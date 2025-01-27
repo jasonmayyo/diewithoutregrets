@@ -32,6 +32,67 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6B22E8492D480412003A5685 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6B22E84A2D480440003A5685 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Base;
+			sourceTree = "<group>";
+		};
+		6B22E84B2D480446003A5685 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				6B22E84D2D480488003A5685 /* RegretGuard */,
+				6B22E84C2D48045D003A5685 /* RegretReport */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		6B22E84C2D48045D003A5685 /* RegretReport */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = RegretReport;
+			sourceTree = "<group>";
+		};
+		6B22E84D2D480488003A5685 /* RegretGuard */ = {
+			isa = PBXGroup;
+			children = (
+				6B22E8502D480528003A5685 /* ViewModels */,
+				6B22E84F2D480523003A5685 /* Models */,
+				6B22E84E2D480517003A5685 /* Views */,
+			);
+			path = RegretGuard;
+			sourceTree = "<group>";
+		};
+		6B22E84E2D480517003A5685 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6B22E84F2D480523003A5685 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6B22E8502D480528003A5685 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		6B9D89B82D3552DF00DE8B2E = {
 			isa = PBXGroup;
 			children = (
@@ -51,6 +112,9 @@
 		6B9D89C32D3552E000DE8B2E /* diewithoutregrets */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E84B2D480446003A5685 /* Features */,
+				6B22E84A2D480440003A5685 /* Base */,
+				6B22E8492D480412003A5685 /* Resources */,
 				6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */,
 				6B9D89C62D3552E000DE8B2E /* ContentView.swift */,
 				6B9D89C82D3552E600DE8B2E /* Assets.xcassets */,
