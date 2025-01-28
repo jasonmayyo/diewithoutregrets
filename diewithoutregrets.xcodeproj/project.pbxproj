@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8512D48CDD2003A5685 /* RegretView.swift */; };
+		6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8532D48CEB6003A5685 /* CustomColor.swift */; };
+		6B22E8592D48D0FB003A5685 /* RegretReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8582D48D0FB003A5685 /* RegretReportView.swift */; };
+		6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E85A2D48D155003A5685 /* RegretGuard.swift */; };
+		6B22E85D2D48D984003A5685 /* RegretGuardInstructionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E85C2D48D984003A5685 /* RegretGuardInstructionSheet.swift */; };
+		6B22E85F2D48EA5F003A5685 /* MeshGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E85E2D48EA5F003A5685 /* MeshGradient.swift */; };
+		6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8602D490092003A5685 /* RegretGuardApps.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
 		6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C62D3552E000DE8B2E /* ContentView.swift */; };
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
@@ -14,6 +21,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6B22E8512D48CDD2003A5685 /* RegretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretView.swift; sourceTree = "<group>"; };
+		6B22E8532D48CEB6003A5685 /* CustomColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomColor.swift; sourceTree = "<group>"; };
+		6B22E8582D48D0FB003A5685 /* RegretReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretReportView.swift; sourceTree = "<group>"; };
+		6B22E85A2D48D155003A5685 /* RegretGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuard.swift; sourceTree = "<group>"; };
+		6B22E85C2D48D984003A5685 /* RegretGuardInstructionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuardInstructionSheet.swift; sourceTree = "<group>"; };
+		6B22E85E2D48EA5F003A5685 /* MeshGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshGradient.swift; sourceTree = "<group>"; };
+		6B22E8602D490092003A5685 /* RegretGuardApps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuardApps.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
 		6B9D89C62D3552E000DE8B2E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -35,6 +49,8 @@
 		6B22E8492D480412003A5685 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E8532D48CEB6003A5685 /* CustomColor.swift */,
+				6B22E85E2D48EA5F003A5685 /* MeshGradient.swift */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -58,6 +74,9 @@
 		6B22E84C2D48045D003A5685 /* RegretReport */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E8572D48D0DD003A5685 /* ViewModels */,
+				6B22E8562D48D0D4003A5685 /* Models */,
+				6B22E8552D48D0CE003A5685 /* Views */,
 			);
 			path = RegretReport;
 			sourceTree = "<group>";
@@ -75,6 +94,9 @@
 		6B22E84E2D480517003A5685 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E8512D48CDD2003A5685 /* RegretView.swift */,
+				6B22E85A2D48D155003A5685 /* RegretGuard.swift */,
+				6B22E85C2D48D984003A5685 /* RegretGuardInstructionSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -82,11 +104,34 @@
 		6B22E84F2D480523003A5685 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E8602D490092003A5685 /* RegretGuardApps.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
 		};
 		6B22E8502D480528003A5685 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		6B22E8552D48D0CE003A5685 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				6B22E8582D48D0FB003A5685 /* RegretReportView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6B22E8562D48D0D4003A5685 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6B22E8572D48D0DD003A5685 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -201,8 +246,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B22E85F2D48EA5F003A5685 /* MeshGradient.swift in Sources */,
+				6B22E8592D48D0FB003A5685 /* RegretReportView.swift in Sources */,
+				6B22E85D2D48D984003A5685 /* RegretGuardInstructionSheet.swift in Sources */,
 				6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */,
 				6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */,
+				6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */,
+				6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */,
+				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
+				6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
