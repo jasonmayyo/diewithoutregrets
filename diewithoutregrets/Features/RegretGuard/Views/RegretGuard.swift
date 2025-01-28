@@ -16,7 +16,7 @@ struct RegretGuard: View {
                 // Background image
                 Image("dwr-background")
                     .resizable()
-                    .frame(height: 125)
+                    .frame(height: 130)
                     .edgesIgnoringSafeArea(.all)
                 
                 VStack {
@@ -28,7 +28,7 @@ struct RegretGuard: View {
                                     .font(.title)
                                     .bold()
                                     .foregroundColor(.white)
-                                Text("Select apps that you may regret using")
+                                Text("Protect Your Time, Protect Your Goals.")
                                     .foregroundColor(.white)
                             }
                             Spacer()
@@ -37,66 +37,125 @@ struct RegretGuard: View {
                     .padding(.horizontal)
                     
                     
+                    
+                    
                     ScrollView {
-                        VStack {
-                            HStack {
-                                ForEach(viewModel.apps) { app in
-                                    Button(action: {
-                                        viewModel.selectApp(app)
-                                    }) {
-                                        HStack(spacing: 15) {
-                                            Image(app.iconName)
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
-                                            Text(app.name)
-                                        }
-                                        .frame(maxWidth: .infinity)
+                        VStack(alignment: .leading) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(viewModel.regrets) { regret in
+                                        Button(action: {
+                                            viewModel.selectRegret(regret)
+                                        }, label: {
+                                            VStack {
+                                                VStack {
+                                                    Spacer()
+                                                    Text(regret.regret)
+                                                        .bold()
+                                                    Spacer()
+                                                    Text("Tap to edit")
+                                                        .foregroundColor(.gray)
+                                                        .font(.caption)
+                                                }
+                                                .padding()
+                                            }
+                                            .frame(width: 300, height: 150)
+                                            .background(Color.white)
+                                            .cornerRadius(12)
+                                            .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
+                                            .padding(.bottom)
+                                            
+                                        })
                                         .foregroundColor(.black)
-                                        .padding()
-                                        .background(Color.white)
-                                        .cornerRadius(10)
-                                        .shadow(color: .gray.opacity(0.5), radius: 5, x: 2, y: 2)
+                                        
+                                    }
+                                    Spacer()
+                                }.frame(maxWidth: .infinity)
+                                    .padding(.leading)
+                                
+                                
+                            }
+                            VStack (alignment: .leading) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text("Regret-Proof Your Phone")
+                                            .font(.title3)
+                                            .bold()
+                                        Text("Select the apps that may hold you back from your goals.")
+                                            .font(.caption)
+                                    }
+                                    Spacer()
+                                }.padding(.bottom,5)
+                                HStack {
+                                    ForEach(viewModel.apps) { app in
+                                        Button(action: {
+                                            viewModel.selectApp(app)
+                                        }) {
+                                            HStack(spacing: 15) {
+                                                Image(app.iconName)
+                                                    .resizable()
+                                                    .frame(width: 25, height: 25)
+                                                Text(app.name)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .foregroundColor(.black)
+                                            .padding()
+                                            .background(Color.white)
+                                            .cornerRadius(10)
+                                            .shadow(color: .gray.opacity(0.2), radius: 5, x: 2, y: 2)
+                                        }
                                     }
                                 }
-                            }
-                            HStack {
-                                Text("Can't find what you are looking for?")
-                                    .font(.system(size: 10))
-                                    .padding(.top)
-                                Button(action: {
-                                    
-                                }, label: {
-                                    Text("Click Here")
+                                
+                                HStack {
+                                    Text("Can't find what you are looking for?")
                                         .font(.system(size: 10))
                                         .padding(.top)
-                                        .foregroundColor(Color(hex: 0x184449))
-                                })
-                            }
+                                    Button(action: {
+                                        
+                                    }, label: {
+                                        Text("Click Here")
+                                            .font(.system(size: 10))
+                                            .padding(.top)
+                                            .foregroundColor(Color(hex: 0x184449))
+                                    })
+                                }
+                                
+                                
+                            }.padding(.horizontal)
                             
-                        }.padding(.horizontal)
+                            
+                            
+                        }
                         
-                        
+                        Spacer()
                         
                     }
-                    
-                    Spacer()
-                    
                 }
+                
+            }
+            .sheet(isPresented: $viewModel.showInstructions) {
+                if let app = viewModel.selectedApp {
+                    RegretGuardInstructionSheet(app: app)
+                        .presentationDetents([.large])
+                        .presentationCornerRadius(30)
+                }
+            }
+            .sheet(isPresented: $viewModel.showEditRegret) {
+                if let regret = viewModel.selectedRegret {
+                    RegretEditorSheet(regret: regret)
+                        .presentationDetents([.large])
+                        .presentationCornerRadius(30)
+                        .environmentObject(viewModel)
+                }
+                
             }
             
         }
-        .sheet(isPresented: $viewModel.showInstructions) {
-            if let app = viewModel.selectedApp {
-                RegretGuardInstructionSheet(app: app)
-                    .presentationDetents([.large])
-                    .presentationCornerRadius(30)
-            }
-        }
     }
 }
-
-#Preview {
-    RegretGuard()
-}
-
-
+    #Preview {
+        RegretGuard()
+    }
+    
+    
