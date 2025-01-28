@@ -20,12 +20,12 @@ extension RegretApp {
         RegretApp(
             name: "Instagram",
             iconName: "instagram-icon",
-            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/your-instagram-shortcut")!
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/171e3ff340c34abfad727e84cd68799e")!
         ),
         RegretApp(
             name: "YouTube",
             iconName: "youtube-icon",
-            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/your-youtube-shortcut")!
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/171e3ff340c34abfad727e84cd68799e")!
         )
     ]
 }

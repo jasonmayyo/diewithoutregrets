@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RegretGuardInstructionSheet: View {
     @Environment(\.dismiss) var dismiss
+    let app: RegretApp
     var body: some View {
         ScrollView {
             VStack {
@@ -45,7 +46,7 @@ struct RegretGuardInstructionSheet: View {
                         Spacer()
                     }
                     Button(action: {
-                        
+                        UIApplication.shared.open(app.shortcutLink)
                     }, label: {
                         HStack {
                             Image(systemName: "button.angledtop.vertical.right")
@@ -85,6 +86,9 @@ struct RegretGuardInstructionSheet: View {
                     }
                     Button(action: {
                         // Open the shortcut app
+                        if let shortcutsURL = URL(string: "shortcuts://") {
+                                UIApplication.shared.open(shortcutsURL)
+                            }
                     }, label: {
                         HStack {
                             Image(systemName: "link")
@@ -340,5 +344,9 @@ struct RegretGuardInstructionSheet: View {
 }
 
 #Preview {
-    RegretGuardInstructionSheet()
+    RegretGuardInstructionSheet(app: RegretApp(
+            name: "Instagram",
+            iconName: "instagram-icon",
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/your-instagram-shortcut")!
+        ))
 }

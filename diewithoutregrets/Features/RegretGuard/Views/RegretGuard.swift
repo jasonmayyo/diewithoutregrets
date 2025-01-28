@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct RegretGuard: View {
-    @State private var showInstructions:Bool = false
+    @StateObject private var viewModel = RegretGuardViewModel()
+    
     var body: some View {
         VStack {
             ZStack(alignment: .top) {
@@ -39,39 +40,24 @@ struct RegretGuard: View {
                     ScrollView {
                         VStack {
                             HStack {
-                                Button(action: {
-                                    // Show Instructions Sheet
-                                    showInstructions = true
-                                }, label: {
-                                    HStack(spacing: 15) {
-                                        Image("instagram-icon")
-                                            .resizable()
-                                            .frame(width: 25, height: 25)
-                                        Text("Instagram")
-                                    }.frame(maxWidth: .infinity)
+                                ForEach(viewModel.apps) { app in
+                                    Button(action: {
+                                        viewModel.selectApp(app)
+                                    }) {
+                                        HStack(spacing: 15) {
+                                            Image(app.iconName)
+                                                .resizable()
+                                                .frame(width: 25, height: 25)
+                                            Text(app.name)
+                                        }
+                                        .frame(maxWidth: .infinity)
                                         .foregroundColor(.black)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(10)
                                         .shadow(color: .gray.opacity(0.5), radius: 5, x: 2, y: 2)
-                                })
-                                
-                                Button(action: {
-                                    // Show Instructions Sheet
-                                }, label: {
-                                    HStack(spacing: 15) {
-                                        Image("youtube-icon")
-                                            .resizable()
-                                            .frame(width: 25, height: 25)
-                                        Text("Youtube")
                                     }
-                                    .frame(maxWidth: .infinity)
-                                        .foregroundColor(.black)
-                                        .padding()
-                                        .background(Color.white)
-                                        .cornerRadius(10)
-                                        .shadow(color: .gray.opacity(0.5), radius: 5, x: 2, y: 2)
-                                })
+                                }
                             }
                             HStack {
                                 Text("Can't find what you are looking for?")
@@ -89,21 +75,22 @@ struct RegretGuard: View {
                             
                         }.padding(.horizontal)
                         
+                        
+                        
                     }
                     
+                    Spacer()
+                    
                 }
-                
-                Spacer()
-                
             }
             
-            
         }
-        .sheet(isPresented: $showInstructions) {
-            // pass though which app they click on and the link
-            RegretGuardInstructionSheet()
-                .presentationDetents([.large])
-                .presentationCornerRadius(30)
+        .sheet(isPresented: $viewModel.showInstructions) {
+            if let app = viewModel.selectedApp {
+                RegretGuardInstructionSheet(app: app)
+                    .presentationDetents([.large])
+                    .presentationCornerRadius(30)
+            }
         }
     }
 }
@@ -111,3 +98,5 @@ struct RegretGuard: View {
 #Preview {
     RegretGuard()
 }
+
+
