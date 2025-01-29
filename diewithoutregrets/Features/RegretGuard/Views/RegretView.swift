@@ -8,10 +8,7 @@
 import SwiftUI
 
 struct RegretView: View {
-    @State private var showRegret: Bool = false
-    @State private var showFinalMessage: Bool = false
-    
-    @State private var regretMessage: String = "This is the regret the user has put in :)"
+    @StateObject private var viewModel = RegretViewModel()
     
     var body: some View {
         ZStack {
@@ -26,7 +23,7 @@ struct RegretView: View {
                 
                 Spacer()
                 
-                if !showRegret && !showFinalMessage {
+                if !viewModel.showRegret && !viewModel.showFinalMessage {
                     Text("You told us your biggest regret would be...")
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
@@ -42,12 +39,13 @@ struct RegretView: View {
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                                 withAnimation {
-                                    showRegret = true
+                                    viewModel.showRegret = true
+                                    viewModel.updateRegretMessage()
                                 }
                             }
                         }
-                } else if showRegret && !showFinalMessage {
-                    Text(regretMessage)
+                } else if viewModel.showRegret && !viewModel.showFinalMessage {
+                    Text(viewModel.regretMessage)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
                         .font(.title2)
@@ -63,9 +61,13 @@ struct RegretView: View {
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                                 withAnimation {
-                                    showFinalMessage = true
+                                    viewModel.showFinalMessage = true
                                 }
                             }
+                        }
+                        .onDisappear {
+                            // Cycle to the next regret
+                            viewModel.currentRegretIndex = viewModel.getNextRegretIndex()
                         }
                 } else {
                     VStack {
@@ -75,23 +77,19 @@ struct RegretView: View {
                             .foregroundColor(.white)
                             .font(.title2)
                             .padding(.horizontal, 30)
-                            .transition(.opacity.animation(.easeIn(duration: 3.0)))
+                            .transition(.opacity.animation(.easeIn(duration: 4.0)))
                         
                         Spacer()
                         
                         VStack {
-                            // Take you to "instagram"
                             Button(action: {
-                                showRegret = false
-                                showFinalMessage = false
+                                viewModel.resetView()
                                 if let url = URL(string: "instagram://") {
                                     UIApplication.shared.open(url, options: [:]) { success in
                                         if !success {
                                             print("Failed to open Instagram")
                                         }
                                     }
-                                } else {
-                                    print("Invalid URL for Instagram")
                                 }
                             }) {
                                 Text("Continue anyway")
@@ -101,10 +99,9 @@ struct RegretView: View {
                                     .background(Color.gray.opacity(0.3))
                                     .cornerRadius(10)
                             }
-                            // Take you to the home screen of the app or close the app
+                            
                             Button(action: {
-                                showRegret = false
-                                showFinalMessage = false
+                                viewModel.resetView()
                             }) {
                                 Text("Close Instagram")
                                     .foregroundColor(.white)
@@ -124,7 +121,6 @@ struct RegretView: View {
         }
     }
 }
-
 
 #Preview {
     RegretView()
