@@ -4,10 +4,38 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>diewithoutregrets.xcscheme_^#shared#^_</key>
+		<key>OpenGuardIntent.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
+		</dict>
+		<key>RegretGuardIntent.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+		<key>diewithoutregrets.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>6B22E87E2D4A1D78003A5685</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>6B22E8912D4C081C003A5685</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>6B9D89C02D3552DF00DE8B2E</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

@@ -46,12 +46,12 @@ struct RegretEditorSheet: View {
             Text("Edit Your Regrets")
                 .font(.title2)
                 .bold()
-            
+                .padding(.bottom, 5)
+            Text(regret.regretPrompt)
+                .font(.system(size: 14))
+                .foregroundColor(.gray)
+                .padding(.horizontal)
             VStack (alignment: .leading){
-                Text(regret.regretPrompt)
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray)
-                    .padding(.bottom)
                 Text("You Said...")
                 TextEditor(text: $editedRegret)
                     .frame(height: 150)
@@ -60,9 +60,8 @@ struct RegretEditorSheet: View {
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            .stroke(Color(hex: 0x184449), lineWidth: 1)
                     )
-                    .padding(.top)
             }.padding()
             Spacer()
         }

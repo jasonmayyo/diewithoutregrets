@@ -20,3 +20,5 @@ extension Color {
 }
 
 
+// Example Useage
+// Color(hex: 0x184449)

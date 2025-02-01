@@ -17,11 +17,52 @@
 		6B22E8632D490126003A5685 /* RegretGuardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8622D490126003A5685 /* RegretGuardViewModel.swift */; };
 		6B22E8672D4910B3003A5685 /* RegretEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8662D4910B3003A5685 /* RegretEditorSheet.swift */; };
 		6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8682D4A17A2003A5685 /* RegretViewModel.swift */; };
+		6B22E8822D4A1D78003A5685 /* RegretGuardIntentExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8812D4A1D78003A5685 /* RegretGuardIntentExtension.swift */; };
+		6B22E8842D4A1D78003A5685 /* RegretGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8832D4A1D78003A5685 /* RegretGuardIntent.swift */; };
+		6B22E8882D4A1D78003A5685 /* RegretGuardIntent.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 6B22E87F2D4A1D78003A5685 /* RegretGuardIntent.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6B22E8952D4C081C003A5685 /* OpenGuardIntentExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8942D4C081C003A5685 /* OpenGuardIntentExtension.swift */; };
+		6B22E89B2D4C081C003A5685 /* OpenGuardIntent.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 6B22E8922D4C081C003A5685 /* OpenGuardIntent.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
+		6B22E8A42D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
+		6B22E8A52D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
+		6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
 		6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C62D3552E000DE8B2E /* ContentView.swift */; };
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
 		6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6B22E8862D4A1D78003A5685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B9D89B92D3552DF00DE8B2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6B22E87E2D4A1D78003A5685;
+			remoteInfo = RegretGuardIntent;
+		};
+		6B22E8992D4C081C003A5685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B9D89B92D3552DF00DE8B2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6B22E8912D4C081C003A5685;
+			remoteInfo = OpenGuardIntent;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6B22E88C2D4A1D78003A5685 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				6B22E89B2D4C081C003A5685 /* OpenGuardIntent.appex in Embed ExtensionKit Extensions */,
+				6B22E8882D4A1D78003A5685 /* RegretGuardIntent.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		6B22E8512D48CDD2003A5685 /* RegretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretView.swift; sourceTree = "<group>"; };
@@ -34,6 +75,18 @@
 		6B22E8622D490126003A5685 /* RegretGuardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuardViewModel.swift; sourceTree = "<group>"; };
 		6B22E8662D4910B3003A5685 /* RegretEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretEditorSheet.swift; sourceTree = "<group>"; };
 		6B22E8682D4A17A2003A5685 /* RegretViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretViewModel.swift; sourceTree = "<group>"; };
+		6B22E87F2D4A1D78003A5685 /* RegretGuardIntent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = RegretGuardIntent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B22E8812D4A1D78003A5685 /* RegretGuardIntentExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuardIntentExtension.swift; sourceTree = "<group>"; };
+		6B22E8832D4A1D78003A5685 /* RegretGuardIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretGuardIntent.swift; sourceTree = "<group>"; };
+		6B22E8852D4A1D78003A5685 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6B22E8922D4C081C003A5685 /* OpenGuardIntent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = OpenGuardIntent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B22E8942D4C081C003A5685 /* OpenGuardIntentExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGuardIntentExtension.swift; sourceTree = "<group>"; };
+		6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGuardIntent.swift; sourceTree = "<group>"; };
+		6B22E8982D4C081C003A5685 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6B22E89F2D4C0F69003A5685 /* diewithoutregrets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = diewithoutregrets.entitlements; sourceTree = "<group>"; };
+		6B22E8A02D4C0F7F003A5685 /* RegretGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RegretGuardIntent.entitlements; sourceTree = "<group>"; };
+		6B22E8A12D4C0F84003A5685 /* OpenGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenGuardIntent.entitlements; sourceTree = "<group>"; };
+		6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationModel.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
 		6B9D89C62D3552E000DE8B2E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -42,6 +95,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6B22E87C2D4A1D78003A5685 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6B22E88F2D4C081C003A5685 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6B9D89BE2D3552DF00DE8B2E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -147,10 +214,34 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		6B22E8802D4A1D78003A5685 /* RegretGuardIntent */ = {
+			isa = PBXGroup;
+			children = (
+				6B22E8A02D4C0F7F003A5685 /* RegretGuardIntent.entitlements */,
+				6B22E8812D4A1D78003A5685 /* RegretGuardIntentExtension.swift */,
+				6B22E8832D4A1D78003A5685 /* RegretGuardIntent.swift */,
+				6B22E8852D4A1D78003A5685 /* Info.plist */,
+			);
+			path = RegretGuardIntent;
+			sourceTree = "<group>";
+		};
+		6B22E8932D4C081C003A5685 /* OpenGuardIntent */ = {
+			isa = PBXGroup;
+			children = (
+				6B22E8A12D4C0F84003A5685 /* OpenGuardIntent.entitlements */,
+				6B22E8942D4C081C003A5685 /* OpenGuardIntentExtension.swift */,
+				6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */,
+				6B22E8982D4C081C003A5685 /* Info.plist */,
+			);
+			path = OpenGuardIntent;
+			sourceTree = "<group>";
+		};
 		6B9D89B82D3552DF00DE8B2E = {
 			isa = PBXGroup;
 			children = (
 				6B9D89C32D3552E000DE8B2E /* diewithoutregrets */,
+				6B22E8802D4A1D78003A5685 /* RegretGuardIntent */,
+				6B22E8932D4C081C003A5685 /* OpenGuardIntent */,
 				6B9D89C22D3552DF00DE8B2E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -159,6 +250,8 @@
 			isa = PBXGroup;
 			children = (
 				6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */,
+				6B22E87F2D4A1D78003A5685 /* RegretGuardIntent.appex */,
+				6B22E8922D4C081C003A5685 /* OpenGuardIntent.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -166,6 +259,7 @@
 		6B9D89C32D3552E000DE8B2E /* diewithoutregrets */ = {
 			isa = PBXGroup;
 			children = (
+				6B22E89F2D4C0F69003A5685 /* diewithoutregrets.entitlements */,
 				6B22E84B2D480446003A5685 /* Features */,
 				6B22E84A2D480440003A5685 /* Base */,
 				6B22E8492D480412003A5685 /* Resources */,
@@ -173,6 +267,7 @@
 				6B9D89C62D3552E000DE8B2E /* ContentView.swift */,
 				6B9D89C82D3552E600DE8B2E /* Assets.xcassets */,
 				6B9D89CA2D3552E600DE8B2E /* Preview Content */,
+				6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */,
 			);
 			path = diewithoutregrets;
 			sourceTree = "<group>";
@@ -188,6 +283,40 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6B22E87E2D4A1D78003A5685 /* RegretGuardIntent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6B22E8892D4A1D78003A5685 /* Build configuration list for PBXNativeTarget "RegretGuardIntent" */;
+			buildPhases = (
+				6B22E87B2D4A1D78003A5685 /* Sources */,
+				6B22E87C2D4A1D78003A5685 /* Frameworks */,
+				6B22E87D2D4A1D78003A5685 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RegretGuardIntent;
+			productName = RegretGuardIntent;
+			productReference = 6B22E87F2D4A1D78003A5685 /* RegretGuardIntent.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		6B22E8912D4C081C003A5685 /* OpenGuardIntent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6B22E89C2D4C081C003A5685 /* Build configuration list for PBXNativeTarget "OpenGuardIntent" */;
+			buildPhases = (
+				6B22E88E2D4C081C003A5685 /* Sources */,
+				6B22E88F2D4C081C003A5685 /* Frameworks */,
+				6B22E8902D4C081C003A5685 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenGuardIntent;
+			productName = OpenGuardIntent;
+			productReference = 6B22E8922D4C081C003A5685 /* OpenGuardIntent.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 		6B9D89C02D3552DF00DE8B2E /* diewithoutregrets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6B9D89CF2D3552E600DE8B2E /* Build configuration list for PBXNativeTarget "diewithoutregrets" */;
@@ -195,10 +324,13 @@
 				6B9D89BD2D3552DF00DE8B2E /* Sources */,
 				6B9D89BE2D3552DF00DE8B2E /* Frameworks */,
 				6B9D89BF2D3552DF00DE8B2E /* Resources */,
+				6B22E88C2D4A1D78003A5685 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				6B22E8872D4A1D78003A5685 /* PBXTargetDependency */,
+				6B22E89A2D4C081C003A5685 /* PBXTargetDependency */,
 			);
 			name = diewithoutregrets;
 			productName = diewithoutregrets;
@@ -215,6 +347,12 @@
 				LastSwiftUpdateCheck = 1520;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
+					6B22E87E2D4A1D78003A5685 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					6B22E8912D4C081C003A5685 = {
+						CreatedOnToolsVersion = 15.2;
+					};
 					6B9D89C02D3552DF00DE8B2E = {
 						CreatedOnToolsVersion = 15.2;
 					};
@@ -234,11 +372,27 @@
 			projectRoot = "";
 			targets = (
 				6B9D89C02D3552DF00DE8B2E /* diewithoutregrets */,
+				6B22E87E2D4A1D78003A5685 /* RegretGuardIntent */,
+				6B22E8912D4C081C003A5685 /* OpenGuardIntent */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6B22E87D2D4A1D78003A5685 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6B22E8902D4C081C003A5685 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6B9D89BF2D3552DF00DE8B2E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -251,6 +405,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6B22E87B2D4A1D78003A5685 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B22E8842D4A1D78003A5685 /* RegretGuardIntent.swift in Sources */,
+				6B22E8822D4A1D78003A5685 /* RegretGuardIntentExtension.swift in Sources */,
+				6B22E8A42D4CA96A003A5685 /* NavigationModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6B22E88E2D4C081C003A5685 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B22E8952D4C081C003A5685 /* OpenGuardIntentExtension.swift in Sources */,
+				6B22E8A52D4CA96A003A5685 /* NavigationModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6B9D89BD2D3552DF00DE8B2E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -264,7 +437,9 @@
 				6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */,
 				6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */,
 				6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */,
+				6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */,
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
+				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
 				6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */,
 			);
@@ -272,7 +447,124 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		6B22E8872D4A1D78003A5685 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6B22E87E2D4A1D78003A5685 /* RegretGuardIntent */;
+			targetProxy = 6B22E8862D4A1D78003A5685 /* PBXContainerItemProxy */;
+		};
+		6B22E89A2D4C081C003A5685 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6B22E8912D4C081C003A5685 /* OpenGuardIntent */;
+			targetProxy = 6B22E8992D4C081C003A5685 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		6B22E88A2D4A1D78003A5685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RegretGuardIntent;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6B22E88B2D4A1D78003A5685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RegretGuardIntent;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6B22E89D2D4C081C003A5685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenGuardIntent;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6B22E89E2D4C081C003A5685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenGuardIntent;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		6B9D89CD2D3552E600DE8B2E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -395,14 +687,17 @@
 		6B9D89D02D3552E600DE8B2E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = diewithoutregrets/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,14 +719,17 @@
 		6B9D89D12D3552E600DE8B2E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = diewithoutregrets/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -453,6 +751,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6B22E8892D4A1D78003A5685 /* Build configuration list for PBXNativeTarget "RegretGuardIntent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B22E88A2D4A1D78003A5685 /* Debug */,
+				6B22E88B2D4A1D78003A5685 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6B22E89C2D4C081C003A5685 /* Build configuration list for PBXNativeTarget "OpenGuardIntent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B22E89D2D4C081C003A5685 /* Debug */,
+				6B22E89E2D4C081C003A5685 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		6B9D89BC2D3552DF00DE8B2E /* Build configuration list for PBXProject "diewithoutregrets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

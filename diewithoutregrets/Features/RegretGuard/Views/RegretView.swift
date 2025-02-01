@@ -83,14 +83,41 @@ struct RegretView: View {
                         
                         VStack {
                             Button(action: {
-                                viewModel.resetView()
-                                if let url = URL(string: "instagram://") {
-                                    UIApplication.shared.open(url, options: [:]) { success in
-                                        if !success {
-                                            print("Failed to open Instagram")
+                                let currentTime = Date().timeIntervalSince1970
+                                print("RegretView: Setting break time to:", currentTime)
+                                
+                                // Use shared UserDefaults
+                                let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+                                sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
+                                sharedDefaults?.set(true, forKey: "UserAllowedBreak")
+                                sharedDefaults?.synchronize()
+                                
+                                print("RegretView: Break time set, attempting to open app")
+                                
+                                // Get the stored app name and determine the URL scheme
+                                if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
+                                    print("RegretView: Opening app:", appName)
+                                    let urlScheme: String
+                                    switch appName.lowercased() {
+                                    case "instagram":
+                                        urlScheme = "instagram://"
+                                    case "youtube":
+                                        urlScheme = "youtube://"
+                                    default:
+                                        urlScheme = "instagram://"
+                                    }
+                                    
+                                    if let url = URL(string: urlScheme) {
+                                        UIApplication.shared.open(url, options: [:]) { success in
+                                            if !success {
+                                                print("RegretView: Failed to open \(appName)")
+                                            } else {
+                                                print("RegretView: Successfully opened \(appName)")
+                                            }
                                         }
                                     }
                                 }
+                                NavigationModel.shared.navigate(to: .regretReport)
                             }) {
                                 Text("Continue anyway")
                                     .foregroundColor(.white)
@@ -101,7 +128,9 @@ struct RegretView: View {
                             }
                             
                             Button(action: {
-                                viewModel.resetView()
+                                // take me to the home screen
+                                NavigationModel.shared.navigate(to: .regretReport)
+
                             }) {
                                 Text("Close Instagram")
                                     .foregroundColor(.white)
@@ -118,6 +147,9 @@ struct RegretView: View {
                 
                 Spacer()
             }
+        }
+        .onAppear {
+            viewModel.resetView()
         }
     }
 }
