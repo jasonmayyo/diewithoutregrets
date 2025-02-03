@@ -28,11 +28,8 @@ class RegretGuardViewModel: ObservableObject {
     }
     
     func updateRegret(_ updatedRegret: Regret) {
-        // Using @Published regrets, so we directly update the array
         if let index = regrets.firstIndex(where: { $0.id == updatedRegret.id }) {
-            // Replace the old regret with the new one
             regrets[index] = updatedRegret
-            // Ensure the view is updated by calling `objectWillChange.send()`
             objectWillChange.send()
         }
     }

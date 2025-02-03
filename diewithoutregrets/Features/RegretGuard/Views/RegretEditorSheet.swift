@@ -66,6 +66,7 @@ struct RegretEditorSheet: View {
             Spacer()
         }
         .padding(.top)
+        .preferredColorScheme(.light)
     }
 }
 

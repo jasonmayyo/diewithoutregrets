@@ -340,6 +340,7 @@ struct RegretGuardInstructionSheet: View {
             }
         }
         .padding(.top, 30)
+        .preferredColorScheme(.light)
     }
 }
 

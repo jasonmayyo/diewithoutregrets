@@ -34,7 +34,7 @@ struct RegretView: View {
                                 .scaleEffect(phase)
                                 .opacity(phase == 1 ? 1 : 0)
                         } animation: { phase in
-                            .easeIn(duration: 4)
+                                .easeIn(duration: 4)
                         }
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
@@ -56,18 +56,16 @@ struct RegretView: View {
                                 .scaleEffect(phase)
                                 .opacity(phase == 1 ? 1 : 0)
                         } animation: { phase in
-                            .easeIn(duration: 4)
+                                .easeIn(duration: 4)
                         }
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                                 withAnimation {
                                     viewModel.showFinalMessage = true
+                                    
+                                    viewModel.cycleRegret()
                                 }
                             }
-                        }
-                        .onDisappear {
-                            // Cycle to the next regret
-                            viewModel.currentRegretIndex = viewModel.getNextRegretIndex()
                         }
                 } else {
                     VStack {
@@ -103,6 +101,22 @@ struct RegretView: View {
                                         urlScheme = "instagram://"
                                     case "youtube":
                                         urlScheme = "youtube://"
+                                    case "tiktok":
+                                        urlScheme = "tiktok://"
+                                    case "threads":
+                                        urlScheme = "threads://"
+                                    case "snapchat":
+                                        urlScheme = "snapchat://"
+                                    case "netflix":
+                                        urlScheme = "netflix://"
+                                    case "facebook":
+                                        urlScheme = "facebook://"
+                                    case "bereal":
+                                        urlScheme = "bereal://"
+                                    case "reddit":
+                                        urlScheme = "reddit://"
+                                    case "x":
+                                        urlScheme = "x://"
                                     default:
                                         urlScheme = "instagram://"
                                     }
@@ -118,8 +132,9 @@ struct RegretView: View {
                                     }
                                 }
                                 NavigationModel.shared.navigate(to: .regretReport)
+                                
                             }) {
-                                Text("Continue anyway")
+                                Text("Unlock for 5 Min")
                                     .foregroundColor(.white)
                                     .padding()
                                     .frame(maxWidth: .infinity)
@@ -130,9 +145,11 @@ struct RegretView: View {
                             Button(action: {
                                 // take me to the home screen
                                 NavigationModel.shared.navigate(to: .regretReport)
-
-                            }) {
-                                Text("Close Instagram")
+                               
+                            }) { let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+                                let appName = sharedDefaults?.string(forKey: "LastGuardedApp")
+                                let buttonText = "Close \(appName)"
+                                Text(buttonText)
                                     .foregroundColor(.white)
                                     .padding()
                                     .frame(maxWidth: .infinity)
@@ -148,6 +165,7 @@ struct RegretView: View {
                 Spacer()
             }
         }
+        .preferredColorScheme(.light)
         .onAppear {
             viewModel.resetView()
         }

@@ -14,11 +14,11 @@ struct MeshGradient: View {
         ZStack {
             AngularGradient(
                 gradient: Gradient(colors: [
-                    Color(hex: 0x184449),  // Dark teal
-                    Color(hex: 0x1B3F34),  // Deep forest green
-                    Color(hex: 0x1EDAA0),  // Bright teal
-                    Color(hex: 0x90EE90),  // Light green
-                    Color(hex: 0x00FF00)   // Neon green
+                    Color(hex: 0x36B8C4),  // Dark teal
+                    Color(hex: 0x238A94),  // Deep forest green
+                    Color(hex: 0x197C6F),  // Bright teal
+                    Color(hex: 0x26B37D),  // Light green
+                    Color(hex: 0x34CC92)   // Neon green
                 ]),
                 center: .center,
                 angle: .degrees(animateGradient ? 360 : 0)
@@ -27,8 +27,8 @@ struct MeshGradient: View {
             .overlay(
                 LinearGradient(
                     gradient: Gradient(colors: [
-                        Color(hex: 0x1EDAA0).opacity(0.7),  // Bright teal
-                        Color(hex: 0xADFF2F).opacity(0.4)   // Green-yellow
+                        Color(hex: 0x197C6F).opacity(0.7),  // Bright teal
+                        Color(hex: 0x26B37D).opacity(0.4)   // Green-yellow
                     ]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing

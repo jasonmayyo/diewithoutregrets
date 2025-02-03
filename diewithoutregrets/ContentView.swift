@@ -11,26 +11,58 @@ struct ContentView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     
     var body: some View {
-        TabView {
-            if navigationModel.currentDestination == .regretView {
-                RegretView()
-            } else if navigationModel.currentDestination == .regretReport {
-                RegretReportView()
-            } else {
-                TabView {
-                    RegretReportView()
-                        .tabItem {
-                            Image(systemName: "house.fill")
+        NavigationStack {
+            Group {
+                if navigationModel.currentDestination == .regretView {
+                    RegretView()
+                } else {
+                    ZStack {
+                        // Blurred background
+                        Color.clear
+                            .background(.ultraThinMaterial)
+                            .ignoresSafeArea()
+                        
+                        TabView {
+                            RegretGuard()
+                                .tabItem {
+                                    Image(systemName: "house.fill")
+                                        
+                                    Text("Home")
+                                }
+                            
+                            dwrLockView()
+                                .tabItem {
+                                    Image(systemName: "lock.rectangle.stack.fill")
+                                        
+                                    Text("Locks")
+                                }
                         }
-                        .tag(1)
-                    RegretGuard()
-                        .tabItem {
-                            Image(systemName: "lock.shield.fill")
-                        }
-                        .tag(2)
+                        .tint(Color(hex: 0x184449))
+                        .background(Color.clear)
+                        .glassBackground()
+                    }
                 }
             }
+        }
+        .preferredColorScheme(.light)
+    }
+}
+
+
+extension View {
+    func glassBackground() -> some View {
+        self.onAppear {
+            let appearance = UITabBarAppearance()
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+            
+            UITabBar.appearance().standardAppearance = appearance
+            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }
 }
 
+#Preview {
+    ContentView()
+        .environmentObject(NavigationModel.shared)
+}

@@ -86,39 +86,40 @@ struct RegretGuard: View {
                                     }
                                     Spacer()
                                 }.padding(.bottom,5)
-                                HStack {
+                                let columns = [
+                                    GridItem(.flexible(), spacing: 15),
+                                    GridItem(.flexible(), spacing: 15)
+                                ]
+                                
+                                LazyVGrid(columns: columns, spacing: 15) {
                                     ForEach(viewModel.apps) { app in
                                         Button(action: {
                                             viewModel.selectApp(app)
                                         }) {
-                                            HStack(spacing: 15) {
+                                            HStack(spacing: 10) {
                                                 Image(app.iconName)
                                                     .resizable()
                                                     .frame(width: 25, height: 25)
                                                 Text(app.name)
+                                                    .font(.system(size: 14))
                                             }
                                             .frame(maxWidth: .infinity)
-                                            .foregroundColor(.black)
                                             .padding()
                                             .background(Color.white)
                                             .cornerRadius(10)
                                             .shadow(color: .gray.opacity(0.2), radius: 5, x: 2, y: 2)
                                         }
+                                        .foregroundColor(.black)
                                     }
                                 }
                                 
+                                
                                 HStack {
-                                    Text("Can't find what you are looking for?")
+                                    Spacer()
+                                    Text("Can't find what you are looking for? We are adding more everyday!")
                                         .font(.system(size: 10))
-                                        .padding(.top)
-                                    Button(action: {
-                                        
-                                    }, label: {
-                                        Text("Click Here")
-                                            .font(.system(size: 10))
-                                            .padding(.top)
-                                            .foregroundColor(Color(hex: 0x184449))
-                                    })
+                                        .padding(.top, 5)
+                                    Spacer()
                                 }
                                 
                                 
@@ -151,11 +152,11 @@ struct RegretGuard: View {
                 
             }
             
-        }
+        }.preferredColorScheme(.light)
     }
 }
-    #Preview {
-        RegretGuard()
-    }
-    
-    
+#Preview {
+    RegretGuard()
+}
+
+

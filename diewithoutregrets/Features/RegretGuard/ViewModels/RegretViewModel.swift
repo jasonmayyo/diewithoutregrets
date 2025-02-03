@@ -34,4 +34,9 @@ class RegretViewModel: ObservableObject {
     func getNextRegretIndex() -> Int {
         return (currentRegretIndex + 1) % regrets.count
     }
+    
+    func cycleRegret() {
+        currentRegretIndex = getNextRegretIndex()
+        updateRegretMessage()
+    }
 }

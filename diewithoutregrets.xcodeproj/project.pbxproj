@@ -25,7 +25,21 @@
 		6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
 		6B22E8A42D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
 		6B22E8A52D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
+		6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */; };
+		6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */; };
+		6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */; };
+		6B7CD4E22D50A5510065A0F7 /* AvgScreenTimeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4E12D50A5510065A0F7 /* AvgScreenTimeViewModel.swift */; };
+		6B7CD4E42D50A7380065A0F7 /* AgeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */; };
+		6B7CD4E62D50BD5B0065A0F7 /* NameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4E52D50BD5B0065A0F7 /* NameView.swift */; };
+		6B7CD4E82D50BE340065A0F7 /* NameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4E72D50BE340065A0F7 /* NameViewModel.swift */; };
+		6B7CD4EA2D50C00F0065A0F7 /* BreakdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4E92D50C00F0065A0F7 /* BreakdownView.swift */; };
+		6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */; };
+		6B7CD4F02D50CBAA0065A0F7 /* RegretQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4EF2D50CBAA0065A0F7 /* RegretQuestionView.swift */; };
+		6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */; };
+		6B7CD4F42D50DAE20065A0F7 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */; };
+		6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */; };
 		6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */; };
+		6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
 		6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C62D3552E000DE8B2E /* ContentView.swift */; };
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
@@ -87,6 +101,20 @@
 		6B22E8A02D4C0F7F003A5685 /* RegretGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RegretGuardIntent.entitlements; sourceTree = "<group>"; };
 		6B22E8A12D4C0F84003A5685 /* OpenGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenGuardIntent.entitlements; sourceTree = "<group>"; };
 		6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationModel.swift; sourceTree = "<group>"; };
+		6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AverageScreenTime.swift; sourceTree = "<group>"; };
+		6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvgScreenTimeModel.swift; sourceTree = "<group>"; };
+		6B7CD4E12D50A5510065A0F7 /* AvgScreenTimeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvgScreenTimeViewModel.swift; sourceTree = "<group>"; };
+		6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeSelectView.swift; sourceTree = "<group>"; };
+		6B7CD4E52D50BD5B0065A0F7 /* NameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameView.swift; sourceTree = "<group>"; };
+		6B7CD4E72D50BE340065A0F7 /* NameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameViewModel.swift; sourceTree = "<group>"; };
+		6B7CD4E92D50C00F0065A0F7 /* BreakdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakdownView.swift; sourceTree = "<group>"; };
+		6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WecanhelpView.swift; sourceTree = "<group>"; };
+		6B7CD4EF2D50CBAA0065A0F7 /* RegretQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretQuestionView.swift; sourceTree = "<group>"; };
+		6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionView.swift; sourceTree = "<group>"; };
+		6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = dwrLockView.swift; path = ../../../../../../Documents/dwrLockView.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
 		6B9D89C62D3552E000DE8B2E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -138,6 +166,8 @@
 		6B22E84B2D480446003A5685 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				6B7CD4D72D509DFA0065A0F7 /* Onboarding */,
+				6B8D6B9C2D4E4E2600753EB4 /* dwrBlock */,
 				6B22E84D2D480488003A5685 /* RegretGuard */,
 				6B22E84C2D48045D003A5685 /* RegretReport */,
 			);
@@ -234,6 +264,82 @@
 				6B22E8982D4C081C003A5685 /* Info.plist */,
 			);
 			path = OpenGuardIntent;
+			sourceTree = "<group>";
+		};
+		6B7CD4D72D509DFA0065A0F7 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				6B7CD4DA2D509E160065A0F7 /* Models */,
+				6B7CD4D92D509E0D0065A0F7 /* ViewModels */,
+				6B7CD4D82D509E040065A0F7 /* Views */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		6B7CD4D82D509E040065A0F7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */,
+				6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */,
+				6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */,
+				6B7CD4E52D50BD5B0065A0F7 /* NameView.swift */,
+				6B7CD4E92D50C00F0065A0F7 /* BreakdownView.swift */,
+				6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */,
+				6B7CD4EF2D50CBAA0065A0F7 /* RegretQuestionView.swift */,
+				6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */,
+				6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6B7CD4D92D509E0D0065A0F7 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				6B7CD4E12D50A5510065A0F7 /* AvgScreenTimeViewModel.swift */,
+				6B7CD4E72D50BE340065A0F7 /* NameViewModel.swift */,
+				6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		6B7CD4DA2D509E160065A0F7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6B8D6B9C2D4E4E2600753EB4 /* dwrBlock */ = {
+			isa = PBXGroup;
+			children = (
+				6B8D6B9F2D4E4EE200753EB4 /* Models */,
+				6B8D6B9E2D4E4ED700753EB4 /* ViewModels */,
+				6B8D6B9D2D4E4ED000753EB4 /* Views */,
+			);
+			path = dwrBlock;
+			sourceTree = "<group>";
+		};
+		6B8D6B9D2D4E4ED000753EB4 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6B8D6B9E2D4E4ED700753EB4 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		6B8D6B9F2D4E4EE200753EB4 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		6B9D89B82D3552DF00DE8B2E = {
@@ -428,19 +534,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */,
+				6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */,
+				6B7CD4EA2D50C00F0065A0F7 /* BreakdownView.swift in Sources */,
 				6B22E85F2D48EA5F003A5685 /* MeshGradient.swift in Sources */,
+				6B7CD4F42D50DAE20065A0F7 /* OnboardingViewModel.swift in Sources */,
 				6B22E8632D490126003A5685 /* RegretGuardViewModel.swift in Sources */,
+				6B7CD4E62D50BD5B0065A0F7 /* NameView.swift in Sources */,
+				6B7CD4E82D50BE340065A0F7 /* NameViewModel.swift in Sources */,
+				6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */,
 				6B22E8672D4910B3003A5685 /* RegretEditorSheet.swift in Sources */,
+				6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */,
 				6B22E8592D48D0FB003A5685 /* RegretReportView.swift in Sources */,
+				6B7CD4E22D50A5510065A0F7 /* AvgScreenTimeViewModel.swift in Sources */,
+				6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */,
 				6B22E85D2D48D984003A5685 /* RegretGuardInstructionSheet.swift in Sources */,
 				6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */,
 				6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */,
+				6B7CD4F02D50CBAA0065A0F7 /* RegretQuestionView.swift in Sources */,
 				6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */,
 				6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */,
 				6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */,
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
+				6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */,
+				6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
+				6B7CD4E42D50A7380065A0F7 /* AgeSelectView.swift in Sources */,
 				6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
