@@ -25,6 +25,7 @@
 		6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
 		6B22E8A42D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
 		6B22E8A52D4CA96A003A5685 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */; };
+		6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2B70CC2D5CFA59008D2884 /* RegretStore.swift */; };
 		6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */; };
 		6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */; };
 		6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */; };
@@ -101,6 +102,7 @@
 		6B22E8A02D4C0F7F003A5685 /* RegretGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RegretGuardIntent.entitlements; sourceTree = "<group>"; };
 		6B22E8A12D4C0F84003A5685 /* OpenGuardIntent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenGuardIntent.entitlements; sourceTree = "<group>"; };
 		6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationModel.swift; sourceTree = "<group>"; };
+		6B2B70CC2D5CFA59008D2884 /* RegretStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretStore.swift; sourceTree = "<group>"; };
 		6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AverageScreenTime.swift; sourceTree = "<group>"; };
 		6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvgScreenTimeModel.swift; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 			isa = PBXGroup;
 			children = (
 				6B22E8602D490092003A5685 /* RegretGuardApps.swift */,
+				6B2B70CC2D5CFA59008D2884 /* RegretStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -557,6 +560,7 @@
 				6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */,
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
+				6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */,
 				6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */,
 				6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
@@ -818,11 +822,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Regret Guard";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -850,11 +854,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Regret Guard";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

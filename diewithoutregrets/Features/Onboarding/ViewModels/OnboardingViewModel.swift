@@ -25,6 +25,12 @@ class OnboardingViewModel: ObservableObject {
     @Published var screenTime: String = ""
     @Published var regretAnswers: [String] = ["", ""]
     
+    let regretPrompts = [
+            "Imagine you’re 80, looking back on your life. What are the things you’d most regret not doing? What dreams did you leave behind? What opportunities did you waste?",
+            "What’s one thing you’d regret not doing if you knew your time was limited?"
+        ]
+        
+    
     func nextStep() {
         switch currentStep {
         case .welcome:

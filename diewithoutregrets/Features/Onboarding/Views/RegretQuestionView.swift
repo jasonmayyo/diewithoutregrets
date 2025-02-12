@@ -11,6 +11,7 @@ struct RegretQuestionView: View {
     @StateObject private var viewModel = RegretQuestionViewModel()
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     @State private var currentQuestionIndex = 0
+    @State private var showQuestionCard = false
     
     let questions = [
         Question(
@@ -47,9 +48,12 @@ struct RegretQuestionView: View {
                     },
                     canContinue: viewModel.canContinue(for: currentQuestionIndex),
                     currentQuestionIndex: currentQuestionIndex,
-                    totalQuestions: questions.count
+                    totalQuestions: questions.count,
+                    showQuestionCard: $showQuestionCard
                 )
             }
+        }.onAppear {
+            showQuestionCard = true
         }
     }
 }
@@ -62,18 +66,24 @@ struct QuestionCard: View {
     let canContinue: Bool
     let currentQuestionIndex: Int
         let totalQuestions: Int
-    
+    @Binding var showQuestionCard: Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(question.title)
                 .font(.title2)
                 .foregroundColor(.white)
                 .bold()
+                .opacity(showQuestionCard ? 1 : 0)
+                .offset(y: showQuestionCard ? 0 : 20)
+                .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
             
             Text(question.prompt)
                 .font(.subheadline)
                 .foregroundColor(.white)
                 .padding(.bottom, 20)
+                .opacity(showQuestionCard ? 1 : 0)
+                .offset(y: showQuestionCard ? 0 : 20)
+                .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
             
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $answer)
@@ -90,12 +100,18 @@ struct QuestionCard: View {
                         RoundedRectangle(cornerRadius: 15)
                             .stroke(Color.white.opacity(0.3), lineWidth: 1)
                     )
+                    .opacity(showQuestionCard ? 1 : 0)
+                    .offset(y: showQuestionCard ? 0 : 20)
+                    .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
                 
                 if answer.isEmpty {
                     Text(question.placeholder)
                         .foregroundColor(.white.opacity(0.6))
                         .padding(.leading, 20)
                         .padding(.top, 20)
+                        .opacity(showQuestionCard ? 1 : 0)
+                        .offset(y: showQuestionCard ? 0 : 20)
+                        .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
                 }
             }
             
@@ -104,6 +120,9 @@ struct QuestionCard: View {
                 Text("\(answer.filter { !$0.isWhitespace }.count)/200")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.6))
+                    .opacity(showQuestionCard ? 1 : 0)
+                    .offset(y: showQuestionCard ? 0 : 20)
+                    .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
             }
             
             Spacer()
@@ -119,6 +138,9 @@ struct QuestionCard: View {
             }
             .disabled(!canContinue)
             .buttonStyle(DisabledOpacityButtonStyle())
+            .opacity(showQuestionCard ? 1 : 0)
+            .offset(y: showQuestionCard ? 0 : 20)
+            .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
         }
         .padding()
     }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct RegretGuard: View {
+    @EnvironmentObject var regretStore: RegretStore
     @StateObject private var viewModel = RegretGuardViewModel()
     
     var body: some View {
@@ -43,9 +44,10 @@ struct RegretGuard: View {
                         VStack(alignment: .leading) {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack {
-                                    ForEach(viewModel.regrets) { regret in
+                                    ForEach(regretStore.regrets) { regret in
                                         Button(action: {
-                                            viewModel.selectRegret(regret)
+                                            regretStore.selectRegret(regret)
+                                            viewModel.showEditRegret = true
                                         }, label: {
                                             VStack {
                                                 VStack {
@@ -143,13 +145,12 @@ struct RegretGuard: View {
                 }
             }
             .sheet(isPresented: $viewModel.showEditRegret) {
-                if let regret = viewModel.selectedRegret {
+                if let regret = regretStore.selectedRegret {
                     RegretEditorSheet(regret: regret)
                         .presentationDetents([.large])
                         .presentationCornerRadius(30)
-                        .environmentObject(viewModel)
+                        .environmentObject(regretStore)
                 }
-                
             }
             
         }.preferredColorScheme(.light)

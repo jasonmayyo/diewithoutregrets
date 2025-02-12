@@ -18,7 +18,7 @@ struct Regret: Identifiable {
     let id: UUID
     let regretPrompt: String
     var regret: String // Mark as `var` to allow modification
-
+    static let regrets: [Regret] = []
     // Custom initializer
     init(id: UUID = UUID(), regretPrompt: String, regret: String) {
         self.id = id
@@ -80,13 +80,5 @@ extension RegretApp {
             iconName: "threads-icon",
             shortcutLink: URL(string: "https://www.icloud.com/shortcuts/41a6f82163e5463898af33ed3e7c5253")!
         ),
-    ]
-}
-
-
-extension Regret {
-    static let regrets: [Regret] = [
-        Regret (regretPrompt: "Imagine you’re 80, looking back on your life. What are the things you’d most regret not doing? What dreams did you leave behind? What opportunities did you waste?", regret: "Not starting the business I've always wanted"),
-        Regret (regretPrompt: "Regret prompt number 2?", regret: "this is my second regret hehehe hghogogogog")
     ]
 }

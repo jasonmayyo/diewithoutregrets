@@ -9,14 +9,13 @@ import SwiftUI
 
 struct RegretEditorSheet: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: RegretGuardViewModel // Access the view model
+    @EnvironmentObject var regretStore: RegretStore
     @State private var editedRegret: String
-    
     let regret: Regret
     
     init(regret: Regret) {
         self.regret = regret
-        _editedRegret = State(initialValue: regret.regret) // Initialize state with regret
+        _editedRegret = State(initialValue: regret.regret)
     }
     
     var body: some View {
@@ -24,34 +23,33 @@ struct RegretEditorSheet: View {
             HStack {
                 Button(action: {
                     dismiss()
-                }, label: {
+                }) {
                     Text("Cancel")
                         .foregroundColor(.black)
-                })
+                }
                 Spacer()
                 Button(action: {
-                    print(editedRegret)
-                    print(regret.id)
-                    print(regret.regretPrompt)
                     let updatedRegret = Regret(id: regret.id, regretPrompt: regret.regretPrompt, regret: editedRegret)
-                    viewModel.updateRegret(updatedRegret) 
-                    print(updatedRegret)
+                    regretStore.updateRegret(updatedRegret)
                     dismiss()
-                }, label: {
+                }) {
                     Text("Save")
                         .foregroundColor(Color(hex: 0x184449))
                         .bold()
-                })
+                }
             }.padding()
+            
             Text("Edit Your Regrets")
                 .font(.title2)
                 .bold()
                 .padding(.bottom, 5)
+            
             Text(regret.regretPrompt)
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
                 .padding(.horizontal)
-            VStack (alignment: .leading){
+            
+            VStack(alignment: .leading) {
                 Text("You Said...")
                 TextEditor(text: $editedRegret)
                     .frame(height: 150)
@@ -63,13 +61,10 @@ struct RegretEditorSheet: View {
                             .stroke(Color(hex: 0x184449), lineWidth: 1)
                     )
             }.padding()
+            
             Spacer()
         }
         .padding(.top)
         .preferredColorScheme(.light)
     }
-}
-
-#Preview {
-    RegretEditorSheet(regret: Regret(regretPrompt: "this is an example prompt for the preview", regret: "this is an ecxmaple regret for the preview"))
 }

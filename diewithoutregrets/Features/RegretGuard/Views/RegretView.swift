@@ -8,7 +8,15 @@
 import SwiftUI
 
 struct RegretView: View {
-    @StateObject private var viewModel = RegretViewModel()
+    @EnvironmentObject var regretStore: RegretStore
+    @StateObject private var viewModel: RegretViewModel
+    
+    init() {
+        // Use temporary store for preview
+        let previewStore = RegretStore()
+        previewStore.regrets = Regret.regrets
+        _viewModel = StateObject(wrappedValue: RegretViewModel(regretStore: previewStore))
+    }
     
     var body: some View {
         ZStack {
@@ -62,7 +70,6 @@ struct RegretView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                                 withAnimation {
                                     viewModel.showFinalMessage = true
-                                    
                                     viewModel.cycleRegret()
                                 }
                             }
@@ -82,57 +89,18 @@ struct RegretView: View {
                         VStack {
                             Button(action: {
                                 let currentTime = Date().timeIntervalSince1970
-                                print("RegretView: Setting break time to:", currentTime)
-                                
-                                // Use shared UserDefaults
                                 let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
                                 sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
                                 sharedDefaults?.set(true, forKey: "UserAllowedBreak")
                                 sharedDefaults?.synchronize()
                                 
-                                print("RegretView: Break time set, attempting to open app")
-                                
-                                // Get the stored app name and determine the URL scheme
                                 if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
-                                    print("RegretView: Opening app:", appName)
-                                    let urlScheme: String
-                                    switch appName.lowercased() {
-                                    case "instagram":
-                                        urlScheme = "instagram://"
-                                    case "youtube":
-                                        urlScheme = "youtube://"
-                                    case "tiktok":
-                                        urlScheme = "tiktok://"
-                                    case "threads":
-                                        urlScheme = "threads://"
-                                    case "snapchat":
-                                        urlScheme = "snapchat://"
-                                    case "netflix":
-                                        urlScheme = "netflix://"
-                                    case "facebook":
-                                        urlScheme = "facebook://"
-                                    case "bereal":
-                                        urlScheme = "bereal://"
-                                    case "reddit":
-                                        urlScheme = "reddit://"
-                                    case "x":
-                                        urlScheme = "x://"
-                                    default:
-                                        urlScheme = "instagram://"
-                                    }
-                                    
+                                    let urlScheme = getUrlScheme(for: appName)
                                     if let url = URL(string: urlScheme) {
-                                        UIApplication.shared.open(url, options: [:]) { success in
-                                            if !success {
-                                                print("RegretView: Failed to open \(appName)")
-                                            } else {
-                                                print("RegretView: Successfully opened \(appName)")
-                                            }
-                                        }
+                                        UIApplication.shared.open(url, options: [:]) { _ in }
                                     }
                                 }
                                 NavigationModel.shared.navigate(to: .regretReport)
-                                
                             }) {
                                 Text("Unlock for 5 Min")
                                     .foregroundColor(.white)
@@ -143,12 +111,11 @@ struct RegretView: View {
                             }
                             
                             Button(action: {
-                                // take me to the home screen
                                 NavigationModel.shared.navigate(to: .regretReport)
-                               
-                            }) { let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+                            }) {
+                                let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
                                 let appName = sharedDefaults?.string(forKey: "LastGuardedApp")
-                                let buttonText = "Close \(appName)"
+                                let buttonText = "Close \(appName ?? "")"
                                 Text(buttonText)
                                     .foregroundColor(.white)
                                     .padding()
@@ -167,7 +134,31 @@ struct RegretView: View {
         }
         .preferredColorScheme(.light)
         .onAppear {
+            // Update with actual environment store
+            viewModel.regretStore = regretStore
             viewModel.resetView()
+            
+            // Start with next regret when view appears
+            if !regretStore.regrets.isEmpty {
+                regretStore.cycleRegret()
+                viewModel.updateRegretMessage()
+            }
+        }
+    }
+    
+    private func getUrlScheme(for appName: String) -> String {
+        switch appName.lowercased() {
+        case "instagram": return "instagram://"
+        case "youtube": return "youtube://"
+        case "tiktok": return "tiktok://"
+        case "threads": return "threads://"
+        case "snapchat": return "snapchat://"
+        case "netflix": return "netflix://"
+        case "facebook": return "facebook://"
+        case "bereal": return "bereal://"
+        case "reddit": return "reddit://"
+        case "x": return "x://"
+        default: return "instagram://"
         }
     }
 }
