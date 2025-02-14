@@ -29,6 +29,7 @@ struct BreakdownView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
@@ -39,6 +40,7 @@ struct BreakdownView: View {
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                    .accessibilityLabel("Here is the deal, \(onboardingViewModel.userName)!")
                 
                 // Subtitle with animation
                 Text("Based on what you have told us, we estimate you will spend...")
@@ -48,6 +50,7 @@ struct BreakdownView: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
+                    .accessibilityLabel("Based on what you have told us, we estimate you will spend...")
                 
                 Spacer()
                 
@@ -59,13 +62,16 @@ struct BreakdownView: View {
                             .font(.system(size: 72, weight: .black))
                             .foregroundColor(.white)
                             .shadow(color: .white.opacity(0.8), radius: 10, x: 0, y: 0)
+                            .accessibilityLabel("\(lifetimeYears.formattedWithCommas) years on your phone")
                         
                         Text("ON YOUR PHONE!")
                             .font(.system(size: 40, weight: .black))
                             .foregroundColor(.white.opacity(0.7))
                             .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
+                            .accessibilityHidden(true) // Hide decorative text
                     }
                     .background(Color(hex: 0x184449))
+                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
                     
                     // Annual Estimate
                     VStack {
@@ -73,17 +79,21 @@ struct BreakdownView: View {
                             .font(.system(size: 72, weight: .black))
                             .foregroundColor(.white)
                             .shadow(color: .white.opacity(0.8), radius: 10, x: 0, y: 0)
+                            .accessibilityLabel("\(annualDays.formattedWithCommas) days this year alone")
                         
                         Text("THIS YEAR ALONE!")
                             .font(.system(size: 38, weight: .black))
                             .foregroundColor(.white.opacity(0.7))
                             .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
+                            .accessibilityHidden(true) // Hide decorative text
                     }
+                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
                 }
                 .tabViewStyle(PageTabViewStyle())
                 .opacity(showTabView ? 1 : 0)
                 .offset(y: showTabView ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.6), value: showTabView)
+                .accessibilityLabel("Time spent on your phone")
                 
                 Spacer()
                 
@@ -102,6 +112,9 @@ struct BreakdownView: View {
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
+                .accessibilityLabel("Next")
+                .accessibilityHint("Tap to proceed to the next step")
+                .accessibilityAddTraits(.isButton)
             }
             .padding()
         }

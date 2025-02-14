@@ -21,6 +21,7 @@ struct AverageScreenTime: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             VStack(alignment: .leading, spacing: 2) {
                 // Title with animation
@@ -31,6 +32,7 @@ struct AverageScreenTime: View {
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                    .accessibilityLabel("What is your average screen time right now?")
                 
                 // Subtitle with animation
                 Text("Just an estimate, does not have to be exact")
@@ -40,6 +42,7 @@ struct AverageScreenTime: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
+                    .accessibilityLabel("Just an estimate, does not have to be exact")
                 
                 // ScrollView with options
                 ScrollView(.vertical, showsIndicators: false) {
@@ -53,9 +56,13 @@ struct AverageScreenTime: View {
                             .opacity(showOptions ? 1 : 0)
                             .offset(y: showOptions ? 0 : 20)
                             .animation(.easeInOut(duration: 1).delay(0.6 + Double(viewModel.screenTimeOptions.firstIndex(of: option)!) * 0.1), value: showOptions)
+                            .accessibilityLabel("Screen time option: \(option.range)")
+                            .accessibilityHint("Tap to select this option")
+                            .accessibilityAddTraits(.isButton)
                         }
                     }
                 }
+                .accessibilityLabel("Screen time options")
                 
                 Spacer()
                 
@@ -79,6 +86,9 @@ struct AverageScreenTime: View {
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
+                .accessibilityLabel("Continue")
+                .accessibilityHint("Tap to proceed to the next step")
+                .accessibilityAddTraits(.isButton)
             }
             .padding()
         }
@@ -103,6 +113,7 @@ struct TimeOptionButton: View {
                 Spacer()
                 Text(option.range)
                     .foregroundColor(isSelected ? .black : .white)
+                    .accessibilityLabel(option.range)
                 Spacer()
             }
             .padding()
@@ -110,6 +121,7 @@ struct TimeOptionButton: View {
             .background(isSelected ? Color.white : Color.white.opacity(0.2))
             .cornerRadius(12)
         }
+        .accessibilityElement(children: .combine) // Combine text and button traits
     }
 }
 

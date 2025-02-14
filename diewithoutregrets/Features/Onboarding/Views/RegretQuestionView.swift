@@ -30,6 +30,7 @@ struct RegretQuestionView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             if currentQuestionIndex < questions.count {
                 QuestionCard(
@@ -52,23 +53,25 @@ struct RegretQuestionView: View {
                     showQuestionCard: $showQuestionCard
                 )
             }
-        }.onAppear {
+        }
+        .onAppear {
             showQuestionCard = true
         }
     }
 }
 
 struct QuestionCard: View {
-   
     let question: Question
     @Binding var answer: String
     let onContinue: () -> Void
     let canContinue: Bool
     let currentQuestionIndex: Int
-        let totalQuestions: Int
+    let totalQuestions: Int
     @Binding var showQuestionCard: Bool
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // Question Title
             Text(question.title)
                 .font(.title2)
                 .foregroundColor(.white)
@@ -76,7 +79,9 @@ struct QuestionCard: View {
                 .opacity(showQuestionCard ? 1 : 0)
                 .offset(y: showQuestionCard ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+                .accessibilityLabel("Question \(currentQuestionIndex + 1): \(question.title)")
             
+            // Question Prompt
             Text(question.prompt)
                 .font(.subheadline)
                 .foregroundColor(.white)
@@ -84,7 +89,9 @@ struct QuestionCard: View {
                 .opacity(showQuestionCard ? 1 : 0)
                 .offset(y: showQuestionCard ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+                .accessibilityLabel(question.prompt)
             
+            // Text Editor for Answer
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $answer)
                     .scrollContentBackground(.hidden)
@@ -103,6 +110,9 @@ struct QuestionCard: View {
                     .opacity(showQuestionCard ? 1 : 0)
                     .offset(y: showQuestionCard ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+                    .accessibilityLabel("Answer field")
+                    .accessibilityHint("Type your answer here")
+                    .accessibilityValue(answer.isEmpty ? "Empty" : answer)
                 
                 if answer.isEmpty {
                     Text(question.placeholder)
@@ -112,9 +122,11 @@ struct QuestionCard: View {
                         .opacity(showQuestionCard ? 1 : 0)
                         .offset(y: showQuestionCard ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+                        .accessibilityHidden(true) // Hide placeholder from VoiceOver
                 }
             }
             
+            // Character Count
             HStack {
                 Spacer()
                 Text("\(answer.filter { !$0.isWhitespace }.count)/200")
@@ -123,12 +135,14 @@ struct QuestionCard: View {
                     .opacity(showQuestionCard ? 1 : 0)
                     .offset(y: showQuestionCard ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+                    .accessibilityLabel("Character count: \(answer.filter { !$0.isWhitespace }.count) out of 200")
             }
             
             Spacer()
             
+            // Continue/Finish Button
             Button(action: onContinue) {
-                Text(currentQuestionIndex < totalQuestions - 1 ? "Continue" : "Finish") 
+                Text(currentQuestionIndex < totalQuestions - 1 ? "Continue" : "Finish")
                     .foregroundColor(.black)
                     .padding()
                     .frame(maxWidth: .infinity)
@@ -141,6 +155,9 @@ struct QuestionCard: View {
             .opacity(showQuestionCard ? 1 : 0)
             .offset(y: showQuestionCard ? 0 : 20)
             .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
+            .accessibilityLabel(currentQuestionIndex < totalQuestions - 1 ? "Continue" : "Finish")
+            .accessibilityHint("Tap to proceed to the next question")
+            .accessibilityAddTraits(.isButton)
         }
         .padding()
     }

@@ -25,6 +25,7 @@ struct CompletionView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             // Main Content
             VStack(spacing: 10) {
@@ -37,6 +38,7 @@ struct CompletionView: View {
                         .opacity(showTitle ? 1 : 0)
                         .offset(y: showTitle ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                        .accessibilityLabel("You're ready to begin!")
                     
                     Text("Remember, every moment spent mindfully\nis a moment lived without regrets.")
                         .font(.subheadline)
@@ -45,6 +47,7 @@ struct CompletionView: View {
                         .opacity(showSubtitle ? 1 : 0)
                         .offset(y: showSubtitle ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
+                        .accessibilityLabel("Remember, every moment spent mindfully is a moment lived without regrets.")
                 }
                 
                 Spacer()
@@ -53,6 +56,7 @@ struct CompletionView: View {
                     // Confetti Particles
                     ForEach(particles) { particle in
                         ConfettiParticle(particle: particle)
+                            .accessibilityHidden(true) // Hide decorative confetti
                     }
                     
                     // Shaking Hand Button
@@ -71,6 +75,9 @@ struct CompletionView: View {
                     .opacity(showHandButton ? 1 : 0)
                     .offset(y: showHandButton ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.6), value: showHandButton)
+                    .accessibilityLabel("Tap to celebrate")
+                    .accessibilityHint("Tap the hand button to trigger confetti")
+                    .accessibilityAddTraits(.isButton)
                 }
                 
                 HStack {
@@ -80,6 +87,7 @@ struct CompletionView: View {
                         .opacity(showTapText ? 1 : 0)
                         .offset(y: showTapText ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.8), value: showTapText)
+                        .accessibilityLabel("Tap to continue")
                 }
                 
                 Spacer()
@@ -110,19 +118,19 @@ struct CompletionView: View {
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                   // Add user's regrets to the store
-                   for i in 0..<onboardingViewModel.regretAnswers.count {
-                       let newRegret = Regret(
-                           regretPrompt: onboardingViewModel.regretPrompts[i],
-                           regret: onboardingViewModel.regretAnswers[i]
-                       )
-                       regretStore.regrets.append(newRegret)
-                       print(regretStore.regrets)
-                   }
-                   
-                   hasCompletedOnboarding = true
-               }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // Add user's regrets to the store
+            for i in 0..<onboardingViewModel.regretAnswers.count {
+                let newRegret = Regret(
+                    regretPrompt: onboardingViewModel.regretPrompts[i],
+                    regret: onboardingViewModel.regretAnswers[i]
+                )
+                regretStore.regrets.append(newRegret)
+                print(regretStore.regrets)
+            }
+            
+            hasCompletedOnboarding = true
+        }
     }
     
     private func generateParticles() {
@@ -131,7 +139,6 @@ struct CompletionView: View {
         }
     }
 }
-
 
 struct ConfettiParticle: View {
     let particle: Particle
@@ -194,85 +201,3 @@ struct InfoRow: View {
     CompletionView()
         .environmentObject(OnboardingViewModel())
 }
-
-
-/* Debugging Completion View
- struct CompletionView: View {
- @EnvironmentObject var onboardingViewModel: OnboardingViewModel
- 
- var body: some View {
- ZStack {
- Color(hex: 0x184449)
- .ignoresSafeArea()
- 
- ScrollView {
- VStack(alignment: .leading, spacing: 20) {
- Text("Debug Information")
- .font(.title)
- .foregroundColor(.white)
- .bold()
- 
- Group {
- InfoRow(title: "Name", value: onboardingViewModel.userName)
- InfoRow(title: "Age", value: onboardingViewModel.selectedAge)
- InfoRow(title: "Daily Screen Time", value: onboardingViewModel.screenTime)
- 
- Text("Regret Questions:")
- .font(.headline)
- .foregroundColor(.white)
- 
- VStack(alignment: .leading, spacing: 10) {
- Text("Question 1:")
- .foregroundColor(.white.opacity(0.7))
- Text(onboardingViewModel.regretAnswers[0])
- .foregroundColor(.white)
- .padding(.bottom)
- 
- Text("Question 2:")
- .foregroundColor(.white.opacity(0.7))
- Text(onboardingViewModel.regretAnswers[1])
- .foregroundColor(.white)
- }
- .padding()
- .background(Color.white.opacity(0.1))
- .cornerRadius(10)
- }
- 
- 
- Button(action: {
- onboardingViewModel.completeOnboarding()
- }, label: {
- Text("Begin")
- .foregroundColor(.black)
- .padding()
- .frame(maxWidth: .infinity)
- .frame(height: 70)
- .background(Color.white)
- .cornerRadius(50)
- })
- }
- .padding()
- }
- }
- }
- }
- 
- struct InfoRow: View {
- let title: String
- let value: String
- 
- var body: some View {
- VStack(alignment: .leading) {
- Text(title)
- .foregroundColor(.white.opacity(0.7))
- Text(value)
- .foregroundColor(.white)
- }
- .padding()
- .frame(maxWidth: .infinity, alignment: .leading)
- .background(Color.white.opacity(0.1))
- .cornerRadius(10)
- }
- }
- 
- */

@@ -21,6 +21,7 @@ struct AgeSelectView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
@@ -31,6 +32,7 @@ struct AgeSelectView: View {
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                    .accessibilityLabel("How old are you?")
                 
                 // Subtitle with animation
                 Text("This is so we can estimate the amount of time you would spend on your phone over your life")
@@ -40,6 +42,7 @@ struct AgeSelectView: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
+                    .accessibilityLabel("This is so we can estimate the amount of time you would spend on your phone over your life")
                 
                 // ScrollView with options
                 ScrollView(.vertical, showsIndicators: false) {
@@ -53,9 +56,13 @@ struct AgeSelectView: View {
                             .opacity(showOptions ? 1 : 0)
                             .offset(y: showOptions ? 0 : 20)
                             .animation(.easeInOut(duration: 1).delay(0.6 + Double(viewModel.AgeOptions.firstIndex(of: option)!) * 0.1), value: showOptions)
+                            .accessibilityLabel("Age option: \(option.range)")
+                            .accessibilityHint("Tap to select this age")
+                            .accessibilityAddTraits(.isButton)
                         }
                     }
                 }
+                .accessibilityLabel("Age options")
                 
                 Spacer()
                 
@@ -79,6 +86,9 @@ struct AgeSelectView: View {
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
+                .accessibilityLabel("Continue")
+                .accessibilityHint("Tap to proceed to the next step")
+                .accessibilityAddTraits(.isButton)
             }
             .padding()
         }

@@ -33,7 +33,7 @@ extension RegretApp {
         RegretApp(
             name: "Instagram",
             iconName: "instagram-icon",
-            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/171e3ff340c34abfad727e84cd68799e")!
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/b02dc82b30d24fd6bf688e1bc323d392")!
         ),
         RegretApp(
             name: "YouTube",
@@ -79,6 +79,11 @@ extension RegretApp {
             name: "Threads",
             iconName: "threads-icon",
             shortcutLink: URL(string: "https://www.icloud.com/shortcuts/41a6f82163e5463898af33ed3e7c5253")!
+        ),
+        RegretApp(
+            name: "Safari",
+            iconName: "safari-icon",
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/b1074252da6148eda199e73109e7b0bc")!
         ),
     ]
 }

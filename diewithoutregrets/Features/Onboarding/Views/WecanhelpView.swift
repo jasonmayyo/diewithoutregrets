@@ -4,6 +4,7 @@
 //
 //  Created by Jason Mayo on 2025/02/03.
 //
+
 import SwiftUI
 
 struct WecanhelpView: View {
@@ -43,8 +44,10 @@ struct WecanhelpView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
+                .accessibilityHidden(true) // Hide decorative background color
             
             VStack(alignment: .leading, spacing: 3) {
+                // Title with animation
                 Text("It's time to get real...")
                     .font(.title2)
                     .foregroundColor(.white)
@@ -52,14 +55,18 @@ struct WecanhelpView: View {
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                    .accessibilityLabel("It's time to get real")
                 
-                Text("In order to help you use your phone more consciously we are going to as you a couple of questions and you should be as honest as possible")
+                // Subtitle with animation
+                Text("In order to help you use your phone more consciously we are going to ask you a couple of questions and you should be as honest as possible")
                     .font(.subheadline)
                     .foregroundColor(.white)
                     .padding(.bottom, 40)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
+                    .accessibilityLabel("In order to help you use your phone more consciously, we are going to ask you a couple of questions, and you should be as honest as possible")
+                
                 // Life visualization grid
                 HStack {
                     Spacer()
@@ -69,6 +76,7 @@ struct WecanhelpView: View {
                         .foregroundColor(.white.opacity(0.6))
                         .opacity(showGrid ? 1 : 0)
                         .animation(.easeInOut(duration: 1).delay(0.6), value: showGrid)
+                        .accessibilityLabel("Your life in months")
                     Spacer()
                 }
                 
@@ -78,14 +86,14 @@ struct WecanhelpView: View {
                             .fill(getBlockColor(for: index))
                             .aspectRatio(1, contentMode: .fill)
                             .cornerRadius(1)
+                            .accessibilityLabel(blockAccessibilityLabel(for: index))
                     }
                 }
                 .padding(.horizontal, 8)
                 .opacity(showGrid ? 1 : 0)
                 .offset(y: showGrid ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.6), value: showGrid)
-                
-                
+                .accessibilityElement(children: .combine) // Combine grid elements for VoiceOver
                 
                 // Legend
                 HStack {
@@ -94,25 +102,31 @@ struct WecanhelpView: View {
                         Rectangle()
                             .fill(Color.green.opacity(0.8))
                             .frame(width: 12, height: 12)
+                            .accessibilityHidden(true) // Hide decorative element
                         Text("Lived")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
+                            .accessibilityLabel("Lived months")
                     }
                     HStack {
                         Rectangle()
                             .fill(Color.red)
                             .frame(width: 12, height: 12)
+                            .accessibilityHidden(true) // Hide decorative element
                         Text("Phone time")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
+                            .accessibilityLabel("Phone time months")
                     }
                     HStack {
                         Rectangle()
                             .fill(Color.white.opacity(0.2))
                             .frame(width: 12, height: 12)
+                            .accessibilityHidden(true) // Hide decorative element
                         Text("Remaining")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
+                            .accessibilityLabel("Remaining months")
                     }
                     Spacer()
                 }
@@ -120,7 +134,11 @@ struct WecanhelpView: View {
                 .opacity(showGrid ? 1 : 0)
                 .animation(.easeInOut(duration: 1).delay(0.7), value: showGrid)
                 .padding(.top)
+                .accessibilityElement(children: .combine) // Combine legend elements for VoiceOver
+                
                 Spacer()
+                
+                // Next button with animation
                 Button(action: {
                     onboardingViewModel.nextStep()
                 }) {
@@ -136,6 +154,9 @@ struct WecanhelpView: View {
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
+                .accessibilityLabel("Next")
+                .accessibilityHint("Tap to proceed to the next step")
+                .accessibilityAddTraits(.isButton)
             }
             .padding()
         }
@@ -154,6 +175,16 @@ struct WecanhelpView: View {
             return Color.red
         } else {
             return Color.white.opacity(0.2)
+        }
+    }
+    
+    private func blockAccessibilityLabel(for index: Int) -> String {
+        if index < livedMonths {
+            return "Lived month"
+        } else if index < livedMonths + phoneMonths {
+            return "Phone time month"
+        } else {
+            return "Remaining month"
         }
     }
     

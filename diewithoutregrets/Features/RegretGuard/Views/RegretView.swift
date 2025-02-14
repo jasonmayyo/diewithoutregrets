@@ -28,6 +28,7 @@ struct RegretView: View {
                     .font(.title)
                     .bold()
                     .foregroundColor(.white)
+                    .accessibilityHidden(true) // Hide decorative title
                 
                 Spacer()
                 
@@ -44,6 +45,7 @@ struct RegretView: View {
                         } animation: { phase in
                                 .easeIn(duration: 4)
                         }
+                        .accessibilityLabel("Prompt message")
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                                 withAnimation {
@@ -66,6 +68,8 @@ struct RegretView: View {
                         } animation: { phase in
                                 .easeIn(duration: 4)
                         }
+                        .accessibilityLabel("Your stated regret")
+                        .accessibilityIdentifier("regretMessage")
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                                 withAnimation {
@@ -83,6 +87,7 @@ struct RegretView: View {
                             .font(.title2)
                             .padding(.horizontal, 30)
                             .transition(.opacity.animation(.easeIn(duration: 4.0)))
+                            .accessibilityLabel("Final reflection question")
                         
                         Spacer()
                         
@@ -109,6 +114,9 @@ struct RegretView: View {
                                     .background(Color.gray.opacity(0.3))
                                     .cornerRadius(10)
                             }
+                            .accessibilityLabel("Unlock for 5 minutes")
+                            .accessibilityHint("Temporarily access the restricted app")
+                            .accessibilityAddTraits(.isButton)
                             
                             Button(action: {
                                 NavigationModel.shared.navigate(to: .regretReport)
@@ -123,6 +131,9 @@ struct RegretView: View {
                                     .background(Color.red.opacity(0.7))
                                     .cornerRadius(10)
                             }
+                            .accessibilityLabel("Close app")
+                            .accessibilityHint("Exit and view your usage report")
+                            .accessibilityAddTraits(.isButton)
                         }
                         .padding(.horizontal, 30)
                         .transition(.move(edge: .bottom).combined(with: .opacity).animation(.easeOut(duration: 5.0)))
@@ -158,6 +169,7 @@ struct RegretView: View {
         case "bereal": return "bereal://"
         case "reddit": return "reddit://"
         case "x": return "x://"
+        case "safari": return "https://google.com"
         default: return "instagram://"
         }
     }
