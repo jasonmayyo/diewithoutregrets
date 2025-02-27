@@ -46,9 +46,21 @@ class OnboardingViewModel: ObservableObject {
         case .weCanHelp:
             currentStep = .regretQuestions
         case .regretQuestions:
-            currentStep = .completion
+                    saveRegretAnswers()
+                    currentStep = .completion
         case .completion:
             break
         }
     }
+    
+    
+    private func saveRegretAnswers() {
+            let newRegrets = regretAnswers.enumerated().map { index, answer in
+                Regret(
+                    regretPrompt: regretPrompts[index],
+                    regret: answer
+                )
+            }
+            RegretStore.shared.addRegrets(newRegrets)
+        }
 }

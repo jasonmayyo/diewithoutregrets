@@ -24,8 +24,8 @@ struct RegretView: View {
                 .ignoresSafeArea()
             
             VStack(alignment: .center) {
-                Text("dwr.")
-                    .font(.title)
+                Text("Regret Guard")
+                    .font(.title2)
                     .bold()
                     .foregroundColor(.white)
                     .accessibilityHidden(true) // Hide decorative title

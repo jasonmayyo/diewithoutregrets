@@ -14,17 +14,17 @@ struct RegretApp: Identifiable {
     let shortcutLink: URL
 }
 
-struct Regret: Identifiable {
+struct Regret: Identifiable, Codable {
     let id: UUID
-    let regretPrompt: String
-    var regret: String // Mark as `var` to allow modification
-    static let regrets: [Regret] = []
-    // Custom initializer
-    init(id: UUID = UUID(), regretPrompt: String, regret: String) {
-        self.id = id
-        self.regretPrompt = regretPrompt
-        self.regret = regret
-    }
+        let regretPrompt: String
+        var regret: String
+
+        init(id: UUID = UUID(), regretPrompt: String, regret: String) {
+            self.id = id
+            self.regretPrompt = regretPrompt
+            self.regret = regret
+        }
+    
 }
 
 // Add the sample data extension
@@ -85,5 +85,14 @@ extension RegretApp {
             iconName: "safari-icon",
             shortcutLink: URL(string: "https://www.icloud.com/shortcuts/b1074252da6148eda199e73109e7b0bc")!
         ),
+    ]
+}
+
+
+extension Regret {
+    static let regrets: [Regret] = [
+        Regret(regretPrompt: "Not spending enough time with family", regret: "Not spending enough time with the people I love"),
+        Regret(regretPrompt: "Working too much", regret: "Spending too much time working instead of living"),
+        Regret(regretPrompt: "Not pursuing passions", regret: "Not following my dreams and passions"),
     ]
 }
