@@ -57,3 +57,4 @@ class RegretStore: ObservableObject {
         saveRegrets()
     }
 }
+ 
