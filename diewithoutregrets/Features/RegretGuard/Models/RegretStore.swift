@@ -435,7 +435,7 @@ class RegretStore: ObservableObject {
                     correctAnswerIndex: 3,
                     backgroundExplanation: "The transport layer provides a reliable connection by detecting lost packets and controlling data flow to prevent network congestion. This ensures that the data reaches its destination intact, or that higher layers are notified of transmission failures [46]."
                 )
-
+                
             ])
         }
     }
@@ -475,4 +475,84 @@ class RegretStore: ObservableObject {
         saveRegrets()
     }
 }
- 
+
+
+class DeckStore: ObservableObject {
+    static let shared = DeckStore()
+    
+    @Published var decks: [Deck] {
+        didSet {
+            saveDecks()
+        }
+    }
+    
+    @Published var selectedDeck: Deck? {
+        didSet {
+            saveSelectedDeck()
+        }
+    }
+    
+    private func saveSelectedDeck() {
+        if let deck = selectedDeck {
+            UserDefaults.standard.set(deck.id.uuidString, forKey: "SelectedDeckID")
+        }
+    }
+    
+    func loadSelectedDeck() {
+        if let deckID = UserDefaults.standard.string(forKey: "SelectedDeckID") {
+            selectedDeck = decks.first { $0.id.uuidString == deckID }
+        }
+    }
+    
+    
+    init() {
+        if let data = UserDefaults.standard.data(forKey: "SavedDecks"),
+           let savedDecks = try? JSONDecoder().decode([Deck].self, from: data) {
+            self.decks = savedDecks
+        } else {
+            self.decks = []
+            addSampleData()
+        }
+        loadSelectedDeck()
+    }
+    func selectDeck(_ deck: Deck) {
+        selectedDeck = deck
+    }
+    private func saveDecks() {
+        do {
+            let encoded = try JSONEncoder().encode(decks)
+            UserDefaults.standard.set(encoded, forKey: "SavedDecks")
+        } catch {
+            print("Error saving decks: \(error)")
+        }
+    }
+    
+    func addDeck(_ deck: Deck) {
+        decks.append(deck)
+    }
+    
+    func updateDeck(_ updatedDeck: Deck) {
+        if let index = decks.firstIndex(where: { $0.id == updatedDeck.id }) {
+            decks[index] = updatedDeck
+        }
+    }
+    
+    func deleteDeck(at offsets: IndexSet) {
+        decks.remove(atOffsets: offsets)
+    }
+    
+    private func addSampleData() {
+        let sampleDeck = Deck(
+            name: "Networking Fundamentals",
+            cards: [
+                Regret(regretPrompt: "This is the regret propmt buddy boy of the new deck?",
+                       regret: "This sould be the naser bdfufhsuf",
+                       choices: ["Option 1", "Option 2", "Option 3", "Option 4"],
+                       correctAnswerIndex: 0,
+                       backgroundExplanation: "Studies show people who prioritize family time report higher life satisfaction and lower end-of-life regrets."
+                      )
+            ]
+        )
+        decks.append(sampleDeck)
+    }
+}

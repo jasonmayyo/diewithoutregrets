@@ -8,17 +8,9 @@
 import SwiftUI
 
 class RegretViewModel: ObservableObject {
-    @Published var regretStore: RegretStore
-    
-    init(regretStore: RegretStore) {
-        self.regretStore = regretStore
-    }
-    
-    func cycleRegret() {
-        regretStore.cycleRegret()
-    }
+    @Published var currentQuestionIndex = 0
     
     func reset() {
-        regretStore.currentRegretIndex = 0
+        currentQuestionIndex = 0
     }
 }

@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct RegretView: View {
-    @EnvironmentObject var regretStore: RegretStore
-    @StateObject private var viewModel: RegretViewModel
+    @EnvironmentObject var deckStore: DeckStore
+    @StateObject private var viewModel = RegretViewModel()
     @State private var currentStep: Int = 0
     @State private var showFinalMessage = false
     @State private var selectedAnswer: Int?
@@ -19,12 +19,8 @@ struct RegretView: View {
     @State private var questionResults: [Bool?] = []
     @State private var selectedRegrets: [Regret] = []
     
-    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
-    init() {
-        let store = RegretStore.shared
-        _viewModel = StateObject(wrappedValue: RegretViewModel(regretStore: store))
-    }
+    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
     var body: some View {
         ZStack {
@@ -297,6 +293,7 @@ struct RegretView: View {
     }
     
     private func handleTap() {
+        guard !selectedRegrets.isEmpty else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
             // Guard against index out of range
             guard !selectedRegrets.isEmpty && currentStep < selectedRegrets.count * 2 else {
@@ -342,26 +339,34 @@ struct RegretView: View {
     }
     
     private func setupView() {
-        // Select 3 random regrets or all if less than 3
-        let allRegrets = regretStore.regrets
-        selectedRegrets = allRegrets.count <= 3 ? allRegrets : Array(allRegrets.shuffled().prefix(3))
-        viewModel.regretStore = regretStore
+        // Ensure we have a valid deck with cards
+        guard let deck = deckStore.selectedDeck else {
+            print("No deck selected")
+            return
+        }
+        
+        guard !deck.cards.isEmpty else {
+            print("Selected deck has no cards")
+            return
+        }
+        
+        selectedRegrets = deck.cards.count <= 3 ? deck.cards : Array(deck.cards.shuffled().prefix(3))
         resetView()
     }
     
     private func resetView() {
-        currentStep = 0
-        showFinalMessage = false
-        selectedAnswer = nil
-        hasIncorrectAnswers = false
-        questionResults = Array(repeating: nil, count: selectedRegrets.count)
-        regretStore.currentRegretIndex = 0
-    }
+            currentStep = 0
+            showFinalMessage = false
+            selectedAnswer = nil
+            hasIncorrectAnswers = false
+            questionResults = Array(repeating: nil, count: selectedRegrets.count)
+            viewModel.reset() // Use viewModel's reset instead
+        }
     
     private func retryQuestions() {
-        // Reshuffle questions on retry
-        let allRegrets = regretStore.regrets
-        selectedRegrets = allRegrets.count <= 3 ? allRegrets : Array(allRegrets.shuffled().prefix(3))
+        // Reshuffle questions on retry using selected deck
+        guard let deck = deckStore.selectedDeck else { return }
+        selectedRegrets = deck.cards.count <= 3 ? deck.cards : Array(deck.cards.shuffled().prefix(3))
         resetView()
     }
     
@@ -406,7 +411,23 @@ struct RegretView: View {
 }
 
 
+
 #Preview {
-    RegretView()
-        .environmentObject(RegretStore.shared)
+    let deckStore = DeckStore.shared
+    let sampleDeck = Deck(
+        name: "Sample Deck",
+        cards: [
+            Regret(
+                regretPrompt: "Sample Question",
+                regret: "Correct Answer",
+                choices: ["Correct Answer", "Wrong 1", "Wrong 2", "Wrong 3"],
+                correctAnswerIndex: 0,
+                backgroundExplanation: "Sample explanation"
+            )
+        ]
+    )
+    deckStore.selectedDeck = sampleDeck
+    
+    return RegretView()
+        .environmentObject(deckStore)
 }

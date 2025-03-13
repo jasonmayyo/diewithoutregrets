@@ -10,6 +10,7 @@ import SwiftUI
 struct RegretGuard: View {
     @EnvironmentObject var regretStore: RegretStore
     @StateObject private var viewModel = RegretGuardViewModel()
+    @EnvironmentObject var deckStore: DeckStore
     @State private var showNewFlashcardSheet = false
     
     var body: some View {
@@ -44,6 +45,60 @@ struct RegretGuard: View {
                     
                     ScrollView {
                         VStack(alignment: .leading) {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text("Selected Deck:")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                    
+                                    if let selectedDeck = deckStore.selectedDeck {
+                                        Text(selectedDeck.name)
+                                            .foregroundColor(.white)
+                                    } else {
+                                        Text("No deck selected")
+                                            .foregroundColor(.white.opacity(0.7))
+                                    }
+                                }
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack {
+                                        ForEach(deckStore.decks) { deck in
+                                            Button(action: {
+                                                deckStore.selectDeck(deck)
+                                            }) {
+                                                VStack {
+                                                    Text(deck.name)
+                                                        .foregroundColor(.black)
+                                                        .padding()
+                                                        .frame(width: 200, height: 80)
+                                                        .background(Color.white)
+                                                        .cornerRadius(12)
+                                                        .overlay(
+                                                            RoundedRectangle(cornerRadius: 12)
+                                                                .stroke(deckStore.selectedDeck?.id == deck.id ? Color.blue : Color.clear, lineWidth: 2)
+                                                        )
+                                                }
+                                            }
+                                        }
+                                        
+                                        Button(action: {
+                                            showNewFlashcardSheet = true
+                                        }) {
+                                            VStack {
+                                                Image(systemName: "plus")
+                                                    .foregroundColor(.white)
+                                                Text("New Deck")
+                                                    .foregroundColor(.white)
+                                            }
+                                            .frame(width: 200, height: 80)
+                                            .background(Color.white.opacity(0.2))
+                                            .cornerRadius(12)
+                                        }
+                                    }
+                                    .padding(.leading)
+                                }
+                            }
+                            .padding(.bottom)
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack {
                                     ForEach(regretStore.regrets) { regret in
@@ -77,22 +132,22 @@ struct RegretGuard: View {
                                     }
                                     
                                     Button(action: {
-                                                            showNewFlashcardSheet = true
-                                                        }) {
-                                                            VStack {
-                                                                Image(systemName: "plus.circle")
-                                                                    .font(.system(size: 24))
-                                                                    .padding(.bottom, 5)
-                                                                Text("Add Custom\nFlashcard")
-                                                                    .multilineTextAlignment(.center)
-                                                            }
-                                                            .frame(width: 300, height: 150)
-                                                            .background(Color.white)
-                                                            .cornerRadius(12)
-                                                            .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
-                                                            .padding(.bottom)
-                                                        }
-                                                        .foregroundColor(.black)
+                                        showNewFlashcardSheet = true
+                                    }) {
+                                        VStack {
+                                            Image(systemName: "plus.circle")
+                                                .font(.system(size: 24))
+                                                .padding(.bottom, 5)
+                                            Text("Add Custom\nFlashcard")
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(width: 300, height: 150)
+                                        .background(Color.white)
+                                        .cornerRadius(12)
+                                        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
+                                        .padding(.bottom)
+                                    }
+                                    .foregroundColor(.black)
                                     Spacer()
                                 }
                                 .frame(maxWidth: .infinity)
@@ -178,9 +233,10 @@ struct RegretGuard: View {
                 }
             }
             .sheet(isPresented: $showNewFlashcardSheet) {
-                        NewFlashcardSheet()
-                            .environmentObject(regretStore)
-                    }
+                /*NewFlashcardSheet($deck: deck)
+                 .environmentObject(regretStore)
+                 }*/
+            }
         }
         .preferredColorScheme(.light)
     }
@@ -188,4 +244,6 @@ struct RegretGuard: View {
 
 #Preview {
     RegretGuard()
+        .environmentObject(RegretStore.shared)
+        .environmentObject(DeckStore.shared)
 }

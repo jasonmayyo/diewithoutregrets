@@ -14,6 +14,20 @@ struct RegretApp: Identifiable {
     let shortcutLink: URL
 }
 
+struct Deck: Identifiable, Codable {
+    let id: UUID
+    var name: String
+    var cards: [Regret]
+    var createdAt: Date
+    
+    init(id: UUID = UUID(), name: String, cards: [Regret] = [], createdAt: Date = Date()) {
+        self.id = id
+        self.name = name
+        self.cards = cards
+        self.createdAt = createdAt
+    }
+}
+
 struct Regret: Identifiable, Codable {
     let id: UUID
     var regretPrompt: String

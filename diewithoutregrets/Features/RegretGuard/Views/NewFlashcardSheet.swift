@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct NewFlashcardSheet: View {
-    @EnvironmentObject var regretStore: RegretStore
     @Environment(\.dismiss) private var dismiss
+    @Binding var deck: Deck // Add this binding
     @State private var newQuestion = ""
     @State private var newAnswer = ""
     @State private var newExplanation = ""
@@ -65,11 +65,14 @@ struct NewFlashcardSheet: View {
             correctAnswerIndex: allChoices.firstIndex(of: newAnswer) ?? 0,
             backgroundExplanation: newExplanation
         )
-        regretStore.addRegrets([newRegret])
+        
+        // Add to the bound deck instead of the regretStore
+        deck.cards.append(newRegret)
         dismiss()
     }
 }
 
 #Preview {
-    NewFlashcardSheet()
+    // Update preview with sample deck
+    NewFlashcardSheet(deck: .constant(Deck(name: "Sample Deck", cards: [])))
 }

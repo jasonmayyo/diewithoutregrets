@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 //
 //  UnlockView.swift
 //  diewithoutregrets
@@ -6,17 +6,6 @@
 //  Created by Jason Mayo on 2025/03/12.
 //
 
-import SwiftUI
-
-struct UnlockView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
-
-#Preview {
-    UnlockView()
-=======
 import SwiftUI
 
 struct UnlockView: View {
@@ -69,5 +58,4 @@ struct UnlockView_Previews: PreviewProvider {
     static var previews: some View {
         UnlockView()
     }
->>>>>>> Stashed changes
 }
