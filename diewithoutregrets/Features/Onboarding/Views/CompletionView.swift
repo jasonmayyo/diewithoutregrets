@@ -120,16 +120,10 @@ struct CompletionView: View {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             // Add user's regrets to the store
-            for i in 0..<onboardingViewModel.regretAnswers.count {
-                let newRegret = Regret(
-                    regretPrompt: onboardingViewModel.regretPrompts[i],
-                    regret: onboardingViewModel.regretAnswers[i]
-                )
-                regretStore.regrets.append(newRegret)
-                print(regretStore.regrets)
-            }
-            
-            hasCompletedOnboarding = true
+            regretStore.regrets.append(contentsOf: onboardingViewModel.regretEntries)
+                    print(regretStore.regrets)
+                    
+                    hasCompletedOnboarding = true
         }
     }
     

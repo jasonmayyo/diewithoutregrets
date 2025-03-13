@@ -24,13 +24,28 @@ class NameViewModel: ObservableObject {
 }
 
 class RegretQuestionViewModel: ObservableObject {
-    @Published var answers: [String] = ["", ""]
+    @Published var regrets: [Regret] = [
+        Regret(
+            regretPrompt: "",
+            regret: "",
+            choices: [
+                "",
+                "",
+                "",
+                ""
+            ],
+            correctAnswerIndex: 0,
+            backgroundExplanation: ""
+            
+        ),
+    ]
     
     func canContinue(for index: Int) -> Bool {
-        let answer = answers[index]
-        return !answer.isEmpty && answer.count >= 20 && answer.count <= 200
+        !regrets[index].regretPrompt.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !regrets[index].regret.trimmingCharacters(in: .whitespaces).isEmpty
     }
 }
+
 
 struct Question: Identifiable {
     let id = UUID()

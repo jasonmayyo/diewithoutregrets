@@ -10,82 +10,128 @@ import SwiftUI
 struct RegretEditorSheet: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var regretStore: RegretStore
+    @State private var editedPrompt: String
     @State private var editedRegret: String
+    @State private var editedExplanation: String
     let regret: Regret
+    @State private var editedChoices: [String]
+    @State private var editedCorrectIndex: Int
     
     init(regret: Regret) {
         self.regret = regret
+        _editedPrompt = State(initialValue: regret.regretPrompt)
         _editedRegret = State(initialValue: regret.regret)
+        _editedExplanation = State(initialValue: regret.backgroundExplanation)
+        _editedChoices = State(initialValue: regret.choices)
+        _editedCorrectIndex = State(initialValue: regret.correctAnswerIndex)
     }
     
     var body: some View {
         VStack {
             // Top Bar with Cancel and Save Buttons
             HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Text("Cancel")
-                        .foregroundColor(.black)
-                }
-                .accessibilityLabel("Cancel")
-                .accessibilityHint("Tap to close the editor without saving")
-                .accessibilityAddTraits(.isButton)
+                Button("Cancel") { dismiss() }
+                    .foregroundColor(.black)
                 
                 Spacer()
                 
-                Button(action: {
-                    let updatedRegret = Regret(id: regret.id, regretPrompt: regret.regretPrompt, regret: editedRegret)
-                    regretStore.updateRegret(updatedRegret)
-                    dismiss()
-                }) {
-                    Text("Save")
-                        .foregroundColor(Color(hex: 0x184449))
-                        .bold()
-                }
-                .accessibilityLabel("Save")
-                .accessibilityHint("Tap to save your changes")
-                .accessibilityAddTraits(.isButton)
+                Button("Save") { saveChanges() }
+                    .foregroundColor(Color(hex: 0x184449))
+                    .bold()
             }
             .padding()
             
-            // Title
-            Text("Edit Your Regrets")
+            Text("Edit Flashcard")
                 .font(.title2)
                 .bold()
                 .padding(.bottom, 5)
-                .accessibilityLabel("Edit Your Regrets")
             
-            // Regret Prompt
-            Text(regret.regretPrompt)
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .padding(.horizontal)
-                .accessibilityLabel("Prompt: \(regret.regretPrompt)")
-            
-            // Regret Editor
-            VStack(alignment: .leading) {
-                Text("You Said...")
-                    .accessibilityLabel("You Said")
-                
-                TextEditor(text: $editedRegret)
-                    .frame(height: 150)
-                    .padding(8)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(hex: 0x184449), lineWidth: 1)
-                    )
-                    .accessibilityLabel("Edit your regret")
-                    .accessibilityValue(editedRegret)
-                    .accessibilityHint("Tap to edit your regret")
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Prompt Editor
+                    VStack(alignment: .leading) {
+                        Text("Question")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                        
+                        TextEditor(text: $editedPrompt)
+                            .frame(height: 100)
+                            .padding(8)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(hex: 0x184449), lineWidth: 1)
+                            )
+                    }
+                    
+                    // Explanation Editor
+                    VStack(alignment: .leading) {
+                        Text("Explanation")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                        
+                        TextEditor(text: $editedExplanation)
+                            .frame(height: 120)
+                            .padding(8)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(hex: 0x184449), lineWidth: 1)
+                            )
+                    }
+                    
+                    // Answer Options
+                    VStack(alignment: .leading) {
+                        Text("Answer Options")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                        
+                        ForEach(0..<4, id: \.self) { index in
+                            HStack {
+                                TextField("Option \(index + 1)", text: $editedChoices[index])
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                
+                                Button(action: {
+                                    editedCorrectIndex = index
+                                }) {
+                                    Image(systemName: editedCorrectIndex == index ?
+                                        "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(editedCorrectIndex == index ? .green : .gray)
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                .padding()
             }
-            .padding()
-            
-            Spacer()
         }
-        .padding(.top)
         .preferredColorScheme(.light)
     }
+    
+    private func saveChanges() {
+        let updatedRegret = Regret(
+            id: regret.id,
+            regretPrompt: editedPrompt,
+            regret: editedRegret,
+            choices: editedChoices,
+            correctAnswerIndex: editedCorrectIndex,
+            backgroundExplanation: editedExplanation
+        )
+        regretStore.updateRegret(updatedRegret)
+        dismiss()
+    }
+}
+
+#Preview {
+    RegretEditorSheet(regret: Regret(
+        regretPrompt: "Sample Prompt",
+        regret: "Sample Response",
+        choices: ["Option 1", "Option 2", "Option 3", "Option 4"],
+        correctAnswerIndex: 0,
+        backgroundExplanation: "Sample explanation"
+    ))
+    .environmentObject(RegretStore())
 }

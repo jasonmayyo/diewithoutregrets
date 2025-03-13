@@ -23,7 +23,15 @@ class OnboardingViewModel: ObservableObject {
     @Published var userName: String = ""
     @Published var selectedAge: String = ""
     @Published var screenTime: String = ""
-    @Published var regretAnswers: [String] = ["", ""]
+    @Published var regretEntries: [Regret] = [
+        Regret(
+        regretPrompt: "Not spending enough time with family",
+        regret: "Not spending enough time with the people I love",
+        choices: ["Option 1", "Option 2", "Option 3", "Option 4"],
+        correctAnswerIndex: 0,
+        backgroundExplanation: "Studies show people who prioritize family time report higher life satisfaction and lower end-of-life regrets."
+        ),
+        ]
     
     let regretPrompts = [
             "Imagine you’re 80, looking back on your life. What are the things you’d most regret not doing? What dreams did you leave behind? What opportunities did you waste?",
@@ -55,12 +63,6 @@ class OnboardingViewModel: ObservableObject {
     
     
     private func saveRegretAnswers() {
-            let newRegrets = regretAnswers.enumerated().map { index, answer in
-                Regret(
-                    regretPrompt: regretPrompts[index],
-                    regret: answer
-                )
-            }
-            RegretStore.shared.addRegrets(newRegrets)
+            RegretStore.shared.addRegrets(regretEntries)
         }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct RegretGuard: View {
     @EnvironmentObject var regretStore: RegretStore
     @StateObject private var viewModel = RegretGuardViewModel()
+    @State private var showNewFlashcardSheet = false
     
     var body: some View {
         VStack {
@@ -26,7 +27,7 @@ struct RegretGuard: View {
                         // Page Title - Limits
                         HStack {
                             VStack(alignment: .leading) {
-                                Text("Regret Guard")
+                                Text("Study Guard")
                                     .font(.title)
                                     .bold()
                                     .foregroundColor(.white)
@@ -74,6 +75,24 @@ struct RegretGuard: View {
                                         .foregroundColor(.black)
                                         .accessibilityAddTraits(.isButton)
                                     }
+                                    
+                                    Button(action: {
+                                                            showNewFlashcardSheet = true
+                                                        }) {
+                                                            VStack {
+                                                                Image(systemName: "plus.circle")
+                                                                    .font(.system(size: 24))
+                                                                    .padding(.bottom, 5)
+                                                                Text("Add Custom\nFlashcard")
+                                                                    .multilineTextAlignment(.center)
+                                                            }
+                                                            .frame(width: 300, height: 150)
+                                                            .background(Color.white)
+                                                            .cornerRadius(12)
+                                                            .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
+                                                            .padding(.bottom)
+                                                        }
+                                                        .foregroundColor(.black)
                                     Spacer()
                                 }
                                 .frame(maxWidth: .infinity)
@@ -83,7 +102,7 @@ struct RegretGuard: View {
                             VStack(alignment: .leading) {
                                 HStack {
                                     VStack(alignment: .leading) {
-                                        Text("Regret-Proof Your Phone")
+                                        Text("Study-Proof Your Phone")
                                             .font(.title3)
                                             .bold()
                                             .accessibilityLabel("Regret-Proof Your Phone")
@@ -158,6 +177,10 @@ struct RegretGuard: View {
                         .environmentObject(regretStore)
                 }
             }
+            .sheet(isPresented: $showNewFlashcardSheet) {
+                        NewFlashcardSheet()
+                            .environmentObject(regretStore)
+                    }
         }
         .preferredColorScheme(.light)
     }

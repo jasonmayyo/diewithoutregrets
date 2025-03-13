@@ -10,151 +10,381 @@ import SwiftUI
 struct RegretView: View {
     @EnvironmentObject var regretStore: RegretStore
     @StateObject private var viewModel: RegretViewModel
+    @State private var currentStep: Int = 0
+    @State private var showFinalMessage = false
+    @State private var selectedAnswer: Int?
+    @State private var showLockAnimation = true
+    @State private var showUnlockAnimation = false
+    @State private var hasIncorrectAnswers = false
+    @State private var questionResults: [Bool?] = []
+    @State private var selectedRegrets: [Regret] = []
+    
+    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
     init() {
-        // Use temporary store for preview
-        let previewStore = RegretStore()
-        previewStore.regrets = Regret.regrets
-        _viewModel = StateObject(wrappedValue: RegretViewModel(regretStore: previewStore))
+        let store = RegretStore.shared
+        _viewModel = StateObject(wrappedValue: RegretViewModel(regretStore: store))
     }
     
     var body: some View {
         ZStack {
-            Color(hex: 0x184449)
-                .ignoresSafeArea()
-            
-            VStack(alignment: .center) {
-                Text("Regret Guard")
-                    .font(.title2)
-                    .bold()
-                    .foregroundColor(.white)
-                    .accessibilityHidden(true) // Hide decorative title
-                
-                Spacer()
-                
-                if !viewModel.showRegret && !viewModel.showFinalMessage {
-                    Text("You told us your biggest regret would be...")
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                        .font(.title2)
-                        .padding(.horizontal, 30)
-                        .phaseAnimator([0.7, 1, 4]) { content, phase in
-                            content
-                                .scaleEffect(phase)
-                                .opacity(phase == 1 ? 1 : 0)
-                        } animation: { phase in
-                                .easeIn(duration: 4)
-                        }
-                        .accessibilityLabel("Prompt message")
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                                withAnimation {
-                                    viewModel.showRegret = true
-                                    viewModel.updateRegretMessage()
-                                }
-                            }
-                        }
-                } else if viewModel.showRegret && !viewModel.showFinalMessage {
-                    Text(viewModel.regretMessage)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                        .font(.title2)
-                        .padding(.horizontal, 30)
+            VStack {
+                // Lock Icon and Progress Bar
+                VStack {
+                    Image(systemName: "lock.fill")
+                        .font(.title)
                         .bold()
-                        .phaseAnimator([0.7, 1, 4]) { content, phase in
-                            content
-                                .scaleEffect(phase)
-                                .opacity(phase == 1 ? 1 : 0)
-                        } animation: { phase in
-                                .easeIn(duration: 4)
-                        }
-                        .accessibilityLabel("Your stated regret")
-                        .accessibilityIdentifier("regretMessage")
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
-                                withAnimation {
-                                    viewModel.showFinalMessage = true
-                                    viewModel.cycleRegret()
-                                }
+                        .foregroundColor(.black)
+                        .padding(5)
+                    
+                    GeometryReader { geometry in
+                        HStack(spacing: 3) {
+                            ForEach(0..<selectedRegrets.count, id: \.self) { index in
+                                let segmentWidth = geometry.size.width / CGFloat(selectedRegrets.count)
+                                
+                                Rectangle()
+                                    .frame(width: segmentWidth, height: 5)
+                                    .foregroundColor(colorForQuestion(at: index))
+                                    .cornerRadius(10)
+                                    .animation(.easeInOut(duration: 0.3), value: questionResults)
                             }
                         }
-                } else {
-                    VStack {
-                        Spacer()
-                        Text("Are you sure this is how you want to spend your time?")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
-                            .font(.title2)
-                            .padding(.horizontal, 30)
-                            .transition(.opacity.animation(.easeIn(duration: 4.0)))
-                            .accessibilityLabel("Final reflection question")
-                        
-                        Spacer()
-                        
-                        VStack {
-                            Button(action: {
-                                let currentTime = Date().timeIntervalSince1970
-                                let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
-                                sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
-                                sharedDefaults?.set(true, forKey: "UserAllowedBreak")
-                                sharedDefaults?.synchronize()
+                    }
+                    .frame(height: 4)
+                    .padding(.horizontal, 20)
+                }
+                
+                // Main Content
+                Group {
+                    if !showFinalMessage {
+                        VStack(spacing: 0) {
+                            // Guard against index out of range
+                            if !selectedRegrets.isEmpty && currentStep/2 < selectedRegrets.count {
+                                let currentRegret = selectedRegrets[currentStep/2]
                                 
-                                if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
-                                    let urlScheme = getUrlScheme(for: appName)
-                                    if let url = URL(string: urlScheme) {
-                                        UIApplication.shared.open(url, options: [:]) { _ in }
+                                // Question
+                                Text(currentRegret.regretPrompt)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                    .font(currentStep % 2 == 1 ? .headline : .title3)
+                                    .padding(.horizontal, 30)
+                                    .padding(.top, currentStep % 2 == 1 ? 20 : 70)
+                                    .padding(.bottom, currentStep % 2 == 1 ? 5 : 15)
+                                    .scaleEffect(currentStep % 2 == 1 ? 0.95 : 1.0)
+                                    .animation(.easeInOut(duration: 0.2), value: currentStep)
+                                
+                                // Explanation View
+                                if currentStep % 2 == 1 {
+                                    ScrollView {
+                                        Text(currentRegret.backgroundExplanation)
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                            .padding(.horizontal, 30)
+                                            .padding(.top, 5)
+                                            .transition(.move(edge: .top).combined(with: .opacity))
+                                    }
+                                    .frame(maxHeight: 150)
+                                    .padding(.bottom, 10)
+                                }
+                                Spacer()
+                                
+                                // Answer Options
+                                if currentStep % 2 == 0 {
+                                    VStack(spacing: 12) {
+                                        ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
+                                            Button(action: {
+                                                selectedAnswer = index
+                                            }) {
+                                                HStack {
+                                                    Text(choice)
+                                                        .foregroundColor(.black)
+                                                        .padding()
+                                                        .frame(maxWidth: .infinity)
+                                                        .background(
+                                                            selectedAnswer == index ?
+                                                            Color.blue.opacity(0.2) : Color.clear
+                                                        )
+                                                        .cornerRadius(8)
+                                                        .overlay(
+                                                            RoundedRectangle(cornerRadius: 8)
+                                                                .stroke(
+                                                                    selectedAnswer == index ?
+                                                                    Color.blue : Color.gray.opacity(0.3),
+                                                                    lineWidth: 2
+                                                                )
+                                                        )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom)
+                                } else {
+                                    // Answer Reveal
+                                    VStack(spacing: 12) {
+                                        ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
+                                            HStack {
+                                                Text(choice)
+                                                    .foregroundColor(
+                                                        index == currentRegret.correctAnswerIndex ?
+                                                            .white : .black
+                                                    )
+                                                    .padding()
+                                                    .frame(maxWidth: .infinity)
+                                                    .background(
+                                                        index == currentRegret.correctAnswerIndex ?
+                                                        Color.green :
+                                                            (index == selectedAnswer ? Color.red.opacity(0.2) : Color.clear)
+                                                    )
+                                                    .cornerRadius(8)
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 8)
+                                                            .stroke(
+                                                                index == currentRegret.correctAnswerIndex ?
+                                                                Color.green : Color.clear,
+                                                                lineWidth: 2
+                                                            )
+                                                    )
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom)
+                                }
+                            } else {
+                                // Fallback if no regrets or index out of range
+                                Text("No questions available")
+                                    .foregroundColor(.black)
+                                    .padding()
+                            }
+                        }
+                        .frame(maxHeight: .infinity)
+                    } else {
+                        // Final Screen
+                        VStack {
+                            Spacer()
+                            
+                            let appName = sharedDefaults?.string(forKey: "LastGuardedApp") ?? ""
+                            
+                            if hasIncorrectAnswers {
+                                Text("Looks like you don't know what you're doing, no \(appName) for you")
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                    .font(.title2)
+                                    .padding(.horizontal, 30)
+                            } else {
+                                Text("Well done! You've earned temporary access to \(appName)")
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                    .font(.title2)
+                                    .padding(.horizontal, 30)
+                            }
+                            
+                            Spacer()
+                            
+                            // Action Buttons
+                            VStack(spacing: 15) {
+                                if hasIncorrectAnswers {
+                                    Button(action: retryQuestions) {
+                                        Text("Retry Questions")
+                                            .foregroundColor(.black)
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(Color.red.opacity(0.2))
+                                            .cornerRadius(10)
+                                    }
+                                } else {
+                                    Button(action: handleUnlock) {
+                                        Text("Unlock \(appName) for 5 Min")
+                                            .foregroundColor(.black)
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(Color.green.opacity(0.3))
+                                            .cornerRadius(10)
                                     }
                                 }
-                                NavigationModel.shared.navigate(to: .regretReport)
-                            }) {
-                                Text("Unlock for 5 Min")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.gray.opacity(0.3))
-                                    .cornerRadius(10)
+                                
+                                Button(action: navigateToReport) {
+                                    Text(hasIncorrectAnswers ? "Close \(appName)" : "Close Anyway")
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.red.opacity(0.7))
+                                        .cornerRadius(10)
+                                }
                             }
-                            .accessibilityLabel("Unlock for 5 minutes")
-                            .accessibilityHint("Temporarily access the restricted app")
-                            .accessibilityAddTraits(.isButton)
-                            
-                            Button(action: {
-                                NavigationModel.shared.navigate(to: .regretReport)
-                            }) {
-                                let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
-                                let appName = sharedDefaults?.string(forKey: "LastGuardedApp")
-                                let buttonText = "Close \(appName ?? "")"
-                                Text(buttonText)
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.red.opacity(0.7))
-                                    .cornerRadius(10)
-                            }
-                            .accessibilityLabel("Close app")
-                            .accessibilityHint("Exit and view your usage report")
-                            .accessibilityAddTraits(.isButton)
+                            .padding(.horizontal, 30)
                         }
-                        .padding(.horizontal, 30)
-                        .transition(.move(edge: .bottom).combined(with: .opacity).animation(.easeOut(duration: 5.0)))
                     }
                 }
                 
-                Spacer()
+                // Bottom Control
+                if !showFinalMessage {
+                    VStack {
+                        Divider()
+                            .background(Color.white.opacity(0.2))
+                        
+                        Text(controlButtonText)
+                            .font(.subheadline)
+                            .foregroundColor(.black.opacity(0.7))
+                            .padding(.vertical, 15)
+                            .contentShape(Rectangle())
+                            .onTapGesture(perform: handleTap)
+                    }
+                    .background(Color.gray.opacity(0.2))
+                    .transition(.move(edge: .bottom))
+                }
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 0)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [
+                                Color(hex: 0x36B8C4).opacity(0.3),
+                                Color(hex: 0x238A94).opacity(0.3),
+                                Color(hex: 0x197C6F).opacity(0.3)
+                            ]),
+                            center: .center,
+                            angle: .degrees(Double(currentStep * 10))
+                        ),
+                        lineWidth: 4
+                    )
+                    .blur(radius: 20)
+                    .compositingGroup()
+                    .ignoresSafeArea()
+            )
+            
+            if showLockAnimation {
+                LockView()
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+            
+            if showUnlockAnimation {
+                UnlockView()
+                    .transition(.opacity)
+                    .zIndex(1)
             }
         }
         .preferredColorScheme(.light)
         .onAppear {
-            // Update with actual environment store
-            viewModel.regretStore = regretStore
-            viewModel.resetView()
-            
-            // Start with next regret when view appears
-            if !regretStore.regrets.isEmpty {
-                regretStore.cycleRegret()
-                viewModel.updateRegretMessage()
+            setupView()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showLockAnimation = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showLockAnimation = false
+                }
             }
         }
+    }
+    
+    private func colorForQuestion(at index: Int) -> Color {
+        guard index < questionResults.count else { return .gray.opacity(0.2) }
+        
+        if let isCorrect = questionResults[index] {
+            return isCorrect ? .green : .red
+        }
+        return .gray.opacity(0.2)
+    }
+    
+    private var controlButtonText: String {
+        if currentStep % 2 == 0 {
+            return selectedAnswer == nil ? "Select an answer" : "Reveal Answer"
+        }
+        return "Next Question"
+    }
+    
+    private func handleTap() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            // Guard against index out of range
+            guard !selectedRegrets.isEmpty && currentStep < selectedRegrets.count * 2 else {
+                showFinalMessage = true
+                return
+            }
+            
+            if currentStep % 2 == 0 {
+                guard selectedAnswer != nil else { return }
+            }
+            
+            let previousStep = currentStep
+            currentStep += 1
+            
+            // Update progress bar when answering
+            if currentStep % 2 == 1 {
+                let questionIndex = (currentStep - 1) / 2
+                guard questionIndex < selectedRegrets.count else { return }
+                
+                let currentRegret = selectedRegrets[questionIndex]
+                let isCorrect = selectedAnswer == currentRegret.correctAnswerIndex
+                
+                // Ensure questionResults has enough elements
+                while questionResults.count <= questionIndex {
+                    questionResults.append(nil)
+                }
+                
+                questionResults[questionIndex] = isCorrect
+                
+                if !isCorrect {
+                    hasIncorrectAnswers = true
+                }
+            }
+            
+            if currentStep % 2 == 0 {
+                selectedAnswer = nil
+            }
+            
+            if currentStep >= selectedRegrets.count * 2 {
+                showFinalMessage = true
+            }
+        }
+    }
+    
+    private func setupView() {
+        // Select 3 random regrets or all if less than 3
+        let allRegrets = regretStore.regrets
+        selectedRegrets = allRegrets.count <= 3 ? allRegrets : Array(allRegrets.shuffled().prefix(3))
+        viewModel.regretStore = regretStore
+        resetView()
+    }
+    
+    private func resetView() {
+        currentStep = 0
+        showFinalMessage = false
+        selectedAnswer = nil
+        hasIncorrectAnswers = false
+        questionResults = Array(repeating: nil, count: selectedRegrets.count)
+        regretStore.currentRegretIndex = 0
+    }
+    
+    private func retryQuestions() {
+        // Reshuffle questions on retry
+        let allRegrets = regretStore.regrets
+        selectedRegrets = allRegrets.count <= 3 ? allRegrets : Array(allRegrets.shuffled().prefix(3))
+        resetView()
+    }
+    
+    private func handleUnlock() {
+        showUnlockAnimation = true
+        let currentTime = Date().timeIntervalSince1970
+        sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
+        sharedDefaults?.set(true, forKey: "UserAllowedBreak")
+        sharedDefaults?.synchronize()
+        
+        if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
+            UIApplication.shared.open(getAppURL(for: appName), options: [:])
+        }
+        NavigationModel.shared.navigate(to: .regretReport)
+    }
+    
+    private func navigateToReport() {
+        NavigationModel.shared.navigate(to: .regretReport)
+    }
+    
+    private func getAppURL(for appName: String) -> URL {
+        let scheme = getUrlScheme(for: appName)
+        return URL(string: scheme) ?? URL(string: "instagram://")!
     }
     
     private func getUrlScheme(for appName: String) -> String {
@@ -175,6 +405,8 @@ struct RegretView: View {
     }
 }
 
+
 #Preview {
     RegretView()
+        .environmentObject(RegretStore.shared)
 }

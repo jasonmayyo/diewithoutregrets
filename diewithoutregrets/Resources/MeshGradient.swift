@@ -8,41 +8,35 @@
 import SwiftUI
 
 struct MeshGradient: View {
-    @State private var animateGradient = false
+    @State private var pulseWidth: CGFloat = 10
     
     var body: some View {
         ZStack {
-            AngularGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: 0x36B8C4),  // Dark teal
-                    Color(hex: 0x238A94),  // Deep forest green
-                    Color(hex: 0x197C6F),  // Bright teal
-                    Color(hex: 0x26B37D),  // Light green
-                    Color(hex: 0x34CC92)   // Neon green
-                ]),
-                center: .center,
-                angle: .degrees(animateGradient ? 360 : 0)
-            )
-            .blur(radius: 40)
-            .overlay(
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(hex: 0x197C6F).opacity(0.7),  // Bright teal
-                        Color(hex: 0x26B37D).opacity(0.4)   // Green-yellow
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+            // Full-screen edge effect
+            Rectangle()
+                .strokeBorder(
+                    AngularGradient(
+                        gradient: Gradient(colors: [
+                            Color(hex: 0x8B0000), // Dark Red
+                            Color(hex: 0xB22222), //
+                            Color(hex: 0x8B0000)  // Dark Red for smooth transition
+                        ]),
+                        center: .center
+                    ),
+                    lineWidth: pulseWidth
                 )
-                .blendMode(.softLight)
-            )
-            .animation(
-                Animation.easeInOut(duration: 6)  // Faster animation
-                    .repeatForever(autoreverses: false),
-                value: animateGradient
-            )
-            .onAppear {
-                animateGradient = true
-            }
+                .cornerRadius(50)
+                .blur(radius: 10)
+                .animation(
+                    Animation.easeInOut(duration: 3)
+                        .repeatForever(autoreverses: true),
+                    value: pulseWidth
+                )
+                .ignoresSafeArea()
+        }
+        .compositingGroup()
+        .onAppear {
+            pulseWidth = 20 // Expands and contracts
         }
     }
 }

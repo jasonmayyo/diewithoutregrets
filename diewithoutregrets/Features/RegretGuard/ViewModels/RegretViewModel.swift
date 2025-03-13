@@ -8,29 +8,17 @@
 import SwiftUI
 
 class RegretViewModel: ObservableObject {
-    @Published var showRegret = false
-    @Published var showFinalMessage = false
-    @Published var regretMessage = ""
-    
-    @ObservedObject var regretStore: RegretStore
+    @Published var regretStore: RegretStore
     
     init(regretStore: RegretStore) {
         self.regretStore = regretStore
     }
     
-    func resetView() {
-        showRegret = false
-        showFinalMessage = false
-        updateRegretMessage()
-    }
-    
-    func updateRegretMessage() {
-        guard !regretStore.regrets.isEmpty else { return }
-        regretMessage = regretStore.regrets[regretStore.currentRegretIndex].regret
-    }
-    
     func cycleRegret() {
         regretStore.cycleRegret()
-        updateRegretMessage()
+    }
+    
+    func reset() {
+        regretStore.currentRegretIndex = 0
     }
 }
