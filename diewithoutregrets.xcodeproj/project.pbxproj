@@ -42,6 +42,7 @@
 		6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */; };
 		6B7CD4F42D50DAE20065A0F7 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */; };
 		6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */; };
+		6B811F562D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */; };
 		6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */; };
 		6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
@@ -123,6 +124,7 @@
 		6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionView.swift; sourceTree = "<group>"; };
 		6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoGenerateFlashcardSheet.swift; sourceTree = "<group>"; };
 		6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = dwrLockView.swift; path = ../../../../../../Documents/dwrLockView.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				6B22E8662D4910B3003A5685 /* RegretEditorSheet.swift */,
 				6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */,
 				6BFA08392D82DA71007C1898 /* DeckListView.swift */,
+				6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -549,6 +552,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B811F562D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift in Sources */,
 				6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */,
 				6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */,
 				6B7CD4EA2D50C00F0065A0F7 /* BreakdownView.swift in Sources */,

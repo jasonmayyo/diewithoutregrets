@@ -13,89 +13,92 @@ struct DeckListView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .top) {
-                // Background image
-                Image("dwr-background")
-                    .resizable()
-                    .frame(height: 140)
-                    .edgesIgnoringSafeArea(.all)
-                    .accessibilityHidden(true)
-                
-                // Content
-                VStack(spacing: 0) {
-                    // Header
-                    VStack {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Decks")
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(.white)
-                                Text("Feed Your Brain Before Your Feed.")
-                                    .foregroundColor(.white)
-                            }
-                            Spacer()
-                            VStack {
-                                HStack {
-                                    Button(action: { showingNewDeckSheet = true }) {
-                                        Image(systemName: "plus")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .background(Color(hex: 0x184449).opacity(0.7))
-                                            .clipShape(Circle())
-                                            .shadow(radius: 5)
+            VStack {
+                ZStack(alignment: .top) {
+                    // Background image
+                    Image("dwr-background2")
+                        .resizable()
+                        .frame(height: 160)
+                        .edgesIgnoringSafeArea(.all)
+                        .accessibilityHidden(true)
+                    
+                    // Content
+                    VStack(spacing: 0) {
+                        // Header
+                        VStack {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("Decks")
+                                        .font(.title)
+                                        .bold()
+                                        .foregroundColor(.white)
+                                    Text("Feed Your Brain Before Your Feed.")
+                                        .foregroundColor(.white)
+                                }
+                                Spacer()
+                                VStack {
+                                    HStack {
+                                        Button(action: { showingNewDeckSheet = true }) {
+                                            Image(systemName: "plus")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .padding()
+                                                .background(Color(hex: 0x184449).opacity(0.7))
+                                                .clipShape(Circle())
+                                                .shadow(radius: 5)
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal)
+                            .padding(.bottom, 15)
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 15)
+                        
+                        // List of decks
+                        ScrollView {
+                            VStack(spacing: 10) {
+                                ForEach($deckStore.decks) { $deck in
+                                    NavigationLink(destination: DeckView(deck: $deck)) {
+                                        HStack () {
+                                            VStack(alignment: .leading, spacing: 7) {
+                                                Text(deck.name)
+                                                    .font(.headline)
+                                                    .foregroundColor(.black)
+                                                
+                                                HStack (spacing: 3) {
+                                                    Image(systemName: "rectangle.on.rectangle")
+                                                        .foregroundColor(.black)
+                                                        .font(.caption)
+                                                    Text("\(deck.cards.count)")
+                                                        .foregroundColor(Color(hex: 0x184449))
+                                                        .font(.caption)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(12)
+                                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                                    }
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.top)
+                        }
+                        .background(Color(.systemGroupedBackground))
                     }
                     
-                    // List of decks
-                    ScrollView {
-                        VStack(spacing: 10) {
-                            ForEach($deckStore.decks) { $deck in
-                                NavigationLink(destination: DeckView(deck: $deck)) {
-                                    HStack () {
-                                        VStack(alignment: .leading, spacing: 7) {
-                                            Text(deck.name)
-                                                .font(.headline)
-                                                .foregroundColor(.black)
-                                            
-                                            HStack (spacing: 3) {
-                                                Image(systemName: "rectangle.on.rectangle")
-                                                    .foregroundColor(.black)
-                                                    .font(.caption)
-                                                Text("\(deck.cards.count)")
-                                                    .foregroundColor(Color(hex: 0x184449))
-                                                    .font(.caption)
-                                            }
-                                        }
-                                        
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .foregroundColor(.gray)
-                                    }
-                                    .padding()
-                                    .background(Color.white)
-                                    .cornerRadius(12)
-                                    .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-                        .padding(.top)
-                    }
-                    .background(Color(.systemGroupedBackground))
                 }
-                
+                .navigationBarHidden(true)
+                .sheet(isPresented: $showingNewDeckSheet) {
+                    NewDeckView()
+                }
             }
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingNewDeckSheet) {
-                NewDeckView()
-            }
+            
         }
         .tint(Color(hex: 0x184449))
         .navigationBarHidden(true)
@@ -110,34 +113,56 @@ struct DeckListView: View {
 struct DeckView: View {
     @Binding var deck: Deck
     @State private var showingNewCardSheet = false
-    
+    @State private var showAutoGenerateSheet = false
+    @State private var selectedCard: Binding<Regret>? = nil
+    @State private var showEditSheet = false
+
     var body: some View {
-        List {
-            ForEach(deck.cards) { card in
-                NavigationLink(destination: CardDetailView(card: card)) {
-                    VStack(alignment: .leading) {
-                        Text(card.regretPrompt)
-                            .font(.headline)
-                        Text(card.regret)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+        VStack {
+            List {
+                ForEach($deck.cards) { $card in
+                    Button {
+                        selectedCard = $card
+                        showEditSheet = true
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(card.regretPrompt)
+                                .font(.headline)
+                            Text(card.regret)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+                .onDelete(perform: deleteCards)
+            }
+            .listStyle(PlainListStyle())
+            .tint(.black)
+            .navigationTitle(deck.name)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingNewCardSheet = true }) {
+                        Image(systemName: "plus")
+                            .foregroundColor(Color(hex: 0x184449))
+                    }
+                }
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Auto Generate Flashcards") {
+                        showAutoGenerateSheet = true
                     }
                 }
             }
-            .onDelete(perform: deleteCards)
-        }
-        .tint(.black)
-        .navigationTitle(deck.name)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showingNewCardSheet = true }) {
-                    Image(systemName: "plus")
-                        .foregroundColor(Color(hex: 0x184449))
+            .sheet(isPresented: $showAutoGenerateSheet) {
+                AutoGenerateFlashcardsSheet(deck: $deck)
+            }
+            .sheet(isPresented: $showingNewCardSheet) {
+                NewFlashcardSheet(deck: $deck)
+            }
+            .sheet(isPresented: $showEditSheet, onDismiss: { selectedCard = nil }) {
+                if let selectedCard = selectedCard {
+                    RegretEditorSheet(regret: selectedCard)
                 }
             }
-        }
-        .sheet(isPresented: $showingNewCardSheet) {
-            NewFlashcardSheet(deck: $deck)
         }
     }
     
@@ -145,6 +170,7 @@ struct DeckView: View {
         deck.cards.remove(atOffsets: offsets)
     }
 }
+
 
 struct CardDetailView: View {
     let card: Regret

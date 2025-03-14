@@ -38,7 +38,13 @@ struct ContentView: View {
                         Label("Decks", systemImage: "square.stack.3d.up")
                     }
                     .tag(1)
-                }
+                }.tint(Color(hex: 0x184449))
+                    .onChange(of: selectedTab) { newValue in
+                                        // Haptic feedback when tab changes
+                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        generator.prepare()
+                                        generator.impactOccurred()
+                                    }
             }
             
         }

@@ -19,228 +19,223 @@ struct RegretGuard: View {
                 // Background image
                 Image("dwr-background")
                     .resizable()
-                    .frame(height: 130)
+                    .frame(height: 160)
                     .edgesIgnoringSafeArea(.all)
                     .accessibilityHidden(true) // Hide decorative background image
                 
                 VStack {
-                    VStack {
-                        // Page Title - Limits
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Study Guard")
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(.white)
-                                    .accessibilityLabel("Regret Guard")
-                                Text("Protect Your Time, Protect Your Goals.")
-                                    .foregroundColor(.white)
-                                    .accessibilityLabel("Protect your time, protect your goals")
-                            }
-                            Spacer()
-                        }
-                        .accessibilityElement(children: .combine) // Combine title and subtitle for VoiceOver
-                    }
-                    .padding(.horizontal)
-                    
+                    headerSection
                     ScrollView {
                         VStack(alignment: .leading) {
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text("Selected Deck:")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                    
-                                    if let selectedDeck = deckStore.selectedDeck {
-                                        Text(selectedDeck.name)
-                                            .foregroundColor(.white)
-                                    } else {
-                                        Text("No deck selected")
-                                            .foregroundColor(.white.opacity(0.7))
-                                    }
-                                }
-                                
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack {
-                                        ForEach(deckStore.decks) { deck in
-                                            Button(action: {
-                                                deckStore.selectDeck(deck)
-                                            }) {
-                                                VStack {
-                                                    Text(deck.name)
-                                                        .foregroundColor(.black)
-                                                        .padding()
-                                                        .frame(width: 200, height: 80)
-                                                        .background(Color.white)
-                                                        .cornerRadius(12)
-                                                        .overlay(
-                                                            RoundedRectangle(cornerRadius: 12)
-                                                                .stroke(deckStore.selectedDeck?.id == deck.id ? Color.blue : Color.clear, lineWidth: 2)
-                                                        )
-                                                }
-                                            }
-                                        }
-                                        
-                                        Button(action: {
-                                            showNewFlashcardSheet = true
-                                        }) {
-                                            VStack {
-                                                Image(systemName: "plus")
-                                                    .foregroundColor(.white)
-                                                Text("New Deck")
-                                                    .foregroundColor(.white)
-                                            }
-                                            .frame(width: 200, height: 80)
-                                            .background(Color.white.opacity(0.2))
-                                            .cornerRadius(12)
-                                        }
-                                    }
-                                    .padding(.leading)
-                                }
-                            }
-                            .padding(.bottom)
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack {
-                                    ForEach(regretStore.regrets) { regret in
-                                        Button(action: {
-                                            regretStore.selectRegret(regret)
-                                            viewModel.showEditRegret = true
-                                        }, label: {
-                                            VStack {
-                                                VStack {
-                                                    Spacer()
-                                                    Text(regret.regret)
-                                                        .bold()
-                                                        .accessibilityLabel("Regret: \(regret.regret)")
-                                                    Spacer()
-                                                    Text("Tap to edit")
-                                                        .foregroundColor(.gray)
-                                                        .font(.caption)
-                                                        .accessibilityLabel("Tap to edit this regret")
-                                                }
-                                                .padding()
-                                            }
-                                            .frame(width: 300, height: 150)
-                                            .background(Color.white)
-                                            .cornerRadius(12)
-                                            .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
-                                            .padding(.bottom)
-                                            .accessibilityElement(children: .combine) // Combine regret and edit text
-                                        })
-                                        .foregroundColor(.black)
-                                        .accessibilityAddTraits(.isButton)
-                                    }
-                                    
-                                    Button(action: {
-                                        showNewFlashcardSheet = true
-                                    }) {
-                                        VStack {
-                                            Image(systemName: "plus.circle")
-                                                .font(.system(size: 24))
-                                                .padding(.bottom, 5)
-                                            Text("Add Custom\nFlashcard")
-                                                .multilineTextAlignment(.center)
-                                        }
-                                        .frame(width: 300, height: 150)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
-                                        .padding(.bottom)
-                                    }
-                                    .foregroundColor(.black)
-                                    Spacer()
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.leading)
-                            }
-                            
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text("Study-Proof Your Phone")
-                                            .font(.title3)
-                                            .bold()
-                                            .accessibilityLabel("Regret-Proof Your Phone")
-                                        Text("Select the apps that may hold you back from your goals.")
-                                            .font(.caption)
-                                            .accessibilityLabel("Select the apps that may hold you back from your goals")
-                                    }
-                                    Spacer()
-                                }
-                                .padding(.bottom, 5)
-                                .accessibilityElement(children: .combine) // Combine heading and description
-                                
-                                let columns = [
-                                    GridItem(.flexible(), spacing: 15),
-                                    GridItem(.flexible(), spacing: 15)
-                                ]
-                                
-                                LazyVGrid(columns: columns, spacing: 15) {
-                                    ForEach(viewModel.apps) { app in
-                                        Button(action: {
-                                            viewModel.selectApp(app)
-                                        }) {
-                                            HStack(spacing: 10) {
-                                                Image(app.iconName)
-                                                    .resizable()
-                                                    .frame(width: 25, height: 25)
-                                                    .accessibilityHidden(true) // Hide decorative icon
-                                                Text(app.name)
-                                                    .font(.system(size: 14))
-                                                    .accessibilityLabel(app.name)
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding()
-                                            .background(Color.white)
-                                            .cornerRadius(10)
-                                            .shadow(color: .gray.opacity(0.2), radius: 5, x: 2, y: 2)
-                                        }
-                                        .foregroundColor(.black)
-                                        .accessibilityAddTraits(.isButton)
-                                        .accessibilityHint("Select this app to restrict")
-                                    }
-                                }
-                                
-                                HStack {
-                                    Spacer()
-                                    Text("Can't find what you are looking for? We are adding more everyday!")
-                                        .font(.system(size: 10))
-                                        .padding(.top, 5)
-                                        .accessibilityLabel("Can't find what you are looking for? We are adding more everyday!")
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
+                            deckSelectionSection
+                            appRestrictionSection
                         }
-                        
-                        Spacer()
+                    }
+                }
+                
+                .sheet(isPresented: $viewModel.showInstructions) {
+                    if let app = viewModel.selectedApp {
+                        RegretGuardInstructionSheet(app: app)
+                            .presentationDetents([.large])
+                            .presentationCornerRadius(30)
+                    }
+                }
+                .sheet(isPresented: $viewModel.showEditRegret) {
+                    if let selectedRegret = regretStore.selectedRegret,
+                       let index = regretStore.regrets.firstIndex(where: { $0.id == selectedRegret.id }) {
+                        RegretEditorSheet(regret: $regretStore.regrets[index])
+                            .presentationDetents([.large])
+                            .presentationCornerRadius(30)
+                            .environmentObject(regretStore)
                     }
                 }
             }
-            .sheet(isPresented: $viewModel.showInstructions) {
-                if let app = viewModel.selectedApp {
-                    RegretGuardInstructionSheet(app: app)
-                        .presentationDetents([.large])
-                        .presentationCornerRadius(30)
+            .preferredColorScheme(.light)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+    
+    
+    private var headerSection: some View {
+        VStack {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Study Guard")
+                        .font(.title)
+                        .bold()
+                        .foregroundColor(.white)
+                    Text("Protect Your Time, Protect Your Goals.")
+                        .foregroundColor(.white)
                 }
+                Spacer()
             }
-            .sheet(isPresented: $viewModel.showEditRegret) {
-                if let regret = regretStore.selectedRegret {
-                    RegretEditorSheet(regret: regret)
-                        .presentationDetents([.large])
-                        .presentationCornerRadius(30)
-                        .environmentObject(regretStore)
+            .accessibilityElement(children: .combine)
+        }
+        .padding(.horizontal)
+    }
+    
+    private var deckSelectionSection: some View {
+        VStack(alignment: .leading) {
+            ScrollViewReader { scrollProxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(deckStore.decks) { deck in
+                            DeckCardView(deck: deck, isSelected: deckStore.selectedDeck?.id == deck.id) {
+                                deckStore.selectDeck(deck)
+                                withAnimation {
+                                    scrollProxy.scrollTo(deck.id, anchor: .leading)
+                                }
+                            }
+                        }
+                        
+                    }
                 }
-            }
-            .sheet(isPresented: $showNewFlashcardSheet) {
-                /*NewFlashcardSheet($deck: deck)
-                 .environmentObject(regretStore)
-                 }*/
             }
         }
-        .preferredColorScheme(.light)
+    }
+    
+    
+    private var newDeckButton: some View {
+        Button(action: { showNewFlashcardSheet = true }) {
+            VStack {
+                Image(systemName: "plus")
+                    .foregroundColor(.black)
+                    .bold()
+                Text("New Deck")
+                    .foregroundColor(.black)
+                    .bold()
+            }
+            .frame(width: 280, height: 130)
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 0)
+            
+            .padding(.vertical, 5)
+        }
+    }
+    
+    
+    
+    private var appRestrictionSection: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Study-Proof Your Phone")
+                        .font(.title3)
+                        .bold()
+                    Text("Select the apps that may hold you back from your goals.")
+                        .font(.caption)
+                }
+                Spacer()
+            }
+            .padding(.bottom, 5)
+            
+            let columns = [GridItem(.flexible(), spacing: 7), GridItem(.flexible(), spacing: 10)]
+            
+            LazyVGrid(columns: columns, spacing: 9) {
+                ForEach(viewModel.apps) { app in
+                    AppRestrictionButton(app: app) {
+                        viewModel.selectApp(app)
+                    }
+                }
+            }
+            
+            HStack {
+                Spacer()
+                Text("Can't find what you're looking for? We're adding more everyday!")
+                    .font(.system(size: 10))
+                    .padding(.top, 5)
+                Spacer()
+            }
+        }
+        .padding(.horizontal)
     }
 }
+
+
+
+struct DeckCardView: View {
+    let deck: Deck
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack {
+                Spacer()
+                Text(deck.name)
+                    .foregroundColor(.black)
+                    .bold()
+                
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(isSelected ? Color.green : Color.gray)
+                        .frame(width: 10, height: 10)
+                        .shadow(color: isSelected ? Color.green.opacity(0.8) : Color.clear, radius: 5, x: 0, y: 0)
+                        
+                    Text(isSelected ? "Active" : "Inactive")
+                        .foregroundColor(.black)
+                        .font(.caption)
+                    Divider()
+                        .frame(height: 20)
+                        .padding(.horizontal, 10)
+                    Image(systemName: "rectangle.on.rectangle")
+                        .foregroundColor(Color(hex: 0x184449))
+                        .font(.caption)
+                    Text("\(deck.cards.count)")
+                        .foregroundColor(.black)
+                        .font(.caption)
+                    
+                }
+                
+                Spacer()
+                Text(isSelected ? " " : "Tap to make Active")
+                    .foregroundColor(.gray)
+                    .font(.caption2)
+                    .padding(.bottom,5)
+            }
+            .frame(width: 280, height: 130)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 5)
+                
+            )
+            
+        }.cornerRadius(12)
+            .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 0)
+            .padding(.leading)
+            .padding(.vertical, 5)
+        
+    }
+}
+
+
+struct AppRestrictionButton: View {
+    let app: RegretApp
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(app.iconName)
+                    .resizable()
+                    .frame(width: 25, height: 25)
+                Text(app.name)
+                    .font(.system(size: 14))
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(10)
+            .shadow(color: .gray.opacity(0.2), radius: 5, x: 2, y: 2)
+        }
+        .foregroundColor(.black)
+    }
+}
+
+
+
 
 #Preview {
     RegretGuard()
