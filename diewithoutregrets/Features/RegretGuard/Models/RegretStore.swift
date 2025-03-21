@@ -518,7 +518,7 @@ class DeckStore: ObservableObject {
     func selectDeck(_ deck: Deck) {
         selectedDeck = deck
     }
-    private func saveDecks() {
+     func saveDecks() {
         do {
             let encoded = try JSONEncoder().encode(decks)
             UserDefaults.standard.set(encoded, forKey: "SavedDecks")
@@ -528,8 +528,7 @@ class DeckStore: ObservableObject {
     }
     
     func addDeck(_ deck: Deck) {
-        decks.append(deck)
-    }
+        decks.insert(deck, at: 0)    }
     
     func updateDeck(_ updatedDeck: Deck) {
         if let index = decks.firstIndex(where: { $0.id == updatedDeck.id }) {

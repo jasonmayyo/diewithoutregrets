@@ -10,18 +10,20 @@ import SwiftUI
 struct DeckListView: View {
     @EnvironmentObject var deckStore: DeckStore
     @State private var showingNewDeckSheet = false
-    
+    @State private var deckToDelete: Deck? = nil
+    @State private var showDeleteAlert: Bool = false
+
     var body: some View {
         NavigationStack {
             VStack {
                 ZStack(alignment: .top) {
                     // Background image
-                    Image("dwr-background2")
+                    Image("dwr-background3")
                         .resizable()
-                        .frame(height: 160)
+                        .frame(height: 145)
                         .edgesIgnoringSafeArea(.all)
                         .accessibilityHidden(true)
-                    
+
                     // Content
                     VStack(spacing: 0) {
                         // Header
@@ -36,69 +38,84 @@ struct DeckListView: View {
                                         .foregroundColor(.white)
                                 }
                                 Spacer()
-                                VStack {
-                                    HStack {
-                                        Button(action: { showingNewDeckSheet = true }) {
-                                            Image(systemName: "plus")
-                                                .font(.system(size: 16, weight: .bold))
-                                                .foregroundColor(.white)
-                                                .padding()
-                                                .background(Color(hex: 0x184449).opacity(0.7))
-                                                .clipShape(Circle())
-                                                .shadow(radius: 5)
-                                        }
-                                    }
+                                Button(action: { showingNewDeckSheet = true }) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color(hex: 0x184449).opacity(0.7))
+                                        .clipShape(Circle())
+                                        .shadow(radius: 5)
                                 }
                             }
                             .padding(.horizontal)
-                            .padding(.bottom, 15)
+                            .padding(.bottom, 25)
                         }
-                        
-                        // List of decks
-                        ScrollView {
-                            VStack(spacing: 10) {
-                                ForEach($deckStore.decks) { $deck in
-                                    NavigationLink(destination: DeckView(deck: $deck)) {
-                                        HStack () {
-                                            VStack(alignment: .leading, spacing: 7) {
-                                                Text(deck.name)
-                                                    .font(.headline)
+
+                        // List of decks with swipe delete
+                        List {
+                            ForEach($deckStore.decks) { $deck in
+                                NavigationLink(destination: DeckView(deck: $deck)) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 7) {
+                                            Text(deck.name)
+                                                .font(.headline)
+                                                .foregroundColor(.black)
+
+                                            HStack(spacing: 3) {
+                                                Image(systemName: "rectangle.on.rectangle")
                                                     .foregroundColor(.black)
-                                                
-                                                HStack (spacing: 3) {
-                                                    Image(systemName: "rectangle.on.rectangle")
-                                                        .foregroundColor(.black)
-                                                        .font(.caption)
-                                                    Text("\(deck.cards.count)")
-                                                        .foregroundColor(Color(hex: 0x184449))
-                                                        .font(.caption)
-                                                }
+                                                    .font(.caption)
+                                                Text("\(deck.cards.count)")
+                                                    .foregroundColor(Color(hex: 0x184449))
+                                                    .font(.caption)
                                             }
-                                            
-                                            Spacer()
-                                            Image(systemName: "chevron.right")
-                                                .foregroundColor(.gray)
                                         }
-                                        .padding()
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+
+                                        Spacer()
+                                       
                                     }
-                                    .padding(.horizontal)
+                                    .padding(8)
+                                    .background(Color.white)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        deckToDelete = deck
+                                        showDeleteAlert = true
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
                                 }
                             }
-                            .padding(.top)
                         }
-                        .background(Color(.systemGroupedBackground))
+                        .listStyle(PlainListStyle())
+                        // Remove extra separators if needed
+                        .padding(.top, 8)
                     }
-                    
                 }
-                .navigationBarHidden(true)
                 .sheet(isPresented: $showingNewDeckSheet) {
                     NewDeckView()
                 }
             }
-            
+            .navigationBarHidden(true)
+            .alert("Confirm Deletion", isPresented: $showDeleteAlert) {
+                Button("Delete", role: .destructive) {
+                    if let deck = deckToDelete,
+                       let index = deckStore.decks.firstIndex(where: { $0.id == deck.id }) {
+                        deckStore.decks.remove(at: index)
+                    }
+                    deckToDelete = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    deckToDelete = nil
+                }
+            } message: {
+                if let deck = deckToDelete {
+                    Text("Are you sure you want to delete the deck \"\(deck.name)\"?")
+                } else {
+                    Text("Are you sure you want to delete this deck?")
+                }
+            }
         }
         .tint(Color(hex: 0x184449))
         .navigationBarHidden(true)
@@ -110,13 +127,14 @@ struct DeckListView: View {
         .environmentObject(DeckStore.shared)
 }
 
+
 struct DeckView: View {
     @Binding var deck: Deck
     @State private var showingNewCardSheet = false
     @State private var showAutoGenerateSheet = false
     @State private var selectedCard: Binding<Regret>? = nil
     @State private var showEditSheet = false
-
+    
     var body: some View {
         VStack {
             List {
@@ -229,7 +247,6 @@ struct NewDeckView: View {
                         dismiss()
                     }
                     .disabled(deckName.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .accessibilityLabel(deckName.isEmpty ? "Save disabled" : "Save new deck")
                 }
             }
         }

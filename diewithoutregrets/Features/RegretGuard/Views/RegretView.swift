@@ -98,14 +98,14 @@ struct RegretView: View {
                                                         .frame(maxWidth: .infinity)
                                                         .background(
                                                             selectedAnswer == index ?
-                                                            Color.blue.opacity(0.2) : Color.clear
+                                                            Color.gray.opacity(0.2) : Color.clear
                                                         )
                                                         .cornerRadius(8)
                                                         .overlay(
                                                             RoundedRectangle(cornerRadius: 8)
                                                                 .stroke(
                                                                     selectedAnswer == index ?
-                                                                    Color.blue : Color.gray.opacity(0.3),
+                                                                    Color.gray : Color.gray.opacity(0.3),
                                                                     lineWidth: 2
                                                                 )
                                                         )
@@ -195,7 +195,7 @@ struct RegretView: View {
                                             .foregroundColor(.black)
                                             .padding()
                                             .frame(maxWidth: .infinity)
-                                            .background(Color.green.opacity(0.3))
+                                            .background(Color.gray.opacity(0.3))
                                             .cornerRadius(10)
                                     }
                                 }
@@ -223,7 +223,7 @@ struct RegretView: View {
                         Text(controlButtonText)
                             .font(.subheadline)
                             .foregroundColor(.black.opacity(0.7))
-                            .padding(.vertical, 15)
+                            .padding(.vertical, 35)
                             .contentShape(Rectangle())
                             .onTapGesture(perform: handleTap)
                     }
@@ -372,15 +372,24 @@ struct RegretView: View {
     
     private func handleUnlock() {
         showUnlockAnimation = true
-        let currentTime = Date().timeIntervalSince1970
-        sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
-        sharedDefaults?.set(true, forKey: "UserAllowedBreak")
-        sharedDefaults?.synchronize()
         
-        if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
-            UIApplication.shared.open(getAppURL(for: appName), options: [:])
+        // Wait for animation to complete before proceeding
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Match animation duration
+            let currentTime = Date().timeIntervalSince1970
+            sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
+            sharedDefaults?.set(true, forKey: "UserAllowedBreak")
+            sharedDefaults?.synchronize()
+            
+            if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
+                UIApplication.shared.open(getAppURL(for: appName), options: [:])
+            }
+            NavigationModel.shared.navigate(to: .regretReport)
+            
+            // Hide unlock animation after transition
+            withAnimation {
+                showUnlockAnimation = false
+            }
         }
-        NavigationModel.shared.navigate(to: .regretReport)
     }
     
     private func navigateToReport() {
