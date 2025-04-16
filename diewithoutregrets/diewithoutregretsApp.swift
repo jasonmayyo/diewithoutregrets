@@ -27,7 +27,7 @@ struct diewithoutregretsApp: App {
                     .environmentObject(navigationModel)
                     .environmentObject(regretStore)
                     .environmentObject(deckStore)
-                    .presentPaywallIfNeeded(requiredEntitlementIdentifier: "Pro Acess")
+                    
             } else {
                 OnboardingView()
                     .environmentObject(regretStore) 
