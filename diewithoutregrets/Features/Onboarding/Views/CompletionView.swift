@@ -3,191 +3,139 @@
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/02/03.
-//
 
 import SwiftUI
 
 struct CompletionView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    @State private var isConfettiActive = false
-    @State private var isFading = false
-    @State private var particles: [Particle] = []
-    @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding = false
-    @EnvironmentObject var regretStore: RegretStore
-    
-    // Animation states
-    @State private var showTitle = false
-    @State private var showSubtitle = false
-    @State private var showHandButton = false
-    @State private var showTapText = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var counter: Int = 0
+    @State private var showConfetti = false
+        @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         ZStack {
-            Color(hex: 0x184449)
+            // Background color
+            Color(hex: 0xF5F7FA)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
             
-            // Main Content
-            VStack(spacing: 10) {
-                VStack(spacing: 10) {
-                    Text("You're Ready to Begin!")
-                        .font(.title2)
-                        .bold()
+            if showConfetti {
+                            ConfettiView()
+                                .transition(.opacity)
+                                .zIndex(1)
+                        }
+            
+            VStack(spacing: 25) {
+                Spacer()
+                
+                // Success icon
+                Image(systemName: "checkmark.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    .foregroundColor(Color(hex: 0x065961))
+                
+                // Title
+                Text("You're all set!")
+                    .font(.title2)
+                    .bold()
+                    .foregroundColor(Color(hex: 0x013B41))
+                
+                // Description
+                Text("Your first flashcard deck '\(onboardingViewModel.newDeckName)' has been created.")
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(Color(hex: 0x065961))
+                    .padding(.horizontal, 24)
+                
+                Spacer()
+                
+                // Finish Button
+                Button(action: {
+                    hasCompletedOnboarding = true // This triggers navigation
+                    onboardingViewModel.triggerHapticFeedback()
+                }) {
+                    Text("Finish") // Fixed spelling from "Finnish" to "Finish"
+                        .font(.headline)
                         .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .opacity(showTitle ? 1 : 0)
-                        .offset(y: showTitle ? 0 : 20)
-                        .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                        .accessibilityLabel("You're ready to begin!")
-                    
-                    Text("Remember, every moment spent mindfully\nis a moment lived without regrets.")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                        .opacity(showSubtitle ? 1 : 0)
-                        .offset(y: showSubtitle ? 0 : 20)
-                        .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                        .accessibilityLabel("Remember, every moment spent mindfully is a moment lived without regrets.")
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 55)
+                        .background(Color(hex: 0x184449))
+                        .cornerRadius(28)
                 }
-                
-                Spacer()
-                
-                ZStack {
-                    // Confetti Particles
-                    ForEach(particles) { particle in
-                        ConfettiParticle(particle: particle)
-                            .accessibilityHidden(true) // Hide decorative confetti
-                    }
-                    
-                    // Shaking Hand Button
-                    Button(action: {
-                        triggerConfetti()
-                    }) {
-                        Text("🤝")
-                            .font(.system(size: 50))
-                            .padding(30)
-                            .background(Color.white.opacity(0.3))
-                            .clipShape(Circle())
-                            .shadow(radius: 10)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .disabled(isConfettiActive)
-                    .opacity(showHandButton ? 1 : 0)
-                    .offset(y: showHandButton ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.6), value: showHandButton)
-                    .accessibilityLabel("Tap to celebrate")
-                    .accessibilityHint("Tap the hand button to trigger confetti")
-                    .accessibilityAddTraits(.isButton)
-                }
-                
-                HStack {
-                    Text("Tap To Continue")
-                        .foregroundColor(.white.opacity(0.6))
-                        .font(.caption)
-                        .opacity(showTapText ? 1 : 0)
-                        .offset(y: showTapText ? 0 : 20)
-                        .animation(.easeInOut(duration: 1).delay(0.8), value: showTapText)
-                        .accessibilityLabel("Tap to continue")
-                }
-                
-                Spacer()
+                .padding(.horizontal, 24)
+                .padding(.bottom)
             }
-            .opacity(isFading ? 0 : 1)
-            .scaleEffect(isFading ? 1.2 : 1)
-            .animation(.easeInOut(duration: 0.4), value: isFading)
-            .padding()
         }
         .onAppear {
-            // Trigger entry animations
-            showTitle = true
-            showSubtitle = true
-            showHandButton = true
-            showTapText = true
-        }
-    }
-    
-    private func triggerConfetti() {
-        guard !isConfettiActive else { return }
-        isConfettiActive = true
-        generateParticles()
-        
-        // Confetti animation duration
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-                isFading = true
-            }
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // Add user's regrets to the store
-            regretStore.regrets.append(contentsOf: onboardingViewModel.regretEntries)
-                    print(regretStore.regrets)
-                    
-                    hasCompletedOnboarding = true
-        }
-    }
-    
-    private func generateParticles() {
-        particles = (0..<15).map { _ in
-            Particle()
-        }
-    }
-}
-
-struct ConfettiParticle: View {
-    let particle: Particle
-    @State private var isActive = false
-    
-    var body: some View {
-        Text("🤝")
-            .font(.system(size: 48)) // Increased from 40 to 48
-            .scaleEffect(isActive ? particle.scale : 1)
-            .offset(x: isActive ? particle.x : 0,
-                    y: isActive ? particle.y : 0)
-            .rotationEffect(.degrees(isActive ? particle.rotation : 0))
-            .opacity(isActive ? 0 : 1)
-            .onAppear {
-                withAnimation(.easeOut(duration: 1.5)) { // Faster animation
-                    self.isActive = true
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        showConfetti = true
+                    }
                 }
-            }
     }
 }
 
-struct Particle: Identifiable {
-    let id = UUID()
-    let x: CGFloat
-    let y: CGFloat
-    let scale: Double
-    let rotation: Double
-    
-    init() {
-        let angle = Double.random(in: 0..<360)
-        let distance = Double.random(in: 80...250) // Reduced distance
-        let radians = angle * .pi / 180
-        
-        self.x = CGFloat(distance * cos(radians))
-        self.y = CGFloat(-distance * sin(radians))
-        self.scale = Double.random(in: 0.8...1.5) // Reduced scale variation
-        self.rotation = Double.random(in: -45...45) // DRAMATICALLY reduced rotation range
-    }
-}
-
-struct InfoRow: View {
-    let title: String
-    let value: String
+struct ConfettiView: View {
+    @State private var particles: [ConfettiParticle] = []
+    @State private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    let colors: [Color] = [.red, .green, .blue, .yellow, .pink, .orange, .purple]
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(title)
-                .foregroundColor(.white.opacity(0.7))
-            Text(value)
-                .foregroundColor(.white)
+        ZStack {
+            ForEach(particles) { particle in
+                Rectangle()
+                    .fill(particle.color)
+                    .frame(width: 10, height: 10)
+                    .rotationEffect(.degrees(particle.rotation))
+                    .scaleEffect(particle.scale)
+                    .position(x: particle.x, y: particle.y)
+            }
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
+        .onAppear {
+            createParticles()
+        }
+        .onReceive(timer) { _ in
+            updateParticles()
+        }
+    }
+    
+    private func createParticles() {
+        particles = (0..<50).map { _ in
+            ConfettiParticle(
+                x: UIScreen.main.bounds.width / 2,
+                y: UIScreen.main.bounds.height / 3,
+                color: colors.randomElement()!,
+                rotation: Double.random(in: 0...360)
+            )
+        }
+    }
+    
+    private func updateParticles() {
+        withAnimation(.linear(duration: 0.1)) {
+            particles = particles.filter { $0.isActive }
+            particles.indices.forEach { i in
+                particles[i].x += particles[i].vx
+                particles[i].y += particles[i].vy
+                particles[i].vy += 0.5 // Gravity
+                particles[i].rotation += particles[i].vr
+                particles[i].scale *= 0.99 // Fade out
+            }
+        }
+    }
+}
+
+struct ConfettiParticle: Identifiable {
+    let id = UUID()
+    var x: Double
+    var y: Double
+    var vx: Double = Double.random(in: -10...10)
+    var vy: Double = Double.random(in: -50...(-20))
+    var color: Color
+    var rotation: Double
+    var vr: Double = Double.random(in: -10...10)
+    var scale: Double = 1.0
+    var isActive: Bool {
+        y < UIScreen.main.bounds.height + 100 && scale > 0.1
     }
 }
 

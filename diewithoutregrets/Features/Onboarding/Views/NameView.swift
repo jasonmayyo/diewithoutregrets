@@ -8,112 +8,108 @@
 import SwiftUI
 
 struct NameView: View {
-    @StateObject private var viewModel = NameViewModel()
+    @State private var name = ""
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
+    @FocusState private var isNameFieldFocused: Bool
     
-    // State variables to control the opacity and offset of each element
+    // Animation states
     @State private var showTitle = false
     @State private var showSubtitle = false
     @State private var showTextField = false
     @State private var showButton = false
     
+    private var canContinue: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
     var body: some View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
             
-            VStack(alignment: .leading, spacing: 3) {
-                // Title with animation
+            VStack(alignment: .leading, spacing: 20) {
+                // Title
                 Text("What should we call you?")
                     .font(.title2)
-                    .foregroundColor(.white)
                     .bold()
+                    .foregroundColor(.white)
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                    .accessibilityLabel("What should we call you?")
                 
-                // Subtitle with animation
+                // Subtitle
                 Text("What's your name? Or what's the name your mom calls you when she is mad at you?")
                     .font(.subheadline)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 25)
+                    .foregroundColor(Color.white.opacity(0.9))
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("What's your name? Or what's the name your mom calls you when she is mad at you?")
                 
-                // Custom TextField with animation
-                TextField("", text: Binding(
-                    get: { viewModel.name },
-                    set: { viewModel.handleNameChange($0) }
-                ))
-                .placeholder(when: viewModel.name.isEmpty) {
-                    Text("Enter your name")
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding(.leading, 20)
-                }
-                .textFieldStyle(CustomTextFieldStyle())
-                .foregroundColor(.white)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .opacity(showTextField ? 1 : 0)
-                .offset(y: showTextField ? 0 : 20)
-                .animation(.easeInOut(duration: 1).delay(0.6), value: showTextField)
-                .accessibilityLabel("Enter your name")
-                .accessibilityHint("Type your name in this field")
-                .accessibilityValue(viewModel.name.isEmpty ? "Empty" : viewModel.name)
+                // Text Field
+                TextField("", text: $name)
+                    .focused($isNameFieldFocused)
+                    .placeholder(when: name.isEmpty) {
+                        Text("Enter your name")
+                            .foregroundColor(Color.white.opacity(0.5))
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 50)
+                            .fill(Color.white.opacity(0.2))
+                    )
+                    .autocorrectionDisabled()
+                    .autocapitalization(.words)
+                    .submitLabel(.done)
+                    .opacity(showTextField ? 1 : 0)
+                    .offset(y: showTextField ? 0 : 20)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            isNameFieldFocused = true
+                        }
+                    }
                 
                 Spacer()
                 
-                // Continue button with animation
-                Button(action: {
-                    onboardingViewModel.userName = viewModel.name
+                // Continue Button
+                Button {
+                    onboardingViewModel.userName = name.trimmingCharacters(in: .whitespaces)
                     onboardingViewModel.nextStep()
-                }) {
+                } label: {
                     Text("Continue")
+                        .fontWeight(.semibold)
                         .foregroundColor(.black)
-                        .padding()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 70)
+                        .frame(height: 55)
                         .background(Color.white)
-                        .cornerRadius(50)
+                        .clipShape(Capsule())
                 }
-                .disabled(!viewModel.canContinue)
-                .buttonStyle(DisabledOpacityButtonStyle())
+                .disabled(!canContinue)
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
-                .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
-                .accessibilityLabel("Continue")
-                .accessibilityHint("Tap to proceed to the next step")
-                .accessibilityAddTraits(.isButton)
             }
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
+            animateViews()
+        }
+    }
+    
+    private func animateViews() {
+        withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
             showTitle = true
+        }
+        withAnimation(.easeOut(duration: 0.8).delay(0.4)) {
             showSubtitle = true
+        }
+        withAnimation(.easeOut(duration: 0.8).delay(0.6)) {
             showTextField = true
+        }
+        withAnimation(.easeOut(duration: 0.8).delay(0.8)) {
             showButton = true
         }
     }
 }
 
-// Custom TextField Style
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 50)
-                    .fill(Color.white.opacity(0.2))
-            )
-    }
-}
-
-// Custom View Extension for Placeholder
+// Add this extension for placeholder functionality
 extension View {
     func placeholder<Content: View>(
         when shouldShow: Bool,

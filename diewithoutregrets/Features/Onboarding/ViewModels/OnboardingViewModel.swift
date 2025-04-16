@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreHaptics
 
 enum OnboardingStep {
     case welcome
@@ -13,8 +14,13 @@ enum OnboardingStep {
     case age
     case name
     case breakdown
+    case longTermResults
+    case studyTwice
+    case rating
+    case readyView
     case weCanHelp
-    case regretQuestions
+    case createFirstFlashcard
+    case appSelection
     case completion
 }
 
@@ -23,23 +29,27 @@ class OnboardingViewModel: ObservableObject {
     @Published var userName: String = ""
     @Published var selectedAge: String = ""
     @Published var screenTime: String = ""
-    @Published var regretEntries: [Regret] = [
-        Regret(
-        regretPrompt: "Not spending enough time with family",
-        regret: "Not spending enough time with the people I love",
-        choices: ["Option 1", "Option 2", "Option 3", "Option 4"],
-        correctAnswerIndex: 0,
-        backgroundExplanation: "Studies show people who prioritize family time report higher life satisfaction and lower end-of-life regrets."
-        ),
-        ]
+    @Published var newDeckName: String = "My First Deck"
+    @Published var regretEntries: [Regret] = []
+    @Published var selectedApps: [RegretApp] = []
+
+    
+    // Haptic engine
+    private var hapticEngine: CHHapticEngine?
     
     let regretPrompts = [
-            "Imagine you’re 80, looking back on your life. What are the things you’d most regret not doing? What dreams did you leave behind? What opportunities did you waste?",
-            "What’s one thing you’d regret not doing if you knew your time was limited?"
+            "Create your first study flashcard. What's a concept you want to remember?",
+            "Add a question about something you're currently studying."
         ]
         
+    init() {
+        prepareHaptics()
+    }
     
     func nextStep() {
+        // Trigger haptic feedback when moving to next step
+        triggerHapticFeedback()
+        
         switch currentStep {
         case .welcome:
             currentStep = .averageScreenTime
@@ -50,19 +60,78 @@ class OnboardingViewModel: ObservableObject {
         case .name:
             currentStep = .breakdown
         case .breakdown:
+            currentStep = .longTermResults
+        case .longTermResults:
+            currentStep = .studyTwice
+        case .studyTwice:
+            currentStep = .rating
+        case .rating:
+            currentStep = .readyView
+        case .readyView:
             currentStep = .weCanHelp
         case .weCanHelp:
-            currentStep = .regretQuestions
-        case .regretQuestions:
-                    saveRegretAnswers()
-                    currentStep = .completion
+            currentStep = .createFirstFlashcard
+        case .createFirstFlashcard:
+            saveUserData()
+            currentStep = .appSelection
+        case .appSelection:
+            currentStep = .completion
         case .completion:
             break
         }
     }
     
+    // Function to trigger haptic feedback
+    func triggerHapticFeedback() {
+        // Use UINotificationFeedbackGenerator for simpler feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        
+        // Or use the more advanced CHHapticEngine for more customizable feedback
+        playHapticFeedback()
+    }
     
-    private func saveRegretAnswers() {
-            RegretStore.shared.addRegrets(regretEntries)
+    // Prepare the haptic engine
+    private func prepareHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        
+        do {
+            hapticEngine = try CHHapticEngine()
+            try hapticEngine?.start()
+        } catch {
+            print("There was an error creating the haptic engine: \(error.localizedDescription)")
         }
+    }
+    
+    // Play a simple button tap haptic pattern
+    private func playHapticFeedback() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics,
+              let engine = hapticEngine else { return }
+        
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.5)
+        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
+        
+        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
+        
+        do {
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try player.start(atTime: 0)
+        } catch {
+            print("Failed to play haptic pattern: \(error.localizedDescription)")
+        }
+    }
+    
+    private func saveUserData() {
+        // Save user data
+        UserDefaults.standard.set(userName, forKey: "userName")
+        UserDefaults.standard.set(selectedAge, forKey: "selectedAge")
+        UserDefaults.standard.set(screenTime, forKey: "screenTime")
+        
+        // Create first deck if we have flashcards
+        if !regretEntries.isEmpty {
+            let newDeck = Deck(name: newDeckName, cards: regretEntries)
+            DeckStore.shared.addDeck(newDeck)
+        }
+    }
 }

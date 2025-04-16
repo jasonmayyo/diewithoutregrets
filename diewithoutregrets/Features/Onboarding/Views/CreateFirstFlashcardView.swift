@@ -7,6 +7,32 @@
 
 import SwiftUI
 
+// Reusable Input Card Component from RegretGuard
+struct InputCard<Content: View>: View {
+    let title: String
+    let systemImage: String
+    let content: () -> Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: systemImage)
+                    .foregroundColor(Color(hex: 0x065961))
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(Color(hex: 0x013B41))
+                Spacer()
+            }
+            
+            content()
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+}
+
 struct CreateFirstFlashcardView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     
@@ -19,9 +45,6 @@ struct CreateFirstFlashcardView: View {
     private let accentColor = Color(hex: 0x065961)
     private let bgColor = Color(.systemGroupedBackground)
     
-    @State private var showAutoGenerateSheet = false
-    @State private var tempDeck = Deck(name: "Generated Flashcards", cards: [])
-    
     private var isValidInput: Bool {
         !newQuestion.trimmingCharacters(in: .whitespaces).isEmpty &&
         !newAnswer.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -31,15 +54,15 @@ struct CreateFirstFlashcardView: View {
     var body: some View {
         ZStack {
             // Background color
-            Color(hex: 0x184449)
+            Color(hex: 0xF5F7FA)
                 .ignoresSafeArea()
             
-            VStack(spacing: 5) {
+            VStack(spacing: 24) {
                 // Header Text
                 Text("Create your first flashcard")
                     .font(.title3)
                     .bold()
-                    .foregroundColor(.white)
+                    .foregroundColor(dwrGreen)
                     .padding(.top)
                 
                 // Form
@@ -143,83 +166,25 @@ struct CreateFirstFlashcardView: View {
                     .padding()
                 }
                 
-                VStack(spacing: 12) {
-                    Button {
-                        showAutoGenerateSheet = true
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .medium))
-                            
-                            Text("Auto Generate Flashcards")
-                                .font(.headline)
-                            
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .medium))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(hex: 0x3FA4AE),
-                                    Color(hex: 0x2BC391)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .shadow(
-                            color: Color(hex: 0x3FA4AE).opacity(0.3),
-                            radius: 15,
-                            x: 0,
-                            y: 8
-                        )
-                    }
-                    .frame(height: 55)
-                    .cornerRadius(28)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 8)
-                    .buttonStyle(GenerateButtonStyle())
-                }
-                
                 // Continue Button
                 Button(action: {
                     saveFlashcard()
+                    onboardingViewModel.triggerHapticFeedback()
                     onboardingViewModel.nextStep()
                 }) {
                     Text("Continue")
                         .font(.headline)
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 55)
-                        .background(isValidInput ? Color.white : Color.gray.opacity(0.5))
+                        .background(isValidInput ? Color(hex: 0x184449) : Color.gray.opacity(0.5))
                         .cornerRadius(28)
                         .padding(.horizontal, 24)
                 }
                 .disabled(!isValidInput)
                 .padding(.bottom, 24)
             }
-            .sheet(isPresented: $showAutoGenerateSheet) {
-                            AutoGenerateFlashcardsSheet(deck: $tempDeck)
-                                .environmentObject(onboardingViewModel)
-                        }
-            .onChange(of: showAutoGenerateSheet, initial: false) { oldValue, newValue in
-                if oldValue == true && newValue == false && !tempDeck.cards.isEmpty {
-                    // Add generated cards to onboarding
-                    onboardingViewModel.regretEntries.append(contentsOf: tempDeck.cards)
-                    // Clear temporary deck
-                    tempDeck.cards.removeAll()
-                    onboardingViewModel.nextStep()
-                }
-            }
-        }.preferredColorScheme(.light)
+        }
     }
     
     private func addNewOption() {
@@ -258,4 +223,4 @@ struct CreateFirstFlashcardView: View {
 #Preview {
     CreateFirstFlashcardView()
         .environmentObject(OnboardingViewModel())
-}
+} 

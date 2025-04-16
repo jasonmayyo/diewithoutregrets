@@ -143,6 +143,7 @@ struct DeckSelectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            
             // Deck Cards Carousel
             TabView(selection: $currentPageIndex) {
                 ForEach(Array(deckStore.decks.enumerated()), id: \.element.id) { index, deck in
@@ -206,6 +207,11 @@ struct DeckSelectionView: View {
             NewDeckView()
                 .presentationDetents([.large])
                 .presentationCornerRadius(30)
+        }
+        .onChange(of: deckStore.decks.count, initial: false) { oldCount, newCount in
+            if newCount == 1 && oldCount != 1 && deckStore.selectedDeck == nil {
+                deckStore.selectedDeck = deckStore.decks.first
+            }
         }
     }
 }

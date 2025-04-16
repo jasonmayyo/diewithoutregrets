@@ -35,14 +35,14 @@ struct AverageScreenTime: View {
                     .accessibilityLabel("What is your average screen time right now?")
                 
                 // Subtitle with animation
-                Text("Just an estimate, does not have to be exact")
+                Text("We are going to take a wild guess and say that you open Instagram a lot of times a day 👀 (if not then definitely some other social media)")
                     .font(.subheadline)
                     .foregroundColor(.white)
                     .padding(.bottom, 25)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("Just an estimate, does not have to be exact")
+                    .accessibilityLabel("The average person checks Instagram 80 times a day. Each check could be a study opportunity!")
                 
                 // ScrollView with options
                 ScrollView(.vertical, showsIndicators: false) {
@@ -77,7 +77,7 @@ struct AverageScreenTime: View {
                         .foregroundColor(.black)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 70)
+                        .frame(height: 55)
                         .background(Color.white)
                         .cornerRadius(50)
                 }

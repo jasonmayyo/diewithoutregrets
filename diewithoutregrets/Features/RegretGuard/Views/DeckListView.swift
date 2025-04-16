@@ -134,9 +134,12 @@ struct DeckView: View {
     @State private var showAutoGenerateSheet = false
     @State private var selectedCard: Binding<Regret>? = nil
     @State private var showEditSheet = false
-    
+    @State private var isPracticing = false // Add this state variable
+    @EnvironmentObject var deckStore: DeckStore // Add this environment object
+        @State private var showingPractice = false
+
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             List {
                 ForEach($deck.cards) { $card in
                     Button {
@@ -156,30 +159,103 @@ struct DeckView: View {
             }
             .listStyle(PlainListStyle())
             .tint(.black)
-            .navigationTitle(deck.name)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingNewCardSheet = true }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(Color(hex: 0x184449))
+            
+            // Practice & Auto Generate Buttons
+            VStack(spacing: 12) {
+                // Add Practice Button
+                Button {
+                    showingPractice = true
+                } label: {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Practice Deck")
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(hex: 0x184449))
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
+                    .shadow(
+                        color: Color(hex: 0x184449).opacity(0.3),
+                        radius: 15,
+                        x: 0,
+                        y: 8
+                    )
                 }
-                ToolbarItem(placement: .bottomBar) {
-                    Button("Auto Generate Flashcards") {
-                        showAutoGenerateSheet = true
+                .disabled(deck.cards.isEmpty)
+                            .fullScreenCover(isPresented: $showingPractice) {
+                                PracticeView()
+                                    .environmentObject(deckStore)
+                            }
+                
+                // Existing Auto Generate Button
+                Button {
+                    showAutoGenerateSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 16, weight: .medium))
+                        
+                        Text("Auto Generate Flashcards")
+                            .font(.headline)
+                        
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 16, weight: .medium))
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                Color(hex: 0x3FA4AE),
+                                Color(hex: 0x2BC391)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
+                    .shadow(
+                        color: Color(hex: 0x3FA4AE).opacity(0.3),
+                        radius: 15,
+                        x: 0,
+                        y: 8
+                    )
+                }
+                .buttonStyle(GenerateButtonStyle())
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 16)
+            .background(Color(hex: 0xF8F9FA))
+        }
+        .navigationTitle(deck.name)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { showingNewCardSheet = true }) {
+                    Image(systemName: "plus")
+                        .foregroundColor(Color(hex: 0x184449))
                 }
             }
-            .sheet(isPresented: $showAutoGenerateSheet) {
-                AutoGenerateFlashcardsSheet(deck: $deck)
-            }
-            .sheet(isPresented: $showingNewCardSheet) {
-                NewFlashcardSheet(deck: $deck)
-            }
-            .sheet(isPresented: $showEditSheet, onDismiss: { selectedCard = nil }) {
-                if let selectedCard = selectedCard {
-                    RegretEditorSheet(regret: selectedCard)
-                }
+        }
+        .sheet(isPresented: $showAutoGenerateSheet) {
+            AutoGenerateFlashcardsSheet(deck: $deck)
+                .presentationCornerRadius(30)
+        }
+        .sheet(isPresented: $showingNewCardSheet) {
+            NewFlashcardSheet(deck: $deck)
+        }
+        .sheet(isPresented: $showEditSheet, onDismiss: { selectedCard = nil }) {
+            if let selectedCard = selectedCard {
+                RegretEditorSheet(regret: selectedCard)
             }
         }
     }
@@ -188,7 +264,6 @@ struct DeckView: View {
         deck.cards.remove(atOffsets: offsets)
     }
 }
-
 
 struct CardDetailView: View {
     let card: Regret

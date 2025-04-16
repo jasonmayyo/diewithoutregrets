@@ -6,12 +6,19 @@
 //
 
 import SwiftUI
+import RevenueCat
+import RevenueCatUI
 
 @main
 struct diewithoutregretsApp: App {
     @StateObject private var navigationModel = NavigationModel.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @StateObject private var regretStore = RegretStore()
+    @StateObject private var deckStore = DeckStore.shared
+    
+    init() {
+        Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
+    }
     
     var body: some Scene {
         WindowGroup {
@@ -19,6 +26,8 @@ struct diewithoutregretsApp: App {
                 ContentView()
                     .environmentObject(navigationModel)
                     .environmentObject(regretStore)
+                    .environmentObject(deckStore)
+                    .presentPaywallIfNeeded(requiredEntitlementIdentifier: "Pro Acess")
             } else {
                 OnboardingView()
                     .environmentObject(regretStore) 

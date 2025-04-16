@@ -18,7 +18,8 @@ struct RegretView: View {
     @State private var hasIncorrectAnswers = false
     @State private var questionResults: [Bool?] = []
     @State private var selectedRegrets: [Regret] = []
-    
+    @AppStorage("flashcardCount") private var flashcardCount: Int = 3
+    @AppStorage("useAllCards") private var useAllCards: Bool = false
     
     let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
@@ -234,19 +235,17 @@ struct RegretView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 0)
                     .stroke(
-                        AngularGradient(
-                            gradient: Gradient(colors: [
-                                Color(hex: 0x36B8C4).opacity(0.3),
-                                Color(hex: 0x238A94).opacity(0.3),
-                                Color(hex: 0x197C6F).opacity(0.3)
-                            ]),
-                            center: .center,
-                            angle: .degrees(Double(currentStep * 10))
+                        LinearGradient(
+                            colors: [
+                                Color(hex: 0x36B8C4).opacity(0.1),
+                                Color(hex: 0x238A94).opacity(0.1)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         ),
                         lineWidth: 4
                     )
                     .blur(radius: 20)
-                    .compositingGroup()
                     .ignoresSafeArea()
             )
             
@@ -339,19 +338,32 @@ struct RegretView: View {
     }
     
     private func setupView() {
-        // Ensure we have a valid deck with cards
+        // Add debug prints
+        print("RegretView setup started")
+        defer { print("RegretView setup completed") }
+        
+        // Validate deck selection
         guard let deck = deckStore.selectedDeck else {
-            print("No deck selected")
+            print("🚨 Critical error: No deck selected in RegretView")
+            showFinalMessage = true
             return
         }
+        
+        print("Processing deck: \(deck.name)")
+        print("Deck contains \(deck.cards.count) cards")
         
         guard !deck.cards.isEmpty else {
-            print("Selected deck has no cards")
+            print("⚠️ Empty deck selected")
+            showFinalMessage = true
             return
-        }
+        }                     
         
-        selectedRegrets = deck.cards.count <= 3 ? deck.cards : Array(deck.cards.shuffled().prefix(3))
-        resetView()
+        DispatchQueue.main.async {
+               self.selectedRegrets = useAllCards || flashcardCount >= deck.cards.count
+                   ? deck.cards.shuffled()
+                   : Array(deck.cards.shuffled().prefix(flashcardCount))
+               self.resetView()
+           }
     }
     
     private func resetView() {
@@ -364,9 +376,14 @@ struct RegretView: View {
         }
     
     private func retryQuestions() {
-        // Reshuffle questions on retry using selected deck
         guard let deck = deckStore.selectedDeck else { return }
-        selectedRegrets = deck.cards.count <= 3 ? deck.cards : Array(deck.cards.shuffled().prefix(3))
+        
+        // If useAllCards is true or if user selected more cards than available, use all cards
+        if useAllCards || flashcardCount >= deck.cards.count {
+            selectedRegrets = deck.cards.shuffled()
+        } else {
+            selectedRegrets = Array(deck.cards.shuffled().prefix(flashcardCount))
+        }
         resetView()
     }
     

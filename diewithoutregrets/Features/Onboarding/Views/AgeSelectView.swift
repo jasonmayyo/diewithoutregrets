@@ -77,7 +77,7 @@ struct AgeSelectView: View {
                         .foregroundColor(.black)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 70)
+                        .frame(height: 55)
                         .background(Color.white)
                         .cornerRadius(50)
                 }

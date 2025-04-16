@@ -105,7 +105,7 @@ struct BreakdownView: View {
                         .foregroundColor(.black)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 70)
+                        .frame(height: 55)
                         .background(Color.white)
                         .cornerRadius(50)
                 }
@@ -129,7 +129,7 @@ struct BreakdownView: View {
     
     // MARK: - Calculation Methods
     private func calculateLifetimeYears() -> Int {
-        let lifeExpectancy = 80.0
+        let lifeExpectancy = 90.0
         let currentAge = parseAge(onboardingViewModel.selectedAge)
         let remainingYears = max(lifeExpectancy - currentAge, 0)
         let dailyHours = parseScreenTime(onboardingViewModel.screenTime)

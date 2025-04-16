@@ -19,7 +19,7 @@ struct RegretGuardInstructionSheet: View {
                     .bold()
                     .font(.title2)
                     .accessibilityLabel("Setup Instructions")
-                Text("2 min setup process to save thousands")
+                Text("2 min MAX setup process to save thousands")
                     .font(.subheadline)
                     .accessibilityLabel("Two-minute setup process to save thousands")
                 
@@ -45,31 +45,14 @@ struct RegretGuardInstructionSheet: View {
                         }
                         Spacer()
                     }
-                    Button(action: {
+                    
+                    StudyGuardGradientButton(title: "Copy Shortcut") {
+                        print("Button tapped!")
                         UIApplication.shared.open(app.shortcutLink)
-                    }, label: {
-                        HStack {
-                            Image(systemName: "button.angledtop.vertical.right")
-                                .accessibilityHidden(true) // Hide decorative icon
-                            Text("Copy Shortcut")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .foregroundColor(.black)
-                        .padding()
-                        .background(
-                            MeshGradient()
-                                .cornerRadius(10)
-                        )
-                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                    })
-                    .accessibilityLabel("Copy Shortcut")
-                    .accessibilityHint("Tap to copy the custom shortcut for \(app.name)")
-                    .accessibilityAddTraits(.isButton)
-                    .padding(.top)
+                    }
+                        
+                   
+                    
                 }
                 .padding()
                 
@@ -370,6 +353,24 @@ struct RegretGuardInstructionSheet: View {
                     }
                 }
                 .padding()
+                
+                Button(action: {
+                    dismiss()
+                }) {
+                                    Text("Finished")
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 55)
+                                        .background(Color(hex: 0x184449))
+                                        .cornerRadius(50)
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 20)
+                                .accessibilityLabel("Finished")
+                                .accessibilityHint("Tap to close this instruction sheet")
+                                .accessibilityAddTraits(.isButton)
+                                
                 
                 Spacer()
             }
