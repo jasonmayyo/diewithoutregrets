@@ -52,7 +52,6 @@
 		6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */; };
 		6B811F562D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */; };
 		6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */; };
-		6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
 		6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C62D3552E000DE8B2E /* ContentView.swift */; };
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
@@ -145,7 +144,6 @@
 		6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoGenerateFlashcardSheet.swift; sourceTree = "<group>"; };
-		6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = dwrLockView.swift; path = ../../../../../../Documents/dwrLockView.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
 		6B9D89C62D3552E000DE8B2E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -208,7 +206,6 @@
 			isa = PBXGroup;
 			children = (
 				6B7CD4D72D509DFA0065A0F7 /* Onboarding */,
-				6B8D6B9C2D4E4E2600753EB4 /* dwrBlock */,
 				6B22E84D2D480488003A5685 /* RegretGuard */,
 				6B22E84C2D48045D003A5685 /* RegretReport */,
 			);
@@ -365,38 +362,6 @@
 			isa = PBXGroup;
 			children = (
 				6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		6B8D6B9C2D4E4E2600753EB4 /* dwrBlock */ = {
-			isa = PBXGroup;
-			children = (
-				6B8D6B9F2D4E4EE200753EB4 /* Models */,
-				6B8D6B9E2D4E4ED700753EB4 /* ViewModels */,
-				6B8D6B9D2D4E4ED000753EB4 /* Views */,
-			);
-			path = dwrBlock;
-			sourceTree = "<group>";
-		};
-		6B8D6B9D2D4E4ED000753EB4 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		6B8D6B9E2D4E4ED700753EB4 /* ViewModels */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		6B8D6B9F2D4E4EE200753EB4 /* Models */ = {
-			isa = PBXGroup;
-			children = (
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -642,7 +607,6 @@
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */,
-				6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */,
 				6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
 				6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */,
