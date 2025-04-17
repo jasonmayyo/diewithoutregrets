@@ -46,9 +46,21 @@ struct RegretGuardInstructionSheet: View {
                         Spacer()
                     }
                     
-                    StudyGuardGradientButton(title: "Copy Shortcut") {
+                    Button(action: {
                         print("Button tapped!")
                         UIApplication.shared.open(app.shortcutLink)
+                    }) {
+                        HStack {
+                            Image(systemName: "doc.on.doc") // SF Symbol for copy
+                                .font(.system(size: 16))
+                            Text("Copy Shortcut")
+                                .font(.system(size: 16))
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                     }
                         
                    
