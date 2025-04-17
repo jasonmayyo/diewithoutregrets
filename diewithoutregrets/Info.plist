@@ -19,5 +19,7 @@
 	<array>
 		<string></string>
 	</array>
+	<key>OpenAIAPIKey</key>
+	<string>$(OPENAI_API_KEY)</string>
 </dict>
 </plist>

@@ -818,6 +818,17 @@ struct AutoGenerateFlashcardsSheet: View {
         }
     }
     
+    private func loadOpenAIKey() -> String? {
+        guard
+          let key = Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String,
+          !key.isEmpty
+        else {
+          assertionFailure("🔑 Missing OpenAIAPIKey in Info.plist")
+          return nil
+        }
+        return key
+    }
+    
     private func generateFlashcards() {
         // Show generation view
         showingGenerationView = true
@@ -919,7 +930,10 @@ struct AutoGenerateFlashcardsSheet: View {
         request.timeoutInterval = 60
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // API key placeholder - use your actual key in production
-        let apiKey = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? ""
+        guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
+          assertionFailure("Missing API key")
+          return
+        }
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
         let jsonBody: [String: Any] = [
@@ -1081,7 +1095,10 @@ Only output flashcards in the above format with one flashcard per line.
         request.timeoutInterval = 60
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Replace with your actual API key.
-        let apiKey = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? ""
+        guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
+          assertionFailure("Missing API key")
+          return
+        }
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
         let jsonBody: [String: Any] = [

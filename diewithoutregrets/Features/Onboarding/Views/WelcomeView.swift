@@ -19,10 +19,10 @@ struct WelcomeView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                VStack(spacing: geometry.size.height * 0.03) {
+                VStack(spacing: geometry.size.height * 0.01) {
                     // Video player that scales based on device size
                     LoopingVideoPlayer(videoName: "mockupvideo", videoExtension: "mp4")
-                        .frame(height: min(570, geometry.size.height * 0.5))
+                        .frame(height: min(570, geometry.size.height * 0.7))
                         .opacity(showImage ? 1 : 0)
                         .offset(y: showImage ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.2), value: showImage)
@@ -86,7 +86,7 @@ struct WelcomeView: View {
                             .font(.footnote)
                             .foregroundColor(Color(hex: 0x184449))
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 2)
                 }
                 .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 20)
                 .padding(.vertical, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.height * 0.05 : 20)

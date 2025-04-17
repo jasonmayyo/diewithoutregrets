@@ -36,6 +36,9 @@
 		6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E52DADB48E0053351D /* RevenueCat */; };
 		6B45F2E82DADB48E0053351D /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E72DADB48E0053351D /* RevenueCatUI */; };
 		6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B531BAE2DAD249900663511 /* StoreKit.framework */; };
+		6B74330D2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
+		6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
+		6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
 		6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */; };
 		6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */; };
 		6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */; };
@@ -131,6 +134,7 @@
 		6B2D5F942D779F6400009417 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFlashcardSheet.swift; sourceTree = "<group>"; };
 		6B531BAE2DAD249900663511 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		6B74330C2DB19E5F0007270C /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSelectionOnboarding.swift; sourceTree = "<group>"; };
 		6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AverageScreenTime.swift; sourceTree = "<group>"; };
@@ -404,6 +408,7 @@
 				6B9D89C82D3552E600DE8B2E /* Assets.xcassets */,
 				6B9D89CA2D3552E600DE8B2E /* Preview Content */,
 				6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */,
+				6B74330C2DB19E5F0007270C /* Secrets.xcconfig */,
 			);
 			path = diewithoutregrets;
 			sourceTree = "<group>";
@@ -536,6 +541,7 @@
 			files = (
 				6BC73FAF2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
 				6BDD79242DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
+				6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,6 +551,7 @@
 			files = (
 				6BC73FB02DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
 				6BDD79252DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
+				6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +560,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BC73FAE2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
+				6B74330D2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */,
 				6BDD79232DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
 				6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */,
@@ -750,6 +758,7 @@
 		};
 		6B9D89CD2D3552E600DE8B2E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -813,6 +822,7 @@
 		};
 		6B9D89CE2D3552E600DE8B2E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -869,6 +879,7 @@
 		};
 		6B9D89D02D3552E600DE8B2E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -906,6 +917,7 @@
 		};
 		6B9D89D12D3552E600DE8B2E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;

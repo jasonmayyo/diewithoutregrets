@@ -40,8 +40,6 @@ struct AppSelectionOnboarding: View {
                 
                 // App selection grid
                 ScrollView(.vertical, showsIndicators: false) {
-                    let columns = [GridItem(.flexible(), spacing: 7), GridItem(.flexible(), spacing: 10)]
-                    
                     VStack(spacing: 12) {
                         ForEach(viewModel.apps) { app in
                             OnboardingAppButton(app: app) {
