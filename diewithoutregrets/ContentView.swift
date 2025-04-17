@@ -160,7 +160,7 @@ struct ProfileView: View {
                     VStack(spacing: 2) {
                         LinkMenuItem(icon: "questionmark.circle", title: "FAQs", url: "https://studyguard.framer.website/")
                         LinkMenuItem(icon: "exclamationmark.triangle", title: "Report an Error", url: "https://studyguard.framer.website/support")
-                        LinkMenuItem(icon: "doc.text", title: "Terms of Service", url: "https://studyguard.framer.website/legal/terms-of-use")
+                        LinkMenuItem(icon: "doc.text", title: "Terms of Use", url: " https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
                         LinkMenuItem(icon: "hand.raised", title: "Privacy Policy", url: "https://studyguard.framer.website/legal/privacy-policy")
                     }
                 }
