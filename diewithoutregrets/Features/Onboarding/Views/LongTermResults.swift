@@ -1,11 +1,3 @@
-
-//
-//  LongTermResultsView.swift
-//  studyguard
-//
-//  Created on 2025/04/10.
-//
-
 import SwiftUI
 
 struct LongTermResultsView: View {
@@ -23,106 +15,142 @@ struct LongTermResultsView: View {
     @State private var studyGuardPathProgress: CGFloat = 0
     
     var body: some View {
-        ZStack {
-            Color(hex: 0x184449)
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
-            
-            VStack(alignment: .leading, spacing: 20) {
+        GeometryReader { geometry in
+            ZStack {
+                // Background
+                Color(hex: 0x184449)
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
                 
-                // Title with animation
-                Text("Study Guard creates long term results")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                    .opacity(showTitle ? 1 : 0)
-                    .offset(y: showTitle ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                    .accessibilityLabel("Study Guard creates long-term results")
-                
-                Spacer()
-                    .frame(height: 30)
-                
-                // Graph Container
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(hex: 0xF9F9F9))
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        .opacity(showTitle ? 1 : 0)
-                        .offset(y: showTitle ? 0 : 20)
-                        .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                        
-                    
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Flashcards studied over time")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.black)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
-                            .opacity(showText ? 1 : 0)
-                            .offset(y: showText ? 0 : 10)
-                            .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
-                        
-                        // Graph component
-                        GraphView(
-                            traditionalPathProgress: $traditionPathProgress,
-                            studyGuardPathProgress: $studyGuardPathProgress
-                        )
-                        .frame(height: 200)
-                        .padding(.horizontal, 20)
-                        .opacity(showGraph ? 1 : 0)
-                        .animation(.easeInOut(duration: 1).delay(0.4), value: showGraph)
-                        HStack {
-                            Text("Month 1")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black)
-                                .opacity(showText ? 1 : 0)
-                                .offset(y: showText ? 0 : 10)
-                                .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                // Outer VStack to control container width on iPad
+                VStack {
+                    // Main content container with scrolling capability
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Title with animation
+                            Text("Study Guard creates long term results")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                                .opacity(showTitle ? 1 : 0)
+                                .offset(y: showTitle ? 0 : 20)
+                                .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                                .accessibilityLabel("Study Guard creates long-term results")
+                                .padding(.top, 20)
+                            
                             Spacer()
-                            Text("Month 6")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black)
-                                .opacity(showText ? 1 : 0)
-                                .offset(y: showText ? 0 : 10)
-                                .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
-                        }.padding()
-                        // Legend & stats text
-                        Text("80% of Study Guard users maintain their\nstudy habits even 6 months later")
-                            .font(.system(size: 16, weight: .medium))
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.gray)
-                            .frame(maxWidth: .infinity)
-                            .padding(.bottom, 20)
-                            .opacity(showText ? 1 : 0)
-                            .offset(y: showText ? 0 : 10)
-                            .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                                .frame(height: 30)
+                            
+                            // Graph Container
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(hex: 0xF9F9F9))
+                                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                                    .opacity(showTitle ? 1 : 0)
+                                    .offset(y: showTitle ? 0 : 20)
+                                    .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
+                                
+                                VStack(alignment: .leading, spacing: 20) {
+                                    Text("Flashcards studied over time")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .padding(.top, 20)
+                                        .padding(.leading, 20)
+                                        .opacity(showText ? 1 : 0)
+                                        .offset(y: showText ? 0 : 10)
+                                        .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                                    
+                                    // Graph component
+                                    GraphView(
+                                        traditionalPathProgress: $traditionPathProgress,
+                                        studyGuardPathProgress: $studyGuardPathProgress
+                                    )
+                                    .frame(height: min(200, geometry.size.height * 0.25))
+                                    .padding(.horizontal, 20)
+                                    .opacity(showGraph ? 1 : 0)
+                                    .animation(.easeInOut(duration: 1).delay(0.4), value: showGraph)
+                                    
+                                    HStack {
+                                        Text("Month 1")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.black)
+                                            .opacity(showText ? 1 : 0)
+                                            .offset(y: showText ? 0 : 10)
+                                            .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                                        Spacer()
+                                        Text("Month 6")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.black)
+                                            .opacity(showText ? 1 : 0)
+                                            .offset(y: showText ? 0 : 10)
+                                            .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                                    }.padding(.horizontal)
+                                    
+                                    // Legend & stats text
+                                    Text("80% of Study Guard users maintain their\nstudy habits even 6 months later")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.gray)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.bottom, 20)
+                                        .opacity(showText ? 1 : 0)
+                                        .offset(y: showText ? 0 : 10)
+                                        .animation(.easeInOut(duration: 1).delay(0.8), value: showText)
+                                }
+                            }
+                            
+                            // Add extra space at the bottom to ensure scrollability
+                            Spacer(minLength: 100)
+                        }
+                        .padding(.horizontal)
                     }
+                    
+                    // Fixed button container at the bottom
+                    VStack {
+                        Spacer()
+                        
+                        // Continue button with animation - now in a fixed position
+                        Button(action: {
+                            onboardingViewModel.nextStep()
+                        }) {
+                            Text("Continue")
+                                .foregroundColor(.black)
+                                .fontWeight(.semibold)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 55)
+                                .background(.white)
+                                .cornerRadius(50)
+                        }
+                        .opacity(showButton ? 1 : 0)
+                        .offset(y: showButton ? 0 : 20)
+                        .animation(.easeInOut(duration: 1).delay(1.0), value: showButton)
+                        .accessibilityLabel("Continue")
+                        .accessibilityHint("Tap to proceed to the next step")
+                        .padding(.horizontal)
+                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 20 : 30)
+                    }
+                    .background(
+                        // Gradient background for button area
+                        LinearGradient(
+                            gradient: Gradient(
+                                colors: [
+                                    Color(hex: 0x184449).opacity(0.0),
+                                    Color(hex: 0x184449).opacity(1.0)
+                                ]
+                            ),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 100)
+                        .offset(y: -50)
+                        .opacity(showButton ? 1 : 0)
+                    )
                 }
-                .padding(.bottom, 40)
-                
-                Spacer()
-                
-                // Continue button with animation
-                Button(action: {
-                    onboardingViewModel.nextStep()
-                }) {
-                    Text("Continue")
-                        .foregroundColor(.black)
-                        .fontWeight(.semibold)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(.white)
-                        .cornerRadius(50)
-                }
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 20)
-                .animation(.easeInOut(duration: 1).delay(1.0), value: showButton)
-                .accessibilityLabel("Continue")
-                .accessibilityHint("Tap to proceed to the next step")
+                .frame(width: min(geometry.size.width, 500)) // Max width container for iPad
+                .frame(maxWidth: .infinity) // Center on screen
             }
-            .padding()
         }
+        .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             // Trigger animations when view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -172,7 +200,7 @@ struct GraphView: View {
             }
             
             GeometryReader { geometry in
-                // Traditional diet path (red)
+                // Traditional diet path (green)
                 Path { path in
                     let width = geometry.size.width
                     let height = geometry.size.height
@@ -234,8 +262,6 @@ struct GraphView: View {
                                 .foregroundColor(.black)
                         }
                         .padding(.bottom, 5)
-                        
-                        
                     }
                 }
                 .padding(.horizontal, 2)
@@ -244,7 +270,6 @@ struct GraphView: View {
         }
     }
 }
-
 
 struct LongTermResultsView_Previews: PreviewProvider {
     static var previews: some View {

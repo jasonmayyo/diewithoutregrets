@@ -41,6 +41,8 @@ struct CreateFirstFlashcardView: View {
                     .bold()
                     .foregroundColor(.white)
                     .padding(.top)
+                Text("Enter your first multiple choice question! Make sure to to fill out correct and incorrect answers as your choices. Or Autogenrate flashcards right from your study notes")
+                    .font(.caption)
                 
                 // Form
                 ScrollView {
