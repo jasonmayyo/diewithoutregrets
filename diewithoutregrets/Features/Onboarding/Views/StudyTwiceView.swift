@@ -22,7 +22,7 @@ struct StudyTwiceView: View {
                     .accessibilityHidden(true)
                 
                 // Main content container
-                VStack {
+                VStack(spacing: 0) {
                     // Scrollable content area
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
@@ -37,28 +37,28 @@ struct StudyTwiceView: View {
                                 .padding(.top, 20)
                             
                             Spacer()
-                                .frame(height: 30)
+                                .frame(height: 20)
                             
-                            // Comparison Card Container
+                            // Comparison Card Container - Made longer
                             ZStack {
                                 RoundedRectangle(cornerRadius: 20)
                                     .fill(Color(hex: 0xF9F9F9))
                                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                                 
-                                VStack(spacing: 25) {
+                                VStack(spacing: 30) { // Increased spacing for a longer card
                                     // Comparison bars
                                     HStack(alignment: .bottom, spacing: 30) {
                                         // Without Study Guard
-                                        VStack(spacing: 15) {
-                                            Text("Without\nStudy Guard")
+                                        VStack(spacing: 20) { // Increased spacing
+                                            Text("Without Study Guard")
                                                 .font(.system(size: 16, weight: .medium))
-                                                .multilineTextAlignment(.center)
+                                                
                                                 .foregroundColor(.black)
                                             
                                             ZStack(alignment: .bottom) {
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(Color.gray.opacity(0.15))
-                                                    .frame(width: 120, height: 120)
+                                                    .frame(width: 120, height: 160) // Increased height from 120
                                                 
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(Color.gray.opacity(0.3))
@@ -74,8 +74,8 @@ struct StudyTwiceView: View {
                                         }
                                         
                                         // With Study Guard
-                                        VStack(spacing: 15) {
-                                            Text("With\nStudy Guard")
+                                        VStack(spacing: 20) { // Increased spacing
+                                            Text("With Study Guard")
                                                 .font(.system(size: 16, weight: .medium))
                                                 .multilineTextAlignment(.center)
                                                 .foregroundColor(.black)
@@ -83,7 +83,7 @@ struct StudyTwiceView: View {
                                             ZStack(alignment: .bottom) {
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(Color.gray.opacity(0.15))
-                                                    .frame(width: 120, height: 120)
+                                                    .frame(width: 120, height: 160) // Increased height from 120
                                                 
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(Color(hex: 0x184449))
@@ -98,7 +98,7 @@ struct StudyTwiceView: View {
                                             }
                                         }
                                     }
-                                    .padding(.top, 20)
+                                    .padding(.top, 25) // Increased padding
                                     
                                     // Tagline text
                                     Text("Study Guard makes it easy and holds\nyou accountable.")
@@ -106,68 +106,48 @@ struct StudyTwiceView: View {
                                         .multilineTextAlignment(.center)
                                         .foregroundColor(Color.gray)
                                         .frame(maxWidth: .infinity)
-                                        .padding(.bottom, 20)
+                                        .padding(.bottom, 25) // Increased padding
                                         .opacity(showTagline ? 1 : 0)
                                         .offset(y: showTagline ? 0 : 10)
                                         .animation(.easeInOut(duration: 0.8).delay(1.2), value: showTagline)
                                 }
                                 .padding(.horizontal)
+                                .padding(.vertical, 10) // Added vertical padding
                             }
                             .opacity(showCard ? 1 : 0)
                             .offset(y: showCard ? 0 : 20)
                             .animation(.easeInOut(duration: 0.8).delay(0.4), value: showCard)
                             .accessibilityLabel("Comparison showing Study Guard helps you study twice as much")
-                            
-                            // Add extra space at the bottom to ensure scrollability
-                            Spacer(minLength: 100)
                         }
                         .padding(.horizontal)
                     }
+                    .padding(.bottom, 20)
                     
-                    // Fixed button container at the bottom
-                    VStack {
-                        Spacer()
-                        
-                        // Continue button with animation
-                        Button(action: {
-                            onboardingViewModel.nextStep()
-                        }) {
-                            Text("Continue")
-                                .foregroundColor(.black)
-                                .fontWeight(.semibold)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 55)
-                                .background(.white)
-                                .cornerRadius(50)
-                        }
-                        .opacity(showButton ? 1 : 0)
-                        .offset(y: showButton ? 0 : 20)
-                        .animation(.easeInOut(duration: 1).delay(1.0), value: showButton)
-                        .accessibilityLabel("Continue")
-                        .accessibilityHint("Tap to proceed to the next step")
-                        .padding(.horizontal)
-                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 20 : 30)
+                    Spacer()
+                    
+                    // Continue button with animation
+                    Button(action: {
+                        onboardingViewModel.nextStep()
+                    }) {
+                        Text("Continue")
+                            .foregroundColor(.black)
+                            .fontWeight(.semibold)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 55)
+                            .background(.white)
+                            .cornerRadius(50)
                     }
-                    .background(
-                        // Gradient background for button area
-                        LinearGradient(
-                            gradient: Gradient(
-                                colors: [
-                                    Color(hex: 0x184449).opacity(0.0),
-                                    Color(hex: 0x184449).opacity(1.0)
-                                ]
-                            ),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 100)
-                        .offset(y: -50)
-                        .opacity(showButton ? 1 : 0)
-                    )
+                    .opacity(showButton ? 1 : 0)
+                    .offset(y: showButton ? 0 : 20)
+                    .animation(.easeInOut(duration: 1).delay(1.0), value: showButton)
+                    .accessibilityLabel("Continue")
+                    .accessibilityHint("Tap to proceed to the next step")
+                    .padding(.horizontal)
+                    .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 20 : 30)
                 }
-                .frame(width: min(geometry.size.width, 500)) // Max width container for iPad
-                .frame(maxWidth: .infinity) // Center on screen
+                .frame(width: min(geometry.size.width, 500))
+                .frame(maxWidth: .infinity)
             }
         }
         .edgesIgnoringSafeArea(.bottom)
@@ -180,13 +160,13 @@ struct StudyTwiceView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 showCard = true
                 
-                // Animate the bars with delay
+                // Animate the bars with delay - adjusted for taller bars
                 withAnimation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.1)) {
-                    withoutStudyGuardBarHeight = 40  // 20% of max height
+                    withoutStudyGuardBarHeight = 53  // Adjusted for taller bar (about 33% of 160)
                 }
                 
                 withAnimation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.3)) {
-                    withStudyGuardBarHeight = 100  // 2X the without bar
+                    withStudyGuardBarHeight = 133  // Adjusted for taller bar (~83% of 160)
                 }
             }
             

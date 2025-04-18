@@ -98,15 +98,14 @@ struct LongTermResultsView: View {
                                 }
                             }
                             
-                            // Add extra space at the bottom to ensure scrollability
-                            Spacer(minLength: 100)
+                        
                         }
                         .padding(.horizontal)
                     }
                     
                     // Fixed button container at the bottom
                     VStack {
-                        Spacer()
+                        
                         
                         // Continue button with animation - now in a fixed position
                         Button(action: {
