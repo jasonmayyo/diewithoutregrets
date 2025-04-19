@@ -8,6 +8,9 @@
 import SwiftUI
 import StoreKit
 
+import SwiftUI
+import StoreKit
+
 struct RatingView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     
@@ -19,12 +22,11 @@ struct RatingView: View {
     @State private var showTestimonials = false
     @State private var showButton = false
     
-    @State private var showRatingPrompt = false
-        
-    
     // State for star rating
     @State private var rating: Int = 0
     @State private var hoveringRating: Int? = nil
+    
+    @Environment(\.requestReview) private var requestReview
     
     // Mock testimonial data
     let testimonials = [
@@ -121,7 +123,15 @@ struct RatingView: View {
                 
                 // Continue button
                 Button(action: {
-                    showRatingPrompt = true
+                    // Request review when button is pressed
+                    requestReview()
+                    
+                    // Since we can't detect when the review prompt is dismissed,
+                    // we'll use a reasonable delay before continuing to the next step
+                    // This gives users time to interact with the review prompt
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        onboardingViewModel.nextStep()
+                    }
                 }) {
                     Text("Continue")
                         .foregroundColor(Color(hex: 0x184449))
@@ -137,7 +147,7 @@ struct RatingView: View {
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 0.8).delay(1.2), value: showButton)
                 .accessibilityLabel("Continue")
-                .accessibilityHint("Tap to proceed to the next step")
+                .accessibilityHint("Tap to rate the app and continue")
             }
         }
         .onAppear {
@@ -164,18 +174,6 @@ struct RatingView: View {
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
                 showButton = true
-            }
-        }
-        .appStoreOverlay(isPresented: $showRatingPrompt) {
-                    // Configure the App Store overlay
-                    SKOverlay.AppConfiguration(appIdentifier: "6744607430", position: .bottom)
-                }
-        .onChange(of: showRatingPrompt, initial: false) { oldValue, newValue in
-            // When the rating prompt is dismissed, move to next step
-            if oldValue == true && newValue == false {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    onboardingViewModel.nextStep()
-                }
             }
         }
     }
