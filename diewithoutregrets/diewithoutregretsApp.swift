@@ -1,24 +1,14 @@
-//
-//  diewithoutregretsApp.swift
-//  diewithoutregrets
-//
-//  Created by Jason Mayo on 2025/01/13.
-//
-
 import SwiftUI
-import RevenueCat
 import RevenueCatUI
+import BranchSDK
 
 @main
 struct diewithoutregretsApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var navigationModel = NavigationModel.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @StateObject private var regretStore = RegretStore()
     @StateObject private var deckStore = DeckStore.shared
-    
-    init() {
-        Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
-    }
     
     var body: some Scene {
         WindowGroup {
@@ -27,7 +17,14 @@ struct diewithoutregretsApp: App {
                     .environmentObject(navigationModel)
                     .environmentObject(regretStore)
                     .environmentObject(deckStore)
-                    
+                    .onContinueUserActivity("NSUserActivityTypeBrowsingWeb") { userActivity in
+                        // Handle Universal Links - Using standard method
+                        Branch.getInstance().continue(userActivity)
+                    }
+                    .onOpenURL { url in
+                        // Handle URL schemes - Using app method since handleDeepLink might not exist
+                        Branch.getInstance().application(UIApplication.shared, open: url, options: [:])
+                    }
             } else {
                 OnboardingView()
                     .environmentObject(regretStore) 
@@ -35,8 +32,3 @@ struct diewithoutregretsApp: App {
         }
     }
 }
-
-class AppState: ObservableObject {
-    @Published var showRegretView: Bool = false
-}
-

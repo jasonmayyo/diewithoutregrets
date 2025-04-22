@@ -60,6 +60,7 @@
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
 		6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */; };
 		6BA42AEA2DAC4A7F00BBB626 /* PracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA42AE92DAC4A7F00BBB626 /* PracticeView.swift */; };
+		6BC21A202DB428EE00B777A0 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 6BC21A1F2DB428EE00B777A0 /* PostHog */; };
 		6BC73FAE2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */; };
 		6BC73FAF2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */; };
 		6BC73FB02DB047EF00301AF1 /* mockupvideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */; };
@@ -67,6 +68,8 @@
 		6BDD79242DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */; };
 		6BDD79252DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */; };
 		6BDD79292DB0352A007DA0BE /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDD79282DB0352A007DA0BE /* AppSecrets.swift */; };
+		6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 6BE29CFA2DB82D0800505D57 /* BranchSDK */; };
+		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
 /* End PBXBuildFile section */
 
@@ -159,6 +162,8 @@
 		6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = mockupvideo.mp4; sourceTree = SOURCE_ROOT; };
 		6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6BDD79282DB0352A007DA0BE /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
+		6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -181,9 +186,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */,
 				6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */,
 				6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */,
 				6B45F2E82DADB48E0053351D /* RevenueCatUI in Frameworks */,
+				6BC21A202DB428EE00B777A0 /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,6 +325,7 @@
 		6B531BAD2DAD249900663511 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */,
 				6B531BAE2DAD249900663511 /* StoreKit.framework */,
 			);
 			name = Frameworks;
@@ -396,6 +404,7 @@
 		6B9D89C32D3552E000DE8B2E /* diewithoutregrets */ = {
 			isa = PBXGroup;
 			children = (
+				6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */,
 				6BC73FAC2DB046C700301AF1 /* Videos */,
 				6BDD79282DB0352A007DA0BE /* AppSecrets.swift */,
 				6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */,
@@ -445,6 +454,8 @@
 			dependencies = (
 			);
 			name = RegretGuardIntent;
+			packageProductDependencies = (
+			);
 			productName = RegretGuardIntent;
 			productReference = 6B22E87F2D4A1D78003A5685 /* RegretGuardIntent.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
@@ -462,6 +473,8 @@
 			dependencies = (
 			);
 			name = OpenGuardIntent;
+			packageProductDependencies = (
+			);
 			productName = OpenGuardIntent;
 			productReference = 6B22E8922D4C081C003A5685 /* OpenGuardIntent.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
@@ -485,6 +498,8 @@
 			packageProductDependencies = (
 				6B45F2E52DADB48E0053351D /* RevenueCat */,
 				6B45F2E72DADB48E0053351D /* RevenueCatUI */,
+				6BC21A1F2DB428EE00B777A0 /* PostHog */,
+				6BE29CFA2DB82D0800505D57 /* BranchSDK */,
 			);
 			productName = diewithoutregrets;
 			productReference = 6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */;
@@ -522,6 +537,8 @@
 			mainGroup = 6B9D89B82D3552DF00DE8B2E;
 			packageReferences = (
 				6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */,
 			);
 			productRefGroup = 6B9D89C22D3552DF00DE8B2E /* Products */;
 			projectDirPath = "";
@@ -597,6 +614,7 @@
 				6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */,
 				6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */,
 				6B04F7272DA8599B00694451 /* RatingView.swift in Sources */,
+				6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */,
 				6B7CD4EA2D50C00F0065A0F7 /* BreakdownView.swift in Sources */,
 				6B22E85F2D48EA5F003A5685 /* MeshGradient.swift in Sources */,
 				6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */,
@@ -1003,6 +1021,22 @@
 				minimumVersion = 5.21.1;
 			};
 		};
+		6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.24.0;
+			};
+		};
+		6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/BranchMetrics/ios-branch-sdk-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.10.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1015,6 +1049,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCatUI;
+		};
+		6BC21A1F2DB428EE00B777A0 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+		6BE29CFA2DB82D0800505D57 /* BranchSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */;
+			productName = BranchSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
