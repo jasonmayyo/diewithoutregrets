@@ -11,24 +11,9 @@ struct diewithoutregretsApp: App {
     @StateObject private var deckStore = DeckStore.shared
     
     var body: some Scene {
-        WindowGroup {
-            if hasCompletedOnboarding {
                 ContentView()
                     .environmentObject(navigationModel)
                     .environmentObject(regretStore)
                     .environmentObject(deckStore)
-                    .onContinueUserActivity("NSUserActivityTypeBrowsingWeb") { userActivity in
-                        // Handle Universal Links - Using standard method
-                        Branch.getInstance().continue(userActivity)
-                    }
-                    .onOpenURL { url in
-                        // Handle URL schemes - Using app method since handleDeepLink might not exist
-                        Branch.getInstance().application(UIApplication.shared, open: url, options: [:])
-                    }
-            } else {
-                OnboardingView()
-                    .environmentObject(regretStore) 
-            }
-        }
     }
 }

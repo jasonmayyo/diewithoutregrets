@@ -4,6 +4,30 @@ import RevenueCatUI
 import PDFKit
 import UniformTypeIdentifiers
 
+// Custom error enum for flashcard generation
+enum FlashcardGenerationError: Error {
+    case networkError(String)
+    case timeout
+    case fileTooLarge
+    case invalidResponse
+    case tokenLimitExceeded
+    
+    var userMessage: String {
+        switch self {
+        case .networkError(let message):
+            return "Network error: \(message). Please check your internet connection and try again."
+        case .timeout:
+            return "Request timed out. The PDF might be too large to process. Try with a smaller document or break it into parts."
+        case .fileTooLarge:
+            return "This PDF is too large for processing. Please use a PDF with fewer than 30 pages for best results"
+        case .invalidResponse:
+            return "Unable to process the response from the AI model. Please try again."
+        case .tokenLimitExceeded:
+            return "The content exceeds the maximum size that we can process. Please try with a smaller document (less than 30 pages)."
+        }
+    }
+}
+
 struct AutoGenerateFlashcardsSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var deck: Deck
@@ -11,6 +35,8 @@ struct AutoGenerateFlashcardsSheet: View {
     @State private var errorMessage: String?
     @State private var showingDocumentPicker = false
     @State private var pdfExtractedText: String = ""
+    @State private var isProcessingError = false
+    @State private var currentError: FlashcardGenerationError?
     
     // Enhanced loading states
     @State private var processingStep: ProcessingStep = .idle
@@ -18,7 +44,7 @@ struct AutoGenerateFlashcardsSheet: View {
     @State private var currentPDFData: Data? = nil
     @State private var fileName: String = ""
     
-    @AppStorage("freeAutoGenerateUses") private var freeAutoGenerateUses = 3
+    @AppStorage("freeAutoGenerateUses") private var freeAutoGenerateUses = 1
     @State private var showPaywall = false
     
     // Animation states
@@ -636,15 +662,109 @@ struct AutoGenerateFlashcardsSheet: View {
             DispatchQueue.main.async {
                 if customerInfo?.entitlements["Pro Acess"]?.isActive == true {
                     print("🚀 User has Pro Access")
-                    self.generateFlashcards()
+                    self.generateFlashcards(shouldDecrementFreeUse: false)
                 } else {
                     print("🚀 No Pro Access found")
                     if self.freeAutoGenerateUses > 0 {
-                        self.freeAutoGenerateUses -= 1
-                        self.generateFlashcards()
+                        self.generateFlashcards(shouldDecrementFreeUse: true)
                     } else {
                         self.showPaywall = true
                     }
+                }
+            }
+        }
+    }
+    
+    private func generateFlashcards(shouldDecrementFreeUse: Bool) {
+        // Show generation view
+        showingGenerationView = true
+        processingStep = .generating
+        processingProgress = 0
+        generationStatus = "Analyzing text content..."
+        
+        // Use fresh text every time
+        let processingText = inputText.isEmpty ? pdfExtractedText : inputText
+        let combinedInput = flashcardPrompt + "\n\n" + processingText
+        
+        // Clear previous results
+        errorMessage = nil
+        
+        // Slower progress simulation with longer intervals
+        let totalDuration: Double = 25.0 // Total animation duration in seconds
+        let steps = 100 // More granular steps
+        
+        func updateProgress(at step: Int) {
+            let progress = Double(step) / Double(steps)
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    processingProgress = progress
+                }
+                
+                // Update status messages at specific progress points
+                switch progress {
+                case 0..<0.2:
+                    generationStatus = "Analyzing text content..."
+                case 0.2..<0.4:
+                    generationStatus = "Extracting key concepts..."
+                case 0.4..<0.6:
+                    generationStatus = "Generating questions..."
+                case 0.6..<0.8:
+                    generationStatus = "Creating answer options..."
+                case 0.8..<0.95:
+                    generationStatus = "Finalizing flashcards..."
+                default:
+                    break
+                }
+            }
+        }
+        
+        // Start progress updates
+        for step in 0..<95 { // Only go up to 95% until API call completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + (totalDuration * Double(step) / Double(steps)), execute: {
+                updateProgress(at: step)
+            })
+        }
+        
+        // Make the API call
+        generateFlashcardsAPI(with: combinedInput) { [weak self] apiResponse in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                if let flashcardsText = apiResponse {
+                    let newFlashcards = self.parseRegrets(from: flashcardsText)
+                    if newFlashcards.isEmpty {
+                        self.errorMessage = "No valid flashcards were generated. Please check the format."
+                        self.showingGenerationView = false
+                        self.processingStep = .idle
+                    } else {
+                        // Show 100% completion
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            self.processingProgress = 1.0
+                        }
+                        self.generationStatus = "Flashcards generated successfully!"
+                        
+                        // Only decrement free use if generation was successful and user is not pro
+                        if shouldDecrementFreeUse {
+                            self.freeAutoGenerateUses -= 1
+                        }
+                        
+                        // Clear input after successful generation
+                        self.inputText = ""
+                        self.pdfExtractedText = ""
+                        self.currentPDFData = nil
+                        
+                        // Add cards to the deck
+                        self.deck.cards.append(contentsOf: newFlashcards)
+                        
+                        // Dismiss the sheet after a short delay to show completion
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.dismiss()
+                        }
+                    }
+                } else {
+                    self.errorMessage = "Failed to generate flashcards. Please try again."
+                    self.showingGenerationView = false
+                    self.processingStep = .idle
                 }
             }
         }
@@ -741,6 +861,15 @@ struct AutoGenerateFlashcardsSheet: View {
         processingProgress = 0
     }
     
+    private func checkPDFSize(_ pdfData: Data) -> Bool {
+        guard let pdfDocument = PDFDocument(data: pdfData) else { return false }
+        // GPT-4o-mini has a context window limit
+        // Assuming average page has 500 words (750 tokens)
+        // Safe limit would be around 30 pages
+        let maxPages = 30
+        return pdfDocument.pageCount <= maxPages
+    }
+
     private func handlePDFSelection(_ url: URL) {
         processingStep = .uploading
         processingProgress = 0
@@ -751,6 +880,15 @@ struct AutoGenerateFlashcardsSheet: View {
         
         do {
             let data = try Data(contentsOf: url)
+            
+            // Check PDF size before processing
+            if !checkPDFSize(data) {
+                currentError = .fileTooLarge
+                errorMessage = currentError?.userMessage
+                processingStep = .idle
+                return
+            }
+            
             currentPDFData = data
             
             simulateProgress(for: .extracting) {
@@ -759,8 +897,9 @@ struct AutoGenerateFlashcardsSheet: View {
                         if let text = extractedText, !text.isEmpty {
                             pdfExtractedText = text
                             inputText = text
-                            processingStep = .idle // Set to idle after extraction
+                            processingStep = .idle
                         } else {
+                            currentError = .invalidResponse
                             errorMessage = """
                             Text extraction failed. Possible reasons:
                             1. PDF contains scanned images
@@ -773,7 +912,8 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
             }
         } catch {
-            errorMessage = "PDF loading error: \(error.localizedDescription)"
+            currentError = .networkError(error.localizedDescription)
+            errorMessage = currentError?.userMessage
             processingStep = .idle
         }
     }
@@ -829,111 +969,32 @@ struct AutoGenerateFlashcardsSheet: View {
         return key
     }
     
-    private func generateFlashcards() {
-        // Show generation view
-        showingGenerationView = true
-        processingStep = .generating
-        processingProgress = 0
-        generationStatus = "Analyzing text content..."
-        
-        // Use fresh text every time
-        let processingText = inputText.isEmpty ? pdfExtractedText : inputText
-        let combinedInput = flashcardPrompt + "\n\n" + processingText
-        
-        // Clear previous results
-        errorMessage = nil
-        
-        // Slower progress simulation with longer intervals
-        let totalDuration: Double = 25.0 // Total animation duration in seconds
-        let steps = 100 // More granular steps
-        
-        func updateProgress(at step: Int) {
-            let progress = Double(step) / Double(steps)
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    processingProgress = progress
-                }
-                
-                // Update status messages at specific progress points
-                switch progress {
-                case 0..<0.2:
-                    generationStatus = "Analyzing text content..."
-                case 0.2..<0.4:
-                    generationStatus = "Extracting key concepts..."
-                case 0.4..<0.6:
-                    generationStatus = "Generating questions..."
-                case 0.6..<0.8:
-                    generationStatus = "Creating answer options..."
-                case 0.8..<0.95:
-                    generationStatus = "Finalizing flashcards..."
-                default:
-                    break
-                }
-            }
-        }
-        
-        // Start progress updates
-        for step in 0..<95 { // Only go up to 95% until API call completes
-            DispatchQueue.main.asyncAfter(deadline: .now() + (totalDuration * Double(step) / Double(steps)), execute: {
-                updateProgress(at: step)
-            })
-        }
-        
-        // Make the API call
-        generateFlashcardsAPI(with: combinedInput) { apiResponse in
-            DispatchQueue.main.async {
-                if let flashcardsText = apiResponse {
-                    let newFlashcards = parseRegrets(from: flashcardsText)
-                    if newFlashcards.isEmpty {
-                        errorMessage = "No valid flashcards were generated. Please check the format."
-                        showingGenerationView = false
-                        processingStep = .idle
-                    } else {
-                        // Show 100% completion
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            processingProgress = 1.0
-                        }
-                        generationStatus = "Flashcards generated successfully!"
-                        
-                        // Clear input after successful generation
-                        inputText = ""
-                        pdfExtractedText = ""
-                        currentPDFData = nil
-                        
-                        // Add cards to the deck
-                        deck.cards.append(contentsOf: newFlashcards)
-                        
-                        // Dismiss the sheet after a short delay to show completion
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            dismiss()
-                        }
-                    }
-                } else {
-                    errorMessage = "Failed to generate flashcards. Please try again."
-                    showingGenerationView = false
-                    processingStep = .idle
-                }
-            }
-        }
-    }
-    
     // MARK: - API Helpers
     
     func generateFlashcardsAPI(with inputText: String, completion: @escaping (String?) -> Void) {
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
+            DispatchQueue.main.async {
+                currentError = .invalidResponse
+                errorMessage = currentError?.userMessage
+            }
             completion(nil)
             return
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = 60
+        request.timeoutInterval = 180
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // API key placeholder - use your actual key in production
+        
         guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
-          assertionFailure("Missing API key")
-          return
+            DispatchQueue.main.async {
+                currentError = .networkError("API key configuration error")
+                errorMessage = "API key configuration error. Please contact support."
+            }
+            completion(nil)
+            return
         }
+        
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
         let jsonBody: [String: Any] = [
@@ -941,10 +1002,16 @@ struct AutoGenerateFlashcardsSheet: View {
             "messages": [
                 ["role": "system", "content": flashcardPrompt],
                 ["role": "user", "content": inputText]
-            ]
+            ],
+            "max_tokens": 4000,
+            "temperature": 0.7
         ]
         
         guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonBody, options: []) else {
+            DispatchQueue.main.async {
+                currentError = .invalidResponse
+                errorMessage = currentError?.userMessage
+            }
             completion(nil)
             return
         }
@@ -952,19 +1019,67 @@ struct AutoGenerateFlashcardsSheet: View {
         request.httpBody = httpBody
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-            
-            if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []),
-               let responseDict = jsonResponse as? [String: Any],
-               let choices = (responseDict["choices"] as? [[String: Any]])?.first,
-               let message = choices["message"] as? [String: Any],
-               let content = message["content"] as? String {
-                completion(content)
-            } else {
-                completion(nil)
+            DispatchQueue.main.async {
+                if let error = error as NSError? {
+                    switch error.code {
+                    case NSURLErrorTimedOut:
+                        currentError = .timeout
+                    case NSURLErrorNotConnectedToInternet:
+                        currentError = .networkError("No internet connection")
+                    default:
+                        currentError = .networkError(error.localizedDescription)
+                    }
+                    errorMessage = currentError?.userMessage
+                    completion(nil)
+                    return
+                }
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    currentError = .invalidResponse
+                    errorMessage = currentError?.userMessage
+                    completion(nil)
+                    return
+                }
+                
+                switch httpResponse.statusCode {
+                case 200:
+                    if let data = data,
+                       let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let choices = (jsonResponse["choices"] as? [[String: Any]])?.first,
+                       let message = choices["message"] as? [String: Any],
+                       let content = message["content"] as? String {
+                        completion(content)
+                    } else {
+                        currentError = .invalidResponse
+                        errorMessage = currentError?.userMessage
+                        completion(nil)
+                    }
+                case 413:
+                    currentError = .fileTooLarge
+                    errorMessage = currentError?.userMessage
+                    completion(nil)
+                case 429:
+                    currentError = .networkError("Rate limit exceeded")
+                    errorMessage = "Rate limit exceeded. Please try again in a few minutes."
+                    completion(nil)
+                case 400:
+                    if let data = data,
+                       let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let error = jsonResponse["error"] as? [String: Any],
+                       let message = error["message"] as? String,
+                       message.contains("maximum context length") {
+                        currentError = .tokenLimitExceeded
+                        errorMessage = currentError?.userMessage
+                    } else {
+                        currentError = .invalidResponse
+                        errorMessage = currentError?.userMessage
+                    }
+                    completion(nil)
+                default:
+                    currentError = .networkError("Server error (Status \(httpResponse.statusCode))")
+                    errorMessage = "Server error (Status \(httpResponse.statusCode)). Please try again."
+                    completion(nil)
+                }
             }
         }.resume()
     }
@@ -1092,7 +1207,7 @@ Only output flashcards in the above format with one flashcard per line.
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = 60
+        request.timeoutInterval = 180
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Replace with your actual API key.
         guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
