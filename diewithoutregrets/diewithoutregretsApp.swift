@@ -11,9 +11,11 @@ struct diewithoutregretsApp: App {
     @StateObject private var deckStore = DeckStore.shared
     
     var body: some Scene {
-                ContentView()
-                    .environmentObject(navigationModel)
-                    .environmentObject(regretStore)
-                    .environmentObject(deckStore)
+        WindowGroup {
+            ContentView()
+                .environmentObject(navigationModel)
+                .environmentObject(regretStore)
+                .environmentObject(deckStore)
+        }
     }
 }

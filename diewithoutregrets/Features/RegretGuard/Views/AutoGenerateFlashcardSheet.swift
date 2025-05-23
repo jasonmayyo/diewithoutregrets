@@ -726,9 +726,7 @@ struct AutoGenerateFlashcardsSheet: View {
         }
         
         // Make the API call
-        generateFlashcardsAPI(with: combinedInput) { [weak self] apiResponse in
-            guard let self = self else { return }
-            
+        generateFlashcardsAPI(with: combinedInput) { apiResponse in
             DispatchQueue.main.async {
                 if let flashcardsText = apiResponse {
                     let newFlashcards = self.parseRegrets(from: flashcardsText)
