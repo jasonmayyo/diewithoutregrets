@@ -689,15 +689,16 @@ struct AutoGenerateFlashcardsSheet: View {
         // Clear previous results
         errorMessage = nil
         
-        // Slower progress simulation with longer intervals
+        // Progress animation configuration
         let totalDuration: Double = 25.0 // Total animation duration in seconds
-        let steps = 100 // More granular steps
+        let initialSteps = 94 // Steps until slow progress begins
+        let slowProgressInterval: Double = 0.5 // Update slow progress every 0.5 seconds
         
         func updateProgress(at step: Int) {
-            let progress = Double(step) / Double(steps)
+            let progress = Double(step) / Double(initialSteps)
             DispatchQueue.main.async {
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    processingProgress = progress
+                    processingProgress = min(0.94, progress)
                 }
                 
                 // Update status messages at specific progress points
@@ -718,15 +719,31 @@ struct AutoGenerateFlashcardsSheet: View {
             }
         }
         
-        // Start progress updates
-        for step in 0..<95 { // Only go up to 95% until API call completes
-            DispatchQueue.main.asyncAfter(deadline: .now() + (totalDuration * Double(step) / Double(steps)), execute: {
+        // Initial fast progress up to 94%
+        for step in 0..<initialSteps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + (totalDuration * Double(step) / Double(initialSteps))) {
                 updateProgress(at: step)
-            })
+            }
+        }
+        
+        // Start slow progress updates after 94%
+        var slowProgressTimer: Timer?
+        slowProgressTimer = Timer.scheduledTimer(withTimeInterval: slowProgressInterval, repeats: true) { timer in
+            DispatchQueue.main.async {
+                // Increment by a tiny amount (0.001) each time
+                let newProgress = min(0.99, self.processingProgress + 0.001)
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.processingProgress = newProgress
+                }
+            }
         }
         
         // Make the API call
         generateFlashcardsAPI(with: combinedInput) { apiResponse in
+            // Invalidate the slow progress timer
+            slowProgressTimer?.invalidate()
+            slowProgressTimer = nil
+            
             DispatchQueue.main.async {
                 if let flashcardsText = apiResponse {
                     let newFlashcards = self.parseRegrets(from: flashcardsText)
