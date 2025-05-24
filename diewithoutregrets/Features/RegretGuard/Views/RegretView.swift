@@ -170,7 +170,7 @@ struct RegretView: View {
                                     .font(.title2)
                                     .padding(.horizontal, 30)
                             } else {
-                                Text("Well done! You've earned temporary access to \(appName)")
+                                Text("Success unlocked! You’ve earned access to  \(appName) — stay focused and keep pushing!")
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(.black)
                                     .font(.title2)
@@ -192,7 +192,7 @@ struct RegretView: View {
                                     }
                                 } else {
                                     Button(action: handleUnlock) {
-                                        Text("Unlock \(appName) for 5 Min")
+                                        Text("Unlock \(appName)")
                                             .foregroundColor(.black)
                                             .padding()
                                             .frame(maxWidth: .infinity)

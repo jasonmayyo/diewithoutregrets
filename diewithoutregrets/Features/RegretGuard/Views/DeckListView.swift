@@ -164,6 +164,7 @@ struct DeckView: View {
             VStack(spacing: 12) {
                 // Add Practice Button
                 Button {
+                    deckStore.selectDeck(deck) // Ensure this deck is selected
                     showingPractice = true
                 } label: {
                     HStack {
@@ -188,7 +189,7 @@ struct DeckView: View {
                 }
                 .disabled(deck.cards.isEmpty)
                             .fullScreenCover(isPresented: $showingPractice) {
-                                PracticeView()
+                                PracticeView(deck: deck)
                                     .environmentObject(deckStore)
                             }
                 
@@ -294,6 +295,16 @@ struct NewDeckView: View {
     @EnvironmentObject var deckStore: DeckStore
     @Environment(\.dismiss) var dismiss
     @State private var deckName = ""
+    @State private var showDuplicateAlert = false
+    
+    private var isDuplicateName: Bool {
+        let trimmedName = deckName.trimmingCharacters(in: .whitespaces).lowercased()
+        return deckStore.decks.contains { $0.name.lowercased() == trimmedName }
+    }
+    
+    private var isValidName: Bool {
+        !deckName.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicateName
+    }
     
     var body: some View {
         NavigationStack {
@@ -301,6 +312,16 @@ struct NewDeckView: View {
                 Section(header: Text("Deck Information")) {
                     TextField("Deck Name", text: $deckName)
                         .accessibilityLabel("Deck name entry field")
+                    
+                    if isDuplicateName && !deckName.trimmingCharacters(in: .whitespaces).isEmpty {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text("A deck with this name already exists")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    }
                 }
             }
             .navigationTitle("New Deck")
@@ -314,15 +335,27 @@ struct NewDeckView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        let newDeck = Deck(
-                            name: deckName.trimmingCharacters(in: .whitespaces),
-                            cards: []
-                        )
-                        deckStore.addDeck(newDeck)
-                        dismiss()
+                        let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
+                        if isDuplicateName {
+                            showDuplicateAlert = true
+                        } else {
+                            let newDeck = Deck(
+                                name: trimmedName,
+                                cards: []
+                            )
+                            deckStore.addDeck(newDeck)
+                            dismiss()
+                        }
                     }
-                    .disabled(deckName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!isValidName)
                 }
+            }
+            .alert("Duplicate Deck Name", isPresented: $showDuplicateAlert) {
+                Button("OK") {
+                    showDuplicateAlert = false
+                }
+            } message: {
+                Text("A deck with the name '\(deckName.trimmingCharacters(in: .whitespaces))' already exists. Please choose a different name.")
             }
         }
     }

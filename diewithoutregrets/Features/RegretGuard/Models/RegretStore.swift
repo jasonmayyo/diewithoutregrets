@@ -129,22 +129,53 @@ class DeckStore: ObservableObject {
         decks.insert(deck, at: 0)
         
         if decks.count == 1 {
-                selectedDeck = deck
-            }
+            selectedDeck = deck
+        }
+        
+        // Force update to ensure proper state synchronization
+        objectWillChange.send()
     }
     
     func updateDeck(_ updatedDeck: Deck) {
         if let index = decks.firstIndex(where: { $0.id == updatedDeck.id }) {
             decks[index] = updatedDeck
+            
+            // Update selectedDeck if it's the same deck that was updated
+            if selectedDeck?.id == updatedDeck.id {
+                selectedDeck = updatedDeck
+            }
+            
+            // Force update to ensure proper state synchronization
+            objectWillChange.send()
+        }
+    }
+    
+    // Add method to refresh deck state
+    func refreshDeck(withId id: UUID) {
+        if let index = decks.firstIndex(where: { $0.id == id }) {
+            if selectedDeck?.id == id {
+                selectedDeck = decks[index]
+            }
+            objectWillChange.send()
         }
     }
     
     func deleteDeck(at offsets: IndexSet) {
+        // Get the deck being deleted before removal
+        let deckToDelete = offsets.map { decks[$0] }
+        
         decks.remove(atOffsets: offsets)
         
+        // If the selected deck was deleted, select a new one
+        if let deletedDeck = deckToDelete.first, 
+           selectedDeck?.id == deletedDeck.id {
+            selectedDeck = decks.first
+        }
+        
+        // If only one deck remains, select it
         if decks.count == 1 {
-                selectedDeck = decks.first
-            }
+            selectedDeck = decks.first
+        }
     }
     
     private func addSampleData() {

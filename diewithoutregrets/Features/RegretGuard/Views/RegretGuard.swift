@@ -153,28 +153,60 @@ struct DeckSelectionView: View {
                     ) {
                         deckStore.selectDeck(deck)
                     }
-                    .padding(.vertical, 5)
                     .tag(index)
                 }
                 
                 // Add Deck Button
                 Button(action: { showAddDeckSheet = true }) {
-                    VStack(spacing: 15) {
-                        Image(systemName: "plus.circle")
-                            .font(.system(size: 40))
-                        Text("Create New Deck")
-                            .bold()
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(hex: 0x3FA4AE).opacity(0.1),
+                                            Color(hex: 0x2BC391).opacity(0.1)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 60, height: 60)
+                            
+                            Image(systemName: "plus")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(Color(hex: 0x184449))
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text("Create New Deck")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: 0x184449))
+                            
+                            Text("Start organizing your flashcards")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.7))
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 0)
-                    .padding(.horizontal)
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.white)
+                            .shadow(
+                                color: Color.black.opacity(0.08),
+                                radius: 12,
+                                x: 0,
+                                y: 4
+                            )
+                    )
                 }
-                .foregroundColor(Color(hex: 0x184449))
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
                 .tag(deckStore.decks.count)
             }
-            .frame(height: 160)
+            .frame(height: 235)
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             
             // Custom Page Indicators
@@ -220,91 +252,203 @@ struct DeckCardView: View {
     let deck: Deck
     let isSelected: Bool
     let action: () -> Void
+    @EnvironmentObject var deckStore: DeckStore
     
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Premium header with gradient background
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(deck.name)
-                            .font(.headline)
-                            .bold()
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
                             .lineLimit(1)
                         
-                        Text("\(deck.cards.count) flashcards")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    Spacer()
-                    
-                    // Status indicator
-                    VStack {
-                        Circle()
-                            .fill(isSelected ? Color.green : Color.gray.opacity(0.3))
-                            .frame(width: 14, height: 14)
-                        Text(isSelected ? "Active" : "Inactive")
-                            .font(.caption2)
-                            .foregroundColor(isSelected ? .green : .gray)
-                    }
-                }
-                
-                Spacer()
-                
-                // Preview of first few cards if available
-                if !deck.cards.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(Array(deck.cards.prefix(3).enumerated()), id: \.element.id) { index, card in
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(hex: 0x184449).opacity(0.1))
-                                    .frame(width: 60, height: 40)
-                                    .overlay(
-                                        Text("\(index + 1)")
-                                            .font(.caption)
-                                            .foregroundColor(Color(hex: 0x184449))
-                                    )
-                            }
-                            
-                            if deck.cards.count > 3 {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(hex: 0x184449).opacity(0.1))
-                                    .frame(width: 60, height: 40)
-                                    .overlay(
-                                        Text("+\(deck.cards.count - 3)")
-                                            .font(.caption)
-                                            .foregroundColor(Color(hex: 0x184449))
-                                    )
-                            }
+                        HStack(spacing: 6) {
+                            Image(systemName: "rectangle.stack.fill")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                            Text("\(deck.cards.count) flashcards")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white.opacity(0.9))
                         }
                     }
-                    .padding(.top, 5)
-                } else {
-                    Text("No cards yet - tap to add")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .padding(.top, 5)
+                    
+                    Spacer()
+                    
+                    // Premium status indicator
+                    VStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .fill(.white.opacity(0.2))
+                                .frame(width: 32, height: 32)
+                            
+                            Circle()
+                                .fill(isSelected ? Color.green : .white.opacity(0.6))
+                                .frame(width: 18, height: 18)
+                            
+                            if isSelected {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        
+                        Text(isSelected ? "ACTIVE" : "INACTIVE")
+                            .font(.caption2)
+                            .fontWeight(.heavy)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
                 }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 24)
+                .background(
+                    LinearGradient(
+                        colors: isSelected ? [
+                            Color(hex: 0x2BC391),
+                            Color(hex: 0x3FA4AE)
+                        ] : [
+                            Color(hex: 0x184449),
+                            Color(hex: 0x065961)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 
+                // Enhanced management button
+                NavigationLink(destination: DeckView(deck: Binding(
+                    get: { 
+                        deckStore.decks.first(where: { $0.id == deck.id }) ?? deck 
+                    },
+                    set: { newValue in
+                        if let index = deckStore.decks.firstIndex(where: { $0.id == deck.id }) {
+                            deckStore.decks[index] = newValue
+                        }
+                    }
+                ))) {
+                    HStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.gray.opacity(0.1))
+                                .frame(width: 40, height: 40)
+                            
+                            Image(systemName: deck.cards.isEmpty ? "plus.circle.fill" : "square.and.pencil")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.7))
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(deck.cards.isEmpty ? "Create Flashcards" : "Manage Flashcards")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: 0x184449))
+                            
+                            Text(deck.cards.isEmpty ? "Start building your deck" : "Edit and organize cards")
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(Color(hex: 0x184449).opacity(0.3))
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 20)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                // Activation prompt or active deck explanation
                 if !isSelected {
-                    Text("Tap to activate")
-                        .font(.caption)
-                        .foregroundColor(Color(hex: 0x184449))
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 8)
+                    Divider()
+                        .padding(.horizontal, 24)
+                    
+                    HStack(spacing: 12) {
+                        Image(systemName: "hand.tap.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(hex: 0x3FA4AE))
+                        
+                        Text("Tap to activate this deck")
+                            .font(.callout)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: 0x184449))
+                        
+                        Spacer()
+                        
+                        Circle()
+                            .fill(Color(hex: 0x3FA4AE))
+                            .frame(width: 6, height: 6)
+                            .scaleEffect(isSelected ? 0 : 1)
+                            .opacity(isSelected ? 0 : 1)
+                            .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isSelected)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                    .background(Color(hex: 0x3FA4AE).opacity(0.04))
+                } else {
+                    Divider()
+                        .padding(.horizontal, 24)
+                    
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.green)
+                        
+                        Text("Answer flashcards from this deck to unblock apps.")
+                            .font(.footnote)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: 0x184449).opacity(0.8))
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.8)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                    .background(Color.green.opacity(0.05))
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white)
-            .cornerRadius(16)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 3)
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        isSelected ? 
+                        LinearGradient(
+                            colors: [
+                                Color(hex: 0x2BC391).opacity(0.6),
+                                Color(hex: 0x3FA4AE).opacity(0.4)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) :
+                        LinearGradient(
+                            colors: [Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: isSelected ? 2 : 0
+                    )
             )
-            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-            .padding(.horizontal)
+            .shadow(
+                color: isSelected ? 
+                    Color(hex: 0x2BC391).opacity(0.2) : 
+                    Color.black.opacity(0.08),
+                radius: isSelected ? 16 : 10,
+                x: 0,
+                y: isSelected ? 6 : 3
+            )
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16) // Increased padding to prevent clipping
     }
 }
 
@@ -330,9 +474,6 @@ struct AppRestrictionButton: View {
         .foregroundColor(.black)
     }
 }
-
-
-
 
 #Preview {
     RegretGuard()

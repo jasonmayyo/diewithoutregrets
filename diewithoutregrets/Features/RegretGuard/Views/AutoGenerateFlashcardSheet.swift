@@ -31,6 +31,7 @@ enum FlashcardGenerationError: Error {
 struct AutoGenerateFlashcardsSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var deck: Deck
+    @EnvironmentObject var deckStore: DeckStore
     @State private var inputText: String = ""
     @State private var errorMessage: String?
     @State private var showingDocumentPicker = false
@@ -770,6 +771,9 @@ struct AutoGenerateFlashcardsSheet: View {
                         
                         // Add cards to the deck
                         self.deck.cards.append(contentsOf: newFlashcards)
+                        
+                        // Update deck store to ensure proper state synchronization
+                        self.deckStore.updateDeck(self.deck)
                         
                         // Dismiss the sheet after a short delay to show completion
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {

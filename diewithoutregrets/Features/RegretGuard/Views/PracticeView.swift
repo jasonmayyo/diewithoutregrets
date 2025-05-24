@@ -12,6 +12,8 @@ struct PracticeView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = PracticeViewModel()
     
+    let deck: Deck
+    
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
@@ -69,7 +71,7 @@ struct PracticeView: View {
             }
             .preferredColorScheme(.light)
             .onAppear {
-                viewModel.setup(deck: deckStore.selectedDeck)
+                viewModel.setup(deck: deck)
             }
         }
     }
@@ -385,7 +387,4 @@ struct PracticeView: View {
                }
            }
     }
-}
-#Preview {
-    PracticeView()
 }
