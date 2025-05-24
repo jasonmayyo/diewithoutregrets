@@ -178,7 +178,7 @@ struct RegretView: View {
                             }
                             
                             Spacer()
-                            
+                                
                             // Action Buttons
                             VStack(spacing: 15) {
                                 if hasIncorrectAnswers {
