@@ -20,25 +20,10 @@ struct PracticeView: View {
             
             VStack {
                 // Added header with back button and progress bar
-                HStack(spacing: 3) {
-                                    // Back Button
-                                    Button(action: { dismiss() }) {
-                                        Image(systemName: "xmark")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(Color(hex: 0x184449))
-                                            .padding(8)
-                                            .background(Color.gray.opacity(0.1))
-                                            .clipShape(Circle())
-                                    }
-                                    .padding(.leading, 10)
-                                    
-                                    // Updated ProgressBar
-                    ProgressBar(questionResults: viewModel.questionResults)
-                                    
-                                    Spacer()
-                                }
-                                .padding(.top)
-                                .padding(.horizontal, 10)
+                PracticeHeaderView(
+                    dismissAction: { dismiss() },
+                    questionResults: viewModel.questionResults
+                )
                 Group {
                     if viewModel.showFinalMessage {
                         FinalMessageView(
@@ -77,6 +62,57 @@ struct PracticeView: View {
     }
     
     // MARK: - Subviews
+    private struct PracticeHeaderView: View {
+        let dismissAction: () -> Void
+        let questionResults: [Bool?]
+        
+        var body: some View {
+            HStack(spacing: 12) {
+                Button(action: dismissAction) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.8))
+                        .padding(10)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                
+                // Use the enhanced ProgressBar
+                EnhancedProgressBar(questionResults: questionResults)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+            .padding(.bottom, 5)
+        }
+    }
+
+    private struct EnhancedProgressBar: View {
+        let questionResults: [Bool?]
+        private let barHeight: CGFloat = 8
+
+        var body: some View {
+            let totalQuestions = questionResults.count
+            let answeredQuestions = questionResults.compactMap { $0 }.count
+            let progress = totalQuestions > 0 ? Double(answeredQuestions) / Double(totalQuestions) : 0.0
+            
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    // Background Track
+                    Capsule()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: barHeight)
+                    
+                    // Progress Fill
+                    Capsule()
+                        .fill(Color(hex: 0x184449))
+                        .frame(width: geometry.size.width * progress, height: barHeight)
+                        .animation(.easeInOut(duration: 0.3), value: progress)
+                }
+            }
+            .frame(height: barHeight)
+        }
+    }
+
     private struct QuestionView: View {
         let currentRegret: Regret?
         @Binding var selectedAnswer: Int?
@@ -188,42 +224,6 @@ struct PracticeView: View {
             .disabled(disabled)
         }
     }
-    
-    // MARK: - Subviews
-    private struct ProgressBar: View {
-        let questionResults: [Bool?]
-        
-        var body: some View {
-            GeometryReader { geometry in
-                HStack(spacing: 2) {
-                    ForEach(0..<questionResults.count, id: \.self) { index in
-                        let segmentWidth = geometry.size.width / CGFloat(questionResults.count)
-                        
-                        Rectangle()
-                            .frame(width: segmentWidth, height: 5)
-                            .foregroundColor(colorForQuestion(at: index))
-                            .cornerRadius(10)
-                    }
-                }
-            }
-            .frame(height: 4)
-            .padding(.horizontal, 10)
-        }
-        
-        private func colorForQuestion(at index: Int) -> Color {
-            guard index < questionResults.count else { return .gray }
-            
-            if let isCorrect = questionResults[index] {
-                return isCorrect ? .green : .red
-            }
-            return .gray
-        }
-    }
-
-    
-    
-    
-    
     
     private struct ExplanationView: View {
         let currentRegret: Regret

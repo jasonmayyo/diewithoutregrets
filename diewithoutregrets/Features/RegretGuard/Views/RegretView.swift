@@ -170,7 +170,7 @@ struct RegretView: View {
                                     .font(.title2)
                                     .padding(.horizontal, 30)
                             } else {
-                                Text("Success unlocked! You’ve earned access to  \(appName) — stay focused and keep pushing!")
+                                Text("Successfully unlocked! You’ve earned access to \(appName)!")
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(.black)
                                     .font(.title2)
