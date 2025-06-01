@@ -14,7 +14,7 @@ struct RegretApp: Identifiable {
     let shortcutLink: URL
 }
 
-struct Deck: Identifiable, Codable {
+struct Deck: Identifiable, Codable, Equatable {
     let id: UUID
     var name: String
     var cards: [Regret]
@@ -28,7 +28,7 @@ struct Deck: Identifiable, Codable {
     }
 }
 
-struct Regret: Identifiable, Codable {
+struct Regret: Identifiable, Codable, Equatable {
     let id: UUID
     var regretPrompt: String
     var regret: String

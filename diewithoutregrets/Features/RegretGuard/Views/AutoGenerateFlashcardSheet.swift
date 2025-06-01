@@ -11,19 +11,31 @@ enum FlashcardGenerationError: Error {
     case fileTooLarge
     case invalidResponse
     case tokenLimitExceeded
+    case textTooShort
+    case textTooLong
+    case textInvalidFormat
+    case textLowQuality
     
     var userMessage: String {
         switch self {
         case .networkError(let message):
             return "Network error: \(message). Please check your internet connection and try again."
         case .timeout:
-            return "Request timed out. The PDF might be too large to process. Try with a smaller document or break it into parts."
+            return "Request timed out. The text might be too long to process. Try with shorter content."
         case .fileTooLarge:
-            return "This PDF is too large for processing. Please use a PDF with fewer than 30 pages for best results"
+            return "This PDF is too large for processing. Please use a PDF with fewer than 50 pages for best results"
         case .invalidResponse:
             return "Unable to process the response from the AI model. Please try again."
         case .tokenLimitExceeded:
-            return "The content exceeds the maximum size that we can process. Please try with a smaller document (less than 30 pages)."
+            return "The content exceeds the maximum size that we can process. Please try with shorter text (less than 25,000 words)."
+        case .textTooShort:
+            return "Please provide more text content. We need at least 50 characters to generate meaningful flashcards."
+        case .textTooLong:
+            return "Text is too long for processing. Please limit to 25,000 words or break into smaller sections."
+        case .textInvalidFormat:
+            return "The text appears to contain invalid characters or formatting. Please paste plain text content."
+        case .textLowQuality:
+            return "The text doesn't contain enough educational content to generate flashcards. Please provide study material with clear concepts."
         }
     }
 }
@@ -47,6 +59,7 @@ struct AutoGenerateFlashcardsSheet: View {
     
     @AppStorage("freeAutoGenerateUses") private var freeAutoGenerateUses = 1
     @State private var showPaywall = false
+    @State private var currentOffering: Offering?
     
     // Animation states
     @State private var showUploadAnimation = false
@@ -186,9 +199,6 @@ struct AutoGenerateFlashcardsSheet: View {
             }
             .navigationTitle("AI Flashcard Generator")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showPaywall) {
-                PaywallView()
-            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -225,15 +235,9 @@ struct AutoGenerateFlashcardsSheet: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.yellow)
                     
-                    if freeAutoGenerateUses > 0 {
-                        Text("\(freeAutoGenerateUses) Free Uses Left")
-                            .font(.headline)
-                            .foregroundColor(Color(hex: 0x184449))
-                    } else {
-                        Text("Premium Feature")
-                            .font(.headline)
-                            .foregroundColor(Color(hex: 0x184449))
-                    }
+                    Text("AI Flashcard Generator")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: 0x184449))
                     
                     Image(systemName: "sparkles")
                         .font(.system(size: 16, weight: .medium))
@@ -342,9 +346,41 @@ struct AutoGenerateFlashcardsSheet: View {
             
             // Enhanced text input
             VStack(alignment: .leading, spacing: 12) {
-                Text("Paste your text")
-                    .font(.headline)
-                    .foregroundColor(Color(hex: 0x184449))
+                HStack {
+                    Text("Paste your text")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    Spacer()
+                    
+                    // Character count and validation status
+                    HStack(spacing: 8) {
+                        let stats = getTextStats(inputText)
+                        
+                        if !inputText.isEmpty {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("\(stats.characters) characters")
+                                    .font(.caption2)
+                                    .foregroundColor(stats.characters < 50 ? .orange : stats.characters > 100000 ? .red : .secondary)
+                                
+                                Text("\(stats.words) words")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // Validation indicator
+                            if let validationError = validateTextInput(inputText) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            } else if inputText.count >= 50 {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
+                    }
+                }
                 
                 TextEditor(text: $inputText)
                     .frame(height: 150)
@@ -366,6 +402,44 @@ struct AutoGenerateFlashcardsSheet: View {
                             )
                     )
                     .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                
+                // Validation warning message
+                if !inputText.isEmpty, let validationError = validateTextInput(inputText) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                        
+                        Text(validationError.userMessage)
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 4)
+                }
+                
+                // Helpful tips for users
+                if inputText.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("💡 Tips for best results:")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: 0x184449))
+                        
+                        Text("• Paste educational content (textbook, notes, articles)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("• Include at least 50 characters for meaningful flashcards")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("• Limit to 25,000 words for optimal processing")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+                }
             }
         }
         .padding(24)
@@ -604,7 +678,11 @@ struct AutoGenerateFlashcardsSheet: View {
     }
     
     var generateButton: some View {
-        Button {
+        let currentText = inputText.isEmpty ? pdfExtractedText : inputText
+        let hasValidText = !currentText.isEmpty && validateTextInput(currentText) == nil
+        let isDisabled = processingStep != .idle || !hasValidText
+        
+        return Button {
             checkAuthAndGenerate()
         } label: {
             HStack {
@@ -616,6 +694,14 @@ struct AutoGenerateFlashcardsSheet: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                         Text("Processing...")
+                    } else if !hasValidText && !currentText.isEmpty {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Fix Input Issues")
+                    } else if currentText.isEmpty {
+                        Image(systemName: "text.alignleft")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Add Text to Generate")
                     } else {
                         Image(systemName: "sparkles")
                             .font(.system(size: 16, weight: .medium))
@@ -629,7 +715,7 @@ struct AutoGenerateFlashcardsSheet: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(primaryGradient)
+                    .fill(isDisabled ? grayGradient : primaryGradient)
             )
             .foregroundColor(.white)
             .font(.headline)
@@ -638,53 +724,38 @@ struct AutoGenerateFlashcardsSheet: View {
                     .stroke(Color.white.opacity(0.3), lineWidth: 1)
             )
             .shadow(
-                color: Color(hex: 0x3FA4AE).opacity(0.3),
+                color: isDisabled ? Color.gray.opacity(0.2) : Color(hex: 0x3FA4AE).opacity(0.3),
                 radius: 15,
                 x: 0,
                 y: 8
             )
         }
         .buttonStyle(GenerateButtonStyle())
-        .disabled(processingStep != .idle || (inputText.isEmpty && pdfExtractedText.isEmpty))
-        .opacity((inputText.isEmpty && pdfExtractedText.isEmpty) ? 0.6 : 1.0)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.6 : 1.0)
     }
     
     private func checkAuthAndGenerate() {
-        Purchases.shared.getCustomerInfo { customerInfo, error in
-            if let error = error {
-                print("🚀 RevenueCat Error: \(error.localizedDescription)")
-            }
-            
-            if let customerInfo = customerInfo {
-                print("🚀 Customer Info: \(customerInfo)")
-                print("🚀 Entitlements: \(customerInfo.entitlements.all)")
-            }
-            
-            DispatchQueue.main.async {
-                if customerInfo?.entitlements["Pro Acess"]?.isActive == true {
-                    print("🚀 User has Pro Access")
-                    self.generateFlashcards(shouldDecrementFreeUse: false)
-                } else {
-                    print("🚀 No Pro Access found")
-                    if self.freeAutoGenerateUses > 0 {
-                        self.generateFlashcards(shouldDecrementFreeUse: true)
-                    } else {
-                        self.showPaywall = true
-                    }
-                }
-            }
-        }
+        generateFlashcards()
     }
     
-    private func generateFlashcards(shouldDecrementFreeUse: Bool) {
+    private func generateFlashcards() {
+        // Use fresh text every time
+        let processingText = inputText.isEmpty ? pdfExtractedText : inputText
+        
+        // Validate text input before proceeding
+        if let validationError = validateTextInput(processingText) {
+            currentError = validationError
+            errorMessage = validationError.userMessage
+            return
+        }
+        
         // Show generation view
         showingGenerationView = true
         processingStep = .generating
         processingProgress = 0
         generationStatus = "Analyzing text content..."
         
-        // Use fresh text every time
-        let processingText = inputText.isEmpty ? pdfExtractedText : inputText
         let combinedInput = flashcardPrompt + "\n\n" + processingText
         
         // Clear previous results
@@ -749,7 +820,8 @@ struct AutoGenerateFlashcardsSheet: View {
                 if let flashcardsText = apiResponse {
                     let newFlashcards = self.parseRegrets(from: flashcardsText)
                     if newFlashcards.isEmpty {
-                        self.errorMessage = "No valid flashcards were generated. Please check the format."
+                        self.currentError = .invalidResponse
+                        self.errorMessage = "No valid flashcards were generated from your text. Try providing more detailed educational content with clear concepts and facts."
                         self.showingGenerationView = false
                         self.processingStep = .idle
                     } else {
@@ -758,11 +830,6 @@ struct AutoGenerateFlashcardsSheet: View {
                             self.processingProgress = 1.0
                         }
                         self.generationStatus = "Flashcards generated successfully!"
-                        
-                        // Only decrement free use if generation was successful and user is not pro
-                        if shouldDecrementFreeUse {
-                            self.freeAutoGenerateUses -= 1
-                        }
                         
                         // Clear input after successful generation
                         self.inputText = ""
@@ -781,7 +848,8 @@ struct AutoGenerateFlashcardsSheet: View {
                         }
                     }
                 } else {
-                    self.errorMessage = "Failed to generate flashcards. Please try again."
+                    self.currentError = .networkError("API request failed")
+                    self.errorMessage = "Failed to generate flashcards. Please check your internet connection and try again."
                     self.showingGenerationView = false
                     self.processingStep = .idle
                 }
@@ -803,24 +871,78 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Error")
+                    Text("Validation Error")
                         .font(.headline)
                         .foregroundColor(Color(hex: 0x184449))
                     
-                    Text(message)
+                    Text("Issues found with your content")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 
                 Spacer()
                 
                 Button {
                     errorMessage = nil
+                    currentError = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 24))
                         .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                }
+            }
+            
+            // Scrollable detailed error message
+            ScrollView {
+                Text(message)
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxHeight: 200) // Limit height and make scrollable
+            .padding(.vertical, 8)
+            
+            // Action buttons
+            HStack(spacing: 12) {
+                // Copy error details button
+                Button {
+                    UIPasteboard.general.string = message
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "doc.on.clipboard")
+                            .font(.system(size: 14))
+                        Text("Copy Details")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: 0x184449).opacity(0.1))
+                    .foregroundColor(Color(hex: 0x184449))
+                    .cornerRadius(8)
+                }
+                
+                Spacer()
+                
+                // Try again button
+                Button {
+                    errorMessage = nil
+                    currentError = nil
+                    resetState()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 14))
+                        Text("Try Again")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: 0x184449))
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
             }
         }
@@ -882,10 +1004,10 @@ struct AutoGenerateFlashcardsSheet: View {
     
     private func checkPDFSize(_ pdfData: Data) -> Bool {
         guard let pdfDocument = PDFDocument(data: pdfData) else { return false }
-        // GPT-4o-mini has a context window limit
+        // GPT-4o-mini has a 128k context window
         // Assuming average page has 500 words (750 tokens)
-        // Safe limit would be around 30 pages
-        let maxPages = 30
+        // Safe limit for quality flashcard generation: around 50 pages
+        let maxPages = 50
         return pdfDocument.pageCount <= maxPages
     }
 
@@ -902,8 +1024,9 @@ struct AutoGenerateFlashcardsSheet: View {
             
             // Check PDF size before processing
             if !checkPDFSize(data) {
+                let pageCount = PDFDocument(data: data)?.pageCount ?? 0
                 currentError = .fileTooLarge
-                errorMessage = currentError?.userMessage
+                errorMessage = "PDF is too large (\(pageCount) pages). Please use a PDF with 50 pages or fewer for optimal processing."
                 processingStep = .idle
                 return
             }
@@ -914,27 +1037,151 @@ struct AutoGenerateFlashcardsSheet: View {
                 self.extractTextFromPDF(data) { extractedText in
                     DispatchQueue.main.async {
                         if let text = extractedText, !text.isEmpty {
-                            pdfExtractedText = text
-                            inputText = text
-                            processingStep = .idle
+                            // Validate the extracted text and provide detailed feedback
+                            if let validationError = self.validateExtractedText(text) {
+                                self.currentError = validationError.error
+                                self.errorMessage = validationError.detailedMessage
+                                self.processingStep = .idle
+                                // Still set the text so user can see what was extracted
+                                self.pdfExtractedText = text
+                                self.inputText = text
+                            } else {
+                                // Text is valid, proceed
+                                self.pdfExtractedText = text
+                                self.inputText = text
+                                self.processingStep = .idle
+                                self.errorMessage = nil
+                                self.currentError = nil
+                            }
                         } else {
-                            currentError = .invalidResponse
-                            errorMessage = """
-                            Text extraction failed. Possible reasons:
-                            1. PDF contains scanned images
-                            2. PDF is password protected
-                            3. Text layers are missing
-                            """
-                            processingStep = .idle
+                            // No text was extracted
+                            self.currentError = .invalidResponse
+                            self.errorMessage = self.createDetailedExtractionErrorMessage(from: data)
+                            self.processingStep = .idle
                         }
                     }
                 }
             }
         } catch {
             currentError = .networkError(error.localizedDescription)
-            errorMessage = currentError?.userMessage
+            errorMessage = "Failed to read PDF file: \(error.localizedDescription). Please ensure the file is not corrupted and try again."
             processingStep = .idle
         }
+    }
+    
+    // New helper function to create detailed extraction error messages
+    private func createDetailedExtractionErrorMessage(from pdfData: Data) -> String {
+        guard let pdfDocument = PDFDocument(data: pdfData) else {
+            return "Failed to read PDF file. The file may be corrupted or in an unsupported format."
+        }
+        
+        let pageCount = pdfDocument.pageCount
+        var diagnostics: [String] = []
+        
+        // Check if any pages have text
+        var hasAnyText = false
+        var pagesWithText = 0
+        
+        for pageIndex in 0..<min(pageCount, 5) { // Check first 5 pages
+            if let page = pdfDocument.page(at: pageIndex),
+               let pageText = page.string,
+               !pageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                hasAnyText = true
+                pagesWithText += 1
+            }
+        }
+        
+        if !hasAnyText {
+            diagnostics.append("• No readable text found in the PDF")
+            diagnostics.append("• This PDF likely contains scanned images instead of selectable text")
+            diagnostics.append("• Try using a PDF with text that can be selected/copied")
+        } else if pagesWithText < pageCount {
+            diagnostics.append("• Only \(pagesWithText) of \(pageCount) pages contain readable text")
+            diagnostics.append("• Some pages may be scanned images")
+        }
+        
+        let baseMessage = "Text extraction failed from this PDF."
+        let suggestion = "\n\n💡 Try these solutions:\n1. Use a PDF with selectable text (not scanned images)\n2. Check if the PDF is password protected\n3. Try copying and pasting text directly instead"
+        
+        return baseMessage + "\n\n" + diagnostics.joined(separator: "\n") + suggestion
+    }
+    
+    // New helper function to validate extracted text with detailed feedback
+    private func validateExtractedText(_ text: String) -> (error: FlashcardGenerationError, detailedMessage: String)? {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stats = getTextStats(trimmedText)
+        
+        var issues: [String] = []
+        var suggestions: [String] = []
+        
+        // Check minimum length
+        if trimmedText.count < 50 {
+            issues.append("• Text is too short (\(stats.characters) characters, need at least 50)")
+            suggestions.append("• Try uploading a PDF with more content")
+            return (.textTooShort, createValidationErrorMessage(issues: issues, suggestions: suggestions, stats: stats))
+        }
+        
+        // Check maximum length (roughly 25,000 words = ~100,000 characters)
+        if trimmedText.count > 100000 {
+            issues.append("• Text is too long (\(stats.characters) characters, maximum is 100,000)")
+            issues.append("• This represents about \(stats.words) words")
+            suggestions.append("• Try uploading a shorter PDF (fewer pages)")
+            suggestions.append("• Break your content into smaller sections")
+            return (.textTooLong, createValidationErrorMessage(issues: issues, suggestions: suggestions, stats: stats))
+        }
+        
+        // Check text format
+        if !isValidTextFormat(trimmedText) {
+            let letterCharacterSet = CharacterSet.letters
+            let letterCount = trimmedText.unicodeScalars.filter { letterCharacterSet.contains($0) }.count
+            let letterRatio = Double(letterCount) / Double(trimmedText.count)
+            
+            issues.append("• Text contains too many special characters (\(Int(letterRatio * 100))% letters, need at least 60%)")
+            issues.append("• This might be a formatting or encoding issue")
+            suggestions.append("• Try a different PDF or copy text manually")
+            suggestions.append("• Check if the PDF has proper text encoding")
+            return (.textInvalidFormat, createValidationErrorMessage(issues: issues, suggestions: suggestions, stats: stats))
+        }
+        
+        // Check educational content
+        if !hasEducationalContent(trimmedText) {
+            let educationalKeywords = getEducationalKeywords(trimmedText)
+            issues.append("• Text doesn't appear to contain educational content")
+            issues.append("• Found only \(educationalKeywords.count) educational keywords (need at least 3)")
+            if !educationalKeywords.isEmpty {
+                issues.append("• Keywords found: \(educationalKeywords.joined(separator: ", "))")
+            }
+            suggestions.append("• Upload academic content (textbooks, lecture notes, study guides)")
+            suggestions.append("• Ensure the text contains concepts, definitions, or explanations")
+            return (.textLowQuality, createValidationErrorMessage(issues: issues, suggestions: suggestions, stats: stats))
+        }
+        
+        return nil // Text is valid
+    }
+    
+    // Helper to create detailed validation error messages
+    private func createValidationErrorMessage(issues: [String], suggestions: [String], stats: (characters: Int, words: Int, sentences: Int)) -> String {
+        let statsText = "📊 Text Statistics:\n• \(stats.characters) characters\n• \(stats.words) words\n• \(stats.sentences) sentences"
+        let issuesText = "❌ Issues Found:\n" + issues.joined(separator: "\n")
+        let suggestionsText = "💡 Suggestions:\n" + suggestions.joined(separator: "\n")
+        
+        return [statsText, issuesText, suggestionsText].joined(separator: "\n\n")
+    }
+    
+    // Helper to get educational keywords found in text
+    private func getEducationalKeywords(_ text: String) -> [String] {
+        let educationalKeywords = [
+            "definition", "explain", "concept", "theory", "principle", "method", "process",
+            "example", "study", "research", "analysis", "conclusion", "result", "finding",
+            "important", "significant", "factor", "cause", "effect", "relationship",
+            "chapter", "section", "topic", "subject", "course", "lesson", "tutorial",
+            "hypothesis", "experiment", "data", "evidence", "proof", "demonstrate",
+            "calculate", "formula", "equation", "solution", "problem", "question",
+            "answer", "correct", "incorrect", "true", "false", "compare", "contrast"
+        ]
+        
+        let lowercaseText = text.lowercased()
+        return educationalKeywords.filter { lowercaseText.contains($0) }
     }
     
     private func simulateProgress(for step: ProcessingStep, completion: @escaping () -> Void) {
@@ -982,7 +1229,7 @@ struct AutoGenerateFlashcardsSheet: View {
           let key = Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String,
           !key.isEmpty
         else {
-          assertionFailure("🔑 Missing OpenAIAPIKey in Info.plist")
+          print("🔑 ERROR: Missing OpenAIAPIKey in Info.plist - API features will be disabled")
           return nil
         }
         return key
@@ -1008,7 +1255,7 @@ struct AutoGenerateFlashcardsSheet: View {
         guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
             DispatchQueue.main.async {
                 currentError = .networkError("API key configuration error")
-                errorMessage = "API key configuration error. Please contact support."
+                errorMessage = "AI flashcard generation is currently unavailable. You can still create flashcards manually."
             }
             completion(nil)
             return
@@ -1217,58 +1464,78 @@ Only output flashcards in the above format with one flashcard per line.
 """
     }
     
-    // MARK: - ChatGPT API Integration
-    func generateFlashcards(with inputText: String, completion: @escaping (String?) -> Void) {
-        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
-            completion(nil)
-            return
+    // MARK: - Text Validation Functions
+    
+    private func validateTextInput(_ text: String) -> FlashcardGenerationError? {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Check minimum length
+        if trimmedText.count < 50 {
+            return .textTooShort
         }
         
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 180
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // Replace with your actual API key.
-        guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
-          assertionFailure("Missing API key")
-          return
-        }
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        
-        let jsonBody: [String: Any] = [
-            "model": "gpt-4o-mini", // Change to your desired model.
-            "messages": [
-                ["role": "system", "content": flashcardPrompt],
-                ["role": "user", "content": inputText]
-            ]
-        ]
-        
-        guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonBody, options: []) else {
-            completion(nil)
-            return
+        // Check maximum length (roughly 25,000 words = ~100,000 characters)
+        if trimmedText.count > 100000 {
+            return .textTooLong
         }
         
-        request.httpBody = httpBody
+        // Check for invalid characters (excessive special characters, etc.)
+        if !isValidTextFormat(trimmedText) {
+            return .textInvalidFormat
+        }
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-            
-            if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []),
-               let responseDict = jsonResponse as? [String: Any],
-               let choices = (responseDict["choices"] as? [[String: Any]])?.first,
-               let message = choices["message"] as? [String: Any],
-               let content = message["content"] as? String {
-                completion(content)
-            } else {
-                completion(nil)
-            }
-        }.resume()
+        // Check content quality
+        if !hasEducationalContent(trimmedText) {
+            return .textLowQuality
+        }
+        
+        return nil
     }
     
+    private func isValidTextFormat(_ text: String) -> Bool {
+        // Check if text contains reasonable amount of letters vs special characters
+        let letterCharacterSet = CharacterSet.letters
+        let letterCount = text.unicodeScalars.filter { letterCharacterSet.contains($0) }.count
+        let totalCount = text.count
+        
+        // Text should be at least 60% letters
+        let letterRatio = Double(letterCount) / Double(totalCount)
+        return letterRatio >= 0.6
+    }
     
+    private func hasEducationalContent(_ text: String) -> Bool {
+        let educationalKeywords = [
+            // General educational terms
+            "definition", "explain", "concept", "theory", "principle", "method", "process",
+            "example", "study", "research", "analysis", "conclusion", "result", "finding",
+            "important", "significant", "factor", "cause", "effect", "relationship",
+            "chapter", "section", "topic", "subject", "course", "lesson", "tutorial",
+            
+            // Academic terms
+            "hypothesis", "experiment", "data", "evidence", "proof", "demonstrate",
+            "calculate", "formula", "equation", "solution", "problem", "question",
+            "answer", "correct", "incorrect", "true", "false", "compare", "contrast",
+            
+            // Content indicators
+            "according", "states", "suggests", "indicates", "shows", "reveals",
+            "therefore", "however", "furthermore", "moreover", "additionally",
+            "first", "second", "third", "finally", "conclusion", "summary"
+        ]
+        
+        let lowercaseText = text.lowercased()
+        let foundKeywords = educationalKeywords.filter { lowercaseText.contains($0) }
+        
+        // Should have at least 3 educational keywords and reasonable word count
+        let wordCount = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+        return foundKeywords.count >= 3 && wordCount >= 20
+    }
+    
+    private func getTextStats(_ text: String) -> (characters: Int, words: Int, sentences: Int) {
+        let characters = text.count
+        let words = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+        let sentences = text.components(separatedBy: CharacterSet(charactersIn: ".!?")).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
+        return (characters, words, sentences)
+    }
 }
 
 // MARK: - DocumentPicker

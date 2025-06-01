@@ -33,6 +33,8 @@ struct OnboardingView: View {
             return 0.75
         case .readyView:
             return 0.80
+        case .paywall:
+            return 0.82
         case .weCanHelp:
             return 0.85
         case .createFirstFlashcard:
@@ -48,7 +50,7 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Progress bar - only show if not on welcome or completion screen
             // Progress bar - only show if not on welcome or completion screen
-            if onboardingViewModel.currentStep != .welcome && onboardingViewModel.currentStep != .completion {
+            if onboardingViewModel.currentStep != .welcome && onboardingViewModel.currentStep != .completion && onboardingViewModel.currentStep != .paywall {
                 ZStack(alignment: .top) {
                     // Full green background that extends into safe area
                     Color(hex: 0x184449)
@@ -106,13 +108,15 @@ struct OnboardingView: View {
                 case .readyView:
                     StudyGuardReadyView()
                         .environmentObject(onboardingViewModel)
+                case .paywall:
+                    PayWallView()
+                        .environmentObject(onboardingViewModel)
                 case .breakdown:
                     BreakdownView()
                         .environmentObject(onboardingViewModel)
                 case .weCanHelp:
                     WecanhelpView()
                         .environmentObject(onboardingViewModel)
-                        .presentPaywallIfNeeded(requiredEntitlementIdentifier: "Pro Acess")
                 case .createFirstFlashcard:
                     CreateFirstFlashcardView()
                         .environmentObject(onboardingViewModel)
@@ -148,14 +152,17 @@ struct OnboardingView: View {
             return 7
         case .readyView:
             return 8
-        case .weCanHelp:
+        case .paywall:
             return 9
-        case .createFirstFlashcard:
+        case .weCanHelp:
             return 10
-        case .appSelection:
+        case .createFirstFlashcard:
             return 11
-        case .completion:
+        case .appSelection:
             return 12
+        case .completion:
+            return 13
+        
         }
     }
 }

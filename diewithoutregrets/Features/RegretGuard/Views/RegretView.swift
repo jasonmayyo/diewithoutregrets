@@ -62,6 +62,7 @@ struct RegretView: View {
                                 // Question
                                 Text(currentRegret.regretPrompt)
                                     .multilineTextAlignment(.center)
+                                    .lineLimit(nil)
                                     .foregroundColor(.black)
                                     .font(currentStep % 2 == 1 ? .headline : .title3)
                                     .padding(.horizontal, 30)
@@ -95,8 +96,11 @@ struct RegretView: View {
                                                 HStack {
                                                     Text(choice)
                                                         .foregroundColor(.black)
+                                                        .multilineTextAlignment(.leading)
+                                                        .lineLimit(nil)
+                                                        .fixedSize(horizontal: false, vertical: true)
                                                         .padding()
-                                                        .frame(maxWidth: .infinity)
+                                                        .frame(maxWidth: .infinity, alignment: .leading)
                                                         .background(
                                                             selectedAnswer == index ?
                                                             Color.gray.opacity(0.2) : Color.clear
@@ -126,8 +130,11 @@ struct RegretView: View {
                                                         index == currentRegret.correctAnswerIndex ?
                                                             .white : .black
                                                     )
+                                                    .multilineTextAlignment(.leading)
+                                                    .lineLimit(nil)
+                                                    .fixedSize(horizontal: false, vertical: true)
                                                     .padding()
-                                                    .frame(maxWidth: .infinity)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
                                                     .background(
                                                         index == currentRegret.correctAnswerIndex ?
                                                         Color.green :
@@ -170,7 +177,7 @@ struct RegretView: View {
                                     .font(.title2)
                                     .padding(.horizontal, 30)
                             } else {
-                                Text("Successfully unlocked! You’ve earned access to \(appName)!")
+                                Text("Successfully unlocked! You've earned access to \(appName)!")
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(.black)
                                     .font(.title2)
@@ -415,7 +422,7 @@ struct RegretView: View {
     
     private func getAppURL(for appName: String) -> URL {
         let scheme = getUrlScheme(for: appName)
-        return URL(string: scheme) ?? URL(string: "instagram://")!
+        return URL(string: scheme) ?? URL(string: "instagram://") ?? URL(string: "https://instagram.com") ?? URL(fileURLWithPath: "/")
     }
     
     private func getUrlScheme(for appName: String) -> String {

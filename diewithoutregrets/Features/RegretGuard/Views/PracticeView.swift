@@ -127,6 +127,7 @@ struct PracticeView: View {
                             .font(.title3)
                             .bold()
                             .multilineTextAlignment(.center)
+                            .lineLimit(nil)
                             .padding()
                         
                         if showAnswer {
@@ -173,8 +174,11 @@ struct PracticeView: View {
                         HStack {
                             Text(choice)
                                 .foregroundColor(textColor(for: index))
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding()
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(background(for: index))
                         }
                         .cornerRadius(8)
@@ -235,8 +239,11 @@ struct PracticeView: View {
                     HStack {
                         Text(choice)
                             .foregroundColor(index == currentRegret.correctAnswerIndex ? .white : .primary)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
                             .padding()
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .background(
                                 index == currentRegret.correctAnswerIndex ?
                                 Color.green :

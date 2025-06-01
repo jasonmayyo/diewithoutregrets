@@ -55,7 +55,7 @@ struct AgeSelectView: View {
                             )
                             .opacity(showOptions ? 1 : 0)
                             .offset(y: showOptions ? 0 : 20)
-                            .animation(.easeInOut(duration: 1).delay(0.6 + Double(viewModel.AgeOptions.firstIndex(of: option)!) * 0.1), value: showOptions)
+                            .animation(.easeInOut(duration: 1).delay(0.6 + Double(viewModel.AgeOptions.firstIndex(of: option) ?? 0) * 0.1), value: showOptions)
                             .accessibilityLabel("Age option: \(option.range)")
                             .accessibilityHint("Tap to select this age")
                             .accessibilityAddTraits(.isButton)

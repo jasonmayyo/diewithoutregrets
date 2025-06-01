@@ -12,10 +12,17 @@ struct diewithoutregretsApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(navigationModel)
-                .environmentObject(regretStore)
-                .environmentObject(deckStore)
+            if hasCompletedOnboarding {
+                ContentView()
+                    .environmentObject(navigationModel)
+                    .environmentObject(regretStore)
+                    .environmentObject(deckStore)
+            } else {
+                OnboardingView()
+                    .environmentObject(navigationModel)
+                    .environmentObject(regretStore)
+                    .environmentObject(deckStore)
+            }
         }
     }
 }

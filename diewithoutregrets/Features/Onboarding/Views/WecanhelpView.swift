@@ -18,19 +18,40 @@ struct WecanhelpView: View {
             
             VStack(alignment: .leading, spacing: 10) {
                 
-                // Main text
-                Text("What do you hate to learn?")
-                    .font(.title3)
-                    .bold()
-                    .foregroundColor(.white)
-                    .padding(.top)
-                    .padding(.horizontal)
-                Text("We will help you learn and memorise the things you can't be bothered to learn")
-                    .font(.subheadline)
-                    .bold()
-                    .foregroundColor(.white.opacity(0.7))
-                    .padding(.horizontal)
-                   
+                HStack {
+                    VStack(alignment: .leading, spacing: 10) {
+                        // Main text
+                        Text("What do you hate to learn?")
+                            .font(.title3)
+                            .bold()
+                            .foregroundColor(.white)
+                        Text("We will help you learn and memorise the things you can't be bothered to learn")
+                            .font(.subheadline)
+                            .bold()
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    .padding(.leading)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        onboardingViewModel.triggerHapticFeedback()
+                        onboardingViewModel.skipToCompletion()
+                    }) {
+                        Text("Skip")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(.white.opacity(0.1))
+                            )
+                    }
+                    .padding(.trailing)
+                }
+                .padding(.top)
+                
                 Spacer()
                 
                 // Deck name field

@@ -5,6 +5,7 @@
 //  Created by Jason Mayo on 2025/02/03.
 
 import SwiftUI
+import PostHog
 
 struct CompletionView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
@@ -52,6 +53,20 @@ struct CompletionView: View {
                 
                 // Finish Button
                 Button(action: {
+                    // Track onboarding completion in PostHog
+                    PostHogSDK.shared.capture(
+                        "onboarding_completed",
+                        properties: [
+                            "timestamp": Date().ISO8601Format(),
+                            "user_name": onboardingViewModel.userName,
+                            "selected_age": onboardingViewModel.selectedAge,
+                            "screen_time": onboardingViewModel.screenTime,
+                            "deck_name": onboardingViewModel.newDeckName,
+                            "flashcards_created": onboardingViewModel.regretEntries.count,
+                            "selected_apps_count": onboardingViewModel.selectedApps.count
+                        ]
+                    )
+                    
                     hasCompletedOnboarding = true // This triggers navigation
                     onboardingViewModel.triggerHapticFeedback()
                 }) {
@@ -104,7 +119,7 @@ struct ConfettiView: View {
             ConfettiParticle(
                 x: UIScreen.main.bounds.width / 2,
                 y: UIScreen.main.bounds.height / 3,
-                color: colors.randomElement()!,
+                color: colors.randomElement() ?? .blue,
                 rotation: Double.random(in: 0...360)
             )
         }

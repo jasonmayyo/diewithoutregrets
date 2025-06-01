@@ -70,6 +70,8 @@ struct ProfileView: View {
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
     @AppStorage("useAllCards") private var useAllCards: Bool = false
     @State private var showingPaywall = false
+    @State private var currentOffering: Offering?
+    @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
     
     private var totalAvailableCards: Int {
         deckStore.decks.reduce(0) { $0 + $1.cards.count }
@@ -170,6 +172,26 @@ struct ProfileView: View {
         }
         .background(Color(hex: 0xF8F9FA))
         .navigationTitle("Profile")
+        .onAppear {
+            // Fetch the offering when view appears
+            Purchases.shared.getOfferings { offerings, error in
+                DispatchQueue.main.async {
+                    if let offering = offerings?.offering(identifier: "3-Day-Free") {
+                        self.currentOffering = offering
+                    } else {
+                        // Fallback to default offering
+                        self.currentOffering = offerings?.current
+                    }
+                }
+            }
+            
+            // Show paywall for existing users who haven't seen it
+            if !hasSeenPaywall {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    showingPaywall = true
+                }
+            }
+        }
         .sheet(isPresented: $showingFlashcardSettings) {
             FlashcardSettingsSheet(flashcardCount: $flashcardCount, useAllCards: $useAllCards)
                 .presentationCornerRadius(30)
@@ -177,13 +199,33 @@ struct ProfileView: View {
                 .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showingPaywall) {
-                    // Present your PaywallView here
-                    PaywallView()
-                        .onPurchaseCompleted { customerInfo in
-                            // Handle successful purchase if needed
-                            showingPaywall = false
-                        }
-                }
+            if let offering = currentOffering {
+                PaywallView(offering: offering)
+                    .onPurchaseCompleted { customerInfo in
+                        // Handle successful purchase if needed
+                        hasSeenPaywall = true
+                        showingPaywall = false
+                    }
+                    .onRestoreCompleted { customerInfo in
+                        hasSeenPaywall = true
+                        showingPaywall = false
+                    }
+                    .onDisappear {
+                        // Mark as seen even if user dismisses without purchasing
+                        hasSeenPaywall = true
+                    }
+            } else {
+                // Fallback paywall without specific offering
+                PaywallView()
+                    .onPurchaseCompleted { customerInfo in
+                        hasSeenPaywall = true
+                        showingPaywall = false
+                    }
+                    .onDisappear {
+                        hasSeenPaywall = true
+                    }
+            }
+        }
     }
 }
 

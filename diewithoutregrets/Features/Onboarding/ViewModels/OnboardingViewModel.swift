@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreHaptics
+import PostHog
 
 enum OnboardingStep {
     case welcome
@@ -18,6 +19,7 @@ enum OnboardingStep {
     case studyTwice
     case rating
     case readyView
+    case paywall
     case weCanHelp
     case createFirstFlashcard
     case appSelection
@@ -68,6 +70,8 @@ class OnboardingViewModel: ObservableObject {
         case .rating:
             currentStep = .readyView
         case .readyView:
+            currentStep = .paywall
+        case .paywall:
             currentStep = .weCanHelp
         case .weCanHelp:
             currentStep = .createFirstFlashcard
@@ -79,6 +83,29 @@ class OnboardingViewModel: ObservableObject {
         case .completion:
             break
         }
+    }
+    
+    func skipToCompletion() {
+        // Trigger haptic feedback
+        triggerHapticFeedback()
+        
+        // Track skipping to completion in PostHog
+        PostHogSDK.shared.capture(
+            "onboarding_skipped", 
+            properties: [
+                "timestamp": Date().ISO8601Format(),
+                "skipped_from_step": "\(currentStep)",
+                "user_name": userName.isEmpty ? "not_provided" : userName,
+                "selected_age": selectedAge.isEmpty ? "not_provided" : selectedAge,
+                "screen_time": screenTime.isEmpty ? "not_provided" : screenTime
+            ]
+        )
+        
+        // Save user data before completing
+        saveUserData()
+        
+        // Skip directly to completion
+        currentStep = .completion
     }
     
     // Function to trigger haptic feedback
@@ -127,6 +154,9 @@ class OnboardingViewModel: ObservableObject {
         UserDefaults.standard.set(userName, forKey: "userName")
         UserDefaults.standard.set(selectedAge, forKey: "selectedAge")
         UserDefaults.standard.set(screenTime, forKey: "screenTime")
+        
+        // Mark that user has seen paywall during onboarding
+        UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
         
         // Create first deck if we have flashcards
         if !regretEntries.isEmpty {

@@ -40,6 +40,7 @@
 		6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
 		6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
 		6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */; };
+		6B79AC332DEC91080039F063 /* PayWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B79AC322DEC91080039F063 /* PayWallView.swift */; };
 		6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */; };
 		6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */; };
 		6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */; };
@@ -139,6 +140,7 @@
 		6B531BAE2DAD249900663511 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		6B74330C2DB19E5F0007270C /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSelectionOnboarding.swift; sourceTree = "<group>"; };
+		6B79AC322DEC91080039F063 /* PayWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWallView.swift; sourceTree = "<group>"; };
 		6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AverageScreenTime.swift; sourceTree = "<group>"; };
 		6B7CD4DF2D50A5320065A0F7 /* AvgScreenTimeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvgScreenTimeModel.swift; sourceTree = "<group>"; };
@@ -353,6 +355,7 @@
 				6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */,
 				6B04F7262DA8599B00694451 /* RatingView.swift */,
 				6B04F72A2DA863B700694451 /* StudyGuardReadyView.swift */,
+				6B79AC322DEC91080039F063 /* PayWallView.swift */,
 				6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */,
 				6B7CD4EF2D50CBAA0065A0F7 /* RegretQuestionView.swift */,
 				6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */,
@@ -645,6 +648,7 @@
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */,
+				6B79AC332DEC91080039F063 /* PayWallView.swift in Sources */,
 				6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
 				6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */,
@@ -921,7 +925,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.04;
+				MARKETING_VERSION = 1.05;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -960,7 +964,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.04;
+				MARKETING_VERSION = 1.05;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
