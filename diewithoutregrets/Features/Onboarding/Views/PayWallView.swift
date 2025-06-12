@@ -17,7 +17,6 @@ struct PayWallView: View {
     @State private var showVideo = false
     @State private var showCheckmark = false
     @State private var showButton = false
-    @State private var showingFinalSalePitch = false
     @State private var showingRevenueCatPaywall = false
     @State private var currentOffering: Offering?
     @State private var isLoadingOffering = true
@@ -97,7 +96,7 @@ struct PayWallView: View {
                                 return
                             }
                             onboardingViewModel.triggerHapticFeedback()
-                            showingFinalSalePitch = true
+                            showingRevenueCatPaywall = true
                         }) {
                             HStack {
                                 if isLoadingOffering {

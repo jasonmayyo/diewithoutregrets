@@ -72,6 +72,7 @@ struct ProfileView: View {
     @State private var showingPaywall = false
     @State private var currentOffering: Offering?
     @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
+    @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
     
     private var totalAvailableCards: Int {
         deckStore.decks.reduce(0) { $0 + $1.cards.count }
@@ -121,6 +122,38 @@ struct ProfileView: View {
                         .padding()
                         .background(Color.white)
                         .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal)
+                
+                // App Experience Section
+                VStack(alignment: .leading, spacing: 16) {
+                    SectionHeader(title: "App Experience")
+                    
+                    VStack(spacing: 12) {
+                        // Lock Animation Option
+                        AnimationOptionRow(
+                            type: .lockAnimation,
+                            isSelected: selectedAnimationType == AnimationType.lockAnimation.rawValue,
+                            onSelect: { 
+                                selectedAnimationType = AnimationType.lockAnimation.rawValue
+                                // Haptic feedback
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                            }
+                        )
+                        
+                        // Meme Video Option  
+                        AnimationOptionRow(
+                            type: .memeVideo,
+                            isSelected: selectedAnimationType == AnimationType.memeVideo.rawValue,
+                            onSelect: { 
+                                selectedAnimationType = AnimationType.memeVideo.rawValue
+                                // Haptic feedback
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal)
