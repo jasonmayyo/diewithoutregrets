@@ -31,22 +31,22 @@ struct RatingView: View {
     // Mock testimonial data
     let testimonials = [
         Testimonial(
-            name: "Jason - Founder",
+            name: "Sarah M.",
             image: "profile1",
             stars: 5,
-            text: "\"I literally built this app to force me to study and it works, trust me.\""
+            text: "\"I used to spend 6+ hours on TikTok daily and my grades were terrible. Now I can't scroll without answering flashcards first. Got a B+ on my calculus exam!\""
         ),
         Testimonial(
-            name: "Marley Bryle",
+            name: "Alex R.",
             image: "profile1",
             stars: 5,
-            text: "\"I improved my grades by 15% in 2 months! I was about to drop my hardest class but decided to give this app a shot and it worked :)\""
+            text: "\"Finally something that actually stops me from mindlessly scrolling Instagram. The AI flashcards from my lecture notes are surprisingly good. Saved my chemistry grade.\""
         ),
         Testimonial(
-            name: "Benny Marcs",
+            name: "Maya K.",
             image: "profile2",
             stars: 5,
-            text: "\"The flashcard system helped me memorize formulas I've been struggling with for weeks. Totally worth it!\""
+            text: "\"I was failing organic chemistry and spending all day on my phone. This app literally forces me to study before I can scroll. Went from a D to a B in 6 weeks.\""
         )
     ]
     
@@ -92,19 +92,18 @@ struct RatingView: View {
                                     .zIndex(Double(3 - index))
                             }
                         }
-                        .padding(.bottom, 10)
                         .opacity(showTagline ? 1 : 0)
                         .offset(y: showTagline ? 0 : 20)
                         .animation(.easeInOut(duration: 0.8).delay(0.6), value: showTagline)
                         
                         // User count
-                        Text("An app that acctully helps!")
+                        Text("Loved by over 5000+ students")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.white)
                             .opacity(showUserImages ? 1 : 0)
                             .offset(y: showUserImages ? 0 : 20)
                             .animation(.easeInOut(duration: 0.8).delay(0.8), value: showUserImages)
-                            .accessibilityLabel("Over 2 million Study Guard users")
+                            .accessibilityLabel("Loved by over 5000+ students")
                         
                         // Testimonials
                         VStack(spacing: 15) {
@@ -112,7 +111,7 @@ struct RatingView: View {
                                 TestimonialView(testimonial: testimonial)
                             }
                         }
-                        .padding(.top, 15)
+                        .padding(.top, 5)
                         .opacity(showTestimonials ? 1 : 0)
                         .offset(y: showTestimonials ? 0 : 20)
                         .animation(.easeInOut(duration: 0.8).delay(1.0), value: showTestimonials)

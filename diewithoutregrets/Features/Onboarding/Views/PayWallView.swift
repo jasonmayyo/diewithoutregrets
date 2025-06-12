@@ -17,6 +17,7 @@ struct PayWallView: View {
     @State private var showVideo = false
     @State private var showCheckmark = false
     @State private var showButton = false
+    @State private var showingFinalSalePitch = false
     @State private var showingRevenueCatPaywall = false
     @State private var currentOffering: Offering?
     @State private var isLoadingOffering = true
@@ -96,7 +97,7 @@ struct PayWallView: View {
                                 return
                             }
                             onboardingViewModel.triggerHapticFeedback()
-                            showingRevenueCatPaywall = true
+                            showingFinalSalePitch = true
                         }) {
                             HStack {
                                 if isLoadingOffering {
@@ -159,7 +160,7 @@ struct PayWallView: View {
             
             loadCurrentOffering()
         }
-        .sheet(isPresented: $showingRevenueCatPaywall) {
+        .fullScreenCover(isPresented: $showingRevenueCatPaywall) {
             if let offering = currentOffering {
                 PaywallView(offering: offering)
                     .onAppear {

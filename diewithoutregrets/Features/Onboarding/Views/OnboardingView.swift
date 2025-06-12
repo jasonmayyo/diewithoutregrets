@@ -18,17 +18,21 @@ struct OnboardingView: View {
         case .welcome:
             return 0.0
         case .averageScreenTime:
-            return 0.14
+            return 0.12
         case .age:
-            return 0.28
+            return 0.24
         case .name:
-            return 0.42
+            return 0.36
         case .breakdown:
-            return 0.56
+            return 0.48
+        case .studyConsistancy:
+            return 0.54
         case .longTermResults:
-            return 0.65
+            return 0.60
         case .studyTwice:
-            return 0.70
+            return 0.66
+        case .aiFlashcardDemo:
+            return 0.72
         case .rating:
             return 0.75
         case .readyView:
@@ -96,11 +100,20 @@ struct OnboardingView: View {
                 case .name:
                     NameView()
                         .environmentObject(onboardingViewModel)
+                case .breakdown:
+                    BreakdownView()
+                        .environmentObject(onboardingViewModel)
+                case .studyConsistancy:
+                    StudyConsistancy()
+                        .environmentObject(onboardingViewModel)
                 case .longTermResults:
                     LongTermResultsView()
                         .environmentObject(onboardingViewModel)
                 case .studyTwice:
                     StudyTwiceView()
+                        .environmentObject(onboardingViewModel)
+                case .aiFlashcardDemo:
+                    AIFlashcardDemo()
                         .environmentObject(onboardingViewModel)
                 case .rating:
                     RatingView()
@@ -110,9 +123,6 @@ struct OnboardingView: View {
                         .environmentObject(onboardingViewModel)
                 case .paywall:
                     PayWallView()
-                        .environmentObject(onboardingViewModel)
-                case .breakdown:
-                    BreakdownView()
                         .environmentObject(onboardingViewModel)
                 case .weCanHelp:
                     WecanhelpView()
@@ -144,24 +154,28 @@ struct OnboardingView: View {
             return 3
         case .breakdown:
             return 4
-        case .longTermResults:
+        case .studyConsistancy:
             return 5
-        case .studyTwice:
+        case .longTermResults:
             return 6
-        case .rating:
+        case .studyTwice:
             return 7
-        case .readyView:
+        case .aiFlashcardDemo:
             return 8
-        case .paywall:
+        case .rating:
             return 9
-        case .weCanHelp:
+        case .readyView:
             return 10
-        case .createFirstFlashcard:
+        case .paywall:
             return 11
-        case .appSelection:
+        case .weCanHelp:
             return 12
-        case .completion:
+        case .createFirstFlashcard:
             return 13
+        case .appSelection:
+            return 14
+        case .completion:
+            return 15
         
         }
     }

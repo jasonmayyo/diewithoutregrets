@@ -15,8 +15,10 @@ enum OnboardingStep {
     case age
     case name
     case breakdown
+    case studyConsistancy
     case longTermResults
     case studyTwice
+    case aiFlashcardDemo
     case rating
     case readyView
     case paywall
@@ -62,10 +64,14 @@ class OnboardingViewModel: ObservableObject {
         case .name:
             currentStep = .breakdown
         case .breakdown:
+            currentStep = .studyConsistancy
+        case .studyConsistancy:
             currentStep = .longTermResults
         case .longTermResults:
             currentStep = .studyTwice
         case .studyTwice:
+            currentStep = .aiFlashcardDemo
+        case .aiFlashcardDemo:
             currentStep = .rating
         case .rating:
             currentStep = .readyView
