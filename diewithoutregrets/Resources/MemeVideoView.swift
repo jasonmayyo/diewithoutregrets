@@ -83,9 +83,8 @@ struct MemeVideoView: View {
             object: playerItem,
             queue: .main
         ) { _ in
-            // Loop the video
-            newPlayer.seek(to: .zero)
-            newPlayer.play()
+            // Video has finished playing - do nothing (no loop)
+            print("Meme video finished playing")
         }
         
         self.player = newPlayer

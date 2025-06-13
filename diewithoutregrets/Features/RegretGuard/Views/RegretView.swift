@@ -20,6 +20,7 @@ struct RegretView: View {
     @State private var selectedRegrets: [Regret] = []
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
     @AppStorage("useAllCards") private var useAllCards: Bool = false
+    @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
     
     let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
@@ -171,7 +172,7 @@ struct RegretView: View {
                             let appName = sharedDefaults?.string(forKey: "LastGuardedApp") ?? ""
                             
                             if hasIncorrectAnswers {
-                                Text("Looks like you don't know what you're doing, no \(appName) for you")
+                                Text("Looks like you don't know what you're doing, let's pause \(appName) for now")
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(.black)
                                     .font(.title2)
@@ -257,9 +258,15 @@ struct RegretView: View {
             )
             
             if showLockAnimation {
-                LockView()
-                    .transition(.opacity)
-                    .zIndex(1)
+                if selectedAnimationType == AnimationType.memeVideo.rawValue {
+                    MemeVideoView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                } else {
+                    LockView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
             }
             
             if showUnlockAnimation {
@@ -274,7 +281,9 @@ struct RegretView: View {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showLockAnimation = true
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // Different timing for meme video vs lock animation
+            let dismissDelay = selectedAnimationType == AnimationType.memeVideo.rawValue ? 5.0 : 1.5
+            DispatchQueue.main.asyncAfter(deadline: .now() + dismissDelay) {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showLockAnimation = false
                 }
