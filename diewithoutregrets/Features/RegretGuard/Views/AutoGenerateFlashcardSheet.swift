@@ -35,7 +35,7 @@ enum FlashcardGenerationError: Error {
         case .textInvalidFormat:
             return "The text appears to contain invalid characters or formatting. Please paste plain text content."
         case .textLowQuality:
-            return "The text doesn't contain enough educational content to generate flashcards. Please provide study material with clear concepts."
+            return "The text doesn't contain enough content to generate flashcards. Please provide more detailed text with clear concepts."
         }
     }
 }
@@ -1171,17 +1171,73 @@ struct AutoGenerateFlashcardsSheet: View {
     // Helper to get educational keywords found in text
     private func getEducationalKeywords(_ text: String) -> [String] {
         let educationalKeywords = [
+            // General educational terms
             "definition", "explain", "concept", "theory", "principle", "method", "process",
             "example", "study", "research", "analysis", "conclusion", "result", "finding",
             "important", "significant", "factor", "cause", "effect", "relationship",
             "chapter", "section", "topic", "subject", "course", "lesson", "tutorial",
+            
+            // Academic terms
             "hypothesis", "experiment", "data", "evidence", "proof", "demonstrate",
             "calculate", "formula", "equation", "solution", "problem", "question",
-            "answer", "correct", "incorrect", "true", "false", "compare", "contrast"
+            "answer", "correct", "incorrect", "true", "false", "compare", "contrast",
+            
+            // Content indicators
+            "according", "states", "suggests", "indicates", "shows", "reveals",
+            "therefore", "however", "furthermore", "moreover", "additionally",
+            "first", "second", "third", "finally", "conclusion", "summary",
+            
+            // Additional educational terms
+            "learn", "understand", "know", "remember", "recall", "identify",
+            "describe", "discuss", "explain", "analyze", "evaluate", "apply",
+            "create", "develop", "design", "implement", "solve", "calculate",
+            "measure", "observe", "examine", "investigate", "explore", "discover",
+            "present", "demonstrate", "illustrate", "show", "prove", "verify",
+            "test", "check", "review", "assess", "determine", "establish",
+            "define", "clarify", "specify", "detail", "outline", "summarize",
+            "introduce", "begin", "start", "continue", "proceed", "follow",
+            "lead", "guide", "direct", "instruct", "teach", "educate",
+            "inform", "notify", "advise", "suggest", "recommend", "propose",
+            "consider", "think", "believe", "assume", "suppose", "imagine",
+            "expect", "anticipate", "predict", "forecast", "estimate", "approximate",
+            "increase", "decrease", "grow", "develop", "change", "vary",
+            "differ", "similar", "same", "equal", "equivalent", "identical",
+            "opposite", "contrary", "different", "unique", "special", "specific",
+            "general", "common", "usual", "typical", "normal", "standard",
+            "basic", "fundamental", "essential", "necessary", "required", "needed",
+            "optional", "additional", "extra", "supplementary", "complementary",
+            "related", "connected", "linked", "associated", "correlated", "dependent",
+            "independent", "separate", "distinct", "individual", "single", "multiple",
+            "several", "many", "few", "some", "all", "none", "each", "every",
+            "both", "either", "neither", "any", "some", "most", "least",
+            "best", "worst", "better", "worse", "good", "bad", "excellent", "poor",
+            "high", "low", "large", "small", "big", "little", "long", "short",
+            "wide", "narrow", "thick", "thin", "heavy", "light", "strong", "weak",
+            "fast", "slow", "quick", "rapid", "gradual", "sudden", "immediate",
+            "early", "late", "before", "after", "during", "while", "when", "where",
+            "why", "how", "what", "which", "who", "whom", "whose", "that", "this",
+            "these", "those", "it", "its", "they", "them", "their", "theirs",
+            "we", "us", "our", "ours", "you", "your", "yours", "he", "him", "his",
+            "she", "her", "hers", "i", "me", "my", "mine", "am", "is", "are",
+            "was", "were", "be", "been", "being", "have", "has", "had", "do",
+            "does", "did", "will", "would", "could", "should", "may", "might",
+            "can", "must", "shall", "ought", "used", "need", "dare", "help"
         ]
         
         let lowercaseText = text.lowercased()
-        return educationalKeywords.filter { lowercaseText.contains($0) }
+        let foundKeywords = educationalKeywords.filter { lowercaseText.contains($0) }
+        
+        // More flexible requirements: either 2 educational keywords OR reasonable word count
+        let wordCount = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+        
+        // Check for sentence structure (more than just random words)
+        let sentences = text.components(separatedBy: CharacterSet(charactersIn: ".!?")).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
+        
+        // More lenient validation: either keywords OR good sentence structure
+        let hasKeywords = foundKeywords.count >= 2
+        let hasGoodStructure = wordCount >= 15 && sentences >= 2
+        
+        return hasKeywords || hasGoodStructure
     }
     
     private func simulateProgress(for step: ProcessingStep, completion: @escaping () -> Void) {
@@ -1484,10 +1540,7 @@ Only output flashcards in the above format with one flashcard per line.
             return .textInvalidFormat
         }
         
-        // Check content quality
-        if !hasEducationalContent(trimmedText) {
-            return .textLowQuality
-        }
+        // Removed educational content check to support all languages and content types
         
         return nil
     }
@@ -1519,15 +1572,59 @@ Only output flashcards in the above format with one flashcard per line.
             // Content indicators
             "according", "states", "suggests", "indicates", "shows", "reveals",
             "therefore", "however", "furthermore", "moreover", "additionally",
-            "first", "second", "third", "finally", "conclusion", "summary"
+            "first", "second", "third", "finally", "conclusion", "summary",
+            
+            // Additional educational terms
+            "learn", "understand", "know", "remember", "recall", "identify",
+            "describe", "discuss", "explain", "analyze", "evaluate", "apply",
+            "create", "develop", "design", "implement", "solve", "calculate",
+            "measure", "observe", "examine", "investigate", "explore", "discover",
+            "present", "demonstrate", "illustrate", "show", "prove", "verify",
+            "test", "check", "review", "assess", "determine", "establish",
+            "define", "clarify", "specify", "detail", "outline", "summarize",
+            "introduce", "begin", "start", "continue", "proceed", "follow",
+            "lead", "guide", "direct", "instruct", "teach", "educate",
+            "inform", "notify", "advise", "suggest", "recommend", "propose",
+            "consider", "think", "believe", "assume", "suppose", "imagine",
+            "expect", "anticipate", "predict", "forecast", "estimate", "approximate",
+            "increase", "decrease", "grow", "develop", "change", "vary",
+            "differ", "similar", "same", "equal", "equivalent", "identical",
+            "opposite", "contrary", "different", "unique", "special", "specific",
+            "general", "common", "usual", "typical", "normal", "standard",
+            "basic", "fundamental", "essential", "necessary", "required", "needed",
+            "optional", "additional", "extra", "supplementary", "complementary",
+            "related", "connected", "linked", "associated", "correlated", "dependent",
+            "independent", "separate", "distinct", "individual", "single", "multiple",
+            "several", "many", "few", "some", "all", "none", "each", "every",
+            "both", "either", "neither", "any", "some", "most", "least",
+            "best", "worst", "better", "worse", "good", "bad", "excellent", "poor",
+            "high", "low", "large", "small", "big", "little", "long", "short",
+            "wide", "narrow", "thick", "thin", "heavy", "light", "strong", "weak",
+            "fast", "slow", "quick", "rapid", "gradual", "sudden", "immediate",
+            "early", "late", "before", "after", "during", "while", "when", "where",
+            "why", "how", "what", "which", "who", "whom", "whose", "that", "this",
+            "these", "those", "it", "its", "they", "them", "their", "theirs",
+            "we", "us", "our", "ours", "you", "your", "yours", "he", "him", "his",
+            "she", "her", "hers", "i", "me", "my", "mine", "am", "is", "are",
+            "was", "were", "be", "been", "being", "have", "has", "had", "do",
+            "does", "did", "will", "would", "could", "should", "may", "might",
+            "can", "must", "shall", "ought", "used", "need", "dare", "help"
         ]
         
         let lowercaseText = text.lowercased()
         let foundKeywords = educationalKeywords.filter { lowercaseText.contains($0) }
         
-        // Should have at least 3 educational keywords and reasonable word count
+        // More flexible requirements: either 2 educational keywords OR reasonable word count
         let wordCount = text.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
-        return foundKeywords.count >= 3 && wordCount >= 20
+        
+        // Check for sentence structure (more than just random words)
+        let sentences = text.components(separatedBy: CharacterSet(charactersIn: ".!?")).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
+        
+        // More lenient validation: either keywords OR good sentence structure
+        let hasKeywords = foundKeywords.count >= 2
+        let hasGoodStructure = wordCount >= 15 && sentences >= 2
+        
+        return hasKeywords || hasGoodStructure
     }
     
     private func getTextStats(_ text: String) -> (characters: Int, words: Int, sentences: Int) {

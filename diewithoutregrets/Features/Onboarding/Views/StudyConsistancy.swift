@@ -30,7 +30,7 @@ struct StudyConsistancy: View {
                     
         
                         Text("Imagine being as consistent with studying as you are with scrolling")
-                            .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 32 : 24))
+                            .font(.system(size: 24))
                             .bold()
                             .foregroundColor(.white)
                             .multilineTextAlignment(.leading)

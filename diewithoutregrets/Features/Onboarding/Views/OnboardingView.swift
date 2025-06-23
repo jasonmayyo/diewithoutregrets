@@ -17,6 +17,8 @@ struct OnboardingView: View {
         switch onboardingViewModel.currentStep {
         case .welcome:
             return 0.0
+        case .gradeObstacles:
+            return 0.06
         case .averageScreenTime:
             return 0.12
         case .age:
@@ -91,6 +93,9 @@ struct OnboardingView: View {
                 case .welcome:
                     WelcomeView()
                         .environmentObject(onboardingViewModel)
+                case .gradeObstacles:
+                    GradeObstaclesView()
+                        .environmentObject(onboardingViewModel)
                 case .averageScreenTime:
                     AverageScreenTime()
                         .environmentObject(onboardingViewModel)
@@ -146,36 +151,38 @@ struct OnboardingView: View {
         switch onboardingViewModel.currentStep {
         case .welcome:
             return 0 // Welcome isn't counted
-        case .averageScreenTime:
+        case .gradeObstacles:
             return 1
-        case .age:
+        case .averageScreenTime:
             return 2
-        case .name:
+        case .age:
             return 3
-        case .breakdown:
+        case .name:
             return 4
-        case .studyConsistancy:
+        case .breakdown:
             return 5
-        case .longTermResults:
+        case .studyConsistancy:
             return 6
-        case .studyTwice:
+        case .longTermResults:
             return 7
-        case .aiFlashcardDemo:
+        case .studyTwice:
             return 8
-        case .rating:
+        case .aiFlashcardDemo:
             return 9
-        case .readyView:
+        case .rating:
             return 10
-        case .paywall:
+        case .readyView:
             return 11
-        case .weCanHelp:
+        case .paywall:
             return 12
-        case .createFirstFlashcard:
+        case .weCanHelp:
             return 13
-        case .appSelection:
+        case .createFirstFlashcard:
             return 14
-        case .completion:
+        case .appSelection:
             return 15
+        case .completion:
+            return 16
         
         }
     }

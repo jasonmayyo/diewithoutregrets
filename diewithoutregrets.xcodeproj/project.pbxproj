@@ -76,6 +76,7 @@
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
 		6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */; };
 		6BA42AEA2DAC4A7F00BBB626 /* PracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA42AE92DAC4A7F00BBB626 /* PracticeView.swift */; };
+		6BA90DFD2E09CF470025C01B /* GradeObstaclesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */; };
 		6BC04D432DF620070056609C /* StudyConsistancy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC04D422DF620070056609C /* StudyConsistancy.swift */; };
 		6BC04D452DF6EB5A0056609C /* AIFlashcardDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC04D442DF6EB5A0056609C /* AIFlashcardDemo.swift */; };
 		6BC21A202DB428EE00B777A0 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 6BC21A1F2DB428EE00B777A0 /* PostHog */; };
@@ -183,6 +184,7 @@
 		6B9D89C82D3552E600DE8B2E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		6BA42AE92DAC4A7F00BBB626 /* PracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeView.swift; sourceTree = "<group>"; };
+		6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradeObstaclesView.swift; sourceTree = "<group>"; };
 		6BC04D422DF620070056609C /* StudyConsistancy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyConsistancy.swift; sourceTree = "<group>"; };
 		6BC04D442DF6EB5A0056609C /* AIFlashcardDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFlashcardDemo.swift; sourceTree = "<group>"; };
 		6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = mockupvideo.mp4; sourceTree = SOURCE_ROOT; };
@@ -375,6 +377,7 @@
 			isa = PBXGroup;
 			children = (
 				6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */,
+				6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */,
 				6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */,
 				6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */,
 				6B7CD4E52D50BD5B0065A0F7 /* NameView.swift */,
@@ -677,6 +680,7 @@
 				6B706FC42DFB285F004743C9 /* MemeVideoView.swift in Sources */,
 				6B22E8592D48D0FB003A5685 /* RegretReportView.swift in Sources */,
 				6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */,
+				6BA90DFD2E09CF470025C01B /* GradeObstaclesView.swift in Sources */,
 				6B7CD4E22D50A5510065A0F7 /* AvgScreenTimeViewModel.swift in Sources */,
 				6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */,
 				6BDD79292DB0352A007DA0BE /* AppSecrets.swift in Sources */,

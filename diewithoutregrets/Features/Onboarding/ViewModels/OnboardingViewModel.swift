@@ -11,6 +11,7 @@ import PostHog
 
 enum OnboardingStep {
     case welcome
+    case gradeObstacles
     case averageScreenTime
     case age
     case name
@@ -56,6 +57,8 @@ class OnboardingViewModel: ObservableObject {
         
         switch currentStep {
         case .welcome:
+            currentStep = .gradeObstacles
+        case .gradeObstacles:
             currentStep = .averageScreenTime
         case .averageScreenTime:
             currentStep = .age
