@@ -152,13 +152,14 @@ struct ObstacleSelectionCard: View {
     
     private let dwrGreen = Color(hex: 0x013B41)
     private let accentColor = Color(hex: 0x065961)
-    private let bgColor = Color(.systemGroupedBackground)
+    private let bgColor = Color(.white)
     
     var body: some View {
         Button(action: onTap) {
             HStack {
                 Text(obstacle)
                     .font(.body)
+                    .foregroundColor(.black)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
                 
