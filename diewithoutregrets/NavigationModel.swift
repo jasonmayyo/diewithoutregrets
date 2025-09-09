@@ -1,10 +1,3 @@
-//
-//  NavigationModel.swift
-//  diewithoutregrets
-//
-//  Created by Jason Mayo on 2025/01/31.
-//
-
 import Foundation
 import SwiftUI
 
@@ -14,21 +7,48 @@ public enum NavigationDestination {
     case regretReport
 }
 
-// Remove @MainActor and make it synchronous
 public final class NavigationModel: ObservableObject {
     public static let shared = NavigationModel()
     
     @Published public var currentDestination: NavigationDestination?
+    @Published public var showBuyBackOffer: Bool = false
+    @Published public var hasPendingBuyBackOffer: Bool = false
     
-    private init() {}
+    private init() {
+        print("[NavigationModel] Initialized")
+    }
     
     public func navigate(to destination: NavigationDestination) {
-        // Ensure we're on the main thread
+        print("[NavigationModel] Navigate to: \(destination)")
         if Thread.isMainThread {
             currentDestination = destination
         } else {
             DispatchQueue.main.async {
                 self.currentDestination = destination
+            }
+        }
+    }
+
+    public func presentBuyBackOffer() {
+        print("[NavigationModel] presentBuyBackOffer called, current value: \(showBuyBackOffer)")
+        if Thread.isMainThread {
+            self.showBuyBackOffer = true
+            print("[NavigationModel] showBuyBackOffer set to true")
+        } else {
+            DispatchQueue.main.async {
+                self.showBuyBackOffer = true
+                print("[NavigationModel] showBuyBackOffer set to true (async)")
+            }
+        }
+    }
+
+    public func dismissCurrentModal() {
+        print("[NavigationModel] dismissCurrentModal called")
+        if Thread.isMainThread {
+            self.showBuyBackOffer = false
+        } else {
+            DispatchQueue.main.async {
+                self.showBuyBackOffer = false
             }
         }
     }

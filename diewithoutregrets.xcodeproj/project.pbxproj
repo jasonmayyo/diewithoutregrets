@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		40EA4E8D2E6EEC99007E13C7 /* BuyBackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */; };
 		6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7242DA83BED00694451 /* LongTermResults.swift */; };
 		6B04F7272DA8599B00694451 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7262DA8599B00694451 /* RatingView.swift */; };
 		6B04F7292DA85EAD00694451 /* StudyTwiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */; };
@@ -125,6 +126,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuyBackView.swift; sourceTree = "<group>"; };
 		6B04F7242DA83BED00694451 /* LongTermResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongTermResults.swift; sourceTree = "<group>"; };
 		6B04F7262DA8599B00694451 /* RatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingView.swift; sourceTree = "<group>"; };
 		6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyTwiceView.swift; sourceTree = "<group>"; };
@@ -376,6 +378,7 @@
 		6B7CD4D82D509E040065A0F7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */,
 				6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */,
 				6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */,
 				6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */,
@@ -694,6 +697,7 @@
 				6B7CD4F02D50CBAA0065A0F7 /* RegretQuestionView.swift in Sources */,
 				6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */,
 				6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */,
+				40EA4E8D2E6EEC99007E13C7 /* BuyBackView.swift in Sources */,
 				6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */,
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,

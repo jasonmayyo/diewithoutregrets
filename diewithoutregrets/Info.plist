@@ -2,34 +2,47 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>com.jasonmayo.diewithoutregrets</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>diewithoutregrets</string>
-			</array>
-		</dict>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string></string>
-	</array>
-	<key>OpenAIAPIKey</key>
-	<string>$(OPENAI_API_KEY)</string>
-	<key>branch_key</key>
-	<dict>
-		<key>live</key>
-		<string>key_live_aEsipkz1RSZJpKjW53jqVkjaFCmTu1HG</string>
-	</dict>
-	<key>branch_universal_link_domains </key>
-	<array>
-		<string>studyguard.app.link</string>
-		<string>studyguard-alternate.app.link</string>
-	</array>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>com.jasonmayo.diewithoutregrets</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>diewithoutregrets</string>
+            </array>
+        </dict>
+    </array>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string></string>
+    </array>
+    <key>OpenAIAPIKey</key>
+    <string>$(OPENAI_API_KEY)</string>
+    <key>branch_key</key>
+    <dict>
+        <key>live</key>
+        <string>key_live_aEsipkz1RSZJpKjW53jqVkjaFCmTu1HG</string>
+    </dict>
+    <key>branch_universal_link_domains </key>
+    <array>
+        <string>studyguard.app.link</string>
+        <string>studyguard-alternate.app.link</string>
+    </array>
+       <key>UIApplicationShortcutItems</key>
+    <array>
+        <dict>
+            <key>UIApplicationShortcutItemType</key>
+            <string>com.jasonmayo.diewithoutregrets.buyback</string>
+            <key>UIApplicationShortcutItemTitle</key>
+            <string>Buy Back Offer</string>
+            <key>UIApplicationShortcutItemSubtitle</key>
+            <string>Limited-time discount</string>
+            <key>UIApplicationShortcutItemIconType</key>
+            <string>UIApplicationShortcutIconTypeLove</string>
+        </dict>
+    </array>
 </dict>
 </plist>
