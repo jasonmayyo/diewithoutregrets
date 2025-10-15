@@ -3,10 +3,9 @@ import BranchSDK
 import RevenueCat
 import PostHog
 import UIKit
+import UserNotifications
 
-class AppDelegate: NSObject, UIApplicationDelegate {
-    
-    var shortcutItemToProcess: UIApplicationShortcutItem?
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
     func application(
         _ application: UIApplication,
@@ -56,63 +55,51 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             )
         }
         
-        // Check if launched from shortcut
-        if let shortcutItem = launchOptions?[UIApplication.LaunchOptionsKey.shortcutItem] as? UIApplicationShortcutItem {
-            print("[AppDelegate] Launched with shortcut: \(shortcutItem.type)")
-            shortcutItemToProcess = shortcutItem
-            // Return false to indicate we'll handle it later
-            return false
-        }
+        // Set up notification center delegate
+        UNUserNotificationCenter.current().delegate = self
+        
+        // Request notification permissions
+        NotificationManager.shared.requestAuthorization()
 
         return true
     }
     
-    func application(_ application: UIApplication,
-                     configurationForConnecting connectingSceneSession: UISceneSession,
-                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        print("[AppDelegate] configurationForConnecting")
-        
-        // Store shortcut item to process later
-        if let shortcutItem = options.shortcutItem {
-            print("[AppDelegate] Found shortcut in scene options: \(shortcutItem.type)")
-            handleShortcutItem(shortcutItem)
-        }
-        
-        return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    // MARK: - UNUserNotificationCenterDelegate
+    
+    // Handle notification when app is in foreground
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        print("[AppDelegate] 🔔 Will present notification: \(notification.request.identifier)")
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
     }
     
-    func application(_ application: UIApplication,
-                     performActionFor shortcutItem: UIApplicationShortcutItem,
-                     completionHandler: @escaping (Bool) -> Void) {
-        print("[AppDelegate] performActionFor: \(shortcutItem.type)")
-        handleShortcutItem(shortcutItem)
-        completionHandler(true)
-    }
-    
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        print("[AppDelegate] applicationDidBecomeActive")
+    // Handle notification tap
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        print("[AppDelegate] 🔔 User tapped notification: \(response.notification.request.identifier)")
         
-        if let shortcutItem = shortcutItemToProcess {
-            print("[AppDelegate] Processing deferred shortcut: \(shortcutItem.type)")
-            handleShortcutItem(shortcutItem)
-            shortcutItemToProcess = nil
-        }
-    }
-    
-    private func handleShortcutItem(_ shortcutItem: UIApplicationShortcutItem) {
-        print("[AppDelegate] handleShortcutItem: \(shortcutItem.type)")
-        
-        if shortcutItem.type == "com.jasonmayo.diewithoutregrets.buyback" {
-            print("[AppDelegate] Setting pending buyback offer")
-            ShortcutAction.pending = .buyBackOffer
+        if response.notification.request.identifier == "buyback_offer_notification" {
+            // Mark notification as seen
+            NotificationManager.shared.markBuybackNotificationSeen()
             
-            // Also try to open URL as backup
-            if let url = URL(string: "diewithoutregrets://buyback") {
-                print("[AppDelegate] Opening URL: \(url)")
-                DispatchQueue.main.async {
-                    UIApplication.shared.open(url)
-                }
+            // Present buyback offer
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                NotificationCenter.default.post(name: .showBuyBackOffer, object: nil)
             }
         }
+        
+        completionHandler()
     }
+}
+
+// Add notification name extension
+extension Notification.Name {
+    static let showBuyBackOffer = Notification.Name("showBuyBackOffer")
 }

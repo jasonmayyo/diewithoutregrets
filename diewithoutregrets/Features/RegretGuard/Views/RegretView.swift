@@ -89,72 +89,81 @@ struct RegretView: View {
                                 
                                 // Answer Options
                                 if currentStep % 2 == 0 {
-                                    VStack(spacing: 12) {
-                                        ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
-                                            Button(action: {
-                                                selectedAnswer = index
-                                            }) {
+                                    ScrollView {
+                                        VStack(spacing: 16) {
+                                            ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
+                                                Button(action: {
+                                                    selectedAnswer = index
+                                                }) {
+                                                    HStack {
+                                                        Text(choice)
+                                                            .foregroundColor(.black)
+                                                            .multilineTextAlignment(.leading)
+                                                            .lineLimit(nil)
+                                                            .fixedSize(horizontal: false, vertical: true)
+                                                            .padding(.vertical, 16)
+                                                            .padding(.horizontal, 20)
+                                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                                            .background(
+                                                                selectedAnswer == index ?
+                                                                Color.gray.opacity(0.2) : Color.clear
+                                                            )
+                                                            .cornerRadius(12)
+                                                            .overlay(
+                                                                RoundedRectangle(cornerRadius: 12)
+                                                                    .stroke(
+                                                                        selectedAnswer == index ?
+                                                                        Color.gray : Color.gray.opacity(0.3),
+                                                                        lineWidth: 2
+                                                                    )
+                                                            )
+                                                    }
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
+                                        }
+                                        .padding(.horizontal, 20)
+                                        .padding(.bottom, 20)
+                                    }
+                                    .frame(maxHeight: 300) // Limit height to prevent overflow
+                                } else {
+                                    // Answer Reveal
+                                    ScrollView {
+                                        VStack(spacing: 16) {
+                                            ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
                                                 HStack {
                                                     Text(choice)
-                                                        .foregroundColor(.black)
+                                                        .foregroundColor(
+                                                            index == currentRegret.correctAnswerIndex ?
+                                                                .white : .black
+                                                        )
                                                         .multilineTextAlignment(.leading)
                                                         .lineLimit(nil)
                                                         .fixedSize(horizontal: false, vertical: true)
-                                                        .padding()
+                                                        .padding(.vertical, 16)
+                                                        .padding(.horizontal, 20)
                                                         .frame(maxWidth: .infinity, alignment: .leading)
                                                         .background(
-                                                            selectedAnswer == index ?
-                                                            Color.gray.opacity(0.2) : Color.clear
+                                                            index == currentRegret.correctAnswerIndex ?
+                                                            Color.green :
+                                                                (index == selectedAnswer ? Color.red.opacity(0.2) : Color.clear)
                                                         )
-                                                        .cornerRadius(8)
+                                                        .cornerRadius(12)
                                                         .overlay(
-                                                            RoundedRectangle(cornerRadius: 8)
+                                                            RoundedRectangle(cornerRadius: 12)
                                                                 .stroke(
-                                                                    selectedAnswer == index ?
-                                                                    Color.gray : Color.gray.opacity(0.3),
+                                                                    index == currentRegret.correctAnswerIndex ?
+                                                                    Color.green : Color.clear,
                                                                     lineWidth: 2
                                                                 )
                                                         )
                                                 }
                                             }
                                         }
+                                        .padding(.horizontal, 20)
+                                        .padding(.bottom, 20)
                                     }
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom)
-                                } else {
-                                    // Answer Reveal
-                                    VStack(spacing: 12) {
-                                        ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
-                                            HStack {
-                                                Text(choice)
-                                                    .foregroundColor(
-                                                        index == currentRegret.correctAnswerIndex ?
-                                                            .white : .black
-                                                    )
-                                                    .multilineTextAlignment(.leading)
-                                                    .lineLimit(nil)
-                                                    .fixedSize(horizontal: false, vertical: true)
-                                                    .padding()
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                                    .background(
-                                                        index == currentRegret.correctAnswerIndex ?
-                                                        Color.green :
-                                                            (index == selectedAnswer ? Color.red.opacity(0.2) : Color.clear)
-                                                    )
-                                                    .cornerRadius(8)
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 8)
-                                                            .stroke(
-                                                                index == currentRegret.correctAnswerIndex ?
-                                                                Color.green : Color.clear,
-                                                                lineWidth: 2
-                                                            )
-                                                    )
-                                            }
-                                        }
-                                    }
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom)
+                                    .frame(maxHeight: 300) // Limit height to prevent overflow
                                 }
                             } else {
                                 // Fallback if no regrets or index out of range

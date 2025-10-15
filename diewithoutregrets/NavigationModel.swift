@@ -13,6 +13,7 @@ public final class NavigationModel: ObservableObject {
     @Published public var currentDestination: NavigationDestination?
     @Published public var showBuyBackOffer: Bool = false
     @Published public var hasPendingBuyBackOffer: Bool = false
+    @Published public var shouldDismissPaywall: Bool = false
     
     private init() {
         print("[NavigationModel] Initialized")
@@ -32,12 +33,36 @@ public final class NavigationModel: ObservableObject {
     public func presentBuyBackOffer() {
         print("[NavigationModel] presentBuyBackOffer called, current value: \(showBuyBackOffer)")
         if Thread.isMainThread {
-            self.showBuyBackOffer = true
-            print("[NavigationModel] showBuyBackOffer set to true")
+            // First, dismiss any showing paywall
+            print("[NavigationModel] Dismissing any showing paywall")
+            self.shouldDismissPaywall = true
+            
+            // Then show buyback offer after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.showBuyBackOffer = true
+                print("[NavigationModel] showBuyBackOffer set to true")
+                
+                // Reset the dismiss flag
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.shouldDismissPaywall = false
+                }
+            }
         } else {
             DispatchQueue.main.async {
-                self.showBuyBackOffer = true
-                print("[NavigationModel] showBuyBackOffer set to true (async)")
+                // First, dismiss any showing paywall
+                print("[NavigationModel] Dismissing any showing paywall (async)")
+                self.shouldDismissPaywall = true
+                
+                // Then show buyback offer after a short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self.showBuyBackOffer = true
+                    print("[NavigationModel] showBuyBackOffer set to true (async)")
+                    
+                    // Reset the dismiss flag
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.shouldDismissPaywall = false
+                    }
+                }
             }
         }
     }

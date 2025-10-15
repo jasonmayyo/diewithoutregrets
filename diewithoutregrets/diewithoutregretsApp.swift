@@ -9,81 +9,55 @@ struct diewithoutregretsApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @StateObject private var regretStore = RegretStore()
     @StateObject private var deckStore = DeckStore.shared
-    @Environment(\.scenePhase) var scenePhase
+    @Environment(\.scenePhase) private var scenePhase
     
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environmentObject(navigationModel)
-                .environmentObject(regretStore)
-                .environmentObject(deckStore)
-                .onOpenURL { url in
-                    print("[App] onOpenURL: \(url)")
-                    handleURL(url)
-                }
-        }
-    }
-    
-    private func handleURL(_ url: URL) {
-        if url.scheme == "diewithoutregrets" && url.host == "buyback" {
-            print("[App] Handling buyback URL")
-            navigationModel.presentBuyBackOffer()
-        }
-    }
-}
-
-struct RootView: View {
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @EnvironmentObject var navigationModel: NavigationModel
-    @State private var isAppReady = false
-    
-    var body: some View {
-        Group {
-            if hasCompletedOnboarding {
-                ContentView()
-            } else {
-                OnboardingView()
-            }
-        }
-        .sheet(isPresented: $navigationModel.showBuyBackOffer) {
-            BuyBackOfferView()
-        }
-        .onAppear {
-            print("[RootView] onAppear")
-            isAppReady = true
-            
-            // Check for pending shortcut action
-            if let pendingAction = ShortcutAction.pending {
-                print("[RootView] Found pending action: \(pendingAction)")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    handleShortcutAction(pendingAction)
-                    ShortcutAction.pending = nil
+            Group {
+                if hasCompletedOnboarding {
+                    ContentView()
+                        .environmentObject(navigationModel)
+                        .environmentObject(regretStore)
+                        .environmentObject(deckStore)
+                } else {
+                    OnboardingView()
+                        .environmentObject(navigationModel)
+                        .environmentObject(regretStore)
+                        .environmentObject(deckStore)
                 }
             }
-        }
-    }
-    
-    private func handleShortcutAction(_ action: ShortcutAction) {
-        switch action {
-        case .buyBackOffer:
-            print("[RootView] Presenting BuyBackOffer from shortcut")
-            navigationModel.showBuyBackOffer = true
-        }
-    }
-}
-
-enum ShortcutAction {
-    case buyBackOffer
-    
-    static var pending: ShortcutAction? {
-        get {
-            if UserDefaults.standard.bool(forKey: "pendingBuyBackOffer") {
-                return .buyBackOffer
+            .sheet(isPresented: $navigationModel.showBuyBackOffer) {
+                BuyBackOfferView()
             }
-            return nil
-        }
-        set {
-            UserDefaults.standard.set(newValue == .buyBackOffer, forKey: "pendingBuyBackOffer")
+            .onOpenURL { url in
+                print("[App] onOpenURL: \(url)")
+                if url.scheme == "diewithoutregrets" && url.host == "buyback" {
+                    navigationModel.presentBuyBackOffer()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showBuyBackOffer)) { _ in
+                print("[App] ⚡️ Received showBuyBackOffer notification")
+                navigationModel.presentBuyBackOffer()
+            }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                print("[App] 🔄 Scene phase changed from \(oldPhase) to \(newPhase)")
+                
+                // When app moves to background, schedule notification if applicable
+                if newPhase == .background {
+                    print("[App] 📱 App moved to background")
+                    
+                    // Check if we should schedule the buyback notification
+                    if NotificationManager.shared.didViewPaywallWithoutPurchasing() &&
+                       !NotificationManager.shared.hasSeenBuybackNotification() {
+                        print("[App] 🔔 Scheduling buyback notification")
+                        NotificationManager.shared.scheduleBuybackNotification()
+                    } else {
+                        print("[App] ⏭️ Not scheduling notification - conditions not met")
+                        print("  - didViewPaywall: \(NotificationManager.shared.didViewPaywallWithoutPurchasing())")
+                        print("  - hasSeenNotification: \(NotificationManager.shared.hasSeenBuybackNotification())")
+                    }
+                }
+            }
         }
     }
 }

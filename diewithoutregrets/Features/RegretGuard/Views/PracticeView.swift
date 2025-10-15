@@ -164,33 +164,39 @@ struct PracticeView: View {
         let correctAnswer: Int
         
         var body: some View {
-            VStack(spacing: 12) {
-                ForEach(Array(choices.enumerated()), id: \.offset) { index, choice in
-                    Button(action: {
-                        if !showAnswer {
-                            selectedAnswer = index
+            ScrollView {
+                VStack(spacing: 16) {
+                    ForEach(Array(choices.enumerated()), id: \.offset) { index, choice in
+                        Button(action: {
+                            if !showAnswer {
+                                selectedAnswer = index
+                            }
+                        }) {
+                            HStack {
+                                Text(choice)
+                                    .foregroundColor(textColor(for: index))
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.vertical, 16)
+                                    .padding(.horizontal, 20)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(background(for: index))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(borderColor(for: index), lineWidth: 2)
+                                    )
+                            }
                         }
-                    }) {
-                        HStack {
-                            Text(choice)
-                                .foregroundColor(textColor(for: index))
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(nil)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(background(for: index))
-                        }
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(borderColor(for: index), lineWidth: 2)
-                        )
+                        .disabled(showAnswer)
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .disabled(showAnswer)
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal)
+            .frame(maxHeight: 300) // Limit height to prevent overflow
         }
         
         private func textColor(for index: Int) -> Color {

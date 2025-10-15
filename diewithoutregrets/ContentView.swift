@@ -65,6 +65,7 @@ struct ContentView: View {
 
 struct ProfileView: View {
     @EnvironmentObject var deckStore: DeckStore
+    @EnvironmentObject var navigationModel: NavigationModel
     @State private var showingSettings = false
     @State private var showingFlashcardSettings = false
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
@@ -73,6 +74,7 @@ struct ProfileView: View {
     @State private var currentOffering: Offering?
     @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
     @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
+    @State private var didCompletePurchase = false
     
     private var totalAvailableCards: Int {
         deckStore.decks.reduce(0) { $0 + $1.cards.count }
@@ -163,6 +165,7 @@ struct ProfileView: View {
                     SectionHeader(title: "Account")
                     
                     Button(action: {
+                        didCompletePurchase = false  // Reset flag when showing paywall
                         showingPaywall = true
                     }) {
                         HStack {
@@ -234,29 +237,65 @@ struct ProfileView: View {
         .sheet(isPresented: $showingPaywall) {
             if let offering = currentOffering {
                 PaywallView(offering: offering)
+                    .onAppear {
+                        // Mark that user viewed the paywall
+                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
+                        print("[ContentView] 📝 Marked paywall as viewed")
+                    }
                     .onPurchaseCompleted { customerInfo in
                         // Handle successful purchase if needed
                         hasSeenPaywall = true
+                        didCompletePurchase = true
                         showingPaywall = false
+                        
+                        // Reset paywall tracking since user purchased
+                        NotificationManager.shared.resetPaywallTracking()
                     }
                     .onRestoreCompleted { customerInfo in
                         hasSeenPaywall = true
+                        didCompletePurchase = true
                         showingPaywall = false
+                        
+                        // Reset paywall tracking since user has subscription
+                        NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
                         // Mark as seen even if user dismisses without purchasing
                         hasSeenPaywall = true
+                        
+                        print("[ContentView] 🔍 Paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
+                        // Note: Paywall was already marked as viewed in onAppear
+                        // We don't need to do anything here since the flag is already set
                     }
             } else {
                 // Fallback paywall without specific offering
                 PaywallView()
+                    .onAppear {
+                        // Mark that user viewed the paywall
+                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
+                        print("[ContentView] 📝 Marked fallback paywall as viewed")
+                    }
                     .onPurchaseCompleted { customerInfo in
                         hasSeenPaywall = true
+                        didCompletePurchase = true
                         showingPaywall = false
+                        
+                        // Reset paywall tracking since user purchased
+                        NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
                         hasSeenPaywall = true
+                        
+                        print("[ContentView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
+                        // Note: Paywall was already marked as viewed in onAppear
+                        // We don't need to do anything here since the flag is already set
                     }
+            }
+        }
+        .onChange(of: navigationModel.shouldDismissPaywall) { oldValue, newValue in
+            if newValue {
+                print("[ContentView] 🚪 Received dismiss signal, closing paywall")
+                showingPaywall = false
             }
         }
     }

@@ -9,6 +9,8 @@ import SwiftUI
 import RevenueCat
 
 struct BuyBackOfferView: View {
+    @Environment(\.dismiss) var dismiss
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showTitle = false
     @State private var showOfferCard = false
     @State private var showButton = false
@@ -206,7 +208,17 @@ struct BuyBackOfferView: View {
             let result = try await Purchases.shared.purchase(package: package)
             
             if result.customerInfo.entitlements.active.isEmpty == false {
-                print("[BuyBackOfferView] Purchase success; dismissing and refreshing shortcuts")
+                print("[BuyBackOfferView] Purchase success; completing onboarding and dismissing")
+                
+                // Reset tracking flags since user purchased
+                NotificationManager.shared.resetPaywallTracking()
+                NotificationManager.shared.markBuybackNotificationSeen()
+                
+                // Complete onboarding (same as paywall purchase)
+                hasCompletedOnboarding = true
+                
+                // Dismiss the buyback sheet
+                dismiss()
             }
         } catch {
             let nsError = error as NSError

@@ -24,25 +24,12 @@
     <key>branch_key</key>
     <dict>
         <key>live</key>
-        <string>key_live_aEsipkz1RSZJpKjW53jqVkjaFCmTu1HG</string>
+        <string>key_live_aEsipkz1RSZJpKjW53jqVkjaFCmVCwLigzmG</string>
     </dict>
-    <key>branch_universal_link_domains </key>
-    <array>
-        <string>studyguard.app.link</string>
-        <string>studyguard-alternate.app.link</string>
-    </array>
-       <key>UIApplicationShortcutItems</key>
-    <array>
-        <dict>
-            <key>UIApplicationShortcutItemType</key>
-            <string>com.jasonmayo.diewithoutregrets.buyback</string>
-            <key>UIApplicationShortcutItemTitle</key>
-            <string>Buy Back Offer</string>
-            <key>UIApplicationShortcutItemSubtitle</key>
-            <string>Limited-time discount</string>
-            <key>UIApplicationShortcutItemIconType</key>
-            <string>UIApplicationShortcutIconTypeLove</string>
-        </dict>
-    </array>
+	<key>branch_universal_link_domains</key>
+	<array>
+		<string>studyguard.app.link</string>
+		<string>studyguard-alternate.app.link</string>
+	</array>
 </dict>
 </plist>

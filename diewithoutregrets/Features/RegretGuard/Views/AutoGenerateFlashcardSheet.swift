@@ -235,9 +235,15 @@ struct AutoGenerateFlashcardsSheet: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.yellow)
                     
-                    Text("AI Flashcard Generator")
-                        .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("AI Flashcard Generator")
+                            .font(.headline)
+                            .foregroundColor(Color(hex: 0x184449))
+                        
+                        Text("Auto-detects language • Supports 20+ languages")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     
                     Image(systemName: "sparkles")
                         .font(.system(size: 16, weight: .medium))
@@ -431,6 +437,10 @@ struct AutoGenerateFlashcardsSheet: View {
                             .foregroundColor(.secondary)
                         
                         Text("• Include at least 50 characters for meaningful flashcards")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("• AI automatically detects language (supports 20+ languages)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         
@@ -1403,37 +1413,72 @@ struct AutoGenerateFlashcardsSheet: View {
         return """
 You are provided with text (extracted from a PDF) that contains technical or conceptual material. I need you to generate a set of flashcards based on that text. The flashcards should meet the following requirements:
 
-1. **Flashcard Format:**
-    - Use the following object format for each flashcard:
-        
-        ```
-        Regret( regretPrompt: "Question text here", regret: "A brief statement or context for the question.", choices: [ "Option A", "Option B", "Option C", "Option D" ], correctAnswerIndex: X, backgroundExplanation: "Detailed explanation of the answer." ),
-        ```
-        
-    - The flashcards should be output in plain text that can be copy/pasted directly into code.
-2. **Question Types:**
-    - Create a mix of True/False questions and multiple-choice questions.
-    - True/False questions should have two options: "True" and "False".
-    - Multiple-choice questions should include four options.
-3. **Answer Consistency:**
-    - The correct answer index (the value for `correctAnswerIndex`) should not be the same for every flashcard; vary its position among the answer options.
-    - For multiple-choice questions, ensure that the correct answer option has the same number of words as the other options. (Reword options if needed without changing their meaning.)
-4. **Content Requirements:**
-    - Base the questions on key concepts, definitions, examples, and explanations found in the provided text.
-    - Make sure each flashcard includes a clear question (`regretPrompt`), a brief statement or context (`regret`), a list of answer choices (`choices`), the index of the correct answer option has the same number of words as the other options. (Reword options if needed without changing their meaning.)
-4. **Content Requirements:**
-    - Base the questions on key concepts, definitions, examples, and explanations found in the provided text.
-    - Make sure each flashcard includes a clear question (`regretPrompt`), a brief statement or context (`regret`), a list of answer choices (`choices`), the index of the correct answer (`correctAnswerIndex`), and a detailed explanation (`backgroundExplanation`).
-5. **Quantity:**
-    - Create 50 flashcards unless otherwise specified.
-6. **Output:**
-    - Output exactly 50 flashcards in plain text. Each flashcard must be formatted exactly as shown below and each flashcard should be on its own line.
-    
-Example:
+1. **Language Detection & Usage:**
+   - AUTOMATICALLY detect the primary language of the provided text
+   - Generate ALL flashcards in the SAME language as the input text
+   - If the text is in Spanish, generate Spanish flashcards
+   - If the text is in French, generate French flashcards
+   - If the text is in German, generate German flashcards
+   - If the text is in Chinese, generate Chinese flashcards
+   - If the text is in Japanese, generate Japanese flashcards
+   - If the text is in Arabic, generate Arabic flashcards
+   - If the text is in Russian, generate Russian flashcards
+   - If the text is in Korean, generate Korean flashcards
+   - If the text is in Portuguese, generate Portuguese flashcards
+   - If the text is in Italian, generate Italian flashcards
+   - If the text is in Dutch, generate Dutch flashcards
+   - If the text is in Swedish, generate Swedish flashcards
+   - If the text is in Norwegian, generate Norwegian flashcards
+   - If the text is in Danish, generate Danish flashcards
+   - If the text is in Polish, generate Polish flashcards
+   - If the text is in Czech, generate Czech flashcards
+   - If the text is in Hungarian, generate Hungarian flashcards
+   - If the text is in Greek, generate Greek flashcards
+   - If the text is in Hindi, generate Hindi flashcards
+   - If the text is in English, generate English flashcards
+   - Use proper grammar, spelling, and cultural context for the detected language
+   - For non-Latin scripts, use the appropriate writing system
+   - For True/False questions, use the appropriate words for "True" and "False" in the detected language
 
-Regret( regretPrompt: "Why are heuristic functions considered 'weak' knowledge in search algorithms?", regret: "Heuristic functions are deemed 'weak' because they provide only an approximate estimate of the true cost to reach the goal, guiding the search without guaranteeing perfect accuracy.", choices: [ "Because they always overestimate the actual cost.", "Because they guarantee the shortest path.", "Because they offer only approximate guidance without always being accurate, and thus do not replace complete information.", "Because they are based entirely on random guessing." ], correctAnswerIndex: 2, backgroundExplanation: "While heuristics significantly improve search efficiency, their approximate nature means they cannot ensure an optimal solution unless they are carefully designed (i.e., admissible and consistent)." ),
+2. **Flashcard Format:**
+   - Use the following object format for each flashcard:
+       
+       ```
+       Regret( regretPrompt: "Question text here in the detected language", regret: "A brief statement or context for the question in the detected language.", choices: [ "Option A in detected language", "Option B in detected language", "Option C in detected language", "Option D in detected language" ], correctAnswerIndex: X, backgroundExplanation: "Detailed explanation of the answer in the detected language." ),
+       ```
+       
+   - The flashcards should be output in plain text that can be copy/pasted directly into code.
 
-Only output flashcards in the above format with one flashcard per line.
+3. **Question Types:**
+   - Create a mix of True/False questions and multiple-choice questions.
+   - True/False questions should have two options: use the appropriate words for "True" and "False" in the detected language.
+   - Multiple-choice questions should include four options.
+
+4. **Answer Consistency:**
+   - The correct answer index (the value for `correctAnswerIndex`) should not be the same for every flashcard; vary its position among the answer options.
+   - For multiple-choice questions, ensure that the correct answer option has the same number of words as the other options. (Reword options if needed without changing their meaning.)
+
+5. **Content Requirements:**
+   - Base the questions on key concepts, definitions, examples, and explanations found in the provided text.
+   - Make sure each flashcard includes a clear question (`regretPrompt`), a brief statement or context (`regret`), a list of answer choices (`choices`), the index of the correct answer (`correctAnswerIndex`), and a detailed explanation (`backgroundExplanation`).
+   - All content must be in the same language as the input text.
+
+6. **Quantity:**
+   - Create 50 flashcards unless otherwise specified.
+
+7. **Output:**
+   - Output exactly 50 flashcards in plain text. Each flashcard must be formatted exactly as shown below and each flashcard should be on its own line.
+   - IMPORTANT: All flashcards must be in the same language as the input text.
+
+Example (if input text is in Spanish):
+
+Regret( regretPrompt: "¿Cuál es el proceso por el cual las plantas producen su propio alimento?", regret: "Las plantas utilizan la fotosíntesis para convertir la luz solar, el dióxido de carbono y el agua en glucosa y oxígeno.", choices: [ "Respiración celular", "Fotosíntesis", "Fermentación", "Digestión" ], correctAnswerIndex: 1, backgroundExplanation: "La fotosíntesis es el proceso fundamental por el cual las plantas verdes capturan la energía de la luz solar y la convierten en energía química almacenada en forma de glucosa." ),
+
+Example (if input text is in French):
+
+Regret( regretPrompt: "Quel est le processus par lequel les plantes produisent leur propre nourriture?", regret: "Les plantes utilisent la photosynthèse pour convertir la lumière du soleil, le dioxyde de carbone et l'eau en glucose et oxygène.", choices: [ "Respiration cellulaire", "Photosynthèse", "Fermentation", "Digestion" ], correctAnswerIndex: 1, backgroundExplanation: "La photosynthèse est le processus fondamental par lequel les plantes vertes capturent l'énergie de la lumière du soleil et la convertissent en énergie chimique stockée sous forme de glucose." ),
+
+Only output flashcards in the above format with one flashcard per line, ensuring all content is in the same language as the input text.
 """
     }
     

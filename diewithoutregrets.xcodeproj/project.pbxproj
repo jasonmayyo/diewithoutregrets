@@ -90,6 +90,7 @@
 		6BDD79292DB0352A007DA0BE /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDD79282DB0352A007DA0BE /* AppSecrets.swift */; };
 		6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 6BE29CFA2DB82D0800505D57 /* BranchSDK */; };
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
+		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
 /* End PBXBuildFile section */
 
@@ -193,6 +194,7 @@
 		6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6BDD79282DB0352A007DA0BE /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
 		6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -456,6 +458,7 @@
 				6B9D89C82D3552E600DE8B2E /* Assets.xcassets */,
 				6B9D89CA2D3552E600DE8B2E /* Preview Content */,
 				6B22E8A22D4CA96A003A5685 /* NavigationModel.swift */,
+				6BE29CFF2E0000000000001 /* NotificationManager.swift */,
 				6B74330C2DB19E5F0007270C /* Secrets.xcconfig */,
 			);
 			path = diewithoutregrets;
@@ -667,6 +670,7 @@
 				6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */,
 				6B04F7272DA8599B00694451 /* RatingView.swift in Sources */,
 				6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */,
+				6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */,
 				6B7CD4EA2D50C00F0065A0F7 /* BreakdownView.swift in Sources */,
 				6B22E85F2D48EA5F003A5685 /* MeshGradient.swift in Sources */,
 				6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */,

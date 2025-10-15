@@ -13,6 +13,7 @@ import PostHog
 
 struct PayWallView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
+    @StateObject private var navigationModel = NavigationModel.shared
     @State private var showTitle = false
     @State private var showVideo = false
     @State private var showCheckmark = false
@@ -20,6 +21,7 @@ struct PayWallView: View {
     @State private var showingRevenueCatPaywall = false
     @State private var currentOffering: Offering?
     @State private var isLoadingOffering = true
+    @State private var didCompletePurchase = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -96,6 +98,7 @@ struct PayWallView: View {
                                 return
                             }
                             onboardingViewModel.triggerHapticFeedback()
+                            didCompletePurchase = false  // Reset flag when showing paywall
                             showingRevenueCatPaywall = true
                         }) {
                             HStack {
@@ -165,6 +168,10 @@ struct PayWallView: View {
                     .onAppear {
                         print("🎯 Showing paywall with offering: \(offering.identifier)")
                         print("📦 Offering packages: \(offering.availablePackages.map { $0.identifier })")
+                        
+                        // Mark that user viewed the paywall
+                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
+                        print("[PayWallView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
                         // Track successful purchase
@@ -178,6 +185,12 @@ struct PayWallView: View {
                             ]
                         )
                         
+                        // Mark purchase completed
+                        didCompletePurchase = true
+                        
+                        // Reset paywall tracking since user purchased
+                        NotificationManager.shared.resetPaywallTracking()
+                        
                         // Handle successful purchase
                         showingRevenueCatPaywall = false
                         onboardingViewModel.nextStep()
@@ -185,9 +198,20 @@ struct PayWallView: View {
                     .onRestoreCompleted { customerInfo in
                         // Handle restore
                         if customerInfo.entitlements["Pro Acess"]?.isActive == true {
+                            // Mark as completed
+                            didCompletePurchase = true
+                            
+                            // Reset paywall tracking since user has subscription
+                            NotificationManager.shared.resetPaywallTracking()
+                            
                             showingRevenueCatPaywall = false
                             onboardingViewModel.nextStep()
                         }
+                    }
+                    .onDisappear {
+                        print("[PayWallView] 🔍 Paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
+                        // Note: Paywall was already marked as viewed in onAppear
+                        // We don't need to do anything here since the flag is already set
                     }
             } else {
                 // This should not happen now with the loading state
@@ -195,17 +219,44 @@ struct PayWallView: View {
                     .onAppear {
                         print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
                         print("❌ isLoadingOffering: \(isLoadingOffering)")
+                        
+                        // Mark that user viewed the paywall
+                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
+                        print("[PayWallView] 📝 Marked fallback paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
+                        // Mark purchase completed
+                        didCompletePurchase = true
+                        
+                        // Reset paywall tracking since user purchased
+                        NotificationManager.shared.resetPaywallTracking()
+                        
                         showingRevenueCatPaywall = false
                         onboardingViewModel.nextStep()
                     }
                     .onRestoreCompleted { customerInfo in
                         if customerInfo.entitlements["Pro Acess"]?.isActive == true {
+                            // Mark as completed
+                            didCompletePurchase = true
+                            
+                            // Reset paywall tracking since user has subscription
+                            NotificationManager.shared.resetPaywallTracking()
+                            
                             showingRevenueCatPaywall = false
                             onboardingViewModel.nextStep()
                         }
                     }
+                    .onDisappear {
+                        print("[PayWallView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
+                        // Note: Paywall was already marked as viewed in onAppear
+                        // We don't need to do anything here since the flag is already set
+                    }
+            }
+        }
+        .onChange(of: navigationModel.shouldDismissPaywall) { oldValue, newValue in
+            if newValue {
+                print("[PayWallView] 🚪 Received dismiss signal, closing paywall")
+                showingRevenueCatPaywall = false
             }
         }
         .preferredColorScheme(.light)
