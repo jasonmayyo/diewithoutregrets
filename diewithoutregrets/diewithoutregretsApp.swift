@@ -26,7 +26,7 @@ struct diewithoutregretsApp: App {
                         .environmentObject(deckStore)
                 }
             }
-            .sheet(isPresented: $navigationModel.showBuyBackOffer) {
+            .fullScreenCover(isPresented: $navigationModel.showBuyBackOffer) {
                 BuyBackOfferView()
             }
             .onOpenURL { url in

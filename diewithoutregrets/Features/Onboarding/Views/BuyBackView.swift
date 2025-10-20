@@ -39,6 +39,26 @@ struct BuyBackOfferView: View {
                 .transition(.opacity)
             }
             
+            // Close button
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 32, height: 32)
+                            .background(Color.white.opacity(0.3))
+                            .clipShape(Circle())
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.top, 50)
+                }
+                Spacer()
+            }
+            
             VStack(spacing: 0) {
                 Spacer()
                 
