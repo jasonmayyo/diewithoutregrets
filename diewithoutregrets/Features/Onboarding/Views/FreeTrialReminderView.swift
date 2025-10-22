@@ -349,23 +349,20 @@ struct FreeTrialReminderView: View {
                 
                 if let offerings = offerings {
                     print("✅ Available offerings: \(offerings.all.keys)")
+                    print("🔍 Current offering: \(offerings.current?.identifier ?? "none")")
                     
-                    // Try to find the 3-Day-Free offering
-                    if let threeDayOffering = offerings.offering(identifier: "3-Day-Free") {
-                        print("✅ Found 3-Day-Free offering")
-                        self.currentOffering = threeDayOffering
-                        self.isLoadingOffering = false
-                    } else if let threeDayOffering = offerings.all["3-Day-Free"] {
-                        print("✅ Found 3-Day-Free offering (alternative lookup)")
-                        self.currentOffering = threeDayOffering
-                        self.isLoadingOffering = false
+                    // Use the default/current offering (can be changed in RevenueCat dashboard)
+                    self.currentOffering = offerings.current
+                    self.isLoadingOffering = false
+                    
+                    if let current = offerings.current {
+                        print("✅ Using default offering: \(current.identifier)")
+                        print("📦 Available packages: \(current.availablePackages.map { $0.identifier })")
                     } else {
-                        print("⚠️ 3-Day-Free offering not found, using current")
-                        self.currentOffering = offerings.current
-                        self.isLoadingOffering = false
+                        print("⚠️ No current offering set - check RevenueCat dashboard")
                     }
                 } else {
-                    print("❌ No offerings available")
+                    print("❌ No offerings available - check RevenueCat configuration")
                     self.currentOffering = nil
                     self.isLoadingOffering = false
                 }

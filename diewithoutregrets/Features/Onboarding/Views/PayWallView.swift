@@ -7,8 +7,6 @@
 
 import SwiftUI
 import AVKit
-import RevenueCat
-import RevenueCatUI
 import PostHog
 
 struct PayWallView: View {
@@ -17,9 +15,6 @@ struct PayWallView: View {
     @State private var showVideo = false
     @State private var showCheckmark = false
     @State private var showButton = false
-    @State private var showingRevenueCatPaywall = false
-    @State private var currentOffering: Offering?
-    @State private var isLoadingOffering = true
     
     var body: some View {
         GeometryReader { geometry in
@@ -91,30 +86,19 @@ struct PayWallView: View {
                         
                         // Try for $0.00 button
                         Button(action: {
-                            guard currentOffering != nil else {
-                                print("⚠️ Button tapped but offering not loaded yet")
-                                return
-                            }
                             onboardingViewModel.triggerHapticFeedback()
-                            showingRevenueCatPaywall = true
+                            // Move to next step (FreeTrialReminderView)
+                            onboardingViewModel.nextStep()
                         }) {
-                            HStack {
-                                if isLoadingOffering {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                }
-                                Text(isLoadingOffering ? "Loading..." : "Try for $0.00")
-                            }
-                            .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 70 : 55)
-                            .background(isLoadingOffering ? Color.gray : Color(hex: 0x184449))
-                            .cornerRadius(50)
+                            Text("Try for $0.00")
+                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 70 : 55)
+                                .background(Color(hex: 0x184449))
+                                .cornerRadius(50)
                         }
-                        .disabled(isLoadingOffering || currentOffering == nil)
                         .opacity(showButton ? 1 : 0)
                         .offset(y: showButton ? 0 : 20)
                         .animation(.easeInOut(duration: 0.8).delay(0.7), value: showButton)
@@ -156,91 +140,8 @@ struct PayWallView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 showButton = true
             }
-            
-            loadCurrentOffering()
-        }
-        .fullScreenCover(isPresented: $showingRevenueCatPaywall) {
-            if let offering = currentOffering {
-                PaywallView(offering: offering)
-                    .onAppear {
-                        print("🎯 Showing paywall with offering: \(offering.identifier)")
-                        print("📦 Offering packages: \(offering.availablePackages.map { $0.identifier })")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        // Track successful purchase
-                        PostHogSDK.shared.capture(
-                            "onboarding_purchase_completed",
-                            properties: [
-                                "timestamp": Date().ISO8601Format(),
-                                "user_name": onboardingViewModel.userName,
-                                "offering_id": offering.identifier,
-                                "entitlements": customerInfo.entitlements.active.keys.map { $0 }
-                            ]
-                        )
-                        
-                        // Handle successful purchase
-                        showingRevenueCatPaywall = false
-                        onboardingViewModel.nextStep()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        // Handle restore
-                        if customerInfo.entitlements["Pro Acess"]?.isActive == true {
-                            showingRevenueCatPaywall = false
-                            onboardingViewModel.nextStep()
-                        }
-                    }
-            } else {
-                // This should not happen now with the loading state
-                PaywallView()
-                    .onAppear {
-                        print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
-                        print("❌ isLoadingOffering: \(isLoadingOffering)")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        showingRevenueCatPaywall = false
-                        onboardingViewModel.nextStep()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        if customerInfo.entitlements["Pro Acess"]?.isActive == true {
-                            showingRevenueCatPaywall = false
-                            onboardingViewModel.nextStep()
-                        }
-                    }
-            }
         }
         .preferredColorScheme(.light)
-    }
-    
-    private func loadCurrentOffering() {
-        Purchases.shared.getOfferings { offerings, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("❌ RevenueCat Offerings Error: \(error.localizedDescription)")
-                    self.isLoadingOffering = false
-                    return
-                }
-                
-                if let offerings = offerings {
-                    print("✅ Available offerings: \(offerings.all.keys)")
-                    print("🔍 Current offering: \(offerings.current?.identifier ?? "none")")
-                    
-                    // Use the default/current offering (can be changed in RevenueCat dashboard)
-                    self.currentOffering = offerings.current
-                    self.isLoadingOffering = false
-                    
-                    if let current = offerings.current {
-                        print("✅ Using default offering: \(current.identifier)")
-                        print("📦 Available packages: \(current.availablePackages.map { $0.identifier })")
-                    } else {
-                        print("⚠️ No current offering set - check RevenueCat dashboard")
-                    }
-                } else {
-                    print("❌ No offerings available - check RevenueCat configuration")
-                    self.currentOffering = nil
-                    self.isLoadingOffering = false
-                }
-            }
-        }
     }
 }
 

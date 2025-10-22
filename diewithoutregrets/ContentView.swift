@@ -212,11 +212,13 @@ struct ProfileView: View {
             // Fetch the offering when view appears
             Purchases.shared.getOfferings { offerings, error in
                 DispatchQueue.main.async {
-                    if let offering = offerings?.offering(identifier: "3-Day-Free") {
-                        self.currentOffering = offering
+                    // Use the default/current offering (can be changed in RevenueCat dashboard)
+                    self.currentOffering = offerings?.current
+                    
+                    if let current = offerings?.current {
+                        print("✅ Using default offering: \(current.identifier)")
                     } else {
-                        // Fallback to default offering
-                        self.currentOffering = offerings?.current
+                        print("⚠️ No current offering set - check RevenueCat dashboard")
                     }
                 }
             }
