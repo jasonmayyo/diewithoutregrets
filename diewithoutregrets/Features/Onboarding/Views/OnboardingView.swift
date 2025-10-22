@@ -41,6 +41,8 @@ struct OnboardingView: View {
             return 0.80
         case .paywall:
             return 0.82
+        case .notificationPermission:
+            return 0.835
         case .weCanHelp:
             return 0.85
         case .createFirstFlashcard:
@@ -56,7 +58,7 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Progress bar - only show if not on welcome or completion screen
             // Progress bar - only show if not on welcome or completion screen
-            if onboardingViewModel.currentStep != .welcome && onboardingViewModel.currentStep != .completion && onboardingViewModel.currentStep != .paywall {
+            if onboardingViewModel.currentStep != .welcome && onboardingViewModel.currentStep != .completion && onboardingViewModel.currentStep != .paywall && onboardingViewModel.currentStep != .notificationPermission {
                 ZStack(alignment: .top) {
                     // Full green background that extends into safe area
                     Color(hex: 0x184449)
@@ -129,6 +131,9 @@ struct OnboardingView: View {
                 case .paywall:
                     PayWallView()
                         .environmentObject(onboardingViewModel)
+                case .notificationPermission:
+                    FreeTrialReminderView()
+                        .environmentObject(onboardingViewModel)
                 case .weCanHelp:
                     WecanhelpView()
                         .environmentObject(onboardingViewModel)
@@ -175,14 +180,16 @@ struct OnboardingView: View {
             return 11
         case .paywall:
             return 12
-        case .weCanHelp:
+        case .notificationPermission:
             return 13
-        case .createFirstFlashcard:
+        case .weCanHelp:
             return 14
-        case .appSelection:
+        case .createFirstFlashcard:
             return 15
-        case .completion:
+        case .appSelection:
             return 16
+        case .completion:
+            return 17
         
         }
     }

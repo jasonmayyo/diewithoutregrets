@@ -63,11 +63,10 @@ class NotificationManager {
             content.title = "One Time Offer - 80% OFF!"
             content.body = "You left without claiming your discount."
             content.sound = .default
-            content.badge = 1
             content.categoryIdentifier = "BUYBACK_OFFER"
             
             // Create trigger (3 seconds from now)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
             
             // Create request
             let request = UNNotificationRequest(
@@ -105,6 +104,20 @@ class NotificationManager {
     func markBuybackNotificationSeen() {
         UserDefaults.standard.set(true, forKey: hasSeenBuybackNotificationKey)
         print("[NotificationManager] 📝 Marked buyback notification as seen")
+        
+        // Clear the badge
+        clearBadge()
+    }
+    
+    /// Clear the app icon badge
+    func clearBadge() {
+        UNUserNotificationCenter.current().setBadgeCount(0) { error in
+            if let error = error {
+                print("[NotificationManager] ❌ Failed to clear badge: \(error.localizedDescription)")
+            } else {
+                print("[NotificationManager] ✅ Badge cleared")
+            }
+        }
     }
     
     /// Reset the paywall tracking flag (e.g., after successful purchase)

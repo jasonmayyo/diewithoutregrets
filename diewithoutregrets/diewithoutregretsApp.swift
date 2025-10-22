@@ -42,6 +42,12 @@ struct diewithoutregretsApp: App {
             .onChange(of: scenePhase) { oldPhase, newPhase in
                 print("[App] 🔄 Scene phase changed from \(oldPhase) to \(newPhase)")
                 
+                // When app becomes active, clear any badge
+                if newPhase == .active {
+                    print("[App] ✅ App became active - clearing badge")
+                    NotificationManager.shared.clearBadge()
+                }
+                
                 // When app moves to background, schedule notification if applicable
                 if newPhase == .background {
                     print("[App] 📱 App moved to background")

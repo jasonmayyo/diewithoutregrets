@@ -58,8 +58,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
-        // Request notification permissions
-        NotificationManager.shared.requestAuthorization()
+        // Note: Notification permissions are requested during onboarding flow
 
         return true
     }

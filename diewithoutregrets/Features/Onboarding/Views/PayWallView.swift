@@ -13,15 +13,10 @@ import PostHog
 
 struct PayWallView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    @StateObject private var navigationModel = NavigationModel.shared
     @State private var showTitle = false
     @State private var showVideo = false
     @State private var showCheckmark = false
     @State private var showButton = false
-    @State private var showingRevenueCatPaywall = false
-    @State private var currentOffering: Offering?
-    @State private var isLoadingOffering = true
-    @State private var didCompletePurchase = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -93,31 +88,19 @@ struct PayWallView: View {
                         
                         // Try for $0.00 button
                         Button(action: {
-                            guard currentOffering != nil else {
-                                print("⚠️ Button tapped but offering not loaded yet")
-                                return
-                            }
                             onboardingViewModel.triggerHapticFeedback()
-                            didCompletePurchase = false  // Reset flag when showing paywall
-                            showingRevenueCatPaywall = true
+                            // Go to notification permission screen
+                            onboardingViewModel.nextStep()
                         }) {
-                            HStack {
-                                if isLoadingOffering {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                }
-                                Text(isLoadingOffering ? "Loading..." : "Try for $0.00")
-                            }
+                            Text("Try for $0.00")
                             .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold))
                             .foregroundColor(.white)
                             .padding()
                             .frame(maxWidth: .infinity)
                             .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 70 : 55)
-                            .background(isLoadingOffering ? Color.gray : Color(hex: 0x184449))
+                            .background(Color(hex: 0x184449))
                             .cornerRadius(50)
                         }
-                        .disabled(isLoadingOffering || currentOffering == nil)
                         .opacity(showButton ? 1 : 0)
                         .offset(y: showButton ? 0 : 20)
                         .animation(.easeInOut(duration: 0.8).delay(0.7), value: showButton)
@@ -159,149 +142,8 @@ struct PayWallView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 showButton = true
             }
-            
-            loadCurrentOffering()
-        }
-        .fullScreenCover(isPresented: $showingRevenueCatPaywall) {
-            if let offering = currentOffering {
-                PaywallView(offering: offering)
-                    .onAppear {
-                        print("🎯 Showing paywall with offering: \(offering.identifier)")
-                        print("📦 Offering packages: \(offering.availablePackages.map { $0.identifier })")
-                        
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[PayWallView] 📝 Marked paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        // Track successful purchase
-                        PostHogSDK.shared.capture(
-                            "onboarding_purchase_completed",
-                            properties: [
-                                "timestamp": Date().ISO8601Format(),
-                                "user_name": onboardingViewModel.userName,
-                                "offering_id": offering.identifier,
-                                "entitlements": customerInfo.entitlements.active.keys.map { $0 }
-                            ]
-                        )
-                        
-                        // Mark purchase completed
-                        didCompletePurchase = true
-                        
-                        // Reset paywall tracking since user purchased
-                        NotificationManager.shared.resetPaywallTracking()
-                        
-                        // Handle successful purchase
-                        showingRevenueCatPaywall = false
-                        onboardingViewModel.nextStep()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        // Handle restore
-                        if customerInfo.entitlements["Pro Acess"]?.isActive == true {
-                            // Mark as completed
-                            didCompletePurchase = true
-                            
-                            // Reset paywall tracking since user has subscription
-                            NotificationManager.shared.resetPaywallTracking()
-                            
-                            showingRevenueCatPaywall = false
-                            onboardingViewModel.nextStep()
-                        }
-                    }
-                    .onDisappear {
-                        print("[PayWallView] 🔍 Paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                        // Note: Paywall was already marked as viewed in onAppear
-                        // We don't need to do anything here since the flag is already set
-                    }
-            } else {
-                // This should not happen now with the loading state
-                PaywallView()
-                    .onAppear {
-                        print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
-                        print("❌ isLoadingOffering: \(isLoadingOffering)")
-                        
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[PayWallView] 📝 Marked fallback paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        // Mark purchase completed
-                        didCompletePurchase = true
-                        
-                        // Reset paywall tracking since user purchased
-                        NotificationManager.shared.resetPaywallTracking()
-                        
-                        showingRevenueCatPaywall = false
-                        onboardingViewModel.nextStep()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        if customerInfo.entitlements["Pro Acess"]?.isActive == true {
-                            // Mark as completed
-                            didCompletePurchase = true
-                            
-                            // Reset paywall tracking since user has subscription
-                            NotificationManager.shared.resetPaywallTracking()
-                            
-                            showingRevenueCatPaywall = false
-                            onboardingViewModel.nextStep()
-                        }
-                    }
-                    .onDisappear {
-                        print("[PayWallView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                        // Note: Paywall was already marked as viewed in onAppear
-                        // We don't need to do anything here since the flag is already set
-                    }
-            }
-        }
-        .onChange(of: navigationModel.shouldDismissPaywall) { oldValue, newValue in
-            if newValue {
-                print("[PayWallView] 🚪 Received dismiss signal, closing paywall")
-                showingRevenueCatPaywall = false
-            }
         }
         .preferredColorScheme(.light)
-    }
-    
-    private func loadCurrentOffering() {
-        Purchases.shared.getOfferings { offerings, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("❌ RevenueCat Offerings Error: \(error.localizedDescription)")
-                    self.isLoadingOffering = false
-                    return
-                }
-                
-                if let offerings = offerings {
-                    print("✅ Available offerings: \(offerings.all.keys)")
-                    print("🔍 Current offering: \(offerings.current?.identifier ?? "none")")
-                    print("🌍 Environment: \(offerings.all.isEmpty ? "UNKNOWN" : "FETCHED")")
-                    
-                    // Try to find the 3-Day-Free offering
-                    if let threeDayOffering = offerings.offering(identifier: "3-Day-Free") {
-                        print("✅ Found 3-Day-Free offering")
-                        print("📦 3-Day-Free packages: \(threeDayOffering.availablePackages.map { $0.identifier })")
-                        self.currentOffering = threeDayOffering
-                        self.isLoadingOffering = false
-                        print("🎯 3-Day-Free offering set as currentOffering")
-                    } else if let threeDayOffering = offerings.all["3-Day-Free"] {
-                        print("✅ Found 3-Day-Free offering (alternative lookup)")
-                        self.currentOffering = threeDayOffering
-                        self.isLoadingOffering = false
-                        print("🎯 3-Day-Free offering set as currentOffering (alt)")
-                    } else {
-                        print("⚠️ 3-Day-Free offering not found")
-                        print("📋 Available offering identifiers: \(Array(offerings.all.keys))")
-                        print("📋 Using current offering: \(offerings.current?.identifier ?? "none")")
-                        self.currentOffering = offerings.current
-                        self.isLoadingOffering = false
-                    }
-                } else {
-                    print("❌ No offerings available - check RevenueCat configuration")
-                    self.currentOffering = nil
-                    self.isLoadingOffering = false
-                }
-            }
-        }
     }
 }
 

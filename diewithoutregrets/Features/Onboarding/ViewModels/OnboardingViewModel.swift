@@ -23,6 +23,7 @@ enum OnboardingStep {
     case rating
     case readyView
     case paywall
+    case notificationPermission
     case weCanHelp
     case createFirstFlashcard
     case appSelection
@@ -81,6 +82,8 @@ class OnboardingViewModel: ObservableObject {
         case .readyView:
             currentStep = .paywall
         case .paywall:
+            currentStep = .notificationPermission
+        case .notificationPermission:
             currentStep = .weCanHelp
         case .weCanHelp:
             currentStep = .createFirstFlashcard
