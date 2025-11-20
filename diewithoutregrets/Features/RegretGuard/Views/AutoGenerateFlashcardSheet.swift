@@ -102,6 +102,17 @@ struct AutoGenerateFlashcardsSheet: View {
     @State private var showingGenerationView = false
     @State private var generationStatus = "Preparing to generate flashcards..."
     
+    // Language selection
+    @State private var selectedLanguage: String = "English"
+    
+    // Supported languages for flashcard generation
+    private let supportedLanguages = [
+        "English", "Spanish", "French", "German", "Italian", "Portuguese",
+        "Chinese", "Japanese", "Korean", "Arabic", "Russian",
+        "Dutch", "Swedish", "Norwegian", "Danish", "Polish",
+        "Czech", "Hungarian", "Greek", "Hindi"
+    ]
+    
     enum ProcessingStep: String, CaseIterable {
         case idle = "Ready to process"
         case uploading = "Uploading PDF..."
@@ -188,6 +199,8 @@ struct AutoGenerateFlashcardsSheet: View {
                         if processingStep != .idle && processingStep != .generating {
                             processingStatusView
                         }
+                        
+                        languagePickerSection
                         
                         generateButton
                         
@@ -687,6 +700,79 @@ struct AutoGenerateFlashcardsSheet: View {
         )
     }
     
+    var languagePickerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "globe")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(Color(hex: 0x184449))
+                
+                Text("Flashcard Language")
+                    .font(.headline)
+                    .foregroundColor(Color(hex: 0x184449))
+            }
+            
+            Menu {
+                ForEach(supportedLanguages, id: \.self) { language in
+                    Button(action: {
+                        selectedLanguage = language
+                    }) {
+                        HStack {
+                            Text(language)
+                            if selectedLanguage == language {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedLanguage)
+                        .foregroundColor(Color(hex: 0x184449))
+                        .font(.body)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: 0x3FA4AE).opacity(0.3),
+                                    Color(hex: 0x2BC391).opacity(0.3)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(
+            ZStack {
+                Color.white
+                Color(hex: 0x3FA4AE).opacity(0.02)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+        )
+    }
+    
     var generateButton: some View {
         let currentText = inputText.isEmpty ? pdfExtractedText : inputText
         let hasValidText = !currentText.isEmpty && validateTextInput(currentText) == nil
@@ -818,8 +904,8 @@ struct AutoGenerateFlashcardsSheet: View {
             }
         }
         
-        // Make the API call
-        generateFlashcardsAPI(with: processingText) { apiResponse in
+        // Make the API call with selected language
+        generateFlashcardsAPI(with: processingText, language: selectedLanguage) { apiResponse in
             // Invalidate the slow progress timer
             slowProgressTimer?.invalidate()
             slowProgressTimer = nil
@@ -1227,8 +1313,9 @@ struct AutoGenerateFlashcardsSheet: View {
     
     // MARK: - API Helpers
     
-    func generateFlashcardsAPI(with inputText: String, completion: @escaping (String?) -> Void) {
+    func generateFlashcardsAPI(with inputText: String, language: String, completion: @escaping (String?) -> Void) {
         print("🚀 Starting flashcard generation API call")
+        print("🌍 Target language: \(language)")
         print("📝 Input text length: \(inputText.count) characters")
         print("📝 Input text preview: \(String(inputText.prefix(100)))...")
         
@@ -1257,10 +1344,12 @@ struct AutoGenerateFlashcardsSheet: View {
         
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
+        let prompt = createFlashcardPrompt(for: language)
+        
         let jsonBody: [String: Any] = [
             "model": "gpt-4o-mini",
             "messages": [
-                ["role": "system", "content": flashcardPrompt],
+                ["role": "system", "content": prompt],
                 ["role": "user", "content": inputText]
             ],
             "max_tokens": 4000,
@@ -1269,7 +1358,7 @@ struct AutoGenerateFlashcardsSheet: View {
         
         print("📤 API Request:")
         print("   Model: gpt-4o-mini")
-        print("   System prompt length: \(flashcardPrompt.count) characters")
+        print("   System prompt length: \(prompt.count) characters")
         print("   User message length: \(inputText.count) characters")
         print("   Max tokens: 4000")
         print("   Temperature: 0.7")
@@ -1453,76 +1542,44 @@ struct AutoGenerateFlashcardsSheet: View {
     
     // MARK: - Prompt
     
-    var flashcardPrompt: String {
+    func createFlashcardPrompt(for language: String) -> String {
         return """
-You are provided with text (extracted from a PDF) that contains technical or conceptual material. I need you to generate a set of flashcards based on that text. The flashcards should meet the following requirements:
+Generate exactly 50 educational flashcards from the provided text in **\(language)** language.
 
-1. **Language Detection & Usage:**
-   - AUTOMATICALLY detect the primary language of the provided text
-   - Generate ALL flashcards in the SAME language as the input text
-   - If the text is in Spanish, generate Spanish flashcards
-   - If the text is in French, generate French flashcards
-   - If the text is in German, generate German flashcards
-   - If the text is in Chinese, generate Chinese flashcards
-   - If the text is in Japanese, generate Japanese flashcards
-   - If the text is in Arabic, generate Arabic flashcards
-   - If the text is in Russian, generate Russian flashcards
-   - If the text is in Korean, generate Korean flashcards
-   - If the text is in Portuguese, generate Portuguese flashcards
-   - If the text is in Italian, generate Italian flashcards
-   - If the text is in Dutch, generate Dutch flashcards
-   - If the text is in Swedish, generate Swedish flashcards
-   - If the text is in Norwegian, generate Norwegian flashcards
-   - If the text is in Danish, generate Danish flashcards
-   - If the text is in Polish, generate Polish flashcards
-   - If the text is in Czech, generate Czech flashcards
-   - If the text is in Hungarian, generate Hungarian flashcards
-   - If the text is in Greek, generate Greek flashcards
-   - If the text is in Hindi, generate Hindi flashcards
-   - If the text is in English, generate English flashcards
-   - Use proper grammar, spelling, and cultural context for the detected language
-   - For non-Latin scripts, use the appropriate writing system
-   - For True/False questions, use the appropriate words for "True" and "False" in the detected language
+CRITICAL INSTRUCTION: ALL content (questions, context, choices, explanations) MUST be in \(language). DO NOT use any other language.
+
+Requirements:
+
+1. **Language:**
+   - ALL flashcards MUST be in \(language)
+   - Questions: \(language)
+   - Context statements: \(language)
+   - Answer choices: \(language)
+   - Explanations: \(language)
+   - For True/False questions, use appropriate \(language) words
 
 2. **Flashcard Format:**
-   - Use the following object format for each flashcard:
-       
-       ```
-       Regret( regretPrompt: "Question text here in the detected language", regret: "A brief statement or context for the question in the detected language.", choices: [ "Option A in detected language", "Option B in detected language", "Option C in detected language", "Option D in detected language" ], correctAnswerIndex: X, backgroundExplanation: "Detailed explanation of the answer in the detected language." ),
-       ```
-       
-   - The flashcards should be output in plain text that can be copy/pasted directly into code.
+   Use this EXACT format for each flashcard:
+   
+   Regret( regretPrompt: "Question text", regret: "Brief context", choices: [ "Option A", "Option B", "Option C", "Option D" ], correctAnswerIndex: X, backgroundExplanation: "Detailed explanation" ),
 
 3. **Question Types:**
-   - Create a mix of True/False questions and multiple-choice questions.
-   - True/False questions should have two options: use the appropriate words for "True" and "False" in the detected language.
-   - Multiple-choice questions should include four options.
+   - Mix of True/False (2 options) and multiple-choice (4 options)
+   - Vary correctAnswerIndex positions (use 0, 1, 2, 3 - don't always use the same)
+   - Make answer options similar length
 
-4. **Answer Consistency:**
-   - The correct answer index (the value for `correctAnswerIndex`) should not be the same for every flashcard; vary its position among the answer options.
-   - For multiple-choice questions, ensure that the correct answer option has the same number of words as the other options. (Reword options if needed without changing their meaning.)
+4. **Content:**
+   - Base questions on key concepts, definitions, and facts from the text
+   - Each flashcard needs: question, context, choices, correct index, explanation
+   - Focus on educational value and clear learning points
 
-5. **Content Requirements:**
-   - Base the questions on key concepts, definitions, examples, and explanations found in the provided text.
-   - Make sure each flashcard includes a clear question (`regretPrompt`), a brief statement or context (`regret`), a list of answer choices (`choices`), the index of the correct answer (`correctAnswerIndex`), and a detailed explanation (`backgroundExplanation`).
-   - All content must be in the same language as the input text.
+5. **Output Format:**
+   - Exactly 50 flashcards
+   - One flashcard per line
+   - Plain text format as shown above
+   - No extra formatting or markdown
 
-6. **Quantity:**
-   - Create 50 flashcards unless otherwise specified.
-
-7. **Output:**
-   - Output exactly 50 flashcards in plain text. Each flashcard must be formatted exactly as shown below and each flashcard should be on its own line.
-   - IMPORTANT: All flashcards must be in the same language as the input text.
-
-Example (if input text is in Spanish):
-
-Regret( regretPrompt: "¿Cuál es el proceso por el cual las plantas producen su propio alimento?", regret: "Las plantas utilizan la fotosíntesis para convertir la luz solar, el dióxido de carbono y el agua en glucosa y oxígeno.", choices: [ "Respiración celular", "Fotosíntesis", "Fermentación", "Digestión" ], correctAnswerIndex: 1, backgroundExplanation: "La fotosíntesis es el proceso fundamental por el cual las plantas verdes capturan la energía de la luz solar y la convierten en energía química almacenada en forma de glucosa." ),
-
-Example (if input text is in French):
-
-Regret( regretPrompt: "Quel est le processus par lequel les plantes produisent leur propre nourriture?", regret: "Les plantes utilisent la photosynthèse pour convertir la lumière du soleil, le dioxyde de carbone et l'eau en glucose et oxygène.", choices: [ "Respiration cellulaire", "Photosynthèse", "Fermentation", "Digestion" ], correctAnswerIndex: 1, backgroundExplanation: "La photosynthèse est le processus fondamental par lequel les plantes vertes capturent l'énergie de la lumière du soleil et la convertissent en énergie chimique stockée sous forme de glucose." ),
-
-Only output flashcards in the above format with one flashcard per line, ensuring all content is in the same language as the input text.
+Generate all 50 flashcards in \(language) now. Remember: EVERY word in EVERY flashcard must be in \(language).
 """
     }
     
