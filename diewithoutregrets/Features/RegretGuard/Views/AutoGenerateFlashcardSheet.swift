@@ -766,8 +766,6 @@ struct AutoGenerateFlashcardsSheet: View {
         processingProgress = 0
         generationStatus = "Analyzing text content..."
         
-        let combinedInput = flashcardPrompt + "\n\n" + processingText
-        
         // Clear previous results
         errorMessage = nil
         
@@ -821,7 +819,7 @@ struct AutoGenerateFlashcardsSheet: View {
         }
         
         // Make the API call
-        generateFlashcardsAPI(with: combinedInput) { apiResponse in
+        generateFlashcardsAPI(with: processingText) { apiResponse in
             // Invalidate the slow progress timer
             slowProgressTimer?.invalidate()
             slowProgressTimer = nil
@@ -1215,12 +1213,25 @@ struct AutoGenerateFlashcardsSheet: View {
           print("🔑 ERROR: Missing OpenAIAPIKey in Info.plist - API features will be disabled")
           return nil
         }
+        
+        // Check if the key is still a placeholder
+        if key.hasPrefix("$(") || key.contains("OPENAI_API_KEY") {
+            print("🔑 ERROR: OpenAIAPIKey appears to be a placeholder: \(key)")
+            print("🔑 Make sure the Secrets.xcconfig file is properly configured with a real API key")
+            return nil
+        }
+        
+        print("🔑 OpenAI API Key loaded successfully (length: \(key.count))")
         return key
     }
     
     // MARK: - API Helpers
     
     func generateFlashcardsAPI(with inputText: String, completion: @escaping (String?) -> Void) {
+        print("🚀 Starting flashcard generation API call")
+        print("📝 Input text length: \(inputText.count) characters")
+        print("📝 Input text preview: \(String(inputText.prefix(100)))...")
+        
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
             DispatchQueue.main.async {
                 currentError = .invalidResponse
@@ -1256,6 +1267,13 @@ struct AutoGenerateFlashcardsSheet: View {
             "temperature": 0.7
         ]
         
+        print("📤 API Request:")
+        print("   Model: gpt-4o-mini")
+        print("   System prompt length: \(flashcardPrompt.count) characters")
+        print("   User message length: \(inputText.count) characters")
+        print("   Max tokens: 4000")
+        print("   Temperature: 0.7")
+        
         guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonBody, options: []) else {
             DispatchQueue.main.async {
                 currentError = .invalidResponse
@@ -1270,6 +1288,9 @@ struct AutoGenerateFlashcardsSheet: View {
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error as NSError? {
+                    print("🔴 API Error: \(error.localizedDescription)")
+                    print("🔴 Error Code: \(error.code)")
+                    print("🔴 Error Domain: \(error.domain)")
                     switch error.code {
                     case NSURLErrorTimedOut:
                         currentError = .timeout
@@ -1297,21 +1318,32 @@ struct AutoGenerateFlashcardsSheet: View {
                        let choices = (jsonResponse["choices"] as? [[String: Any]])?.first,
                        let message = choices["message"] as? [String: Any],
                        let content = message["content"] as? String {
+                        print("✅ API Success: Generated \(content.count) characters")
                         completion(content)
                     } else {
+                        print("🔴 Failed to parse API response")
+                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                            print("🔴 Raw response: \(responseString)")
+                        }
                         currentError = .invalidResponse
                         errorMessage = currentError?.userMessage
                         completion(nil)
                     }
                 case 413:
+                    print("🔴 API Error 413: Payload too large")
                     currentError = .fileTooLarge
                     errorMessage = currentError?.userMessage
                     completion(nil)
                 case 429:
+                    print("🔴 API Error 429: Rate limit exceeded")
                     currentError = .networkError("Rate limit exceeded")
                     errorMessage = "Rate limit exceeded. Please try again in a few minutes."
                     completion(nil)
                 case 400:
+                    if let data = data,
+                       let responseString = String(data: data, encoding: .utf8) {
+                        print("🔴 API Error 400: \(responseString)")
+                    }
                     if let data = data,
                        let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                        let error = jsonResponse["error"] as? [String: Any],
@@ -1324,7 +1356,19 @@ struct AutoGenerateFlashcardsSheet: View {
                         errorMessage = currentError?.userMessage
                     }
                     completion(nil)
+                case 401:
+                    print("🔴 API Error 401: Invalid API key")
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        print("🔴 Response: \(responseString)")
+                    }
+                    currentError = .networkError("Invalid API key")
+                    errorMessage = "API authentication failed. Please check your API key configuration."
+                    completion(nil)
                 default:
+                    print("🔴 API Error \(httpResponse.statusCode)")
+                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                        print("🔴 Response: \(responseString)")
+                    }
                     currentError = .networkError("Server error (Status \(httpResponse.statusCode))")
                     errorMessage = "Server error (Status \(httpResponse.statusCode)). Please try again."
                     completion(nil)
