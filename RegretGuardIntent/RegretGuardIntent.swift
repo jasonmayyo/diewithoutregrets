@@ -28,7 +28,7 @@ struct FaithGuardIntent: AppIntent {
         let currentTime = Date().timeIntervalSince1970
         
         // Use shared UserDefaults
-        let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguard")
+        let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguardapp")
         let lastBreakTime = sharedDefaults?.double(forKey: "LastBreakTime") ?? 0
         
         print("FaithGuardIntent: Current time:", currentTime)

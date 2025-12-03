@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FaithReportView: View {
     @State private var userDefaultsValues: [String: Any] = [:]
-    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguard")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguardapp")
     
     // Add timer for automatic refresh
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()

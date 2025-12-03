@@ -42,7 +42,7 @@ struct AgeSelectView: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("This helps us personalize your Faith Guard experience")
+                    .accessibilityLabel("This helps us personalize your Faith Guard experience, and understand you better")
                 
                 // ScrollView with options
                 ScrollView(.vertical, showsIndicators: false) {

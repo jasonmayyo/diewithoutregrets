@@ -208,7 +208,7 @@ struct FaithVerseView: View {
                                 
                                 Button(action: {
                                     let currentTime = Date().timeIntervalSince1970
-                                    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguard")
+                                    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguardapp")
                                     sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
                                     sharedDefaults?.set(true, forKey: "UserAllowedBreak")
                                     sharedDefaults?.synchronize()
