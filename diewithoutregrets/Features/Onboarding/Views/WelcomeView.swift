@@ -32,7 +32,7 @@ struct WelcomeView: View {
                     .accessibilityHidden(true)
                 
                 // Welcome Title
-                Text("Welcome to Faith Guard")
+                Text("Welcome to Faith Guard.")
                     .font(.title)
                     .bold()
                     .foregroundColor(.white)
