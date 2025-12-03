@@ -1,5 +1,5 @@
 //
-//  RegretQuestionView.swift
+//  BibleVerseQuestionView.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/02/03.
@@ -7,22 +7,22 @@
 
 import SwiftUI
 
-struct RegretQuestionView: View {
-    @StateObject private var viewModel = RegretQuestionViewModel()
+struct BibleVerseQuestionView: View {
+    @StateObject private var viewModel = BibleVerseQuestionViewModel()
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     @State private var currentQuestionIndex = 0
     @State private var showQuestionCard = false
     
     let questions = [
         Question(
-            title: "First Question",
-            prompt: "Imagine you're 80, looking back on your life. What are the things you'd most regret not doing? What dreams did you leave behind? What opportunities did you waste?",
-            placeholder: "Type your answer here (2 sentences max)"
+            title: "Your Favorite Verse",
+            prompt: "What Bible verse gives you strength and guidance when you're feeling weak or lost? Share a verse that speaks to your heart.",
+            placeholder: "e.g., 'For God so loved the world...' - John 3:16"
         ),
         Question(
-            title: "Second Question",
-            prompt: "What's one thing you keep telling yourself you'll do 'someday'? What if that 'someday' never comes?",
-            placeholder: "Describe your 'someday' dream"
+            title: "Your Anchor",
+            prompt: "What Scripture helps you stay focused on what truly matters in life? What verse reminds you of your purpose?",
+            placeholder: "Share a verse that keeps you grounded"
         )
     ]
     
@@ -30,10 +30,10 @@ struct RegretQuestionView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             if currentQuestionIndex < questions.count {
-                QuestionCard(
+                BibleVerseQuestionCard(
                     question: questions[currentQuestionIndex],
                     answer: $viewModel.answers[currentQuestionIndex],
                     onContinue: {
@@ -43,7 +43,7 @@ struct RegretQuestionView: View {
                             }
                         } else {
                             // Save answers to onboardingViewModel
-                            onboardingViewModel.regretAnswers = viewModel.answers
+                            onboardingViewModel.bibleVerseAnswers = viewModel.answers
                             onboardingViewModel.nextStep()
                         }
                     },
@@ -60,7 +60,7 @@ struct RegretQuestionView: View {
     }
 }
 
-struct QuestionCard: View {
+struct BibleVerseQuestionCard: View {
     let question: Question
     @Binding var answer: String
     let onContinue: () -> Void
@@ -71,6 +71,16 @@ struct QuestionCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // Cross icon
+            HStack {
+                Spacer()
+                Image(systemName: "cross.fill")
+                    .font(.title)
+                    .foregroundColor(.white.opacity(0.6))
+                Spacer()
+            }
+            .padding(.bottom, 10)
+            
             // Question Title
             Text(question.title)
                 .font(.title2)
@@ -84,7 +94,7 @@ struct QuestionCard: View {
             // Question Prompt
             Text(question.prompt)
                 .font(.subheadline)
-                .foregroundColor(.white)
+                .foregroundColor(.white.opacity(0.9))
                 .padding(.bottom, 20)
                 .opacity(showQuestionCard ? 1 : 0)
                 .offset(y: showQuestionCard ? 0 : 20)
@@ -111,31 +121,31 @@ struct QuestionCard: View {
                     .offset(y: showQuestionCard ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
                     .accessibilityLabel("Answer field")
-                    .accessibilityHint("Type your answer here")
+                    .accessibilityHint("Type your Bible verse here")
                     .accessibilityValue(answer.isEmpty ? "Empty" : answer)
                 
                 if answer.isEmpty {
                     Text(question.placeholder)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.white.opacity(0.5))
                         .padding(.leading, 20)
                         .padding(.top, 20)
                         .opacity(showQuestionCard ? 1 : 0)
                         .offset(y: showQuestionCard ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
-                        .accessibilityHidden(true) // Hide placeholder from VoiceOver
+                        .accessibilityHidden(true)
                 }
             }
             
             // Character Count
             HStack {
                 Spacer()
-                Text("\(answer.filter { !$0.isWhitespace }.count)/200")
+                Text("\(answer.count)/300")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.6))
                     .opacity(showQuestionCard ? 1 : 0)
                     .offset(y: showQuestionCard ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showQuestionCard)
-                    .accessibilityLabel("Character count: \(answer.filter { !$0.isWhitespace }.count) out of 200")
+                    .accessibilityLabel("Character count: \(answer.count) out of 300")
             }
             
             Spacer()
@@ -144,11 +154,12 @@ struct QuestionCard: View {
             Button(action: onContinue) {
                 Text(currentQuestionIndex < totalQuestions - 1 ? "Continue" : "Finish")
                     .foregroundColor(.black)
+                    .font(.headline)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 70)
+                    .frame(height: 60)
                     .background(Color.white)
-                    .cornerRadius(50)
+                    .cornerRadius(30)
             }
             .disabled(!canContinue)
             .buttonStyle(DisabledOpacityButtonStyle())
@@ -163,7 +174,11 @@ struct QuestionCard: View {
     }
 }
 
+// Backward compatibility alias
+typealias RegretQuestionView = BibleVerseQuestionView
+typealias QuestionCard = BibleVerseQuestionCard
+
 #Preview {
-    RegretQuestionView()
+    BibleVerseQuestionView()
         .environmentObject(OnboardingViewModel())
 }

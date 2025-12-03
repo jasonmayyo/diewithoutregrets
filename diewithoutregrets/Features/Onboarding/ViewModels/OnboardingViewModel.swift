@@ -14,7 +14,7 @@ enum OnboardingStep {
     case name
     case breakdown
     case weCanHelp
-    case regretQuestions
+    case bibleVerseQuestions
     case completion
 }
 
@@ -23,13 +23,12 @@ class OnboardingViewModel: ObservableObject {
     @Published var userName: String = ""
     @Published var selectedAge: String = ""
     @Published var screenTime: String = ""
-    @Published var regretAnswers: [String] = ["", ""]
+    @Published var bibleVerseAnswers: [String] = ["", ""]
     
-    let regretPrompts = [
-            "Imagine you’re 80, looking back on your life. What are the things you’d most regret not doing? What dreams did you leave behind? What opportunities did you waste?",
-            "What’s one thing you’d regret not doing if you knew your time was limited?"
-        ]
-        
+    let bibleVersePrompts = [
+        "What Bible verse gives you strength and guidance when you're feeling weak or lost?",
+        "What Scripture helps you stay focused on what truly matters in life?"
+    ]
     
     func nextStep() {
         switch currentStep {
@@ -44,23 +43,26 @@ class OnboardingViewModel: ObservableObject {
         case .breakdown:
             currentStep = .weCanHelp
         case .weCanHelp:
-            currentStep = .regretQuestions
-        case .regretQuestions:
-                    saveRegretAnswers()
-                    currentStep = .completion
+            currentStep = .bibleVerseQuestions
+        case .bibleVerseQuestions:
+            saveBibleVerseAnswers()
+            currentStep = .completion
         case .completion:
             break
         }
     }
     
-    
-    private func saveRegretAnswers() {
-            let newRegrets = regretAnswers.enumerated().map { index, answer in
-                Regret(
-                    regretPrompt: regretPrompts[index],
-                    regret: answer
-                )
-            }
-            RegretStore.shared.addRegrets(newRegrets)
+    private func saveBibleVerseAnswers() {
+        // Parse the user's answers into BibleVerse objects
+        // For now, we'll create simple verses from the user input
+        let newVerses = bibleVerseAnswers.enumerated().compactMap { index, answer -> BibleVerse? in
+            guard !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+            return BibleVerse(
+                verse: answer,
+                reference: "Personal \(index + 1)",
+                translation: "Personal"
+            )
         }
+        BibleVerseStore.shared.addVerses(newVerses)
+    }
 }

@@ -40,11 +40,22 @@
 		6B7CD4F42D50DAE20065A0F7 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */; };
 		6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */; };
 		6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22E8962D4C081C003A5685 /* OpenGuardIntent.swift */; };
-		6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */; };
+		6B8D6BA32D4E4F5200753EB4 /* dwrLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8D6BA22D4E4F5200753EB4 /* dwrLock.swift */; };
 		6B9D89C52D3552E000DE8B2E /* diewithoutregretsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */; };
 		6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9D89C62D3552E000DE8B2E /* ContentView.swift */; };
 		6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89C82D3552E600DE8B2E /* Assets.xcassets */; };
 		6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */; };
+		6BFG00012D5CFA59008D2884 /* BibleVerse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00002D5CFA59008D2884 /* BibleVerse.swift */; };
+		6BFG00032D5CFA59008D2884 /* BibleVerseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00022D5CFA59008D2884 /* BibleVerseStore.swift */; };
+		6BFG00052D5CFA59008D2884 /* BibleDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00042D5CFA59008D2884 /* BibleDataManager.swift */; };
+		6BFG00072D5CFA59008D2884 /* BibleReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00062D5CFA59008D2884 /* BibleReaderView.swift */; };
+		6BFG000A2D5CFA59008D2884 /* bible_kjv.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00092D5CFA59008D2884 /* bible_kjv.json */; };
+		6BFG00202D5CFA59008D2884 /* KJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00212D5CFA59008D2884 /* KJV.json */; };
+		6BFG00222D5CFA59008D2884 /* ASV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00232D5CFA59008D2884 /* ASV.json */; };
+		6BFG00242D5CFA59008D2884 /* AKJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00252D5CFA59008D2884 /* AKJV.json */; };
+		6BFG00102D5CFA59008D2884 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG000F2D5CFA59008D2884 /* MainTabView.swift */; };
+		6BFG00122D5CFA59008D2884 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00112D5CFA59008D2884 /* ProfileView.swift */; };
+		6BFG00142D5CFA59008D2884 /* BibleReaderTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00132D5CFA59008D2884 /* BibleReaderTabView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,12 +127,23 @@
 		6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionView.swift; sourceTree = "<group>"; };
 		6B7CD4F32D50DAE20065A0F7 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = dwrLockView.swift; path = ../../../../../../Documents/dwrLockView.swift; sourceTree = "<group>"; };
+		6B8D6BA22D4E4F5200753EB4 /* dwrLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dwrLock.swift; sourceTree = "<group>"; };
 		6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = diewithoutregrets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B9D89C42D3552E000DE8B2E /* diewithoutregretsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = diewithoutregretsApp.swift; sourceTree = "<group>"; };
 		6B9D89C62D3552E000DE8B2E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6B9D89C82D3552E600DE8B2E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		6BFG00002D5CFA59008D2884 /* BibleVerse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleVerse.swift; sourceTree = "<group>"; };
+		6BFG00022D5CFA59008D2884 /* BibleVerseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleVerseStore.swift; sourceTree = "<group>"; };
+		6BFG00042D5CFA59008D2884 /* BibleDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleDataManager.swift; sourceTree = "<group>"; };
+		6BFG00062D5CFA59008D2884 /* BibleReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleReaderView.swift; sourceTree = "<group>"; };
+		6BFG00092D5CFA59008D2884 /* bible_kjv.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = bible_kjv.json; sourceTree = "<group>"; };
+		6BFG00212D5CFA59008D2884 /* KJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = KJV.json; sourceTree = "<group>"; };
+		6BFG00232D5CFA59008D2884 /* ASV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ASV.json; sourceTree = "<group>"; };
+		6BFG00252D5CFA59008D2884 /* AKJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AKJV.json; sourceTree = "<group>"; };
+		6BFG000F2D5CFA59008D2884 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		6BFG00112D5CFA59008D2884 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		6BFG00132D5CFA59008D2884 /* BibleReaderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleReaderTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +176,7 @@
 			children = (
 				6B22E8532D48CEB6003A5685 /* CustomColor.swift */,
 				6B22E85E2D48EA5F003A5685 /* MeshGradient.swift */,
+				6BFG00082D5CFA59008D2884 /* BibleData */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -168,6 +191,8 @@
 		6B22E84B2D480446003A5685 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				6BFG000F2D5CFA59008D2884 /* MainTabView.swift */,
+				6BFG00112D5CFA59008D2884 /* ProfileView.swift */,
 				6B7CD4D72D509DFA0065A0F7 /* Onboarding */,
 				6B8D6B9C2D4E4E2600753EB4 /* dwrBlock */,
 				6B22E84D2D480488003A5685 /* RegretGuard */,
@@ -200,6 +225,8 @@
 			isa = PBXGroup;
 			children = (
 				6B22E8512D48CDD2003A5685 /* RegretView.swift */,
+				6BFG00062D5CFA59008D2884 /* BibleReaderView.swift */,
+				6BFG00132D5CFA59008D2884 /* BibleReaderTabView.swift */,
 				6B22E85A2D48D155003A5685 /* RegretGuard.swift */,
 				6B22E85C2D48D984003A5685 /* RegretGuardInstructionSheet.swift */,
 				6B22E8662D4910B3003A5685 /* RegretEditorSheet.swift */,
@@ -212,6 +239,9 @@
 			children = (
 				6B22E8602D490092003A5685 /* RegretGuardApps.swift */,
 				6B2B70CC2D5CFA59008D2884 /* RegretStore.swift */,
+				6BFG00002D5CFA59008D2884 /* BibleVerse.swift */,
+				6BFG00022D5CFA59008D2884 /* BibleVerseStore.swift */,
+				6BFG00042D5CFA59008D2884 /* BibleDataManager.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -326,7 +356,7 @@
 		6B8D6B9D2D4E4ED000753EB4 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				6B8D6BA22D4E4F5200753EB4 /* dwrLockView.swift */,
+				6B8D6BA22D4E4F5200753EB4 /* dwrLock.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -387,6 +417,17 @@
 				6B9D89CB2D3552E600DE8B2E /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		6BFG00082D5CFA59008D2884 /* BibleData */ = {
+			isa = PBXGroup;
+			children = (
+				6BFG00092D5CFA59008D2884 /* bible_kjv.json */,
+				6BFG00212D5CFA59008D2884 /* KJV.json */,
+				6BFG00232D5CFA59008D2884 /* ASV.json */,
+				6BFG00252D5CFA59008D2884 /* AKJV.json */,
+			);
+			path = BibleData;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -508,6 +549,10 @@
 			files = (
 				6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */,
 				6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */,
+				6BFG000A2D5CFA59008D2884 /* bible_kjv.json in Resources */,
+				6BFG00202D5CFA59008D2884 /* KJV.json in Resources */,
+				6BFG00222D5CFA59008D2884 /* ASV.json in Resources */,
+				6BFG00242D5CFA59008D2884 /* AKJV.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,11 +606,18 @@
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,
 				6B22E8A32D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */,
-				6B8D6BA32D4E4F5200753EB4 /* dwrLockView.swift in Sources */,
+				6BFG00012D5CFA59008D2884 /* BibleVerse.swift in Sources */,
+				6BFG00032D5CFA59008D2884 /* BibleVerseStore.swift in Sources */,
+				6BFG00052D5CFA59008D2884 /* BibleDataManager.swift in Sources */,
+				6B8D6BA32D4E4F5200753EB4 /* dwrLock.swift in Sources */,
 				6B7CD4E02D50A5320065A0F7 /* AvgScreenTimeModel.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
+				6BFG00072D5CFA59008D2884 /* BibleReaderView.swift in Sources */,
 				6B7CD4E42D50A7380065A0F7 /* AgeSelectView.swift in Sources */,
 				6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */,
+				6BFG00102D5CFA59008D2884 /* MainTabView.swift in Sources */,
+				6BFG00122D5CFA59008D2884 /* ProfileView.swift in Sources */,
+				6BFG00142D5CFA59008D2884 /* BibleReaderTabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -602,7 +654,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -628,7 +680,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -654,7 +706,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -680,7 +732,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -822,7 +874,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Regret Guard";
+				INFOPLIST_KEY_CFBundleDisplayName = "Faith Guard";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -832,7 +884,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -854,7 +906,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Regret Guard";
+				INFOPLIST_KEY_CFBundleDisplayName = "Faith Guard";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -864,7 +916,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.faithguard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

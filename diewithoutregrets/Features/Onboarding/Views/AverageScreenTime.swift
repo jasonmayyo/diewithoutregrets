@@ -21,7 +21,7 @@ struct AverageScreenTime: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 2) {
                 // Title with animation
@@ -37,7 +37,7 @@ struct AverageScreenTime: View {
                 // Subtitle with animation
                 Text("Just an estimate, does not have to be exact")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 25)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
@@ -75,6 +75,7 @@ struct AverageScreenTime: View {
                 }) {
                     Text("Continue")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 70)
@@ -93,7 +94,6 @@ struct AverageScreenTime: View {
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showTitle = true
             showSubtitle = true
             showOptions = true
@@ -121,7 +121,7 @@ struct TimeOptionButton: View {
             .background(isSelected ? Color.white : Color.white.opacity(0.2))
             .cornerRadius(12)
         }
-        .accessibilityElement(children: .combine) // Combine text and button traits
+        .accessibilityElement(children: .combine)
     }
 }
 

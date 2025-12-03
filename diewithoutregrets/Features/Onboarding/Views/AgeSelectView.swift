@@ -21,7 +21,7 @@ struct AgeSelectView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
@@ -35,14 +35,14 @@ struct AgeSelectView: View {
                     .accessibilityLabel("How old are you?")
                 
                 // Subtitle with animation
-                Text("This is so we can estimate the amount of time you would spend on your phone over your life")
+                Text("This helps us personalize your Faith Guard experience")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 25)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("This is so we can estimate the amount of time you would spend on your phone over your life")
+                    .accessibilityLabel("This helps us personalize your Faith Guard experience")
                 
                 // ScrollView with options
                 ScrollView(.vertical, showsIndicators: false) {
@@ -75,6 +75,7 @@ struct AgeSelectView: View {
                 }) {
                     Text("Continue")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 70)
@@ -93,7 +94,6 @@ struct AgeSelectView: View {
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showTitle = true
             showSubtitle = true
             showOptions = true

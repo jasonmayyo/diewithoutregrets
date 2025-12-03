@@ -44,33 +44,33 @@ struct WecanhelpView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
-                Text("It's time to get real...")
+                Text("Your Time Matters to God")
                     .font(.title2)
                     .foregroundColor(.white)
                     .bold()
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                    .accessibilityLabel("It's time to get real")
+                    .accessibilityLabel("Your time matters to God")
                 
                 // Subtitle with animation
-                Text("In order to help you use your phone more consciously we are going to ask you a couple of questions and you should be as honest as possible")
+                Text("Let's help you be more intentional with your screen time. We'll ask you a few questions about your faith journey to personalize your experience.")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 40)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("In order to help you use your phone more consciously, we are going to ask you a couple of questions, and you should be as honest as possible")
+                    .accessibilityLabel("Let's help you be more intentional with your screen time. We'll ask you a few questions about your faith journey to personalize your experience.")
                 
                 // Life visualization grid
                 HStack {
                     Spacer()
-                    Text("Your Life in months 👇")
+                    Text("Your Life in months ✝️")
                         .padding(.bottom)
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.6))
@@ -93,7 +93,7 @@ struct WecanhelpView: View {
                 .opacity(showGrid ? 1 : 0)
                 .offset(y: showGrid ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.6), value: showGrid)
-                .accessibilityElement(children: .combine) // Combine grid elements for VoiceOver
+                .accessibilityElement(children: .combine)
                 
                 // Legend
                 HStack {
@@ -102,7 +102,7 @@ struct WecanhelpView: View {
                         Rectangle()
                             .fill(Color.green.opacity(0.8))
                             .frame(width: 12, height: 12)
-                            .accessibilityHidden(true) // Hide decorative element
+                            .accessibilityHidden(true)
                         Text("Lived")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
@@ -112,17 +112,17 @@ struct WecanhelpView: View {
                         Rectangle()
                             .fill(Color.red)
                             .frame(width: 12, height: 12)
-                            .accessibilityHidden(true) // Hide decorative element
-                        Text("Phone time")
+                            .accessibilityHidden(true)
+                        Text("Screen time")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
-                            .accessibilityLabel("Phone time months")
+                            .accessibilityLabel("Screen time months")
                     }
                     HStack {
                         Rectangle()
                             .fill(Color.white.opacity(0.2))
                             .frame(width: 12, height: 12)
-                            .accessibilityHidden(true) // Hide decorative element
+                            .accessibilityHidden(true)
                         Text("Remaining")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.6))
@@ -134,7 +134,7 @@ struct WecanhelpView: View {
                 .opacity(showGrid ? 1 : 0)
                 .animation(.easeInOut(duration: 1).delay(0.7), value: showGrid)
                 .padding(.top)
-                .accessibilityElement(children: .combine) // Combine legend elements for VoiceOver
+                .accessibilityElement(children: .combine)
                 
                 Spacer()
                 
@@ -144,6 +144,7 @@ struct WecanhelpView: View {
                 }) {
                     Text("Next")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 70)
@@ -182,7 +183,7 @@ struct WecanhelpView: View {
         if index < livedMonths {
             return "Lived month"
         } else if index < livedMonths + phoneMonths {
-            return "Phone time month"
+            return "Screen time month"
         } else {
             return "Remaining month"
         }

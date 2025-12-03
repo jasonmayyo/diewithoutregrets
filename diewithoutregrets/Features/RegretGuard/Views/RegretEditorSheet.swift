@@ -1,5 +1,5 @@
 //
-//  RegretEditorSheet.swift
+//  BibleVerseEditorSheet.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/01/28.
@@ -7,15 +7,17 @@
 
 import SwiftUI
 
-struct RegretEditorSheet: View {
+struct BibleVerseEditorSheet: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var regretStore: RegretStore
-    @State private var editedRegret: String
-    let regret: Regret
+    @EnvironmentObject var bibleVerseStore: BibleVerseStore
+    @State private var editedVerse: String
+    @State private var editedReference: String
+    let verse: BibleVerse
     
-    init(regret: Regret) {
-        self.regret = regret
-        _editedRegret = State(initialValue: regret.regret)
+    init(verse: BibleVerse) {
+        self.verse = verse
+        _editedVerse = State(initialValue: verse.verse)
+        _editedReference = State(initialValue: verse.reference)
     }
     
     var body: some View {
@@ -35,8 +37,16 @@ struct RegretEditorSheet: View {
                 Spacer()
                 
                 Button(action: {
-                    let updatedRegret = Regret(id: regret.id, regretPrompt: regret.regretPrompt, regret: editedRegret)
-                    regretStore.updateRegret(updatedRegret)
+                    let updatedVerse = BibleVerse(
+                        id: verse.id,
+                        verse: editedVerse,
+                        reference: editedReference,
+                        book: verse.book,
+                        chapter: verse.chapter,
+                        verseNumber: verse.verseNumber,
+                        translation: verse.translation
+                    )
+                    bibleVerseStore.updateVerse(updatedVerse)
                     dismiss()
                 }) {
                     Text("Save")
@@ -50,25 +60,38 @@ struct RegretEditorSheet: View {
             .padding()
             
             // Title
-            Text("Edit Your Regrets")
+            Text("Edit Bible Verse")
                 .font(.title2)
                 .bold()
                 .padding(.bottom, 5)
-                .accessibilityLabel("Edit Your Regrets")
+                .accessibilityLabel("Edit Bible Verse")
             
-            // Regret Prompt
-            Text(regret.regretPrompt)
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .padding(.horizontal)
-                .accessibilityLabel("Prompt: \(regret.regretPrompt)")
-            
-            // Regret Editor
-            VStack(alignment: .leading) {
-                Text("You Said...")
-                    .accessibilityLabel("You Said")
+            // Reference Editor
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Reference")
+                    .font(.headline)
+                    .accessibilityLabel("Reference")
                 
-                TextEditor(text: $editedRegret)
+                TextField("e.g., John 3:16", text: $editedReference)
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(hex: 0x184449), lineWidth: 1)
+                    )
+                    .accessibilityLabel("Edit reference")
+                    .accessibilityValue(editedReference)
+            }
+            .padding(.horizontal)
+            
+            // Verse Editor
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Verse Text")
+                    .font(.headline)
+                    .accessibilityLabel("Verse Text")
+                
+                TextEditor(text: $editedVerse)
                     .frame(height: 150)
                     .padding(8)
                     .background(Color.gray.opacity(0.1))
@@ -77,9 +100,9 @@ struct RegretEditorSheet: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: 0x184449), lineWidth: 1)
                     )
-                    .accessibilityLabel("Edit your regret")
-                    .accessibilityValue(editedRegret)
-                    .accessibilityHint("Tap to edit your regret")
+                    .accessibilityLabel("Edit verse text")
+                    .accessibilityValue(editedVerse)
+                    .accessibilityHint("Tap to edit the Bible verse")
             }
             .padding()
             
@@ -88,4 +111,12 @@ struct RegretEditorSheet: View {
         .padding(.top)
         .preferredColorScheme(.light)
     }
+}
+
+// Backward compatibility alias
+typealias RegretEditorSheet = BibleVerseEditorSheet
+
+#Preview {
+    BibleVerseEditorSheet(verse: BibleVerse.sampleVerses[0])
+        .environmentObject(BibleVerseStore())
 }

@@ -1,0 +1,294 @@
+[
+  {
+    "id": "genesis",
+    "name": "Genesis",
+    "chapters": [
+      {
+        "id": "genesis-1",
+        "number": 1,
+        "verses": [
+          "In the beginning God created the heaven and the earth.",
+          "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.",
+          "And God said, Let there be light: and there was light.",
+          "And God saw the light, that it was good: and God divided the light from the darkness.",
+          "And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.",
+          "And God said, Let there be a firmament in the midst of the waters, and let it divide the waters from the waters.",
+          "And God made the firmament, and divided the waters which were under the firmament from the waters which were above the firmament: and it was so.",
+          "And God called the firmament Heaven. And the evening and the morning were the second day.",
+          "And God said, Let the waters under the heaven be gathered together unto one place, and let the dry land appear: and it was so.",
+          "And God called the dry land Earth; and the gathering together of the waters called he Seas: and God saw that it was good.",
+          "And God said, Let the earth bring forth grass, the herb yielding seed, and the fruit tree yielding fruit after his kind, whose seed is in itself, upon the earth: and it was so.",
+          "And the earth brought forth grass, and herb yielding seed after his kind, and the tree yielding fruit, whose seed was in itself, after his kind: and God saw that it was good.",
+          "And the evening and the morning were the third day.",
+          "And God said, Let there be lights in the firmament of the heaven to divide the day from the night; and let them be for signs, and for seasons, and for days, and years:",
+          "And let them be for lights in the firmament of the heaven to give light upon the earth: and it was so.",
+          "And God made two great lights; the greater light to rule the day, and the lesser light to rule the night: he made the stars also.",
+          "And God set them in the firmament of the heaven to give light upon the earth,",
+          "And to rule over the day and over the night, and to divide the light from the darkness: and God saw that it was good.",
+          "And the evening and the morning were the fourth day.",
+          "And God said, Let the waters bring forth abundantly the moving creature that hath life, and fowl that may fly above the earth in the open firmament of heaven.",
+          "And God created great whales, and every living creature that moveth, which the waters brought forth abundantly, after their kind, and every winged fowl after his kind: and God saw that it was good.",
+          "And God blessed them, saying, Be fruitful, and multiply, and fill the waters in the seas, and let fowl multiply in the earth.",
+          "And the evening and the morning were the fifth day.",
+          "And God said, Let the earth bring forth the living creature after his kind, cattle, and creeping thing, and beast of the earth after his kind: and it was so.",
+          "And God made the beast of the earth after his kind, and cattle after their kind, and every thing that creepeth upon the earth after his kind: and God saw that it was good.",
+          "And God said, Let us make man in our image, after our likeness: and let them have dominion over the fish of the sea, and over the fowl of the air, and over the cattle, and over all the earth, and over every creeping thing that creepeth upon the earth.",
+          "So God created man in his own image, in the image of God created he him; male and female created he them.",
+          "And God blessed them, and God said unto them, Be fruitful, and multiply, and replenish the earth, and subdue it: and have dominion over the fish of the sea, and over the fowl of the air, and over every living thing that moveth upon the earth.",
+          "And God said, Behold, I have given you every herb bearing seed, which is upon the face of all the earth, and every tree, in the which is the fruit of a tree yielding seed; to you it shall be for meat.",
+          "And to every beast of the earth, and to every fowl of the air, and to every thing that creepeth upon the earth, wherein there is life, I have given every green herb for meat: and it was so.",
+          "And God saw every thing that he had made, and, behold, it was very good. And the evening and the morning were the sixth day."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "psalms",
+    "name": "Psalms",
+    "chapters": [
+      {
+        "id": "psalms-23",
+        "number": 23,
+        "verses": [
+          "The LORD is my shepherd; I shall not want.",
+          "He maketh me to lie down in green pastures: he leadeth me beside the still waters.",
+          "He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.",
+          "Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.",
+          "Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.",
+          "Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever."
+        ]
+      },
+      {
+        "id": "psalms-91",
+        "number": 91,
+        "verses": [
+          "He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.",
+          "I will say of the LORD, He is my refuge and my fortress: my God; in him will I trust.",
+          "Surely he shall deliver thee from the snare of the fowler, and from the noisome pestilence.",
+          "He shall cover thee with his feathers, and under his wings shalt thou trust: his truth shall be thy shield and buckler.",
+          "Thou shalt not be afraid for the terror by night; nor for the arrow that flieth by day;",
+          "Nor for the pestilence that walketh in darkness; nor for the destruction that wasteth at noonday.",
+          "A thousand shall fall at thy side, and ten thousand at thy right hand; but it shall not come nigh thee.",
+          "Only with thine eyes shalt thou behold and see the reward of the wicked.",
+          "Because thou hast made the LORD, which is my refuge, even the most High, thy habitation;",
+          "There shall no evil befall thee, neither shall any plague come nigh thy dwelling.",
+          "For he shall give his angels charge over thee, to keep thee in all thy ways.",
+          "They shall bear thee up in their hands, lest thou dash thy foot against a stone.",
+          "Thou shalt tread upon the lion and adder: the young lion and the dragon shalt thou trample under feet.",
+          "Because he hath set his love upon me, therefore will I deliver him: I will set him on high, because he hath known my name.",
+          "He shall call upon me, and I will answer him: I will be with him in trouble; I will deliver him, and honour him.",
+          "With long life will I satisfy him, and shew him my salvation."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proverbs",
+    "name": "Proverbs",
+    "chapters": [
+      {
+        "id": "proverbs-3",
+        "number": 3,
+        "verses": [
+          "My son, forget not my law; but let thine heart keep my commandments:",
+          "For length of days, and long life, and peace, shall they add to thee.",
+          "Let not mercy and truth forsake thee: bind them about thy neck; write them upon the table of thine heart:",
+          "So shalt thou find favour and good understanding in the sight of God and man.",
+          "Trust in the LORD with all thine heart; and lean not unto thine own understanding.",
+          "In all thy ways acknowledge him, and he shall direct thy paths.",
+          "Be not wise in thine own eyes: fear the LORD, and depart from evil.",
+          "It shall be health to thy navel, and marrow to thy bones.",
+          "Honour the LORD with thy substance, and with the firstfruits of all thine increase:",
+          "So shall thy barns be filled with plenty, and thy presses shall burst out with new wine."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "isaiah",
+    "name": "Isaiah",
+    "chapters": [
+      {
+        "id": "isaiah-40",
+        "number": 40,
+        "verses": [
+          "Comfort ye, comfort ye my people, saith your God.",
+          "Speak ye comfortably to Jerusalem, and cry unto her, that her warfare is accomplished, that her iniquity is pardoned: for she hath received of the LORD's hand double for all her sins.",
+          "The voice of him that crieth in the wilderness, Prepare ye the way of the LORD, make straight in the desert a highway for our God.",
+          "Every valley shall be exalted, and every mountain and hill shall be made low: and the crooked shall be made straight, and the rough places plain:",
+          "And the glory of the LORD shall be revealed, and all flesh shall see it together: for the mouth of the LORD hath spoken it.",
+          "The voice said, Cry. And he said, What shall I cry? All flesh is grass, and all the goodliness thereof is as the flower of the field:",
+          "The grass withereth, the flower fadeth: because the spirit of the LORD bloweth upon it: surely the people is grass.",
+          "The grass withereth, the flower fadeth: but the word of our God shall stand for ever.",
+          "O Zion, that bringest good tidings, get thee up into the high mountain; O Jerusalem, that bringest good tidings, lift up thy voice with strength; lift it up, be not afraid; say unto the cities of Judah, Behold your God!",
+          "Behold, the Lord GOD will come with strong hand, and his arm shall rule for him: behold, his reward is with him, and his work before him.",
+          "He shall feed his flock like a shepherd: he shall gather the lambs with his arm, and carry them in his bosom, and shall gently lead those that are with young.",
+          "Who hath measured the waters in the hollow of his hand, and meted out heaven with the span, and comprehended the dust of the earth in a measure, and weighed the mountains in scales, and the hills in a balance?",
+          "Who hath directed the Spirit of the LORD, or being his counsellor hath taught him?",
+          "With whom took he counsel, and who instructed him, and taught him in the path of judgment, and taught him knowledge, and shewed to him the way of understanding?",
+          "Behold, the nations are as a drop of a bucket, and are counted as the small dust of the balance: behold, he taketh up the isles as a very little thing.",
+          "And Lebanon is not sufficient to burn, nor the beasts thereof sufficient for a burnt offering.",
+          "All nations before him are as nothing; and they are counted to him less than nothing, and vanity.",
+          "To whom then will ye liken God? or what likeness will ye compare unto him?",
+          "The workman melteth a graven image, and the goldsmith spreadeth it over with gold, and casteth silver chains.",
+          "He that is so impoverished that he hath no oblation chooseth a tree that will not rot; he seeketh unto him a cunning workman to prepare a graven image, that shall not be moved.",
+          "Have ye not known? have ye not heard? hath it not been told you from the beginning? have ye not understood from the foundations of the earth?",
+          "It is he that sitteth upon the circle of the earth, and the inhabitants thereof are as grasshoppers; that stretcheth out the heavens as a curtain, and spreadeth them out as a tent to dwell in:",
+          "That bringeth the princes to nothing; he maketh the judges of the earth as vanity.",
+          "Yea, they shall not be planted; yea, they shall not be sown: yea, their stock shall not take root in the earth: and he shall also blow upon them, and they shall wither, and the whirlwind shall take them away as stubble.",
+          "To whom then will ye liken me, or shall I be equal? saith the Holy One.",
+          "Lift up your eyes on high, and behold who hath created these things, that bringeth out their host by number: he calleth them all by names by the greatness of his might, for that he is strong in power; not one faileth.",
+          "Why sayest thou, O Jacob, and speakest, O Israel, My way is hid from the LORD, and my judgment is passed over from my God?",
+          "Hast thou not known? hast thou not heard, that the everlasting God, the LORD, the Creator of the ends of the earth, fainteth not, neither is weary? there is no searching of his understanding.",
+          "He giveth power to the faint; and to them that have no might he increaseth strength.",
+          "Even the youths shall faint and be weary, and the young men shall utterly fall:",
+          "But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "matthew",
+    "name": "Matthew",
+    "chapters": [
+      {
+        "id": "matthew-5",
+        "number": 5,
+        "verses": [
+          "And seeing the multitudes, he went up into a mountain: and when he was set, his disciples came unto him:",
+          "And he opened his mouth, and taught them, saying,",
+          "Blessed are the poor in spirit: for theirs is the kingdom of heaven.",
+          "Blessed are they that mourn: for they shall be comforted.",
+          "Blessed are the meek: for they shall inherit the earth.",
+          "Blessed are they which do hunger and thirst after righteousness: for they shall be filled.",
+          "Blessed are the merciful: for they shall obtain mercy.",
+          "Blessed are the pure in heart: for they shall see God.",
+          "Blessed are the peacemakers: for they shall be called the children of God.",
+          "Blessed are they which are persecuted for righteousness' sake: for theirs is the kingdom of heaven.",
+          "Blessed are ye, when men shall revile you, and persecute you, and shall say all manner of evil against you falsely, for my sake.",
+          "Rejoice, and be exceeding glad: for great is your reward in heaven: for so persecuted they the prophets which were before you.",
+          "Ye are the salt of the earth: but if the salt have lost his savour, wherewith shall it be salted? it is thenceforth good for nothing, but to be cast out, and to be trodden under foot of men.",
+          "Ye are the light of the world. A city that is set on an hill cannot be hid.",
+          "Neither do men light a candle, and put it under a bushel, but on a candlestick; and it giveth light unto all that are in the house.",
+          "Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "john",
+    "name": "John",
+    "chapters": [
+      {
+        "id": "john-1",
+        "number": 1,
+        "verses": [
+          "In the beginning was the Word, and the Word was with God, and the Word was God.",
+          "The same was in the beginning with God.",
+          "All things were made by him; and without him was not any thing made that was made.",
+          "In him was life; and the life was the light of men.",
+          "And the light shineth in darkness; and the darkness comprehended it not.",
+          "There was a man sent from God, whose name was John.",
+          "The same came for a witness, to bear witness of the Light, that all men through him might believe.",
+          "He was not that Light, but was sent to bear witness of that Light.",
+          "That was the true Light, which lighteth every man that cometh into the world.",
+          "He was in the world, and the world was made by him, and the world knew him not.",
+          "He came unto his own, and his own received him not.",
+          "But as many as received him, to them gave he power to become the sons of God, even to them that believe on his name:",
+          "Which were born, not of blood, nor of the will of the flesh, nor of the will of man, but of God.",
+          "And the Word was made flesh, and dwelt among us, (and we beheld his glory, the glory as of the only begotten of the Father,) full of grace and truth."
+        ]
+      },
+      {
+        "id": "john-3",
+        "number": 3,
+        "verses": [
+          "There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:",
+          "The same came to Jesus by night, and said unto him, Rabbi, we know that thou art a teacher come from God: for no man can do these miracles that thou doest, except God be with him.",
+          "Jesus answered and said unto him, Verily, verily, I say unto thee, Except a man be born again, he cannot see the kingdom of God.",
+          "Nicodemus saith unto him, How can a man be born when he is old? can he enter the second time into his mother's womb, and be born?",
+          "Jesus answered, Verily, verily, I say unto thee, Except a man be born of water and of the Spirit, he cannot enter into the kingdom of God.",
+          "That which is born of the flesh is flesh; and that which is born of the Spirit is spirit.",
+          "Marvel not that I said unto thee, Ye must be born again.",
+          "The wind bloweth where it listeth, and thou hearest the sound thereof, but canst not tell whence it cometh, and whither it goeth: so is every one that is born of the Spirit.",
+          "Nicodemus answered and said unto him, How can these things be?",
+          "Jesus answered and said unto him, Art thou a master of Israel, and knowest not these things?",
+          "Verily, verily, I say unto thee, We speak that we do know, and testify that we have seen; and ye receive not our witness.",
+          "If I have told you earthly things, and ye believe not, how shall ye believe, if I tell you of heavenly things?",
+          "And no man hath ascended up to heaven, but he that came down from heaven, even the Son of man which is in heaven.",
+          "And as Moses lifted up the serpent in the wilderness, even so must the Son of man be lifted up:",
+          "That whosoever believeth in him should not perish, but have eternal life.",
+          "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+          "For God sent not his Son into the world to condemn the world; but that the world through him might be saved."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "romans",
+    "name": "Romans",
+    "chapters": [
+      {
+        "id": "romans-8",
+        "number": 8,
+        "verses": [
+          "There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit.",
+          "For the law of the Spirit of life in Christ Jesus hath made me free from the law of sin and death.",
+          "For what the law could not do, in that it was weak through the flesh, God sending his own Son in the likeness of sinful flesh, and for sin, condemned sin in the flesh:",
+          "That the righteousness of the law might be fulfilled in us, who walk not after the flesh, but after the Spirit.",
+          "For they that are after the flesh do mind the things of the flesh; but they that are after the Spirit the things of the Spirit.",
+          "For to be carnally minded is death; but to be spiritually minded is life and peace.",
+          "Because the carnal mind is enmity against God: for it is not subject to the law of God, neither indeed can be.",
+          "So then they that are in the flesh cannot please God.",
+          "But ye are not in the flesh, but in the Spirit, if so be that the Spirit of God dwell in you. Now if any man have not the Spirit of Christ, he is none of his.",
+          "And if Christ be in you, the body is dead because of sin; but the Spirit is life because of righteousness.",
+          "But if the Spirit of him that raised up Jesus from the dead dwell in you, he that raised up Christ from the dead shall also quicken your mortal bodies by his Spirit that dwelleth in you.",
+          "Therefore, brethren, we are debtors, not to the flesh, to live after the flesh.",
+          "For if ye live after the flesh, ye shall die: but if ye through the Spirit do mortify the deeds of the body, ye shall live.",
+          "For as many as are led by the Spirit of God, they are the sons of God.",
+          "For ye have not received the spirit of bondage again to fear; but ye have received the Spirit of adoption, whereby we cry, Abba, Father.",
+          "The Spirit itself beareth witness with our spirit, that we are the children of God:",
+          "And if children, then heirs; heirs of God, and joint-heirs with Christ; if so be that we suffer with him, that we may be also glorified together.",
+          "For I reckon that the sufferings of this present time are not worthy to be compared with the glory which shall be revealed in us.",
+          "For the earnest expectation of the creature waiteth for the manifestation of the sons of God.",
+          "For the creature was made subject to vanity, not willingly, but by reason of him who hath subjected the same in hope,",
+          "Because the creature itself also shall be delivered from the bondage of corruption into the glorious liberty of the children of God.",
+          "For we know that the whole creation groaneth and travaileth in pain together until now.",
+          "And not only they, but ourselves also, which have the firstfruits of the Spirit, even we ourselves groan within ourselves, waiting for the adoption, to wit, the redemption of our body.",
+          "For we are saved by hope: but hope that is seen is not hope: for what a man seeth, why doth he yet hope for?",
+          "But if we hope for that we see not, then do we with patience wait for it.",
+          "Likewise the Spirit also helpeth our infirmities: for we know not what we should pray for as we ought: but the Spirit itself maketh intercession for us with groanings which cannot be uttered.",
+          "And he that searcheth the hearts knoweth what is the mind of the Spirit, because he maketh intercession for the saints according to the will of God.",
+          "And we know that all things work together for good to them that love God, to them who are the called according to his purpose."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "philippians",
+    "name": "Philippians",
+    "chapters": [
+      {
+        "id": "philippians-4",
+        "number": 4,
+        "verses": [
+          "Therefore, my brethren dearly beloved and longed for, my joy and crown, so stand fast in the Lord, my dearly beloved.",
+          "I beseech Euodias, and beseech Syntyche, that they be of the same mind in the Lord.",
+          "And I intreat thee also, true yokefellow, help those women which laboured with me in the gospel, with Clement also, and with other my fellowlabourers, whose names are in the book of life.",
+          "Rejoice in the Lord alway: and again I say, Rejoice.",
+          "Let your moderation be known unto all men. The Lord is at hand.",
+          "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.",
+          "And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.",
+          "Finally, brethren, whatsoever things are true, whatsoever things are honest, whatsoever things are just, whatsoever things are pure, whatsoever things are lovely, whatsoever things are of good report; if there be any virtue, and if there be any praise, think on these things.",
+          "Those things, which ye have both learned, and received, and heard, and seen in me, do: and the God of peace shall be with you.",
+          "But I rejoiced in the Lord greatly, that now at the last your care of me hath flourished again; wherein ye were also careful, but ye lacked opportunity.",
+          "Not that I speak in respect of want: for I have learned, in whatsoever state I am, therewith to be content.",
+          "I know both how to be abased, and I know how to abound: every where and in all things I am instructed both to be full and to be hungry, both to abound and to suffer need.",
+          "I can do all things through Christ which strengtheneth me."
+        ]
+      }
+    ]
+  }
+]
+
+

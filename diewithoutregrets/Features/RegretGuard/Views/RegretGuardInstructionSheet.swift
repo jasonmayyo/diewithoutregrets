@@ -1,5 +1,5 @@
 //
-//  RegretGuardInstructionSheet.swift
+//  FaithGuardInstructionSheet.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/01/28.
@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct RegretGuardInstructionSheet: View {
+struct FaithGuardInstructionSheet: View {
     @Environment(\.dismiss) var dismiss
-    let app: RegretApp
+    let app: GuardedApp
     
     var body: some View {
         ScrollView {
@@ -19,9 +19,9 @@ struct RegretGuardInstructionSheet: View {
                     .bold()
                     .font(.title2)
                     .accessibilityLabel("Setup Instructions")
-                Text("2 min setup process to save thousands")
+                Text("2 min setup to guard your apps with Scripture")
                     .font(.subheadline)
-                    .accessibilityLabel("Two-minute setup process to save thousands")
+                    .accessibilityLabel("Two-minute setup to guard your apps with Scripture")
                 
                 // Step 1
                 VStack {
@@ -50,7 +50,7 @@ struct RegretGuardInstructionSheet: View {
                     }, label: {
                         HStack {
                             Image(systemName: "button.angledtop.vertical.right")
-                                .accessibilityHidden(true) // Hide decorative icon
+                                .accessibilityHidden(true)
                             Text("Copy Shortcut")
                         }
                         .frame(maxWidth: .infinity)
@@ -61,10 +61,6 @@ struct RegretGuardInstructionSheet: View {
                                 .cornerRadius(10)
                         )
                         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
                     })
                     .accessibilityLabel("Copy Shortcut")
                     .accessibilityHint("Tap to copy the custom shortcut for \(app.name)")
@@ -102,7 +98,7 @@ struct RegretGuardInstructionSheet: View {
                     }, label: {
                         HStack {
                             Image(systemName: "link")
-                                .accessibilityHidden(true) // Hide decorative icon
+                                .accessibilityHidden(true)
                             Text("Open Shortcut App")
                         }
                         .foregroundColor(Color(hex: 0x184449))
@@ -154,7 +150,7 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 8) {
@@ -170,7 +166,7 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                             }
                             .padding(.vertical)
@@ -220,14 +216,14 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("2. Choose the app you may regret")
+                                    Text("2. Choose the app to guard")
                                         .font(.caption)
                                         .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 2: Choose the app you may regret")
+                                        .accessibilityLabel("Step 2: Choose the app to guard")
                                     Image("chose-app")
                                         .resizable()
                                         .scaledToFit()
@@ -236,7 +232,7 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                             }
                             .padding(.vertical)
@@ -286,7 +282,7 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                             }
                             .padding(.vertical)
@@ -309,9 +305,9 @@ struct RegretGuardInstructionSheet: View {
                             .lineLimit(1)
                             .accessibilityLabel("Step 6")
                         VStack(alignment: .leading) {
-                            Text("Select the dwr. custom shortcut")
+                            Text("Select the Faith Guard shortcut")
                                 .font(.headline)
-                                .accessibilityLabel("Select the dwr. custom shortcut")
+                                .accessibilityLabel("Select the Faith Guard custom shortcut")
                             Text("Ensure you select the correct shortcut for the app you chose. e.g., Instagram")
                                 .font(.caption)
                                 .accessibilityLabel("Ensure you select the correct shortcut for the app you chose, such as Instagram")
@@ -336,7 +332,7 @@ struct RegretGuardInstructionSheet: View {
                                         .background(Color.white)
                                         .cornerRadius(12)
                                         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
+                                        .accessibilityHidden(true)
                                 }
                             }
                             .padding(.vertical)
@@ -362,7 +358,7 @@ struct RegretGuardInstructionSheet: View {
                             Text("Setup Complete")
                                 .font(.headline)
                                 .accessibilityLabel("Setup Complete")
-                            Text("Return home or create another automation. Make sure to test it out :)")
+                            Text("Return home or create another automation. Make sure to test it out!")
                                 .font(.caption)
                                 .accessibilityLabel("Return home or create another automation. Make sure to test it out")
                         }
@@ -379,8 +375,11 @@ struct RegretGuardInstructionSheet: View {
     }
 }
 
+// Backward compatibility alias
+typealias RegretGuardInstructionSheet = FaithGuardInstructionSheet
+
 #Preview {
-    RegretGuardInstructionSheet(app: RegretApp(
+    FaithGuardInstructionSheet(app: GuardedApp(
         name: "Instagram",
         iconName: "instagram-icon",
         shortcutLink: URL(string: "https://www.icloud.com/shortcuts/your-instagram-shortcut")!

@@ -21,7 +21,7 @@ struct NameView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
@@ -35,14 +35,14 @@ struct NameView: View {
                     .accessibilityLabel("What should we call you?")
                 
                 // Subtitle with animation
-                Text("What's your name? Or what's the name your mom calls you when she is mad at you?")
+                Text("What's your name? We'd love to personalize your experience.")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 25)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("What's your name? Or what's the name your mom calls you when she is mad at you?")
+                    .accessibilityLabel("What's your name? We'd love to personalize your experience.")
                 
                 // Custom TextField with animation
                 TextField("", text: Binding(
@@ -74,6 +74,7 @@ struct NameView: View {
                 }) {
                     Text("Continue")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 70)
@@ -92,7 +93,6 @@ struct NameView: View {
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showTitle = true
             showSubtitle = true
             showTextField = true

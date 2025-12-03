@@ -8,5 +8,8 @@
 import AppIntents
 
 @main
-struct OpenGuardIntentExtension: AppIntentsExtension {
+struct OpenFaithGuardIntentExtension: AppIntentsExtension {
 }
+
+// Backward compatibility alias
+typealias OpenGuardIntentExtension = OpenFaithGuardIntentExtension

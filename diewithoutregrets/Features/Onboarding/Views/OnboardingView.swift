@@ -31,8 +31,8 @@ struct OnboardingView: View {
             case .weCanHelp:
                 WecanhelpView()
                     .environmentObject(onboardingViewModel)
-            case .regretQuestions:
-                RegretQuestionView()
+            case .bibleVerseQuestions:
+                BibleVerseQuestionView()
                     .environmentObject(onboardingViewModel)
             case .completion:
                 CompletionView()

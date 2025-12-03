@@ -13,7 +13,7 @@ struct CompletionView: View {
     @State private var isFading = false
     @State private var particles: [Particle] = []
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding = false
-    @EnvironmentObject var regretStore: RegretStore
+    @EnvironmentObject var bibleVerseStore: BibleVerseStore
     
     // Animation states
     @State private var showTitle = false
@@ -25,7 +25,7 @@ struct CompletionView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             // Main Content
             VStack(spacing: 10) {
@@ -40,14 +40,14 @@ struct CompletionView: View {
                         .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
                         .accessibilityLabel("You're ready to begin!")
                     
-                    Text("Remember, every moment spent mindfully\nis a moment lived without regrets.")
+                    Text("Remember, every moment spent in His word\nis a moment closer to His purpose for you.")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
                         .opacity(showSubtitle ? 1 : 0)
                         .offset(y: showSubtitle ? 0 : 20)
                         .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                        .accessibilityLabel("Remember, every moment spent mindfully is a moment lived without regrets.")
+                        .accessibilityLabel("Remember, every moment spent in His word is a moment closer to His purpose for you.")
                 }
                 
                 Spacer()
@@ -56,14 +56,14 @@ struct CompletionView: View {
                     // Confetti Particles
                     ForEach(particles) { particle in
                         ConfettiParticle(particle: particle)
-                            .accessibilityHidden(true) // Hide decorative confetti
+                            .accessibilityHidden(true)
                     }
                     
-                    // Shaking Hand Button
+                    // Cross Button
                     Button(action: {
                         triggerConfetti()
                     }) {
-                        Text("🤝")
+                        Text("✝️")
                             .font(.system(size: 50))
                             .padding(30)
                             .background(Color.white.opacity(0.3))
@@ -76,7 +76,7 @@ struct CompletionView: View {
                     .offset(y: showHandButton ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.6), value: showHandButton)
                     .accessibilityLabel("Tap to celebrate")
-                    .accessibilityHint("Tap the hand button to trigger confetti")
+                    .accessibilityHint("Tap the cross button to continue")
                     .accessibilityAddTraits(.isButton)
                 }
                 
@@ -98,7 +98,6 @@ struct CompletionView: View {
             .padding()
         }
         .onAppear {
-            // Trigger entry animations
             showTitle = true
             showSubtitle = true
             showHandButton = true
@@ -119,16 +118,7 @@ struct CompletionView: View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // Add user's regrets to the store
-            for i in 0..<onboardingViewModel.regretAnswers.count {
-                let newRegret = Regret(
-                    regretPrompt: onboardingViewModel.regretPrompts[i],
-                    regret: onboardingViewModel.regretAnswers[i]
-                )
-                regretStore.regrets.append(newRegret)
-                print(regretStore.regrets)
-            }
-            
+            // Add user's verses to the store (already handled in onboarding view model)
             hasCompletedOnboarding = true
         }
     }
@@ -145,15 +135,15 @@ struct ConfettiParticle: View {
     @State private var isActive = false
     
     var body: some View {
-        Text("🤝")
-            .font(.system(size: 48)) // Increased from 40 to 48
+        Text("✝️")
+            .font(.system(size: 48))
             .scaleEffect(isActive ? particle.scale : 1)
             .offset(x: isActive ? particle.x : 0,
                     y: isActive ? particle.y : 0)
             .rotationEffect(.degrees(isActive ? particle.rotation : 0))
             .opacity(isActive ? 0 : 1)
             .onAppear {
-                withAnimation(.easeOut(duration: 1.5)) { // Faster animation
+                withAnimation(.easeOut(duration: 1.5)) {
                     self.isActive = true
                 }
             }
@@ -169,13 +159,13 @@ struct Particle: Identifiable {
     
     init() {
         let angle = Double.random(in: 0..<360)
-        let distance = Double.random(in: 80...250) // Reduced distance
+        let distance = Double.random(in: 80...250)
         let radians = angle * .pi / 180
         
         self.x = CGFloat(distance * cos(radians))
         self.y = CGFloat(-distance * sin(radians))
-        self.scale = Double.random(in: 0.8...1.5) // Reduced scale variation
-        self.rotation = Double.random(in: -45...45) // DRAMATICALLY reduced rotation range
+        self.scale = Double.random(in: 0.8...1.5)
+        self.rotation = Double.random(in: -45...45)
     }
 }
 
@@ -200,4 +190,5 @@ struct InfoRow: View {
 #Preview {
     CompletionView()
         .environmentObject(OnboardingViewModel())
+        .environmentObject(BibleVerseStore())
 }

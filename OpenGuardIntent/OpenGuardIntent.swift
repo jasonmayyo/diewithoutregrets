@@ -7,15 +7,18 @@
 
 import AppIntents
 
-struct OpenGuardIntent: AppIntent {
-    static let title: LocalizedStringResource = "Open Regret Guard"
-    static let description = IntentDescription("Opens the Die Without Regrets app")
+struct OpenFaithGuardIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Faith Guard"
+    static let description = IntentDescription("Opens the Faith Guard app")
     
     static var openAppWhenRun: Bool = true
     
     func perform() async throws -> some IntentResult & ReturnsValue<Bool> {
-        print("OpenAppIntent: Attempting to perform")
+        print("OpenFaithGuardIntent: Attempting to perform")
         NavigationModel.shared.navigate(to: .regretView)
         return .result(value: true)
     }
 }
+
+// Backward compatibility alias
+typealias OpenGuardIntent = OpenFaithGuardIntent

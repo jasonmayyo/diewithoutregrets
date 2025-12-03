@@ -23,14 +23,17 @@ class NameViewModel: ObservableObject {
     }
 }
 
-class RegretQuestionViewModel: ObservableObject {
+class BibleVerseQuestionViewModel: ObservableObject {
     @Published var answers: [String] = ["", ""]
     
     func canContinue(for index: Int) -> Bool {
         let answer = answers[index]
-        return !answer.isEmpty && answer.count >= 20 && answer.count <= 200
+        return !answer.isEmpty && answer.count >= 10 && answer.count <= 300
     }
 }
+
+// Backward compatibility alias
+typealias RegretQuestionViewModel = BibleVerseQuestionViewModel
 
 struct Question: Identifiable {
     let id = UUID()

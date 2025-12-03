@@ -1,5 +1,5 @@
 //
-//  RegretGuard.swift
+//  FaithGuard.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/01/28.
@@ -7,162 +7,402 @@
 
 import SwiftUI
 
-struct RegretGuard: View {
-    @EnvironmentObject var regretStore: RegretStore
-    @StateObject private var viewModel = RegretGuardViewModel()
+struct FaithGuard: View {
+    @EnvironmentObject var bibleVerseStore: BibleVerseStore
+    @EnvironmentObject var bibleDataManager: BibleDataManager
+    @EnvironmentObject var navigationModel: NavigationModel
+    @StateObject private var viewModel = FaithGuardViewModel()
     
     var body: some View {
-        VStack {
+        GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Background image
-                Image("dwr-background")
-                    .resizable()
-                    .frame(height: 130)
-                    .edgesIgnoringSafeArea(.all)
-                    .accessibilityHidden(true) // Hide decorative background image
+                // Premium dark gradient background
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.12, green: 0.16, blue: 0.22),
+                        Color(red: 0.08, green: 0.10, blue: 0.14)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
                 
+                // Background image with gradient overlay
                 VStack {
-                    VStack {
-                        // Page Title - Limits
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Regret Guard")
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(.white)
-                                    .accessibilityLabel("Regret Guard")
-                                Text("Protect Your Time, Protect Your Goals.")
-                                    .foregroundColor(.white)
-                                    .accessibilityLabel("Protect your time, protect your goals")
-                            }
-                            Spacer()
-                        }
-                        .accessibilityElement(children: .combine) // Combine title and subtitle for VoiceOver
+                    ZStack {
+                        Image("faith-gaurd-background-image")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: 380)
+                            .clipped()
+                        
+                        // Premium gradient overlay for depth
+                        LinearGradient(
+                            colors: [
+                                Color.black.opacity(0.3),
+                                Color.black.opacity(0.1),
+                                Color(red: 0.12, green: 0.16, blue: 0.22).opacity(0.95)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     }
-                    .padding(.horizontal)
-                    
-                    ScrollView {
-                        VStack(alignment: .leading) {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack {
-                                    ForEach(regretStore.regrets) { regret in
-                                        Button(action: {
-                                            regretStore.selectRegret(regret)
-                                            viewModel.showEditRegret = true
-                                        }, label: {
-                                            VStack {
-                                                VStack {
-                                                    Spacer()
-                                                    Text(regret.regret)
-                                                        .bold()
-                                                        .accessibilityLabel("Regret: \(regret.regret)")
-                                                    Spacer()
-                                                    Text("Tap to edit")
-                                                        .foregroundColor(.gray)
-                                                        .font(.caption)
-                                                        .accessibilityLabel("Tap to edit this regret")
-                                                }
-                                                .padding()
-                                            }
-                                            .frame(width: 300, height: 150)
-                                            .background(Color.white)
-                                            .cornerRadius(12)
-                                            .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 0)
-                                            .padding(.bottom)
-                                            .accessibilityElement(children: .combine) // Combine regret and edit text
-                                        })
-                                        .foregroundColor(.black)
-                                        .accessibilityAddTraits(.isButton)
-                                    }
-                                    Spacer()
+                    .frame(height: 380)
+                    Spacer()
+                }
+                .ignoresSafeArea()
+                
+                // Main content
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Header Section
+                        VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("FAITH GUARD")
+                                        .font(.system(size: 26, weight: .bold))
+                                        .tracking(3)
+                                    .foregroundColor(.white)
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.leading)
+                                Spacer()
                             }
-                            
-                            VStack(alignment: .leading) {
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 120)
+                        
+                        // Featured Verse Section
+                        VStack(alignment: .leading, spacing: 10) {
                                 HStack {
-                                    VStack(alignment: .leading) {
-                                        Text("Regret-Proof Your Phone")
-                                            .font(.title3)
-                                            .bold()
-                                            .accessibilityLabel("Regret-Proof Your Phone")
-                                        Text("Select the apps that may hold you back from your goals.")
-                                            .font(.caption)
-                                            .accessibilityLabel("Select the apps that may hold you back from your goals")
-                                    }
-                                    Spacer()
+                                Text("Recent Verses")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                                    .tracking(1)
+                                                    Spacer()
+                                
+                                if bibleVerseStore.hasRecentVerses {
+                                    Text("\(bibleVerseStore.recentVerses.count) recent")
+                                        .font(.system(size: 12, weight: .regular))
+                                        .foregroundColor(.white.opacity(0.4))
                                 }
-                                .padding(.bottom, 5)
-                                .accessibilityElement(children: .combine) // Combine heading and description
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            // Scripture Cards or Empty State
+                            if bibleVerseStore.hasRecentVerses {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 16) {
+                                        ForEach(Array(bibleVerseStore.recentVerses.enumerated()), id: \.element.id) { index, verse in
+                                            Button(action: {
+                                                // Navigate to Bible reader at this verse
+                                                bibleDataManager.navigateTo(verse: verse)
+                                                navigationModel.switchToTab(.bible)
+                                            }) {
+                                                PremiumVerseCard(verse: verse, isFirst: index == 0)
+                                            }
+                                            .buttonStyle(ScaleButtonStyle())
+                                        }
+                                    }
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 8)
+                                }
+                            } else {
+                                // Empty State
+                                EmptyVersesCard()
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 8)
+                            }
+                        }.padding(.top, 2)
+                        
+                        // Apps Section
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Section Header
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("PROTECTED APPS")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .tracking(2)
+                                    .foregroundColor(.white.opacity(0.5))
                                 
-                                let columns = [
-                                    GridItem(.flexible(), spacing: 15),
-                                    GridItem(.flexible(), spacing: 15)
-                                ]
-                                
-                                LazyVGrid(columns: columns, spacing: 15) {
+                                Text("Select apps to guard")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            // App Grid
+                            LazyVGrid(
+                                columns: [
+                                    GridItem(.flexible(), spacing: 12),
+                                    GridItem(.flexible(), spacing: 12)
+                                ],
+                                spacing: 12
+                            ) {
                                     ForEach(viewModel.apps) { app in
                                         Button(action: {
                                             viewModel.selectApp(app)
                                         }) {
-                                            HStack(spacing: 10) {
-                                                Image(app.iconName)
-                                                    .resizable()
-                                                    .frame(width: 25, height: 25)
-                                                    .accessibilityHidden(true) // Hide decorative icon
-                                                Text(app.name)
-                                                    .font(.system(size: 14))
-                                                    .accessibilityLabel(app.name)
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding()
-                                            .background(Color.white)
-                                            .cornerRadius(10)
-                                            .shadow(color: .gray.opacity(0.2), radius: 5, x: 2, y: 2)
-                                        }
-                                        .foregroundColor(.black)
-                                        .accessibilityAddTraits(.isButton)
-                                        .accessibilityHint("Select this app to restrict")
+                                        PremiumAppCard(app: app)
                                     }
-                                }
-                                
-                                HStack {
-                                    Spacer()
-                                    Text("Can't find what you are looking for? We are adding more everyday!")
-                                        .font(.system(size: 10))
-                                        .padding(.top, 5)
-                                        .accessibilityLabel("Can't find what you are looking for? We are adding more everyday!")
-                                    Spacer()
+                                    .buttonStyle(ScaleButtonStyle())
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 24)
+                            
+                            // Footer text
+                                HStack {
+                                    Spacer()
+                                VStack(spacing: 4) {
+                                    Text("More apps coming soon")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.4))
+                                    
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "sparkles")
+                                        .font(.system(size: 10))
+                                        Text("Request an app")
+                                            .font(.system(size: 11, weight: .medium))
+                                    }
+                                    .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.6))
+                                }
+                                Spacer()
+                            }
+                            .padding(.top, 8)
                         }
-                        
-                        Spacer()
+                        .padding(.top, 25)
+                        .padding(.bottom, 24)
+                    }
                     }
                 }
             }
             .sheet(isPresented: $viewModel.showInstructions) {
                 if let app = viewModel.selectedApp {
-                    RegretGuardInstructionSheet(app: app)
+                FaithGuardInstructionSheet(app: app)
                         .presentationDetents([.large])
                         .presentationCornerRadius(30)
                 }
             }
-            .sheet(isPresented: $viewModel.showEditRegret) {
-                if let regret = regretStore.selectedRegret {
-                    RegretEditorSheet(regret: regret)
+        .sheet(isPresented: $viewModel.showEditVerse) {
+            if let verse = bibleVerseStore.selectedVerse {
+                BibleVerseEditorSheet(verse: verse)
                         .presentationDetents([.large])
                         .presentationCornerRadius(30)
-                        .environmentObject(regretStore)
-                }
+                    .environmentObject(bibleVerseStore)
             }
         }
-        .preferredColorScheme(.light)
     }
 }
 
+// MARK: - Premium Verse Card
+struct PremiumVerseCard: View {
+    let verse: BibleVerse
+    let isFirst: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Top accent bar
+            HStack {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.4, green: 0.7, blue: 0.6),
+                                Color(red: 0.3, green: 0.6, blue: 0.7)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 40, height: 3)
+                Spacer()
+                
+                Image(systemName: "quote.opening")
+                    .font(.system(size: 16, weight: .ultraLight))
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            
+            Spacer()
+            
+            // Verse text
+            Text(verse.verse)
+                .font(.system(size: 16, weight: .regular, design: .serif))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.leading)
+                .lineLimit(4)
+                .lineSpacing(4)
+            
+            Spacer()
+            
+            // Reference and edit hint
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verse.reference)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.6))
+                }
+                
+                Spacer()
+                
+                HStack(spacing: 4) {
+                    Text("Read More")
+                        .font(.system(size: 11, weight: .medium))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10))
+                }
+                .foregroundColor(.white.opacity(0.4))
+            }
+        }
+        .padding(20)
+        .frame(width: 280, height: 200)
+        .background(
+            ZStack {
+                // Glass background
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+                
+                // Subtle gradient overlay
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.1),
+                                Color.clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.3),
+                            Color.white.opacity(0.05)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 10)
+    }
+}
+
+// MARK: - Empty Verses Card
+struct EmptyVersesCard: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color(red: 0.4, green: 0.7, blue: 0.6).opacity(0.15))
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: "book.closed")
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.6))
+            }
+            
+            VStack(spacing: 8) {
+                Text("No Recent Verses")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Text("Verses shown before you open guarded apps will appear here")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+                
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.05),
+                                Color.clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.2),
+                            Color.white.opacity(0.05)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+    }
+}
+
+// MARK: - Premium App Card
+struct PremiumAppCard: View {
+    let app: GuardedApp
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // App icon
+            Image(app.iconName)
+                .resizable()
+                .frame(width: 26, height: 26)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            
+            Text(app.name)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white)
+                .lineLimit(1)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(0.08))
+                
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            }
+        )
+    }
+}
+
+// MARK: - Scale Button Style
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// Backward compatibility alias
+typealias RegretGuard = FaithGuard
+
 #Preview {
-    RegretGuard()
+    FaithGuard()
+        .environmentObject(BibleVerseStore())
+        .environmentObject(BibleDataManager.shared)
+        .environmentObject(NavigationModel.shared)
 }

@@ -1,5 +1,5 @@
 //
-//  RegretGuardViewModel.swift
+//  FaithGuardViewModel.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/01/28.
@@ -7,17 +7,20 @@
 
 import SwiftUI
 
-class RegretGuardViewModel: ObservableObject {
+class FaithGuardViewModel: ObservableObject {
     @Published var showInstructions = false
-    @Published var showEditRegret = false
-    @Published var selectedApp: RegretApp?
+    @Published var showEditVerse = false
+    @Published var selectedApp: GuardedApp?
     
-    var apps: [RegretApp] {
-        RegretApp.sampleApps
+    var apps: [GuardedApp] {
+        GuardedApp.sampleApps
     }
     
-    func selectApp(_ app: RegretApp) {
+    func selectApp(_ app: GuardedApp) {
         selectedApp = app
         showInstructions = true
     }
 }
+
+// Backward compatibility alias
+typealias RegretGuardViewModel = FaithGuardViewModel

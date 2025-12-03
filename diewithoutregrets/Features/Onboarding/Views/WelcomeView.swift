@@ -19,7 +19,7 @@ struct WelcomeView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack {
                 // Welcome Image
@@ -29,26 +29,26 @@ struct WelcomeView: View {
                     .opacity(showImage ? 1 : 0)
                     .offset(y: showImage ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showImage)
-                    .accessibilityHidden(true) // Hide decorative image
+                    .accessibilityHidden(true)
                 
                 // Welcome Title
-                Text("Welcome to Regret Guard")
+                Text("Welcome to Faith Guard")
                     .font(.title)
                     .bold()
                     .foregroundColor(.white)
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showTitle)
-                    .accessibilityLabel("Welcome to Regret Guard")
+                    .accessibilityLabel("Welcome to Faith Guard")
                 
                 // Welcome Subtitle
-                Text("Protect Your Time, Protect Your Goals.")
-                    .foregroundColor(.white)
+                Text("Guard Your Heart with Scripture")
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 40)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.6), value: showSubtitle)
-                    .accessibilityLabel("Protect your time, protect your goals")
+                    .accessibilityLabel("Guard your heart with Scripture")
                 
                 // Get Started Button
                 Button(action: {
@@ -56,6 +56,7 @@ struct WelcomeView: View {
                 }, label: {
                     Text("Get Started")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 65)
@@ -66,13 +67,12 @@ struct WelcomeView: View {
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
                 .accessibilityLabel("Get Started")
-                .accessibilityHint("Tap to begin setting up Regret Guard")
+                .accessibilityHint("Tap to begin setting up Faith Guard")
                 .accessibilityAddTraits(.isButton)
             }
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showImage = true
             showTitle = true
             showSubtitle = true

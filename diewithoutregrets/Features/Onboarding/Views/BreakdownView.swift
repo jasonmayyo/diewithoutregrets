@@ -29,23 +29,23 @@ struct BreakdownView: View {
         ZStack {
             Color(hex: 0x184449)
                 .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 3) {
                 // Title with animation
-                Text("Here is the deal, \(onboardingViewModel.userName)!")
+                Text("Here's the truth, \(onboardingViewModel.userName)!")
                     .font(.title2)
                     .foregroundColor(.white)
                     .bold()
                     .opacity(showTitle ? 1 : 0)
                     .offset(y: showTitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                    .accessibilityLabel("Here is the deal, \(onboardingViewModel.userName)!")
+                    .accessibilityLabel("Here's the truth, \(onboardingViewModel.userName)!")
                 
                 // Subtitle with animation
                 Text("Based on what you have told us, we estimate you will spend...")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white.opacity(0.9))
                     .padding(.bottom, 25)
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
@@ -68,10 +68,9 @@ struct BreakdownView: View {
                             .font(.system(size: 40, weight: .black))
                             .foregroundColor(.white.opacity(0.7))
                             .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
-                            .accessibilityHidden(true) // Hide decorative text
+                            .accessibilityHidden(true)
                     }
-                    .background(Color(hex: 0x184449))
-                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
+                    .accessibilityElement(children: .combine)
                     
                     // Annual Estimate
                     VStack {
@@ -85,9 +84,9 @@ struct BreakdownView: View {
                             .font(.system(size: 38, weight: .black))
                             .foregroundColor(.white.opacity(0.7))
                             .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
-                            .accessibilityHidden(true) // Hide decorative text
+                            .accessibilityHidden(true)
                     }
-                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
+                    .accessibilityElement(children: .combine)
                 }
                 .tabViewStyle(PageTabViewStyle())
                 .opacity(showTabView ? 1 : 0)
@@ -103,6 +102,7 @@ struct BreakdownView: View {
                 }) {
                     Text("Next")
                         .foregroundColor(.black)
+                        .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .frame(height: 70)
@@ -119,7 +119,6 @@ struct BreakdownView: View {
             .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showTitle = true
             showSubtitle = true
             showTabView = true

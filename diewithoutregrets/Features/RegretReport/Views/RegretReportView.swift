@@ -1,5 +1,5 @@
 //
-//  RegretReportView.swift
+//  FaithReportView.swift
 //  diewithoutregrets
 //
 //  Created by Jason Mayo on 2025/01/28.
@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct RegretReportView: View {
+struct FaithReportView: View {
     @State private var userDefaultsValues: [String: Any] = [:]
-    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+    let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.faithguard")
     
     // Add timer for automatic refresh
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -20,7 +20,7 @@ struct RegretReportView: View {
             "OpenedFromIntent": sharedDefaults?.bool(forKey: "OpenedFromIntent") ?? false,
             "UserAllowedBreak": sharedDefaults?.bool(forKey: "UserAllowedBreak") ?? false,
             "LastBreakTime": sharedDefaults?.double(forKey: "LastBreakTime") ?? 0,
-            "ShowRegretView": sharedDefaults?.bool(forKey: "ShowRegretView") ?? false
+            "ShowFaithVerseView": sharedDefaults?.bool(forKey: "ShowFaithVerseView") ?? false
         ]
     }
     
@@ -56,6 +56,9 @@ struct RegretReportView: View {
     }
 }
 
+// Backward compatibility alias
+typealias RegretReportView = FaithReportView
+
 #Preview {
-    RegretReportView()
+    FaithReportView()
 }
