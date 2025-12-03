@@ -65,7 +65,7 @@ struct WecanhelpView: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("Let's help you be more intentional with your screen time. We'll ask you a few questions about your faith journey to personalize your experience.")
+                    .accessibilityLabel("Let's help you be more intentional with your screen time. We'll ask you a few questions about your faith journey to personalize your experience. And be closer to god amen.")
                 
                 // Life visualization grid
                 HStack {

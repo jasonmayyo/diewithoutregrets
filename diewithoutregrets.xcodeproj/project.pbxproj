@@ -50,12 +50,12 @@
 		6BFG00052D5CFA59008D2884 /* BibleDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00042D5CFA59008D2884 /* BibleDataManager.swift */; };
 		6BFG00072D5CFA59008D2884 /* BibleReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00062D5CFA59008D2884 /* BibleReaderView.swift */; };
 		6BFG000A2D5CFA59008D2884 /* bible_kjv.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00092D5CFA59008D2884 /* bible_kjv.json */; };
-		6BFG00202D5CFA59008D2884 /* KJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00212D5CFA59008D2884 /* KJV.json */; };
-		6BFG00222D5CFA59008D2884 /* ASV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00232D5CFA59008D2884 /* ASV.json */; };
-		6BFG00242D5CFA59008D2884 /* AKJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00252D5CFA59008D2884 /* AKJV.json */; };
 		6BFG00102D5CFA59008D2884 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG000F2D5CFA59008D2884 /* MainTabView.swift */; };
 		6BFG00122D5CFA59008D2884 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00112D5CFA59008D2884 /* ProfileView.swift */; };
 		6BFG00142D5CFA59008D2884 /* BibleReaderTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFG00132D5CFA59008D2884 /* BibleReaderTabView.swift */; };
+		6BFG00202D5CFA59008D2884 /* KJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00212D5CFA59008D2884 /* KJV.json */; };
+		6BFG00222D5CFA59008D2884 /* ASV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00232D5CFA59008D2884 /* ASV.json */; };
+		6BFG00242D5CFA59008D2884 /* AKJV.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BFG00252D5CFA59008D2884 /* AKJV.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,12 +138,12 @@
 		6BFG00042D5CFA59008D2884 /* BibleDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleDataManager.swift; sourceTree = "<group>"; };
 		6BFG00062D5CFA59008D2884 /* BibleReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleReaderView.swift; sourceTree = "<group>"; };
 		6BFG00092D5CFA59008D2884 /* bible_kjv.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = bible_kjv.json; sourceTree = "<group>"; };
-		6BFG00212D5CFA59008D2884 /* KJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = KJV.json; sourceTree = "<group>"; };
-		6BFG00232D5CFA59008D2884 /* ASV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ASV.json; sourceTree = "<group>"; };
-		6BFG00252D5CFA59008D2884 /* AKJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AKJV.json; sourceTree = "<group>"; };
 		6BFG000F2D5CFA59008D2884 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		6BFG00112D5CFA59008D2884 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		6BFG00132D5CFA59008D2884 /* BibleReaderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleReaderTabView.swift; sourceTree = "<group>"; };
+		6BFG00212D5CFA59008D2884 /* KJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = KJV.json; sourceTree = "<group>"; };
+		6BFG00232D5CFA59008D2884 /* ASV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ASV.json; sourceTree = "<group>"; };
+		6BFG00252D5CFA59008D2884 /* AKJV.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AKJV.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
