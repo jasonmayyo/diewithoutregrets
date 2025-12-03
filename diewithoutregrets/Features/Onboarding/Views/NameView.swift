@@ -42,7 +42,7 @@ struct NameView: View {
                     .opacity(showSubtitle ? 1 : 0)
                     .offset(y: showSubtitle ? 0 : 20)
                     .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("What's your name? We'd love to personalize your experience.")
+                    .accessibilityLabel("What's your name? We'd love to personalize your experience. Hop right in")
                 
                 // Custom TextField with animation
                 TextField("", text: Binding(
