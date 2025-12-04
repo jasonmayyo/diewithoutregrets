@@ -21,7 +21,7 @@ struct FaithGuardInstructionSheet: View {
                     .accessibilityLabel("Setup Instructions")
                 Text("2 min setup to guard your apps with Scripture")
                     .font(.subheadline)
-                    .accessibilityLabel("Two-minute setup to guard your apps with Scripture")
+                    .accessibilityLabel("Two-minute setup to guard your apps with Scripture, helping you every step of the way.")
                 
                 // Step 1
                 VStack {
