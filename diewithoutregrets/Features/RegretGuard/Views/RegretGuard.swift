@@ -12,6 +12,10 @@ struct RegretGuard: View {
     @StateObject private var viewModel = RegretGuardViewModel()
     @EnvironmentObject var deckStore: DeckStore
     @State private var showNewFlashcardSheet = false
+    @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
+    @AppStorage("focusDuration") private var focusDuration: Int = 5
+    @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
+    @AppStorage("trueFocusBreakDuration") private var trueFocusBreakDuration: Int = 30
     
     var body: some View {
         VStack {
@@ -28,7 +32,9 @@ struct RegretGuard: View {
                     ScrollView {
                         VStack(alignment: .leading) {
                             deckSelectionSection
+                            unlockMethodSection
                             appRestrictionSection
+                                .padding(.top)
                         }
                     }
                 }
@@ -100,6 +106,94 @@ struct RegretGuard: View {
     }
     
     
+    
+    private var unlockMethodSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Unlock Method")
+                        .font(.title3)
+                        .bold()
+                    Text("Choose how to unlock blocked apps")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            
+            HStack(spacing: 10) {
+                // Flashcards option
+                Button(action: {
+                    unlockMethod = "flashcards"
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                }) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "rectangle.stack.fill")
+                            .font(.title3)
+                        Text("Flashcards")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text("\(flashcardBreakDuration) min break")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(unlockMethod == "flashcards"
+                                ? Color(hex: 0x2BC391).opacity(0.15)
+                                : Color.white)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(unlockMethod == "flashcards"
+                                ? Color(hex: 0x2BC391) : Color.gray.opacity(0.2), lineWidth: unlockMethod == "flashcards" ? 2 : 1)
+                    )
+                    .foregroundColor(Color(hex: 0x184449))
+                }
+                
+                // True Focus option
+                Button(action: {
+                    unlockMethod = "trueFocus"
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                }) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "eye.fill")
+                            .font(.title3)
+                        Text("True Focus")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text("\(focusDuration) min focus = \(trueFocusBreakDuration) min break")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(unlockMethod == "trueFocus"
+                                ? Color(hex: 0x2BC391).opacity(0.15)
+                                : Color.white)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(unlockMethod == "trueFocus"
+                                ? Color(hex: 0x2BC391) : Color.gray.opacity(0.2), lineWidth: unlockMethod == "trueFocus" ? 2 : 1)
+                    )
+                    .foregroundColor(Color(hex: 0x184449))
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
     
     private var appRestrictionSection: some View {
         VStack(alignment: .leading) {

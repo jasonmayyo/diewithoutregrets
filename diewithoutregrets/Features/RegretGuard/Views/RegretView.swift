@@ -21,6 +21,7 @@ struct RegretView: View {
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
     @AppStorage("useAllCards") private var useAllCards: Bool = false
     @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
+    @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
     
     let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     
@@ -420,6 +421,7 @@ struct RegretView: View {
             let currentTime = Date().timeIntervalSince1970
             sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
             sharedDefaults?.set(true, forKey: "UserAllowedBreak")
+            sharedDefaults?.set(flashcardBreakDuration, forKey: "BreakDurationMinutes")
             sharedDefaults?.synchronize()
             
             if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
@@ -456,6 +458,7 @@ struct RegretView: View {
         case "reddit": return "reddit://"
         case "x": return "x://"
         case "safari": return "https://google.com"
+        case "clash royale": return "clashroyale://"
         default: return "instagram://"
         }
     }

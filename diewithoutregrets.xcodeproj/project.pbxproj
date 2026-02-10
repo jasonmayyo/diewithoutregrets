@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */; };
+		40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905822F3B73A000F8F5C0 /* GazeSignal.swift */; };
+		40E9058C2F3B73A000F8F5C0 /* FocusCalibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */; };
+		40E9058D2F3B73A000F8F5C0 /* FocusStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905812F3B73A000F8F5C0 /* FocusStateMachine.swift */; };
+		40E9058E2F3B73A000F8F5C0 /* FocusDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */; };
+		40E9058F2F3B73A000F8F5C0 /* FocusSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905802F3B73A000F8F5C0 /* FocusSignal.swift */; };
+		40E905902F3B73A000F8F5C0 /* FocusEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */; };
+		40E905912F3B73A000F8F5C0 /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905852F3B73A000F8F5C0 /* CameraPreviewView.swift */; };
+		40E905922F3B73A000F8F5C0 /* FocusSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905862F3B73A000F8F5C0 /* FocusSessionView.swift */; };
+		40E905932F3B73A000F8F5C0 /* PomodoroTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */; };
 		40EA4E8D2E6EEC99007E13C7 /* BuyBackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */; };
 		6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7242DA83BED00694451 /* LongTermResults.swift */; };
 		6B04F7272DA8599B00694451 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7262DA8599B00694451 /* RatingView.swift */; };
@@ -128,6 +138,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalibration.swift; sourceTree = "<group>"; };
+		40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusDetectionManager.swift; sourceTree = "<group>"; };
+		40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusEngine.swift; sourceTree = "<group>"; };
+		40E905802F3B73A000F8F5C0 /* FocusSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSignal.swift; sourceTree = "<group>"; };
+		40E905812F3B73A000F8F5C0 /* FocusStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStateMachine.swift; sourceTree = "<group>"; };
+		40E905822F3B73A000F8F5C0 /* GazeSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeSignal.swift; sourceTree = "<group>"; };
+		40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrictnessLevel.swift; sourceTree = "<group>"; };
+		40E905852F3B73A000F8F5C0 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
+		40E905862F3B73A000F8F5C0 /* FocusSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionView.swift; sourceTree = "<group>"; };
+		40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimer.swift; sourceTree = "<group>"; };
 		40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuyBackView.swift; sourceTree = "<group>"; };
 		6B04F7242DA83BED00694451 /* LongTermResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongTermResults.swift; sourceTree = "<group>"; };
 		6B04F7262DA8599B00694451 /* RatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingView.swift; sourceTree = "<group>"; };
@@ -231,6 +251,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		40E905842F3B73A000F8F5C0 /* Detection */ = {
+			isa = PBXGroup;
+			children = (
+				40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */,
+				40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */,
+				40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */,
+				40E905802F3B73A000F8F5C0 /* FocusSignal.swift */,
+				40E905812F3B73A000F8F5C0 /* FocusStateMachine.swift */,
+				40E905822F3B73A000F8F5C0 /* GazeSignal.swift */,
+				40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */,
+			);
+			path = Detection;
+			sourceTree = "<group>";
+		};
+		40E905882F3B73A000F8F5C0 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				40E905852F3B73A000F8F5C0 /* CameraPreviewView.swift */,
+				40E905862F3B73A000F8F5C0 /* FocusSessionView.swift */,
+				40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		40E905892F3B73A000F8F5C0 /* TrueFocus */ = {
+			isa = PBXGroup;
+			children = (
+				40E905842F3B73A000F8F5C0 /* Detection */,
+				40E905882F3B73A000F8F5C0 /* Views */,
+			);
+			path = TrueFocus;
+			sourceTree = "<group>";
+		};
 		6B22E8492D480412003A5685 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -256,6 +309,7 @@
 		6B22E84B2D480446003A5685 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				40E905892F3B73A000F8F5C0 /* TrueFocus */,
 				6B7CD4D72D509DFA0065A0F7 /* Onboarding */,
 				6B22E84D2D480488003A5685 /* RegretGuard */,
 				6B22E84C2D48045D003A5685 /* RegretReport */,
@@ -704,6 +758,16 @@
 				6B7CD4F02D50CBAA0065A0F7 /* RegretQuestionView.swift in Sources */,
 				6B22E8542D48CEB6003A5685 /* CustomColor.swift in Sources */,
 				6B22E85B2D48D155003A5685 /* RegretGuard.swift in Sources */,
+				40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */,
+				40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */,
+				40E9058C2F3B73A000F8F5C0 /* FocusCalibration.swift in Sources */,
+				40E9058D2F3B73A000F8F5C0 /* FocusStateMachine.swift in Sources */,
+				40E9058E2F3B73A000F8F5C0 /* FocusDetectionManager.swift in Sources */,
+				40E9058F2F3B73A000F8F5C0 /* FocusSignal.swift in Sources */,
+				40E905902F3B73A000F8F5C0 /* FocusEngine.swift in Sources */,
+				40E905912F3B73A000F8F5C0 /* CameraPreviewView.swift in Sources */,
+				40E905922F3B73A000F8F5C0 /* FocusSessionView.swift in Sources */,
+				40E905932F3B73A000F8F5C0 /* PomodoroTimer.swift in Sources */,
 				40EA4E8D2E6EEC99007E13C7 /* BuyBackView.swift in Sources */,
 				6B8D6B9B2D4CE14600753EB4 /* OpenGuardIntent.swift in Sources */,
 				6B22E8692D4A17A2003A5685 /* RegretViewModel.swift in Sources */,

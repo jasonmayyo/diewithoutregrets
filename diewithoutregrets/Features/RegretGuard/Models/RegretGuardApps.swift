@@ -112,6 +112,11 @@ extension RegretApp {
             iconName: "safari-icon",
             shortcutLink: URL(string: "https://www.icloud.com/shortcuts/b1074252da6148eda199e73109e7b0bc")!
         ),
+        RegretApp(
+            name: "Clash Royale",
+            iconName: "clashroyale-icon",
+            shortcutLink: URL(string: "https://www.icloud.com/shortcuts/7f73c8bd72ba4bb292d8b1736ce48da5")!
+        ),
     ]
 }
 

@@ -24,12 +24,15 @@ struct RegretGuardIntent: AppIntent {
     }
     
     func perform() async throws -> some IntentResult & ReturnsValue<Bool> {
-        let cooldownDuration: TimeInterval = 5 * 60 // 5 minutes
         let currentTime = Date().timeIntervalSince1970
         
         // Use shared UserDefaults
         let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
         let lastBreakTime = sharedDefaults?.double(forKey: "LastBreakTime") ?? 0
+        
+        // Read the user's chosen break duration (in minutes), default to 5 if not set
+        let breakDurationMinutes = sharedDefaults?.integer(forKey: "BreakDurationMinutes")
+        let cooldownDuration: TimeInterval = TimeInterval((breakDurationMinutes ?? 5) > 0 ? (breakDurationMinutes ?? 5) : 5) * 60
         
         print("RegretGuardIntent: Current time:", currentTime)
         print("RegretGuardIntent: Last break time:", lastBreakTime)

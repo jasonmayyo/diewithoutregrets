@@ -12,13 +12,25 @@ import RevenueCatUI
 struct ContentView: View {
     @State private var selectedTab = 0
     @EnvironmentObject var navigationModel: NavigationModel
+    @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
+    @AppStorage("focusDuration") private var focusDuration: Int = 5
     
     var body: some View {
         Group {
             if navigationModel.currentDestination == .regretView {
-                RegretView()
-                    .environmentObject(DeckStore.shared) 
-                    .environmentObject(RegretStore.shared)
+                if unlockMethod == "trueFocus" {
+                    FocusSessionView(
+                        durationMinutes: focusDuration,
+                        strictness: .standard,
+                        onEndSession: {
+                            NavigationModel.shared.navigate(to: .regretReport)
+                        }
+                    )
+                } else {
+                    RegretView()
+                        .environmentObject(DeckStore.shared)
+                        .environmentObject(RegretStore.shared)
+                }
             } else {
                 TabView(selection: $selectedTab) {
                     // First Tab - Guard
@@ -50,6 +62,17 @@ struct ContentView: View {
                         Label("Profile", systemImage: "person.fill")
                     }
                     .tag(2)
+                    
+                    #if DEBUG
+                    // Fourth Tab - Debug (only in debug builds)
+                    NavigationStack {
+                        DebugView()
+                    }
+                    .tabItem {
+                        Label("Debug", systemImage: "ant.fill")
+                    }
+                    .tag(3)
+                    #endif
                 }
                 .tint(Color(hex: 0x184449))
                 .onChange(of: selectedTab) {
@@ -74,7 +97,13 @@ struct ProfileView: View {
     @State private var currentOffering: Offering?
     @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
     @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
+    @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
+    @AppStorage("focusDuration") private var focusDuration: Int = 5
+    @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
+    @AppStorage("trueFocusBreakDuration") private var trueFocusBreakDuration: Int = 30
     @State private var didCompletePurchase = false
+    @State private var showingFocusDurationSettings = false
+    @State private var showingBreakDurationSettings = false
     
     private var totalAvailableCards: Int {
         deckStore.decks.reduce(0) { $0 + $1.cards.count }
@@ -103,14 +132,141 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     SectionHeader(title: "Study Settings")
                     
-                    Button(action: { showingFlashcardSettings = true }) {
+                    // Unlock Method Picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Unlock Method")
+                            .font(.headline)
+                            .foregroundColor(Color(hex: 0x184449))
+                        
+                        Text("How you unlock blocked apps")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 12) {
+                            // Flashcards option
+                            Button(action: {
+                                unlockMethod = "flashcards"
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "rectangle.stack.fill")
+                                        .font(.title2)
+                                    Text("Flashcards")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(unlockMethod == "flashcards"
+                                            ? Color(hex: 0x2BC391).opacity(0.15)
+                                            : Color.gray.opacity(0.08))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(unlockMethod == "flashcards"
+                                            ? Color(hex: 0x2BC391) : Color.clear, lineWidth: 2)
+                                )
+                                .foregroundColor(Color(hex: 0x184449))
+                            }
+                            
+                            // True Focus option
+                            Button(action: {
+                                unlockMethod = "trueFocus"
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "eye.fill")
+                                        .font(.title2)
+                                    Text("True Focus")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(unlockMethod == "trueFocus"
+                                            ? Color(hex: 0x2BC391).opacity(0.15)
+                                            : Color.gray.opacity(0.08))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(unlockMethod == "trueFocus"
+                                            ? Color(hex: 0x2BC391) : Color.clear, lineWidth: 2)
+                                )
+                                .foregroundColor(Color(hex: 0x184449))
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    
+                    // Flashcard count setting - only relevant when flashcards is selected
+                    if unlockMethod == "flashcards" {
+                        Button(action: { showingFlashcardSettings = true }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Flashcards before unlocking")
+                                        .font(.headline)
+                                        .foregroundColor(Color(hex: 0x184449))
+                                    
+                                    Text(useAllCards ? "All cards" : "\(flashcardCount) cards")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
+                    // Focus duration setting - only relevant when True Focus is selected
+                    if unlockMethod == "trueFocus" {
+                        Button(action: { showingFocusDurationSettings = true }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Focus session length")
+                                        .font(.headline)
+                                        .foregroundColor(Color(hex: 0x184449))
+                                    
+                                    Text("\(focusDuration) minutes")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                        }
+                    }
+                    
+                    // Break duration setting - shown for both methods
+                    Button(action: { showingBreakDurationSettings = true }) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Flashcards before unlocking")
+                                Text("Break duration")
                                     .font(.headline)
                                     .foregroundColor(Color(hex: 0x184449))
                                 
-                                Text(useAllCards ? "All cards" : "\(flashcardCount) cards")
+                                Text("\(unlockMethod == "trueFocus" ? trueFocusBreakDuration : flashcardBreakDuration) minutes")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
@@ -232,6 +388,23 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showingFlashcardSettings) {
             FlashcardSettingsSheet(flashcardCount: $flashcardCount, useAllCards: $useAllCards)
+                .presentationCornerRadius(30)
+                .presentationDetents([.fraction(0.8)])
+                .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showingFocusDurationSettings) {
+            FocusDurationSettingsSheet(focusDuration: $focusDuration)
+                .presentationCornerRadius(30)
+                .presentationDetents([.fraction(0.8)])
+                .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showingBreakDurationSettings) {
+            BreakDurationSettingsSheet(
+                breakDuration: unlockMethod == "trueFocus"
+                    ? $trueFocusBreakDuration
+                    : $flashcardBreakDuration,
+                unlockMethod: unlockMethod
+            )
                 .presentationCornerRadius(30)
                 .presentationDetents([.fraction(0.8)])
                 .presentationDragIndicator(.hidden)
@@ -501,6 +674,255 @@ struct FlashcardSettingsSheet: View {
         .presentationDragIndicator(.visible)
     }
 }
+
+struct FocusDurationSettingsSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var focusDuration: Int
+    
+    let options = [1, 3, 5, 10, 15, 20, 25, 30]
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(options, id: \.self) { minutes in
+                        Button(action: {
+                            focusDuration = minutes
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")")
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                if focusDuration == minutes {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(Color(hex: 0x184449))
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Select how long your True Focus session should be")
+                } footer: {
+                    Text("After completing a focus session, you'll earn a break to use the blocked app. You can set the break length separately.")
+                }
+            }
+            .navigationTitle("Focus Duration")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.height(UIScreen.main.bounds.height * 0.6)])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+struct BreakDurationSettingsSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var breakDuration: Int
+    let unlockMethod: String
+    
+    let options = [5, 10, 15, 20, 30, 45, 60]
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                // Explanation section
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(Color(hex: 0x3FA4AE))
+                            
+                            Text("How breaks work")
+                                .font(.headline)
+                                .foregroundColor(Color(hex: 0x184449))
+                        }
+                        
+                        Text("After you complete \(unlockMethod == "trueFocus" ? "a True Focus session" : "your flashcards"), your blocked app is unlocked and you can use it freely.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Once your break time is up, the app won't suddenly close or lock you out. Instead, the next time you try to open that app after the break has expired, you'll need to complete \(unlockMethod == "trueFocus" ? "another focus session" : "flashcards again") to unlock it.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(hex: 0x2BC391))
+                            
+                            Text("You're always in control — no sudden interruptions.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(Color(hex: 0x184449))
+                        }
+                        .padding(.top, 4)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                // Duration options
+                Section {
+                    ForEach(options, id: \.self) { minutes in
+                        Button(action: {
+                            breakDuration = minutes
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text(minutes >= 60 ? "\(minutes / 60) hour" : "\(minutes) minutes")
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                if breakDuration == minutes {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(Color(hex: 0x184449))
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Select your break length")
+                } footer: {
+                    Text("This is how long you can freely use the app before needing to \(unlockMethod == "trueFocus" ? "focus" : "study") again.")
+                }
+            }
+            .navigationTitle("Break Duration")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.height(UIScreen.main.bounds.height * 0.75)])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Debug View (only included in debug builds)
+
+#if DEBUG
+struct DebugView: View {
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+    @State private var lastAction: String = ""
+    @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
+
+    var body: some View {
+        List {
+            Section("Break / Unlock State") {
+                // Current values
+                VStack(alignment: .leading, spacing: 6) {
+                    debugRow("UserAllowedBreak", value: "\(sharedDefaults?.bool(forKey: "UserAllowedBreak") ?? false)")
+                    debugRow("LastBreakTime", value: formattedBreakTime)
+                    debugRow("BreakDurationMinutes", value: "\(sharedDefaults?.integer(forKey: "BreakDurationMinutes") ?? 0)")
+                    debugRow("LastGuardedApp", value: sharedDefaults?.string(forKey: "LastGuardedApp") ?? "none")
+                    debugRow("unlockMethod", value: unlockMethod)
+                }
+                .padding(.vertical, 4)
+
+                // Reset break button
+                Button(role: .destructive) {
+                    sharedDefaults?.set(false, forKey: "UserAllowedBreak")
+                    sharedDefaults?.removeObject(forKey: "LastBreakTime")
+                    sharedDefaults?.removeObject(forKey: "BreakDurationMinutes")
+                    sharedDefaults?.synchronize()
+                    lastAction = "Break state reset at \(Date().formatted(date: .omitted, time: .standard))"
+                } label: {
+                    Label("Reset Break State", systemImage: "arrow.counterclockwise")
+                }
+
+                // Set a fake guarded app for testing
+                Button {
+                    sharedDefaults?.set("Instagram", forKey: "LastGuardedApp")
+                    sharedDefaults?.synchronize()
+                    lastAction = "Set LastGuardedApp = Instagram"
+                } label: {
+                    Label("Set Guarded App to Instagram", systemImage: "app.badge")
+                }
+            }
+
+            Section("Trigger Flows") {
+                // Simulate the shortcut triggering the app
+                Button {
+                    sharedDefaults?.set("Instagram", forKey: "LastGuardedApp")
+                    sharedDefaults?.set(false, forKey: "UserAllowedBreak")
+                    sharedDefaults?.synchronize()
+                    NavigationModel.shared.navigate(to: .regretView)
+                    lastAction = "Triggered unlock flow (regretView)"
+                } label: {
+                    Label("Simulate Shortcut Trigger", systemImage: "play.fill")
+                        .foregroundColor(Color(hex: 0x2BC391))
+                }
+
+                // Quick switch unlock method
+                Button {
+                    unlockMethod = unlockMethod == "flashcards" ? "trueFocus" : "flashcards"
+                    lastAction = "Switched to \(unlockMethod)"
+                } label: {
+                    Label("Toggle Unlock Method (\(unlockMethod))", systemImage: "arrow.left.arrow.right")
+                }
+            }
+
+            Section("Navigation") {
+                Button {
+                    NavigationModel.shared.navigate(to: .regretReport)
+                    lastAction = "Navigated to regretReport"
+                } label: {
+                    Label("Go to Regret Report", systemImage: "doc.text")
+                }
+
+                Button {
+                    NavigationModel.shared.currentDestination = nil
+                    lastAction = "Reset navigation to home"
+                } label: {
+                    Label("Reset to Home", systemImage: "house")
+                }
+            }
+
+            if !lastAction.isEmpty {
+                Section("Last Action") {
+                    Text(lastAction)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .navigationTitle("Debug")
+    }
+
+    private var formattedBreakTime: String {
+        guard let timestamp = sharedDefaults?.double(forKey: "LastBreakTime"), timestamp > 0 else {
+            return "none"
+        }
+        let date = Date(timeIntervalSince1970: timestamp)
+        return date.formatted(date: .abbreviated, time: .standard)
+    }
+
+    private func debugRow(_ key: String, value: String) -> some View {
+        HStack {
+            Text(key)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(width: 140, alignment: .leading)
+            Text(value)
+                .font(.caption.monospaced())
+                .foregroundColor(Color(hex: 0x184449))
+        }
+    }
+}
+#endif
 
 #Preview {
     ContentView()
