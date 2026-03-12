@@ -40,6 +40,22 @@ enum FlashcardGenerationError: Error {
     }
 }
 
+enum InputSource: String, CaseIterable {
+    case pdf = "PDF"
+    case text = "Paste Text"
+    case youtube = "YouTube"
+    case quizlet = "Quizlet"
+    
+    var icon: String {
+        switch self {
+        case .pdf: return "doc.fill"
+        case .text: return "text.alignleft"
+        case .youtube: return "play.rectangle.fill"
+        case .quizlet: return "rectangle.stack.fill"
+        }
+    }
+}
+
 struct AutoGenerateFlashcardsSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var deck: Deck
@@ -66,6 +82,22 @@ struct AutoGenerateFlashcardsSheet: View {
     @State private var cardScale: CGFloat = 0.9
     @State private var cardOpacity: Double = 0.8
     @State private var meshOffset: CGFloat = 0
+    
+    // Input source selection
+    @State private var selectedSource: InputSource = .pdf
+    
+    // YouTube states
+    @State private var youtubeURL: String = ""
+    @State private var youtubeTranscript: String = ""
+    @State private var isFetchingTranscript = false
+    @State private var youtubeVideoTitle: String = ""
+    
+    // Quizlet states
+    @State private var quizletText: String = ""
+    @State private var selectedDelimiter: QuizletDelimiter = .tab
+    @State private var customDelimiter: String = ""
+    @State private var parsedPairs: [TermDefinitionPair] = []
+    @State private var useAIEnhanced: Bool = false
     
     // Gradient animation timer
     let timer = Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()
@@ -186,9 +218,20 @@ struct AutoGenerateFlashcardsSheet: View {
                         premiumFeatureBadge
                             .padding(.top, 10)
                         
-                        documentUploadSection
+                        inputSourceSelector
                         
-                        if !pdfExtractedText.isEmpty || !inputText.isEmpty {
+                        switch selectedSource {
+                        case .pdf:
+                            documentUploadSection
+                        case .text:
+                            textInputSection
+                        case .youtube:
+                            youtubeInputSection
+                        case .quizlet:
+                            quizletInputSection
+                        }
+                        
+                        if (selectedSource == .pdf || selectedSource == .text) && (!pdfExtractedText.isEmpty || !inputText.isEmpty) {
                             contentPreviewSection
                         }
                         
@@ -200,9 +243,15 @@ struct AutoGenerateFlashcardsSheet: View {
                             processingStatusView
                         }
                         
-                        languagePickerSection
+                        if selectedSource != .quizlet || useAIEnhanced {
+                            languagePickerSection
+                        }
                         
-                        generateButton
+                        if selectedSource == .quizlet && !useAIEnhanced {
+                            quizletDirectImportButton
+                        } else {
+                            generateButton
+                        }
                         
                         Spacer(minLength: 50)
                     }
@@ -289,6 +338,56 @@ struct AutoGenerateFlashcardsSheet: View {
         .opacity(cardOpacity)
     }
     
+    // MARK: - Input Source Selector
+    
+    var inputSourceSelector: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(InputSource.allCases, id: \.self) { source in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            selectedSource = source
+                            errorMessage = nil
+                            currentError = nil
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: source.icon)
+                                .font(.system(size: 14, weight: .medium))
+                            Text(source.rawValue)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            selectedSource == source
+                                ? AnyShapeStyle(primaryGradient)
+                                : AnyShapeStyle(Color.white)
+                        )
+                        .foregroundColor(selectedSource == source ? .white : Color(hex: 0x184449))
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule()
+                                .stroke(
+                                    selectedSource == source
+                                        ? Color.clear
+                                        : Color(hex: 0x3FA4AE).opacity(0.3),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(
+                            color: selectedSource == source ? Color(hex: 0x3FA4AE).opacity(0.3) : Color.clear,
+                            radius: 8, x: 0, y: 4
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .padding(.vertical, 4)
+    }
+    
     var documentUploadSection: some View {
         VStack(spacing: 16) {
             if currentPDFData == nil {
@@ -329,7 +428,7 @@ struct AutoGenerateFlashcardsSheet: View {
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: 0x184449))
                         
-                        Text("or paste text below")
+                        Text("Select a PDF file (up to 50 pages)")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -345,143 +444,126 @@ struct AutoGenerateFlashcardsSheet: View {
                     }
                 }
             }
-            
-            // Enhanced divider
-            HStack {
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(Color(hex: 0x3FA4AE).opacity(0.2))
-                
-                Text("OR")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(Color(hex: 0x184449))
-                    .padding(.horizontal, 16)
-                
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(Color(hex: 0x3FA4AE).opacity(0.2))
+        }
+        .padding(24)
+        .background(
+            ZStack {
+                Color.white
+                Color(hex: 0x3FA4AE).opacity(0.02)
             }
-            
-            // Enhanced text input
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Paste your text")
-                        .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Text Input Section
+    
+    var textInputSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Paste your text")
+                    .font(.headline)
+                    .foregroundColor(Color(hex: 0x184449))
+                
+                Spacer()
+                
+                HStack(spacing: 8) {
+                    let stats = getTextStats(inputText)
                     
-                    Spacer()
-                    
-                    // Character count and validation status
-                    HStack(spacing: 8) {
-                        let stats = getTextStats(inputText)
-                        
-                        if !inputText.isEmpty {
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Text("\(stats.characters) characters")
-                                    .font(.caption2)
-                                    .foregroundColor(stats.characters < 50 ? .orange : stats.characters > 100000 ? .red : .secondary)
-                                
-                                Text("\(stats.words) words")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
+                    if !inputText.isEmpty {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(stats.characters) characters")
+                                .font(.caption2)
+                                .foregroundColor(stats.characters < 50 ? .orange : stats.characters > 100000 ? .red : .secondary)
                             
-                            // Validation indicator
-                            if let validationError = validateTextInput(inputText) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            } else if inputText.count >= 50 {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
+                            Text("\(stats.words) words")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if let _ = validateTextInput(inputText) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        } else if inputText.count >= 50 {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
                         }
                     }
                 }
-                
-                TextEditor(text: $inputText)
-                    .frame(height: 150)
-                    .padding(12)
-                    .background(Color.white)
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: 0x3FA4AE).opacity(inputText.isEmpty ? 0.2 : 0.5),
-                                        Color(hex: 0x2BC391).opacity(inputText.isEmpty ? 0.2 : 0.5)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: inputText.isEmpty ? 1 : 2
-                            )
-                    )
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                
-                // Validation warning message
-                if !inputText.isEmpty, let validationError = validateTextInput(inputText) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                        
-                        Text(validationError.userMessage)
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.horizontal, 4)
+            }
+            
+            TextEditor(text: $inputText)
+                .frame(height: 180)
+                .padding(12)
+                .background(Color.white)
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: 0x3FA4AE).opacity(inputText.isEmpty ? 0.2 : 0.5),
+                                    Color(hex: 0x2BC391).opacity(inputText.isEmpty ? 0.2 : 0.5)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: inputText.isEmpty ? 1 : 2
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+            
+            if !inputText.isEmpty, let validationError = validateTextInput(inputText) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    
+                    Text(validationError.userMessage)
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                
-                // Helpful tips for users
-                if inputText.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("💡 Tips for best results:")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(Color(hex: 0x184449))
-                        
-                        Text("• Paste educational content (textbook, notes, articles)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        Text("• Include at least 50 characters for meaningful flashcards")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        Text("• AI automatically detects language (supports 20+ languages)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        Text("• Limit to 25,000 words for optimal processing")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 4)
+                .padding(.horizontal, 4)
+            }
+            
+            if inputText.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Tips for best results:")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    Text("• Paste educational content (textbook, notes, articles)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("• Include at least 50 characters for meaningful flashcards")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("• Limit to 25,000 words for optimal processing")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
+                .padding(.top, 4)
             }
         }
         .padding(24)
         .background(
             ZStack {
                 Color.white
-                
-                // Subtle pattern overlay
-                Color(hex: 0x3FA4AE)
-                    .opacity(0.02)
+                Color(hex: 0x3FA4AE).opacity(0.02)
             }
         )
         .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(
-            color: Color.black.opacity(0.1),
-            radius: 20,
-            x: 0,
-            y: 10
-        )
+        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         .overlay(
             RoundedRectangle(cornerRadius: 24)
                 .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
@@ -563,6 +645,473 @@ struct AutoGenerateFlashcardsSheet: View {
             RoundedRectangle(cornerRadius: 24)
                 .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
         )
+    }
+    
+    // MARK: - YouTube Input Section
+    
+    var youtubeInputSection: some View {
+        VStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "play.rectangle.fill")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(Color(hex: 0x184449))
+                    Text("YouTube Video URL")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: 0x184449))
+                }
+                
+                HStack(spacing: 12) {
+                    TextField("Paste YouTube link here...", text: $youtubeURL)
+                        .textFieldStyle(.plain)
+                        .padding(12)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(hex: 0x3FA4AE).opacity(youtubeURL.isEmpty ? 0.2 : 0.5),
+                                            Color(hex: 0x2BC391).opacity(youtubeURL.isEmpty ? 0.2 : 0.5)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: youtubeURL.isEmpty ? 1 : 2
+                                )
+                        )
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                    
+                    Button {
+                        fetchYouTubeTranscript()
+                    } label: {
+                        Group {
+                            if isFetchingTranscript {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                        }
+                        .frame(width: 44, height: 44)
+                        .background(
+                            YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) != nil
+                                ? primaryGradient
+                                : grayGradient
+                        )
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) == nil || isFetchingTranscript)
+                }
+            }
+            
+            if !youtubeTranscript.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.green)
+                        Text("Transcript loaded")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: 0x184449))
+                        
+                        Spacer()
+                        
+                        Text("\(getTextStats(youtubeTranscript).words) words")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Button {
+                            youtubeTranscript = ""
+                            inputText = ""
+                            youtubeURL = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        }
+                    }
+                    
+                    ScrollView {
+                        Text(youtubeTranscript)
+                            .font(.system(.caption, design: .serif))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                    }
+                    .frame(height: 100)
+                    .background(Color(hex: 0x184449).opacity(0.05))
+                    .cornerRadius(12)
+                }
+            }
+            
+            if youtubeTranscript.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("How it works:")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    Text("1. Paste a YouTube video URL above")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("2. Tap the download button to fetch the transcript")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("3. AI will generate flashcards from the video content")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.caption2)
+                        Text("If auto-fetch fails, copy the transcript from YouTube (... > Show transcript) and use the Paste Text tab.")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(24)
+        .background(
+            ZStack {
+                Color.white
+                Color(hex: 0x3FA4AE).opacity(0.02)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Quizlet Input Section
+    
+    var quizletInputSection: some View {
+        VStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "rectangle.stack.fill")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(Color(hex: 0x184449))
+                    Text("Import from Quizlet")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: 0x184449))
+                }
+                
+                Text("Paste your exported Quizlet flashcards below")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            TextEditor(text: $quizletText)
+                .frame(height: 150)
+                .padding(12)
+                .background(Color.white)
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: 0x3FA4AE).opacity(quizletText.isEmpty ? 0.2 : 0.5),
+                                    Color(hex: 0x2BC391).opacity(quizletText.isEmpty ? 0.2 : 0.5)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: quizletText.isEmpty ? 1 : 2
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                .onChange(of: quizletText) { _ in
+                    parseQuizletInput()
+                }
+            
+            // Delimiter selector
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Delimiter")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color(hex: 0x184449))
+                
+                HStack(spacing: 8) {
+                    ForEach(QuizletDelimiter.allCases.filter { $0 != .custom }, id: \.self) { delimiter in
+                        Button {
+                            selectedDelimiter = delimiter
+                            parseQuizletInput()
+                        } label: {
+                            Text(delimiter.rawValue)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(
+                                    selectedDelimiter == delimiter
+                                        ? AnyShapeStyle(primaryGradient)
+                                        : AnyShapeStyle(Color.white)
+                                )
+                                .foregroundColor(selectedDelimiter == delimiter ? .white : Color(hex: 0x184449))
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .stroke(
+                                            selectedDelimiter == delimiter
+                                                ? Color.clear
+                                                : Color(hex: 0x3FA4AE).opacity(0.3),
+                                            lineWidth: 1
+                                        )
+                                )
+                        }
+                    }
+                    
+                    Button {
+                        selectedDelimiter = .custom
+                    } label: {
+                        Text("Custom")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                selectedDelimiter == .custom
+                                    ? AnyShapeStyle(primaryGradient)
+                                    : AnyShapeStyle(Color.white)
+                            )
+                            .foregroundColor(selectedDelimiter == .custom ? .white : Color(hex: 0x184449))
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        selectedDelimiter == .custom
+                                            ? Color.clear
+                                            : Color(hex: 0x3FA4AE).opacity(0.3),
+                                        lineWidth: 1
+                                    )
+                            )
+                    }
+                }
+                
+                if selectedDelimiter == .custom {
+                    TextField("Enter custom delimiter", text: $customDelimiter)
+                        .textFieldStyle(.plain)
+                        .padding(10)
+                        .background(Color.white)
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color(hex: 0x3FA4AE).opacity(0.3), lineWidth: 1)
+                        )
+                        .onChange(of: customDelimiter) { _ in
+                            parseQuizletInput()
+                        }
+                }
+            }
+            
+            // Parsed cards preview
+            if !parsedPairs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.green)
+                        Text("\(parsedPairs.count) cards detected")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(hex: 0x184449))
+                    }
+                    
+                    ScrollView {
+                        VStack(spacing: 8) {
+                            ForEach(parsedPairs.prefix(5)) { pair in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text(pair.term)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color(hex: 0x184449))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    Rectangle()
+                                        .fill(Color(hex: 0x3FA4AE).opacity(0.3))
+                                        .frame(width: 1)
+                                    
+                                    Text(pair.definition)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .padding(10)
+                                .background(Color(hex: 0x184449).opacity(0.03))
+                                .cornerRadius(8)
+                            }
+                            
+                            if parsedPairs.count > 5 {
+                                Text("+ \(parsedPairs.count - 5) more cards")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 4)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 200)
+                }
+            }
+            
+            // Import mode toggle
+            if !parsedPairs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Import Mode")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    HStack(spacing: 0) {
+                        Button {
+                            useAIEnhanced = false
+                        } label: {
+                            Text("Direct Import")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    !useAIEnhanced
+                                        ? AnyShapeStyle(primaryGradient)
+                                        : AnyShapeStyle(Color.white)
+                                )
+                                .foregroundColor(!useAIEnhanced ? .white : Color(hex: 0x184449))
+                        }
+                        
+                        Button {
+                            useAIEnhanced = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 12))
+                                Text("AI Enhanced")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                useAIEnhanced
+                                    ? AnyShapeStyle(primaryGradient)
+                                    : AnyShapeStyle(Color.white)
+                            )
+                            .foregroundColor(useAIEnhanced ? .white : Color(hex: 0x184449))
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(hex: 0x3FA4AE).opacity(0.3), lineWidth: 1)
+                    )
+                    
+                    Text(useAIEnhanced
+                         ? "AI will generate diverse multiple-choice questions from your terms"
+                         : "Creates flashcards directly using other definitions as answer choices")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    if !useAIEnhanced && parsedPairs.count < 4 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            Text("Direct import requires at least 4 cards. Add more or use AI Enhanced mode.")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+            }
+            
+            if quizletText.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("How to export from Quizlet:")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    Text("1. Open your Quizlet set in a browser")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("2. Click '...' (More) > Export")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("3. Copy the exported text and paste it above")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(24)
+        .background(
+            ZStack {
+                Color.white
+                Color(hex: 0x3FA4AE).opacity(0.02)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Quizlet Direct Import Button
+    
+    var quizletDirectImportButton: some View {
+        let isDisabled = parsedPairs.count < 4 || processingStep != .idle
+        
+        return Button {
+            performQuizletDirectImport()
+        } label: {
+            HStack {
+                Spacer()
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 16, weight: .medium))
+                    Text("Import \(parsedPairs.count) Flashcards")
+                        .fontWeight(.semibold)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isDisabled ? grayGradient : primaryGradient)
+            )
+            .foregroundColor(.white)
+            .font(.headline)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(
+                color: isDisabled ? Color.gray.opacity(0.2) : Color(hex: 0x3FA4AE).opacity(0.3),
+                radius: 15, x: 0, y: 8
+            )
+        }
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.6 : 1.0)
     }
     
     var contentPreviewSection: some View {
@@ -774,7 +1323,10 @@ struct AutoGenerateFlashcardsSheet: View {
     }
     
     var generateButton: some View {
-        let currentText = inputText.isEmpty ? pdfExtractedText : inputText
+        let quizletAIReady = selectedSource == .quizlet && useAIEnhanced && !parsedPairs.isEmpty
+        let currentText = quizletAIReady
+            ? QuizletImportService.shared.formatForAI(pairs: parsedPairs)
+            : (inputText.isEmpty ? pdfExtractedText : inputText)
         let hasValidText = !currentText.isEmpty && validateTextInput(currentText) == nil
         let isDisabled = processingStep != .idle || !hasValidText
         
@@ -832,6 +1384,9 @@ struct AutoGenerateFlashcardsSheet: View {
     }
     
     private func checkAuthAndGenerate() {
+        if selectedSource == .quizlet && useAIEnhanced && !parsedPairs.isEmpty {
+            inputText = QuizletImportService.shared.formatForAI(pairs: parsedPairs)
+        }
         generateFlashcards()
     }
     
@@ -1094,6 +1649,67 @@ struct AutoGenerateFlashcardsSheet: View {
         errorMessage = nil
         processingStep = .idle
         processingProgress = 0
+        youtubeURL = ""
+        youtubeTranscript = ""
+        isFetchingTranscript = false
+        quizletText = ""
+        parsedPairs = []
+    }
+    
+    // MARK: - YouTube Helpers
+    
+    private func fetchYouTubeTranscript() {
+        guard let videoID = YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) else {
+            errorMessage = YouTubeTranscriptError.invalidURL.userMessage
+            return
+        }
+        
+        isFetchingTranscript = true
+        errorMessage = nil
+        
+        YouTubeTranscriptService.shared.fetchTranscript(videoID: videoID) { [self] result in
+            isFetchingTranscript = false
+            
+            switch result {
+            case .success(let transcript):
+                youtubeTranscript = transcript
+                inputText = transcript
+                errorMessage = nil
+            case .failure(let error):
+                errorMessage = error.userMessage
+                youtubeTranscript = ""
+            }
+        }
+    }
+    
+    // MARK: - Quizlet Helpers
+    
+    private func parseQuizletInput() {
+        let delimiter: String
+        if selectedDelimiter == .custom {
+            guard !customDelimiter.isEmpty else {
+                parsedPairs = []
+                return
+            }
+            delimiter = customDelimiter
+        } else {
+            delimiter = selectedDelimiter.character
+        }
+        
+        parsedPairs = QuizletImportService.shared.parseExport(text: quizletText, delimiter: delimiter)
+    }
+    
+    private func performQuizletDirectImport() {
+        let result = QuizletImportService.shared.buildFlashcardsDirectly(from: parsedPairs)
+        
+        switch result {
+        case .success(let flashcards):
+            deck.cards.append(contentsOf: flashcards)
+            deckStore.updateDeck(deck)
+            dismiss()
+        case .failure(let error):
+            errorMessage = error.userMessage
+        }
     }
     
     private func checkPDFSize(_ pdfData: Data) -> Bool {

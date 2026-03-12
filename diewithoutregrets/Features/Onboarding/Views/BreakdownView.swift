@@ -1,22 +1,14 @@
-//
-//  BreakdownView.swift
-//  diewithoutregrets
-//
-//  Created by Jason Mayo on 2025/02/03.
-//
-
 import SwiftUI
 
 struct BreakdownView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     
-    // State variables to control the opacity and offset of each element
     @State private var showTitle = false
     @State private var showSubtitle = false
     @State private var showTabView = false
+    @State private var showQuestion = false
     @State private var showButton = false
     
-    // MARK: - Calculated Values
     private var lifetimeYears: Int {
         calculateLifetimeYears()
     }
@@ -26,108 +18,107 @@ struct BreakdownView: View {
     }
     
     var body: some View {
-        ZStack {
-            Color(hex: 0x184449)
-                .ignoresSafeArea()
-                .accessibilityHidden(true) // Hide decorative background color
-            
-            VStack(alignment: .leading, spacing: 3) {
-                // Title with animation
-                Text("Here is the deal, \(onboardingViewModel.userName)!")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .bold()
-                    .opacity(showTitle ? 1 : 0)
-                    .offset(y: showTitle ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.2), value: showTitle)
-                    .accessibilityLabel("Here is the deal, \(onboardingViewModel.userName)!")
+        GeometryReader { geometry in
+            ZStack {
+                Color.white
+                    .ignoresSafeArea()
                 
-                // Subtitle with animation
-                Text("Based on what you have told us, we estimate you will spend...")
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 25)
-                    .opacity(showSubtitle ? 1 : 0)
-                    .offset(y: showSubtitle ? 0 : 20)
-                    .animation(.easeInOut(duration: 1).delay(0.4), value: showSubtitle)
-                    .accessibilityLabel("Based on what you have told us, we estimate you will spend...")
-                
-                Spacer()
-                
-                // TabView with animation
-                TabView {
-                    // Lifetime Estimate
-                    VStack(alignment: .center, spacing: 0) {
-                        Text("\(lifetimeYears.formattedWithCommas) YEARS")
-                            .font(.system(size: 72, weight: .black))
-                            .foregroundColor(.white)
-                            .shadow(color: .white.opacity(0.8), radius: 10, x: 0, y: 0)
-                            .accessibilityLabel("\(lifetimeYears.formattedWithCommas) years on your phone")
-                        
-                        Text("ON YOUR PHONE!")
-                            .font(.system(size: 40, weight: .black))
-                            .foregroundColor(.white.opacity(0.7))
-                            .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
-                            .accessibilityHidden(true) // Hide decorative text
-                    }
-                    .background(Color(hex: 0x184449))
-                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Here's the truth, \(onboardingViewModel.userName).")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color(hex: 0x184449))
+                        .opacity(showTitle ? 1 : 0)
+                        .offset(y: showTitle ? 0 : 20)
+                        .animation(.easeOut(duration: 0.8).delay(0.2), value: showTitle)
                     
-                    // Annual Estimate
-                    VStack {
-                        Text("\(annualDays.formattedWithCommas) DAYS")
-                            .font(.system(size: 72, weight: .black))
-                            .foregroundColor(.white)
-                            .shadow(color: .white.opacity(0.8), radius: 10, x: 0, y: 0)
-                            .accessibilityLabel("\(annualDays.formattedWithCommas) days this year alone")
+                    Text("Based on what you told us...")
+                        .font(.system(size: 16))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                        .padding(.bottom, 25)
+                        .opacity(showSubtitle ? 1 : 0)
+                        .offset(y: showSubtitle ? 0 : 20)
+                        .animation(.easeOut(duration: 0.8).delay(0.4), value: showSubtitle)
+                    
+                    Spacer()
+                    
+                    TabView {
+                        VStack(spacing: 8) {
+                            Text("\(lifetimeYears.formattedWithCommas)")
+                                .font(.system(size: 80, weight: .black))
+                                .foregroundColor(Color(hex: 0x184449))
+                            
+                            Text("YEARS")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.35))
+                                .tracking(6)
+                            
+                            Text("on your phone. In your lifetime.")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                                .padding(.top, 8)
+                        }
                         
-                        Text("THIS YEAR ALONE!")
-                            .font(.system(size: 38, weight: .black))
-                            .foregroundColor(.white.opacity(0.7))
-                            .shadow(color: .white.opacity(0.3), radius: 5, x: 0, y: 0)
-                            .accessibilityHidden(true) // Hide decorative text
+                        VStack(spacing: 8) {
+                            Text("\(annualDays.formattedWithCommas)")
+                                .font(.system(size: 80, weight: .black))
+                                .foregroundColor(Color(hex: 0x184449))
+                            
+                            Text("DAYS")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.35))
+                                .tracking(6)
+                            
+                            Text("this year alone.")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                                .padding(.top, 8)
+                        }
                     }
-                    .accessibilityElement(children: .combine) // Combine text for VoiceOver
+                    .tabViewStyle(PageTabViewStyle())
+                    .opacity(showTabView ? 1 : 0)
+                    .offset(y: showTabView ? 0 : 20)
+                    .animation(.easeOut(duration: 1.0).delay(0.6), value: showTabView)
+                    
+                    Spacer()
+                    
+                    Text("What could you do with that time?")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.35))
+                        .italic()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .opacity(showQuestion ? 1 : 0)
+                        .animation(.easeOut(duration: 0.8).delay(1.4), value: showQuestion)
+                        .padding(.bottom, 16)
+                    
+                    Button(action: {
+                        onboardingViewModel.nextStep()
+                    }) {
+                        Text("Continue")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.5 : .infinity)
+                            .frame(height: 55)
+                            .background(Color(hex: 0x184449))
+                            .cornerRadius(50)
+                    }
+                    .opacity(showButton ? 1 : 0)
+                    .offset(y: showButton ? 0 : 20)
+                    .animation(.easeOut(duration: 0.8).delay(1.0), value: showButton)
                 }
-                .tabViewStyle(PageTabViewStyle())
-                .opacity(showTabView ? 1 : 0)
-                .offset(y: showTabView ? 0 : 20)
-                .animation(.easeInOut(duration: 1).delay(0.6), value: showTabView)
-                .accessibilityLabel("Time spent on your phone")
-                
-                Spacer()
-                
-                // Next button with animation
-                Button(action: {
-                    onboardingViewModel.nextStep()
-                }) {
-                    Text("Next")
-                        .foregroundColor(.black)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(Color.white)
-                        .cornerRadius(50)
-                }
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 20)
-                .animation(.easeInOut(duration: 1).delay(0.8), value: showButton)
-                .accessibilityLabel("Next")
-                .accessibilityHint("Tap to proceed to the next step")
-                .accessibilityAddTraits(.isButton)
+                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
             }
-            .padding()
         }
         .onAppear {
-            // Trigger the animations when the view appears
             showTitle = true
             showSubtitle = true
             showTabView = true
+            showQuestion = true
             showButton = true
         }
     }
     
-    // MARK: - Calculation Methods
     private func calculateLifetimeYears() -> Int {
         let lifeExpectancy = 90.0
         let currentAge = parseAge(onboardingViewModel.selectedAge)
@@ -160,7 +151,6 @@ struct BreakdownView: View {
     }
 }
 
-// MARK: - Formatting Extension
 extension Int {
     var formattedWithCommas: String {
         let formatter = NumberFormatter()

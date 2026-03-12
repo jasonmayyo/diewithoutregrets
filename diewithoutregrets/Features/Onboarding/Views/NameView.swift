@@ -12,7 +12,6 @@ struct NameView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     @FocusState private var isNameFieldFocused: Bool
     
-    // Animation states
     @State private var showTitle = false
     @State private var showSubtitle = false
     @State private var showTextField = false
@@ -23,70 +22,74 @@ struct NameView: View {
     }
     
     var body: some View {
-        ZStack {
-            Color(hex: 0x184449)
-                .ignoresSafeArea()
-            
-            VStack(alignment: .leading, spacing: 20) {
-                // Title
-                Text("What should we call you?")
-                    .font(.title2)
-                    .bold()
-                    .foregroundColor(.white)
-                    .opacity(showTitle ? 1 : 0)
-                    .offset(y: showTitle ? 0 : 20)
+        GeometryReader { geometry in
+            ZStack {
+                Color.white
+                    .ignoresSafeArea()
                 
-                // Subtitle
-                Text("What's your name? Or what's the name your mom calls you when she is mad at you?")
-                    .font(.subheadline)
-                    .foregroundColor(Color.white.opacity(0.9))
-                    .opacity(showSubtitle ? 1 : 0)
-                    .offset(y: showSubtitle ? 0 : 20)
-                
-                // Text Field
-                TextField("", text: $name)
-                    .focused($isNameFieldFocused)
-                    .placeholder(when: name.isEmpty) {
-                        Text("Enter your name")
-                            .foregroundColor(Color.white.opacity(0.5))
-                    }
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 50)
-                            .fill(Color.white.opacity(0.2))
-                    )
-                    .autocorrectionDisabled()
-                    .autocapitalization(.words)
-                    .submitLabel(.done)
-                    .opacity(showTextField ? 1 : 0)
-                    .offset(y: showTextField ? 0 : 20)
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                            isNameFieldFocused = true
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("What should we call you?")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color(hex: 0x184449))
+                        .opacity(showTitle ? 1 : 0)
+                        .offset(y: showTitle ? 0 : 20)
+                    
+                    Text("We'll use this to personalise your experience.")
+                        .font(.system(size: 16))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        .opacity(showSubtitle ? 1 : 0)
+                        .offset(y: showSubtitle ? 0 : 20)
+                    
+                    TextField("", text: $name)
+                        .focused($isNameFieldFocused)
+                        .placeholder(when: name.isEmpty) {
+                            Text("Enter your name")
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.35))
                         }
+                        .font(.system(size: 16))
+                        .foregroundColor(Color(hex: 0x184449))
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color(hex: 0xF5F7FA))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(name.isEmpty ? Color.gray.opacity(0.2) : Color(hex: 0x184449).opacity(0.3), lineWidth: 1.5)
+                        )
+                        .autocorrectionDisabled()
+                        .autocapitalization(.words)
+                        .submitLabel(.done)
+                        .opacity(showTextField ? 1 : 0)
+                        .offset(y: showTextField ? 0 : 20)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                isNameFieldFocused = true
+                            }
+                        }
+                    
+                    Spacer()
+                    
+                    Button {
+                        onboardingViewModel.userName = name.trimmingCharacters(in: .whitespaces)
+                        onboardingViewModel.nextStep()
+                    } label: {
+                        Text("Continue")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.6 : .infinity)
+                            .frame(height: 55)
+                            .background(canContinue ? Color(hex: 0x184449) : Color(hex: 0x184449).opacity(0.3))
+                            .cornerRadius(50)
                     }
-                
-                Spacer()
-                
-                // Continue Button
-                Button {
-                    onboardingViewModel.userName = name.trimmingCharacters(in: .whitespaces)
-                    onboardingViewModel.nextStep()
-                } label: {
-                    Text("Continue")
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(Color.white)
-                        .clipShape(Capsule())
+                    .disabled(!canContinue)
+                    .opacity(showButton ? 1 : 0)
+                    .offset(y: showButton ? 0 : 20)
                 }
-                .disabled(!canContinue)
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 20)
+                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 20)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
             }
-            .padding()
         }
         .onAppear {
             animateViews()

@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1C7C7564E40CE32E7EEE41D7 /* QuizletImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A44E4579757FFA9816BECB /* QuizletImportService.swift */; };
+		40738F352F62B56A0085DF60 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = C0A200022F61000000000011 /* Lottie */; };
+		40738F372F62BB6A0085DF60 /* hourglass.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 40738F362F62BB6A0085DF60 /* hourglass.lottie */; };
+		407C18352F62D1B700A932E5 /* sademotion.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 407C18342F62D1B700A932E5 /* sademotion.lottie */; };
+		407C18372F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
+		407C18382F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
+		407C18392F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
+		407C183B2F62DFC500A932E5 /* UnlockMethodChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */; };
 		40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */; };
 		40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905822F3B73A000F8F5C0 /* GazeSignal.swift */; };
 		40E9058C2F3B73A000F8F5C0 /* FocusCalibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */; };
@@ -18,6 +26,7 @@
 		40E905922F3B73A000F8F5C0 /* FocusSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905862F3B73A000F8F5C0 /* FocusSessionView.swift */; };
 		40E905932F3B73A000F8F5C0 /* PomodoroTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */; };
 		40EA4E8D2E6EEC99007E13C7 /* BuyBackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */; };
+		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
 		6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7242DA83BED00694451 /* LongTermResults.swift */; };
 		6B04F7272DA8599B00694451 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7262DA8599B00694451 /* RatingView.swift */; };
 		6B04F7292DA85EAD00694451 /* StudyTwiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */; };
@@ -103,6 +112,15 @@
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
+		C0A100012F61000100000001 /* TheHookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100012F61000000000001 /* TheHookView.swift */; };
+		C0A100022F61000100000002 /* TheFeelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100022F61000000000002 /* TheFeelingView.swift */; };
+		C0A100032F61000100000003 /* TheObstacleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100032F61000000000003 /* TheObstacleView.swift */; };
+		C0A100042F61000100000004 /* ScreenTimeStudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100042F61000000000004 /* ScreenTimeStudyView.swift */; };
+		C0A100052F61000100000005 /* YourScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100052F61000000000005 /* YourScreenTimeView.swift */; };
+		C0A100062F61000100000006 /* ProcrastinationStudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100062F61000000000006 /* ProcrastinationStudyView.swift */; };
+		C0A100072F61000100000007 /* HowItWorksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100072F61000000000007 /* HowItWorksView.swift */; };
+		C0A100082F61000100000008 /* FirstDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100082F61000000000008 /* FirstDeckView.swift */; };
+		C0A100092F61000100000009 /* LottieAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100092F61000000000009 /* LottieAnimationView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +156,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		02A44E4579757FFA9816BECB /* QuizletImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizletImportService.swift; sourceTree = "<group>"; };
+		40738F362F62BB6A0085DF60 /* hourglass.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = hourglass.lottie; sourceTree = "<group>"; };
+		407C18342F62D1B700A932E5 /* sademotion.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = sademotion.lottie; sourceTree = "<group>"; };
+		407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "shortcut-setup-tutorial.MP4"; sourceTree = "<group>"; };
+		407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockMethodChoiceView.swift; sourceTree = "<group>"; };
 		40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalibration.swift; sourceTree = "<group>"; };
 		40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusDetectionManager.swift; sourceTree = "<group>"; };
 		40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusEngine.swift; sourceTree = "<group>"; };
@@ -219,6 +242,16 @@
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
+		ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTranscriptService.swift; sourceTree = "<group>"; };
+		C0A100012F61000000000001 /* TheHookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheHookView.swift; sourceTree = "<group>"; };
+		C0A100022F61000000000002 /* TheFeelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheFeelingView.swift; sourceTree = "<group>"; };
+		C0A100032F61000000000003 /* TheObstacleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheObstacleView.swift; sourceTree = "<group>"; };
+		C0A100042F61000000000004 /* ScreenTimeStudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeStudyView.swift; sourceTree = "<group>"; };
+		C0A100052F61000000000005 /* YourScreenTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YourScreenTimeView.swift; sourceTree = "<group>"; };
+		C0A100062F61000000000006 /* ProcrastinationStudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcrastinationStudyView.swift; sourceTree = "<group>"; };
+		C0A100072F61000000000007 /* HowItWorksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowItWorksView.swift; sourceTree = "<group>"; };
+		C0A100082F61000000000008 /* FirstDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstDeckView.swift; sourceTree = "<group>"; };
+		C0A100092F61000000000009 /* LottieAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieAnimationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +273,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40738F352F62B56A0085DF60 /* Lottie in Frameworks */,
 				6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */,
 				6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */,
 				6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */,
@@ -251,6 +285,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		23F899D2033A6A2B75049EE5 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */,
+				02A44E4579757FFA9816BECB /* QuizletImportService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		40E905842F3B73A000F8F5C0 /* Detection */ = {
 			isa = PBXGroup;
 			children = (
@@ -333,6 +376,7 @@
 				6B22E8502D480528003A5685 /* ViewModels */,
 				6B22E84F2D480523003A5685 /* Models */,
 				6B22E84E2D480517003A5685 /* Views */,
+				23F899D2033A6A2B75049EE5 /* Services */,
 			);
 			path = RegretGuard;
 			sourceTree = "<group>";
@@ -436,26 +480,36 @@
 		6B7CD4D82D509E040065A0F7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */,
-				6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */,
-				6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */,
-				6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */,
-				6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */,
+				407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */,
+				C0A100012F61000000000001 /* TheHookView.swift */,
+				C0A100022F61000000000002 /* TheFeelingView.swift */,
+				C0A100032F61000000000003 /* TheObstacleView.swift */,
+				C0A100042F61000000000004 /* ScreenTimeStudyView.swift */,
+				C0A100052F61000000000005 /* YourScreenTimeView.swift */,
 				6B7CD4E52D50BD5B0065A0F7 /* NameView.swift */,
+				6B7CD4E32D50A7380065A0F7 /* AgeSelectView.swift */,
 				6B7CD4E92D50C00F0065A0F7 /* BreakdownView.swift */,
+				C0A100062F61000000000006 /* ProcrastinationStudyView.swift */,
 				6BC04D422DF620070056609C /* StudyConsistancy.swift */,
-				6B04F7242DA83BED00694451 /* LongTermResults.swift */,
-				6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */,
+				C0A100072F61000000000007 /* HowItWorksView.swift */,
 				6BC04D442DF6EB5A0056609C /* AIFlashcardDemo.swift */,
+				6B04F7242DA83BED00694451 /* LongTermResults.swift */,
 				6B04F7262DA8599B00694451 /* RatingView.swift */,
 				6B04F72A2DA863B700694451 /* StudyGuardReadyView.swift */,
 				6B79AC322DEC91080039F063 /* PayWallView.swift */,
 				6B79AC342DEC92000039F063 /* FreeTrialReminderView.swift */,
-				6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */,
+				C0A100082F61000000000008 /* FirstDeckView.swift */,
+				C0A100092F61000000000009 /* LottieAnimationView.swift */,
 				6B7CD4EF2D50CBAA0065A0F7 /* RegretQuestionView.swift */,
 				6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */,
 				6B7CD4F12D50CD5F0065A0F7 /* CompletionView.swift */,
 				6B7CD4F52D50DB000065A0F7 /* OnboardingView.swift */,
+				40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */,
+				6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */,
+				6BA90DFC2E09CF460025C01B /* GradeObstaclesView.swift */,
+				6B7CD4DD2D509FFE0065A0F7 /* AverageScreenTime.swift */,
+				6B04F7282DA85EAD00694451 /* StudyTwiceView.swift */,
+				6B7CD4EB2D50C5650065A0F7 /* WecanhelpView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -502,6 +556,8 @@
 		6B9D89C32D3552E000DE8B2E /* diewithoutregrets */ = {
 			isa = PBXGroup;
 			children = (
+				407C18342F62D1B700A932E5 /* sademotion.lottie */,
+				40738F362F62BB6A0085DF60 /* hourglass.lottie */,
 				6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */,
 				6BC73FAC2DB046C700301AF1 /* Videos */,
 				6BDD79282DB0352A007DA0BE /* AppSecrets.swift */,
@@ -532,6 +588,7 @@
 		6BC73FAC2DB046C700301AF1 /* Videos */ = {
 			isa = PBXGroup;
 			children = (
+				407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */,
 				6B706FBB2DFB2574004743C9 /* dog-side-eye.mp4 */,
 				6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */,
 			);
@@ -600,6 +657,7 @@
 				6B45F2E72DADB48E0053351D /* RevenueCatUI */,
 				6BC21A1F2DB428EE00B777A0 /* PostHog */,
 				6BE29CFA2DB82D0800505D57 /* BranchSDK */,
+				C0A200022F61000000000011 /* Lottie */,
 			);
 			productName = diewithoutregrets;
 			productReference = 6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */;
@@ -639,6 +697,7 @@
 				6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 				6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */,
+				C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			productRefGroup = 6B9D89C22D3552DF00DE8B2E /* Products */;
 			projectDirPath = "";
@@ -657,6 +716,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BC73FAF2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
+				407C18392F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6BDD79242DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
 				6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				6B706FBD2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
@@ -668,6 +728,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BC73FB02DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
+				407C18382F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6BDD79252DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
 				6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				6B706FBE2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
@@ -680,8 +741,11 @@
 			files = (
 				6BC73FAE2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
 				6B74330D2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
+				407C18372F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */,
+				407C18352F62D1B700A932E5 /* sademotion.lottie in Resources */,
 				6BDD79232DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
+				40738F372F62BB6A0085DF60 /* hourglass.lottie in Resources */,
 				6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */,
 				6B706FBC2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
 			);
@@ -722,6 +786,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6B811F562D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift in Sources */,
+				540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */,
+				1C7C7564E40CE32E7EEE41D7 /* QuizletImportService.swift in Sources */,
 				6B7CD4F22D50CD5F0065A0F7 /* CompletionView.swift in Sources */,
 				6B706FC82DFB2880004743C9 /* AnimationOptionRow.swift in Sources */,
 				6B7CD4EC2D50C5650065A0F7 /* WecanhelpView.swift in Sources */,
@@ -741,6 +807,16 @@
 				6B7CD4DE2D509FFE0065A0F7 /* AverageScreenTime.swift in Sources */,
 				6B22E8672D4910B3003A5685 /* RegretEditorSheet.swift in Sources */,
 				6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */,
+				C0A100012F61000100000001 /* TheHookView.swift in Sources */,
+				C0A100022F61000100000002 /* TheFeelingView.swift in Sources */,
+				C0A100032F61000100000003 /* TheObstacleView.swift in Sources */,
+				C0A100042F61000100000004 /* ScreenTimeStudyView.swift in Sources */,
+				407C183B2F62DFC500A932E5 /* UnlockMethodChoiceView.swift in Sources */,
+				C0A100052F61000100000005 /* YourScreenTimeView.swift in Sources */,
+				C0A100062F61000100000006 /* ProcrastinationStudyView.swift in Sources */,
+				C0A100072F61000100000007 /* HowItWorksView.swift in Sources */,
+				C0A100082F61000100000008 /* FirstDeckView.swift in Sources */,
+				C0A100092F61000100000009 /* LottieAnimationView.swift in Sources */,
 				6B706FC42DFB285F004743C9 /* MemeVideoView.swift in Sources */,
 				6B22E8592D48D0FB003A5685 /* RegretReportView.swift in Sources */,
 				6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */,
@@ -1053,7 +1129,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.010;
+				MARKETING_VERSION = 1.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1092,7 +1168,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.010;
+				MARKETING_VERSION = 1.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1171,6 +1247,14 @@
 				minimumVersion = 3.10.0;
 			};
 		};
+		C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.4.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1193,6 +1277,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */;
 			productName = BranchSDK;
+		};
+		C0A200022F61000000000011 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

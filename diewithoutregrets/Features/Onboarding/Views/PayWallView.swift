@@ -27,8 +27,7 @@ struct PayWallView: View {
                 VStack(spacing: 0) {
                     // Title section
                     VStack(spacing: 8) {
-                        
-                        Text("We want you to try Study")
+                        Text("Invest in your future self.")
                             .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 36 : 28, weight: .bold))
                             .foregroundColor(Color(hex: 0x184449))
                             .multilineTextAlignment(.center)
@@ -36,13 +35,12 @@ struct PayWallView: View {
                             .offset(y: showTitle ? 0 : 20)
                             .animation(.easeInOut(duration: 0.8).delay(0.2), value: showTitle)
                         
-                        Text("Guard for FREE")
-                            .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 36 : 28, weight: .bold))
-                            .foregroundColor(Color(hex: 0x184449))
+                        Text("Less than a coffee a day. More valuable than a tutor.")
+                            .font(.system(size: 15))
+                            .foregroundColor(Color(hex: 0x184449).opacity(0.6))
                             .multilineTextAlignment(.center)
                             .opacity(showTitle ? 1 : 0)
-                            .offset(y: showTitle ? 0 : 20)
-                            .animation(.easeInOut(duration: 0.8).delay(0.3), value: showTitle)
+                            .animation(.easeInOut(duration: 0.8).delay(0.4), value: showTitle)
                     }
                     .padding(.top, 60)
                     .padding(.horizontal, 20)

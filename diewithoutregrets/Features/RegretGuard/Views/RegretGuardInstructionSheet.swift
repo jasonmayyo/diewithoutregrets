@@ -1,395 +1,219 @@
-//
-//  RegretGuardInstructionSheet.swift
-//  diewithoutregrets
-//
-//  Created by Jason Mayo on 2025/01/28.
-//
-
 import SwiftUI
+import AVKit
 
 struct RegretGuardInstructionSheet: View {
     @Environment(\.dismiss) var dismiss
     let app: RegretApp
+    @State private var showMoreSteps = false
     
     var body: some View {
         ScrollView {
-            VStack {
-                // Title Section
-                Text("Setup Instructions")
-                    .bold()
-                    .font(.title2)
-                    .accessibilityLabel("Setup Instructions")
-                Text("2 min MAX setup process to save thousands")
-                    .font(.subheadline)
-                    .accessibilityLabel("Two-minute setup process to save thousands")
+            VStack(spacing: 0) {
+                VStack(spacing: 6) {
+                    Text("Setup \(app.name)")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(Color(hex: 0x184449))
+                    
+                    Text("Watch the tutorial — it stays on screen when you leave the app.")
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .padding(.top, 28)
+                .padding(.bottom, 16)
                 
-                // Step 1
-                VStack {
-                    HStack {
-                        Text("1")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 1")
-                        VStack(alignment: .leading) {
-                            Text("Copy Custom Shortcut")
-                                .font(.headline)
-                                .accessibilityLabel("Copy Custom Shortcut")
-                            Text("Click the button below to copy the custom shortcut")
-                                .font(.caption)
-                                .accessibilityLabel("Click the button below to copy the custom shortcut")
-                        }
-                        Spacer()
-                    }
+                PiPVideoPlayer(videoName: "shortcut-setup-tutorial", videoExtension: "MP4")
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(9/16, contentMode: .fit)
+                    .frame(maxHeight: UIScreen.main.bounds.height * 0.4)
+                    .cornerRadius(12)
+                    .padding(.horizontal, 24)
+                
+                VStack(alignment: .leading, spacing: 0) {
+                    SetupStepRow(
+                        number: "1",
+                        title: "Get the shortcut",
+                        subtitle: "Tap the button below to add the \(app.name) shortcut to your device."
+                    )
+                    .padding(.top, 20)
                     
                     Button(action: {
-                        print("Button tapped!")
-                        UIApplication.shared.open(app.shortcutLink)
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showMoreSteps.toggle()
+                        }
                     }) {
                         HStack {
-                            Image(systemName: "doc.on.doc") // SF Symbol for copy
-                                .font(.system(size: 16))
-                            Text("Copy Shortcut")
-                                .font(.system(size: 16))
+                            Text(showMoreSteps ? "Hide steps" : "Show all steps")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                            
+                            Image(systemName: showMoreSteps ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
                         }
-                        .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
                     }
-                        
-                   
                     
-                }
-                .padding()
-                
-                // Step 2
-                VStack {
-                    HStack {
-                        Text("2")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 2")
-                        VStack(alignment: .leading) {
-                            Text("Open Shortcuts App")
-                                .font(.headline)
-                                .accessibilityLabel("Open Shortcuts App")
-                            Text("Click the button below to open the Shortcuts app")
-                                .font(.caption)
-                                .accessibilityLabel("Click the button below to open the Shortcuts app")
+                    if showMoreSteps {
+                        VStack(alignment: .leading, spacing: 0) {
+                            SetupStepRow(
+                                number: "2",
+                                title: "Open the Shortcuts app",
+                                subtitle: "Go to the Automation tab."
+                            )
+                            
+                            SetupStepRow(
+                                number: "3",
+                                title: "Create a new Automation",
+                                subtitle: "Tap + and select \"App\" as the trigger."
+                            )
+                            
+                            SetupStepRow(
+                                number: "4",
+                                title: "Choose \(app.name)",
+                                subtitle: "Select \"Is Opened\" and set to \"Run Immediately\"."
+                            )
+                            
+                            SetupStepRow(
+                                number: "5",
+                                title: "Set the action",
+                                subtitle: "Choose the dwr. shortcut you just added."
+                            )
+                            
+                            SetupStepRow(
+                                number: "6",
+                                title: "Done!",
+                                subtitle: "Test it by opening \(app.name)."
+                            )
                         }
-                        Spacer()
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
+                }
+                .padding(.horizontal, 24)
+                
+                VStack(spacing: 12) {
                     Button(action: {
-                        if let shortcutsURL = URL(string: "shortcuts://") {
-                            UIApplication.shared.open(shortcutsURL)
+                        UIApplication.shared.open(app.shortcutLink)
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "square.and.arrow.down")
+                                .font(.system(size: 16, weight: .medium))
+                            Text("Get Shortcut for \(app.name)")
+                                .font(.system(size: 16, weight: .semibold))
                         }
-                    }, label: {
-                        HStack {
-                            Image(systemName: "link")
-                                .accessibilityHidden(true) // Hide decorative icon
-                            Text("Open Shortcut App")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(hex: 0x2BC391))
+                        .cornerRadius(14)
+                    }
+                    
+                    Button(action: {
+                        if let url = URL(string: "shortcuts://") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "arrow.up.forward.app")
+                                .font(.system(size: 16, weight: .medium))
+                            Text("Open Shortcuts App")
+                                .font(.system(size: 16, weight: .semibold))
                         }
                         .foregroundColor(Color(hex: 0x184449))
-                    })
-                    .accessibilityLabel("Open Shortcut App")
-                    .accessibilityHint("Tap to open the Shortcuts app")
-                    .accessibilityAddTraits(.isButton)
-                    .padding(.top)
-                }
-                .padding()
-                
-                // Step 3
-                VStack {
-                    HStack {
-                        Text("3")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 3")
-                        VStack(alignment: .leading) {
-                            Text("Create a new Automation")
-                                .font(.headline)
-                                .accessibilityLabel("Create a new Automation")
-                            Text("Create a new automation by clicking the automation tab")
-                                .font(.caption)
-                                .accessibilityLabel("Create a new automation by clicking the automation tab")
-                        }
-                        Spacer()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(hex: 0x184449).opacity(0.08))
+                        .cornerRadius(14)
                     }
                     
-                    // Images Section
-                    VStack(alignment: .leading) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 20) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("1. Find Shortcuts")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 1: Find Shortcuts")
-                                    Image("create-automation-1")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("2. Create Automation")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 2: Create Automation")
-                                    Image("create-automation-2")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                            }
-                            .padding(.vertical)
-                        }
-                    }
-                    .padding(.leading)
-                }
-                .padding()
-                
-                // Step 4
-                VStack {
-                    HStack {
-                        Text("4")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Text("Done")
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 4")
-                        VStack(alignment: .leading) {
-                            Text("Select \"Open App\" Automation")
-                                .font(.headline)
-                                .accessibilityLabel("Select Open App Automation")
-                            Text("Choose the App automation and follow the steps below")
-                                .font(.caption)
-                                .accessibilityLabel("Choose the App automation and follow the steps below")
-                        }
-                        Spacer()
-                    }
-                    
-                    // Images Section
-                    VStack(alignment: .leading) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 20) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("1. Find \"App\" Automation")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 1: Find App Automation")
-                                    Image("open-app-automation")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("2. Choose the app you may regret")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 2: Choose the app you may regret")
-                                    Image("chose-app")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                            }
-                            .padding(.vertical)
-                        }
-                    }
-                    .padding(.leading)
-                }
-                .padding()
-                
-                // Step 5
-                VStack {
-                    HStack {
-                        Text("5")
-                            .frame(width: 30, height: 30)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 55)
                             .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 5")
-                        VStack(alignment: .leading) {
-                            Text("Configure Automation Settings")
-                                .font(.headline)
-                                .accessibilityLabel("Configure Automation Settings")
-                            Text("Select \"Is Opened\" and \"Run Immediately\"")
-                                .font(.caption)
-                                .accessibilityLabel("Select Is Opened and Run Immediately")
-                        }
-                        Spacer()
+                            .cornerRadius(50)
                     }
-                    
-                    // Images Section
-                    VStack(alignment: .leading) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 20) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("1. Select \"Is Opened\" and \"Run Immediately\"")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 1: Select Is Opened and Run Immediately")
-                                    Image("is-opened")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                            }
-                            .padding(.vertical)
-                        }
-                    }
-                    .padding(.leading)
+                    .padding(.top, 4)
                 }
-                .padding()
-                
-                // Step 6
-                VStack {
-                    HStack {
-                        Text("6")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 6")
-                        VStack(alignment: .leading) {
-                            Text("Select the dwr. custom shortcut")
-                                .font(.headline)
-                                .accessibilityLabel("Select the dwr. custom shortcut")
-                            Text("Ensure you select the correct shortcut for the app you chose. e.g., Instagram")
-                                .font(.caption)
-                                .accessibilityLabel("Ensure you select the correct shortcut for the app you chose, such as Instagram")
-                        }
-                        Spacer()
-                    }
-                    
-                    // Images Section
-                    VStack(alignment: .leading) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 20) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("1. Select custom shortcut you just copied")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .accessibilityLabel("Step 1: Select custom shortcut you just copied")
-                                    Image("select-custom-shortcut")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 200)
-                                        .padding(.horizontal)
-                                        .background(Color.white)
-                                        .cornerRadius(12)
-                                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                                        .accessibilityHidden(true) // Hide decorative image
-                                }
-                            }
-                            .padding(.vertical)
-                        }
-                    }
-                    .padding(.leading)
-                }
-                .padding()
-                
-                // Step 7
-                VStack {
-                    HStack {
-                        Text("7")
-                            .frame(width: 30, height: 30)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(5)
-                            .foregroundColor(.white)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .accessibilityLabel("Step 7")
-                        VStack(alignment: .leading) {
-                            Text("Setup Complete")
-                                .font(.headline)
-                                .accessibilityLabel("Setup Complete")
-                            Text("Return home or create another automation. Make sure to test it out :)")
-                                .font(.caption)
-                                .accessibilityLabel("Return home or create another automation. Make sure to test it out")
-                        }
-                        Spacer()
-                    }
-                }
-                .padding()
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                                    Text("Finished")
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 55)
-                                        .background(Color(hex: 0x184449))
-                                        .cornerRadius(50)
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom, 20)
-                                .accessibilityLabel("Finished")
-                                .accessibilityHint("Tap to close this instruction sheet")
-                                .accessibilityAddTraits(.isButton)
-                                
-                
-                Spacer()
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
+                .padding(.bottom, 20)
             }
         }
-        .padding(.top, 30)
         .preferredColorScheme(.light)
     }
+}
+
+struct SetupStepRow: View {
+    let number: String
+    let title: String
+    let subtitle: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(number)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 26, height: 26)
+                .background(Color(hex: 0x184449))
+                .cornerRadius(6)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color(hex: 0x184449))
+                
+                Text(subtitle)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - PiP Video Player
+
+struct PiPVideoPlayer: UIViewControllerRepresentable {
+    let videoName: String
+    let videoExtension: String
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
+        
+        guard let url = Bundle.main.url(forResource: videoName, withExtension: videoExtension) else {
+            print("Video file not found: \(videoName).\(videoExtension)")
+            return controller
+        }
+        
+        let player = AVPlayer(url: url)
+        controller.player = player
+        controller.allowsPictureInPicturePlayback = true
+        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        controller.showsPlaybackControls = true
+        controller.videoGravity = .resizeAspect
+        
+        player.play()
+        
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 }
 
 #Preview {

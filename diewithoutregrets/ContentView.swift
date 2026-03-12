@@ -818,6 +818,7 @@ struct DebugView: View {
     private let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
     @State private var lastAction: String = ""
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some View {
         List {
@@ -872,6 +873,15 @@ struct DebugView: View {
                     lastAction = "Switched to \(unlockMethod)"
                 } label: {
                     Label("Toggle Unlock Method (\(unlockMethod))", systemImage: "arrow.left.arrow.right")
+                }
+            }
+
+            Section("Onboarding") {
+                Button(role: .destructive) {
+                    hasCompletedOnboarding = false
+                    lastAction = "Onboarding reset — relaunch the app"
+                } label: {
+                    Label("Reset Onboarding", systemImage: "arrow.counterclockwise")
                 }
             }
 

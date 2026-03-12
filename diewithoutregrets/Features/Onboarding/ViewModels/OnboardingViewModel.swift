@@ -9,38 +9,45 @@ import SwiftUI
 import CoreHaptics
 import PostHog
 
-enum OnboardingStep {
-    case welcome
-    case gradeObstacles
-    case averageScreenTime
-    case age
-    case name
-    case breakdown
-    case studyConsistancy
-    case longTermResults
-    case studyTwice
-    case aiFlashcardDemo
-    case rating
+enum OnboardingStep: CaseIterable {
+    // Phase 1: Emotional Hook
+    case theHook
+    case theFeeling
+    case theObstacle
+    // Phase 2: Reality Check
+    case screenTimeStudy
+    case yourScreenTime
+    case yourName
+    case yourAge
+    case theCost
+    // Phase 3: The Shift
+    case procrastinationStudy
+    case consistencyReframe
+    // Phase 4: The Solution
+    case howItWorks
+    case aiFlashcards
+    case retentionStudy
+    case socialProof
+    // Phase 5: Setup & Commitment
     case readyView
     case paywall
     case notificationPermission
-    case weCanHelp
-    case createFirstFlashcard
+    case unlockMethodChoice
     case appSelection
     case completion
 }
 
 class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: OnboardingStep = .welcome
+    @Published var currentStep: OnboardingStep = .theHook
     @Published var userName: String = ""
     @Published var selectedAge: String = ""
     @Published var screenTime: String = ""
     @Published var newDeckName: String = "My First Deck"
     @Published var regretEntries: [Regret] = []
     @Published var selectedApps: [RegretApp] = []
+    @Published var selectedFeelings: Set<String> = []
+    @Published var selectedObstacles: Set<String> = []
 
-    
-    // Haptic engine
     private var hapticEngine: CHHapticEngine?
     
     let regretPrompts = [
@@ -52,42 +59,56 @@ class OnboardingViewModel: ObservableObject {
         prepareHaptics()
     }
     
+    var totalSteps: Int { OnboardingStep.allCases.count }
+    
+    var currentStepIndex: Int {
+        OnboardingStep.allCases.firstIndex(of: currentStep) ?? 0
+    }
+    
+    var progress: Float {
+        guard totalSteps > 1 else { return 0 }
+        return Float(currentStepIndex) / Float(totalSteps - 1)
+    }
+    
     func nextStep() {
-        // Trigger haptic feedback when moving to next step
         triggerHapticFeedback()
         
         switch currentStep {
-        case .welcome:
-            currentStep = .gradeObstacles
-        case .gradeObstacles:
-            currentStep = .averageScreenTime
-        case .averageScreenTime:
-            currentStep = .age
-        case .age:
-            currentStep = .name
-        case .name:
-            currentStep = .breakdown
-        case .breakdown:
-            currentStep = .studyConsistancy
-        case .studyConsistancy:
-            currentStep = .longTermResults
-        case .longTermResults:
-            currentStep = .studyTwice
-        case .studyTwice:
-            currentStep = .aiFlashcardDemo
-        case .aiFlashcardDemo:
-            currentStep = .rating
-        case .rating:
+        case .theHook:
+            currentStep = .theFeeling
+        case .theFeeling:
+            currentStep = .theObstacle
+        case .theObstacle:
+            currentStep = .screenTimeStudy
+        case .screenTimeStudy:
+            currentStep = .yourScreenTime
+        case .yourScreenTime:
+            currentStep = .yourName
+        case .yourName:
+            currentStep = .yourAge
+        case .yourAge:
+            currentStep = .theCost
+        case .theCost:
+            currentStep = .procrastinationStudy
+        case .procrastinationStudy:
+            currentStep = .consistencyReframe
+        case .consistencyReframe:
+            currentStep = .howItWorks
+        case .howItWorks:
+            currentStep = .aiFlashcards
+        case .aiFlashcards:
+            currentStep = .retentionStudy
+        case .retentionStudy:
+            currentStep = .socialProof
+        case .socialProof:
             currentStep = .readyView
         case .readyView:
             currentStep = .paywall
         case .paywall:
             currentStep = .notificationPermission
         case .notificationPermission:
-            currentStep = .weCanHelp
-        case .weCanHelp:
-            currentStep = .createFirstFlashcard
-        case .createFirstFlashcard:
+            currentStep = .unlockMethodChoice
+        case .unlockMethodChoice:
             saveUserData()
             currentStep = .appSelection
         case .appSelection:
@@ -162,18 +183,9 @@ class OnboardingViewModel: ObservableObject {
     }
     
     private func saveUserData() {
-        // Save user data
         UserDefaults.standard.set(userName, forKey: "userName")
         UserDefaults.standard.set(selectedAge, forKey: "selectedAge")
         UserDefaults.standard.set(screenTime, forKey: "screenTime")
-        
-        // Mark that user has seen paywall during onboarding
         UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
-        
-        // Create first deck if we have flashcards
-        if !regretEntries.isEmpty {
-            let newDeck = Deck(name: newDeckName, cards: regretEntries)
-            DeckStore.shared.addDeck(newDeck)
-        }
     }
 }
