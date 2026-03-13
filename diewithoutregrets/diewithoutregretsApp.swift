@@ -1,6 +1,7 @@
 import SwiftUI
 import RevenueCatUI
 import BranchSDK
+import UIKit
 
 @main
 struct diewithoutregretsApp: App {
@@ -31,9 +32,13 @@ struct diewithoutregretsApp: App {
             }
             .onOpenURL { url in
                 print("[App] onOpenURL: \(url)")
+                _ = Branch.getInstance().application(UIApplication.shared, open: url, options: [:])
                 if url.scheme == "diewithoutregrets" && url.host == "buyback" {
                     navigationModel.presentBuyBackOffer()
                 }
+            }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                _ = Branch.getInstance().continue(userActivity)
             }
             .onReceive(NotificationCenter.default.publisher(for: .showBuyBackOffer)) { _ in
                 print("[App] ⚡️ Received showBuyBackOffer notification")

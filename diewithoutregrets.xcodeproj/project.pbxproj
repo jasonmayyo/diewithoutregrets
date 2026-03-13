@@ -55,6 +55,8 @@
 		6B2DACD32D770543005B062D /* NewFlashcardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */; };
 		6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E52DADB48E0053351D /* RevenueCat */; };
 		6B45F2E82DADB48E0053351D /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E72DADB48E0053351D /* RevenueCatUI */; };
+		6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B45F2E92F6400010053351D /* AdServices.framework */; };
+		6B45F2EC2F6400020053351D /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B45F2EB2F6400020053351D /* AdSupport.framework */; };
 		6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B531BAE2DAD249900663511 /* StoreKit.framework */; };
 		6B706FBC2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6B706FBB2DFB2574004743C9 /* dog-side-eye.mp4 */; };
 		6B706FBD2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6B706FBB2DFB2574004743C9 /* dog-side-eye.mp4 */; };
@@ -202,6 +204,8 @@
 		6B2B70CC2D5CFA59008D2884 /* RegretStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegretStore.swift; sourceTree = "<group>"; };
 		6B2D5F942D779F6400009417 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFlashcardSheet.swift; sourceTree = "<group>"; };
+		6B45F2E92F6400010053351D /* AdServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdServices.framework; path = System/Library/Frameworks/AdServices.framework; sourceTree = SDKROOT; };
+		6B45F2EB2F6400020053351D /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		6B531BAE2DAD249900663511 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		6B706FBB2DFB2574004743C9 /* dog-side-eye.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dog-side-eye.mp4"; sourceTree = "<group>"; };
 		6B706FBF2DFB283F004743C9 /* AnimationType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationType.swift; sourceTree = "<group>"; };
@@ -274,6 +278,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				40738F352F62B56A0085DF60 /* Lottie in Frameworks */,
+				6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */,
+				6B45F2EC2F6400020053351D /* AdSupport.framework in Frameworks */,
 				6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */,
 				6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */,
 				6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */,
@@ -461,6 +467,8 @@
 		6B531BAD2DAD249900663511 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6B45F2E92F6400010053351D /* AdServices.framework */,
+				6B45F2EB2F6400020053351D /* AdSupport.framework */,
 				6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */,
 				6B531BAE2DAD249900663511 /* StoreKit.framework */,
 			);
@@ -1129,7 +1137,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1168,7 +1176,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

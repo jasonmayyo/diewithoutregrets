@@ -6,6 +6,8 @@
     <array>
         <string>audio</string>
     </array>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>Study Guard uses tracking data to measure which ads bring in new users and improve our campaigns.</string>
     <key>NSCameraUsageDescription</key>
     <string>StudyGuard uses the camera to verify you're studying during True Focus sessions.</string>
     <key>CFBundleURLTypes</key>

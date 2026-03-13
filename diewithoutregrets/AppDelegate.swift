@@ -4,6 +4,7 @@ import RevenueCat
 import PostHog
 import UIKit
 import UserNotifications
+import AppTrackingTransparency
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -12,22 +13,33 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         print("[AppDelegate] didFinishLaunchingWithOptions")
+
+        // Configure RevenueCat before attribution callbacks can set attributes.
+        Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
         
         // Initialize Branch with BranchScene for SwiftUI
         BranchScene.shared().initSession(launchOptions: launchOptions) { params, error, scene in
             if let error = error {
                 print("Branch init failed: \(error.localizedDescription)")
             }
-            guard let data = params as? [String: Any] else { return }
+            let data = params as? [String: Any] ?? [:]
 
             var attrs = [String: String]()
             if let influencer = data["$influencer"] as? String {
                 attrs["influencer"] = influencer
                 print("Branch data found - influencer: \(influencer)")
             }
-            if let campaign = data["+campaign"] as? String {
+            if let campaign = (data["+campaign"] as? String) ?? (data["~campaign"] as? String) {
                 attrs["campaign"] = campaign
                 print("Branch data found - campaign: \(campaign)")
+            }
+            if let channel = data["~channel"] as? String {
+                attrs["channel"] = channel
+                print("Branch data found - channel: \(channel)")
+            }
+            if let feature = data["~feature"] as? String {
+                attrs["feature"] = feature
+                print("Branch data found - feature: \(feature)")
             }
             if !attrs.isEmpty {
                 Purchases.shared.setAttributes(attrs)
@@ -35,10 +47,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             } else {
                 print("No influencer or campaign data found in Branch params.")
             }
-        }
 
-        // Configure RevenueCat
-        Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
+            self.requestTrackingPermissionIfNeeded()
+        }
 
         // Configure PostHog
         let POSTHOG_API_KEY = "phc_CzbpdC9g3azt6oI4GBppF8b9C6x7wA7MkbllkaDCt9D"
@@ -61,6 +72,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Note: Notification permissions are requested during onboarding flow
 
         return true
+    }
+
+    private func requestTrackingPermissionIfNeeded() {
+        guard #available(iOS 14, *),
+              ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
+
+        DispatchQueue.main.async {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                Branch.getInstance().handleATTAuthorizationStatus(status.rawValue)
+                print("[AppDelegate] ATT status: \(status.rawValue)")
+            }
+        }
     }
     
     // MARK: - UNUserNotificationCenterDelegate
