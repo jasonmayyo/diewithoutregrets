@@ -7,6 +7,7 @@
 
 import SwiftUI
 import RevenueCat
+import BranchSDK
 
 struct BuyBackOfferView: View {
     @Environment(\.dismiss) var dismiss
@@ -230,7 +231,10 @@ struct BuyBackOfferView: View {
             if result.customerInfo.entitlements.active.isEmpty == false {
                 print("[BuyBackOfferView] Purchase success; completing onboarding and dismissing")
                 
-                // Reset tracking flags since user purchased
+                let branchEvent = BranchEvent.standardEvent(.purchase)
+                branchEvent.eventDescription = "Winback offer purchased"
+                try? await branchEvent.logEvent()
+                
                 NotificationManager.shared.resetPaywallTracking()
                 NotificationManager.shared.markBuybackNotificationSeen()
                 

@@ -10,6 +10,7 @@ import UserNotifications
 import RevenueCat
 import RevenueCatUI
 import PostHog
+import BranchSDK
 
 struct FreeTrialReminderView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
@@ -207,6 +208,13 @@ struct FreeTrialReminderView: View {
                             ]
                         )
                         
+                        // Track trial start for Branch → TikTok attribution
+                        Task {
+                            let branchEvent = BranchEvent.standardEvent(.startTrial)
+                            branchEvent.eventDescription = "Onboarding free trial started"
+                            try? await branchEvent.logEvent()
+                        }
+                        
                         // Mark purchase completed
                         didCompletePurchase = true
                         
@@ -232,6 +240,12 @@ struct FreeTrialReminderView: View {
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                     }
                     .onPurchaseCompleted { customerInfo in
+                        Task {
+                            let branchEvent = BranchEvent.standardEvent(.startTrial)
+                            branchEvent.eventDescription = "Onboarding free trial started (fallback)"
+                            try? await branchEvent.logEvent()
+                        }
+                        
                         didCompletePurchase = true
                         NotificationManager.shared.resetPaywallTracking()
                         showingRevenueCatPaywall = false

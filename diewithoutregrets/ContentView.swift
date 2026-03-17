@@ -8,6 +8,7 @@
 import SwiftUI
 import RevenueCat
 import RevenueCatUI
+import BranchSDK
 
 struct ContentView: View {
     @State private var selectedTab = 0
@@ -418,12 +419,16 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        // Handle successful purchase if needed
+                        Task {
+                            let branchEvent = BranchEvent.standardEvent(.purchase)
+                            branchEvent.eventDescription = "Pro subscription purchased"
+                            try? await branchEvent.logEvent()
+                        }
+                        
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
                         
-                        // Reset paywall tracking since user purchased
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onRestoreCompleted { customerInfo in
@@ -431,7 +436,6 @@ struct ProfileView: View {
                         didCompletePurchase = true
                         showingPaywall = false
                         
-                        // Reset paywall tracking since user has subscription
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
@@ -451,19 +455,22 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked fallback paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
+                        Task {
+                            let branchEvent = BranchEvent.standardEvent(.purchase)
+                            branchEvent.eventDescription = "Pro subscription purchased (fallback)"
+                            try? await branchEvent.logEvent()
+                        }
+                        
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
                         
-                        // Reset paywall tracking since user purchased
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
                         hasSeenPaywall = true
                         
                         print("[ContentView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                        // Note: Paywall was already marked as viewed in onAppear
-                        // We don't need to do anything here since the flag is already set
                     }
             }
         }
