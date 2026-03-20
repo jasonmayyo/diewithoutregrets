@@ -71,9 +71,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         if let singularConfig = getSingularConfig() {
             Singular.start(singularConfig)
         }
-        
-        // TODO: REMOVE after passing Singular onboarding test
-        Singular.revenue("USD", amount: 0.99)
+    
         
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
