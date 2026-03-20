@@ -15,6 +15,8 @@
 		407C18382F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
 		407C18392F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
 		407C183B2F62DFC500A932E5 /* UnlockMethodChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */; };
+		40957BF72F6D1119005CC829 /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = 40957BF62F6D1119005CC829 /* Singular */; settings = {ATTRIBUTES = (Required, ); }; };
+		40957BFC2F6D15CF005CC829 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 40957BFB2F6D15AF005CC829 /* libsqlite3.tbd */; };
 		40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */; };
 		40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905822F3B73A000F8F5C0 /* GazeSignal.swift */; };
 		40E9058C2F3B73A000F8F5C0 /* FocusCalibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */; };
@@ -55,7 +57,7 @@
 		6B2DACD32D770543005B062D /* NewFlashcardSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */; };
 		6B45F2E62DADB48E0053351D /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E52DADB48E0053351D /* RevenueCat */; };
 		6B45F2E82DADB48E0053351D /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 6B45F2E72DADB48E0053351D /* RevenueCatUI */; };
-		6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B45F2E92F6400010053351D /* AdServices.framework */; };
+		6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B45F2E92F6400010053351D /* AdServices.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		6B45F2EC2F6400020053351D /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B45F2EB2F6400020053351D /* AdSupport.framework */; };
 		6B531BAF2DAD249900663511 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B531BAE2DAD249900663511 /* StoreKit.framework */; };
 		6B706FBC2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6B706FBB2DFB2574004743C9 /* dog-side-eye.mp4 */; };
@@ -163,6 +165,8 @@
 		407C18342F62D1B700A932E5 /* sademotion.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = sademotion.lottie; sourceTree = "<group>"; };
 		407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "shortcut-setup-tutorial.MP4"; sourceTree = "<group>"; };
 		407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockMethodChoiceView.swift; sourceTree = "<group>"; };
+		40957BFB2F6D15AF005CC829 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		40957BFD2F6D15CF005CC829 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalibration.swift; sourceTree = "<group>"; };
 		40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusDetectionManager.swift; sourceTree = "<group>"; };
 		40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusEngine.swift; sourceTree = "<group>"; };
@@ -277,6 +281,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40957BFC2F6D15CF005CC829 /* libsqlite3.tbd in Frameworks */,
+				40957BF72F6D1119005CC829 /* Singular in Frameworks */,
 				40738F352F62B56A0085DF60 /* Lottie in Frameworks */,
 				6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */,
 				6B45F2EC2F6400020053351D /* AdSupport.framework in Frameworks */,
@@ -467,6 +473,8 @@
 		6B531BAD2DAD249900663511 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				40957BFD2F6D15CF005CC829 /* libsqlite3.0.tbd */,
+				40957BFB2F6D15AF005CC829 /* libsqlite3.tbd */,
 				6B45F2E92F6400010053351D /* AdServices.framework */,
 				6B45F2EB2F6400020053351D /* AdSupport.framework */,
 				6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */,
@@ -666,6 +674,7 @@
 				6BC21A1F2DB428EE00B777A0 /* PostHog */,
 				6BE29CFA2DB82D0800505D57 /* BranchSDK */,
 				C0A200022F61000000000011 /* Lottie */,
+				40957BF62F6D1119005CC829 /* Singular */,
 			);
 			productName = diewithoutregrets;
 			productReference = 6B9D89C12D3552DF00DE8B2E /* diewithoutregrets.app */;
@@ -706,6 +715,7 @@
 				6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */,
 				C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				40957BF52F6D1119005CC829 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
 			);
 			productRefGroup = 6B9D89C22D3552DF00DE8B2E /* Products */;
 			projectDirPath = "";
@@ -1137,7 +1147,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13;
+				MARKETING_VERSION = 1.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1176,7 +1186,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13;
+				MARKETING_VERSION = 1.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1231,6 +1241,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		40957BF52F6D1119005CC829 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/singular-labs/Singular-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
 		6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
@@ -1266,6 +1284,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		40957BF62F6D1119005CC829 /* Singular */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 40957BF52F6D1119005CC829 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */;
+			productName = Singular;
+		};
 		6B45F2E52DADB48E0053351D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

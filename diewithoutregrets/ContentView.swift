@@ -8,7 +8,7 @@
 import SwiftUI
 import RevenueCat
 import RevenueCatUI
-import BranchSDK
+import Singular
 
 struct ContentView: View {
     @State private var selectedTab = 0
@@ -419,11 +419,9 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        Task {
-                            let branchEvent = BranchEvent.standardEvent(.purchase)
-                            branchEvent.eventDescription = "Pro subscription purchased"
-                            try? await branchEvent.logEvent()
-                        }
+                        Singular.event("subscription_purchase", withArgs: [
+                            "source": "profile_paywall"
+                        ])
                         
                         hasSeenPaywall = true
                         didCompletePurchase = true
@@ -432,6 +430,10 @@ struct ProfileView: View {
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onRestoreCompleted { customerInfo in
+                        Singular.event("subscription_purchase", withArgs: [
+                            "source": "profile_restore"
+                        ])
+                        
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
@@ -455,11 +457,9 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked fallback paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        Task {
-                            let branchEvent = BranchEvent.standardEvent(.purchase)
-                            branchEvent.eventDescription = "Pro subscription purchased (fallback)"
-                            try? await branchEvent.logEvent()
-                        }
+                        Singular.event("subscription_purchase", withArgs: [
+                            "source": "profile_fallback_paywall"
+                        ])
                         
                         hasSeenPaywall = true
                         didCompletePurchase = true

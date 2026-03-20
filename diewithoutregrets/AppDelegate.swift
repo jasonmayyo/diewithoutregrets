@@ -5,6 +5,7 @@ import PostHog
 import UIKit
 import UserNotifications
 import AppTrackingTransparency
+import Singular
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -54,9 +55,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Configure PostHog
         let POSTHOG_API_KEY = "phc_CzbpdC9g3azt6oI4GBppF8b9C6x7wA7MkbllkaDCt9D"
         let POSTHOG_HOST = "https://us.i.posthog.com"
-        let config = PostHogConfig(apiKey: POSTHOG_API_KEY, host: POSTHOG_HOST)
-        config.captureApplicationLifecycleEvents = true
-        PostHogSDK.shared.setup(config)
+        let posthogConfig = PostHogConfig(apiKey: POSTHOG_API_KEY, host: POSTHOG_HOST)
+        posthogConfig.captureApplicationLifecycleEvents = true
+        PostHogSDK.shared.setup(posthogConfig)
 
         if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
@@ -66,11 +67,84 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             )
         }
         
+        // Initialize Singular for TikTok Spark Ads attribution
+        if let singularConfig = getSingularConfig() {
+            Singular.start(singularConfig)
+        }
+        
+        // TODO: REMOVE after passing Singular onboarding test
+        Singular.revenue("USD", amount: 0.99)
+        
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
         
         // Note: Notification permissions are requested during onboarding flow
 
+        return true
+    }
+    
+    // MARK: - Singular Configuration
+    
+    func getSingularConfig(openUrl: URL? = nil, userActivity: NSUserActivity? = nil) -> SingularConfig? {
+        guard let config = SingularConfig(apiKey: "tryonething_6e0547e1", andSecret: "b70c4ed63107874b7078333fec27658e") else {
+            print("[Singular] Failed to create config")
+            return nil
+        }
+        
+        // Wait up to 300s for the user's ATT response before finalizing attribution
+        config.waitForTrackingAuthorizationWithTimeoutInterval = 300
+        
+        config.skAdNetworkEnabled = true
+        
+        config.conversionValuesUpdatedCallback = { conversionValue, coarse, lock in
+            print("[Singular] Conversion value updated: \(conversionValue)")
+        }
+        
+        config.singularLinksHandler = { params in
+            if let params = params {
+                self.handleSingularDeeplink(params: params)
+            }
+        }
+        
+        if let openUrl = openUrl {
+            config.openUrl = openUrl
+        }
+        
+        if let userActivity = userActivity {
+            config.userActivity = userActivity
+        }
+        
+        return config
+    }
+    
+    private func handleSingularDeeplink(params: SingularLinkParams) {
+        let deeplink = params.getDeepLink()
+        let passthrough = params.getPassthrough()
+        let isDeferred = params.isDeferred()
+        print("[Singular] Deep link received - deeplink: \(deeplink ?? "nil"), passthrough: \(passthrough ?? "nil"), deferred: \(isDeferred)")
+    }
+    
+    // MARK: - URL & Universal Link Handling for Singular
+    
+    func application(
+        _ application: UIApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+    ) -> Bool {
+        if let config = getSingularConfig(userActivity: userActivity) {
+            Singular.start(config)
+        }
+        return true
+    }
+    
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        if let config = getSingularConfig(openUrl: url) {
+            Singular.start(config)
+        }
         return true
     }
 
@@ -80,7 +154,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         DispatchQueue.main.async {
             ATTrackingManager.requestTrackingAuthorization { status in
-                Branch.getInstance().handleATTAuthorizationStatus(status.rawValue)
                 print("[AppDelegate] ATT status: \(status.rawValue)")
             }
         }

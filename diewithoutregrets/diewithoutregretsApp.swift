@@ -2,6 +2,7 @@ import SwiftUI
 import RevenueCatUI
 import BranchSDK
 import UIKit
+import Singular
 
 @main
 struct diewithoutregretsApp: App {
@@ -33,12 +34,21 @@ struct diewithoutregretsApp: App {
             .onOpenURL { url in
                 print("[App] onOpenURL: \(url)")
                 _ = Branch.getInstance().application(UIApplication.shared, open: url, options: [:])
+                
+                if let config = self.delegate.getSingularConfig(openUrl: url) {
+                    Singular.start(config)
+                }
+                
                 if url.scheme == "diewithoutregrets" && url.host == "buyback" {
                     navigationModel.presentBuyBackOffer()
                 }
             }
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
                 _ = Branch.getInstance().continue(userActivity)
+                
+                if let config = self.delegate.getSingularConfig(userActivity: userActivity) {
+                    Singular.start(config)
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .showBuyBackOffer)) { _ in
                 print("[App] ⚡️ Received showBuyBackOffer notification")
