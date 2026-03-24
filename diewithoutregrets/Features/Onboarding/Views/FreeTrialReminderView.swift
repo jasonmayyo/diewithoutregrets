@@ -213,13 +213,26 @@ struct FreeTrialReminderView: View {
                             "offering_id": offering.identifier
                         ])
                         
-                        // Mark purchase completed
+                        if let entitlement = customerInfo.entitlements.active.values.first,
+                           let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
+                            let price = Double(truncating: package.storeProduct.price as NSNumber)
+                            let currency = package.storeProduct.currencyCode ?? "USD"
+                            Singular.customRevenue(
+                                "subscription_purchase",
+                                currency: currency,
+                                amount: price,
+                                productSKU: package.storeProduct.productIdentifier,
+                                productName: package.storeProduct.localizedTitle,
+                                productCategory: "subscription",
+                                productQuantity: 1,
+                                productPrice: price
+                            )
+                        }
+                        
                         didCompletePurchase = true
                         
-                        // Reset paywall tracking since user purchased
                         NotificationManager.shared.resetPaywallTracking()
                         
-                        // Handle successful purchase
                         showingRevenueCatPaywall = false
                         viewModel.nextStep()
                     }
@@ -241,6 +254,26 @@ struct FreeTrialReminderView: View {
                         Singular.event("trial_started", withArgs: [
                             "source": "onboarding_fallback"
                         ])
+                        
+                        if let entitlement = customerInfo.entitlements.active.values.first {
+                            Task {
+                                let products = await Purchases.shared.products([entitlement.productIdentifier])
+                                if let product = products.first {
+                                    let price = Double(truncating: product.price as NSNumber)
+                                    let currency = product.currencyCode ?? "USD"
+                                    Singular.customRevenue(
+                                        "subscription_purchase",
+                                        currency: currency,
+                                        amount: price,
+                                        productSKU: product.productIdentifier,
+                                        productName: product.localizedTitle,
+                                        productCategory: "subscription",
+                                        productQuantity: 1,
+                                        productPrice: price
+                                    )
+                                }
+                            }
+                        }
                         
                         didCompletePurchase = true
                         NotificationManager.shared.resetPaywallTracking()

@@ -423,6 +423,22 @@ struct ProfileView: View {
                             "source": "profile_paywall"
                         ])
                         
+                        if let entitlement = customerInfo.entitlements.active.values.first,
+                           let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
+                            let price = Double(truncating: package.storeProduct.price as NSNumber)
+                            let currency = package.storeProduct.currencyCode ?? "USD"
+                            Singular.customRevenue(
+                                "subscription_purchase",
+                                currency: currency,
+                                amount: price,
+                                productSKU: package.storeProduct.productIdentifier,
+                                productName: package.storeProduct.localizedTitle,
+                                productCategory: "subscription",
+                                productQuantity: 1,
+                                productPrice: price
+                            )
+                        }
+                        
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
@@ -460,6 +476,26 @@ struct ProfileView: View {
                         Singular.event("subscription_purchase", withArgs: [
                             "source": "profile_fallback_paywall"
                         ])
+                        
+                        if let entitlement = customerInfo.entitlements.active.values.first {
+                            Task {
+                                let products = await Purchases.shared.products([entitlement.productIdentifier])
+                                if let product = products.first {
+                                    let price = Double(truncating: product.price as NSNumber)
+                                    let currency = product.currencyCode ?? "USD"
+                                    Singular.customRevenue(
+                                        "subscription_purchase",
+                                        currency: currency,
+                                        amount: price,
+                                        productSKU: product.productIdentifier,
+                                        productName: product.localizedTitle,
+                                        productCategory: "subscription",
+                                        productQuantity: 1,
+                                        productPrice: price
+                                    )
+                                }
+                            }
+                        }
                         
                         hasSeenPaywall = true
                         didCompletePurchase = true
