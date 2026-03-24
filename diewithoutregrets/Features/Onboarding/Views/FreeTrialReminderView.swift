@@ -208,25 +208,28 @@ struct FreeTrialReminderView: View {
                             ]
                         )
                         
-                        Singular.event("trial_started", withArgs: [
-                            "source": "onboarding",
-                            "offering_id": offering.identifier
-                        ])
-                        
                         if let entitlement = customerInfo.entitlements.active.values.first,
                            let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                            let price = Double(truncating: package.storeProduct.price as NSNumber)
-                            let currency = package.storeProduct.currencyCode ?? "USD"
-                            Singular.customRevenue(
-                                "subscription_purchase",
-                                currency: currency,
-                                amount: price,
-                                productSKU: package.storeProduct.productIdentifier,
-                                productName: package.storeProduct.localizedTitle,
-                                productCategory: "subscription",
-                                productQuantity: 1,
-                                productPrice: price
-                            )
+                            if entitlement.periodType == .trial {
+                                Singular.event("sng_start_trial", withArgs: [
+                                    "source": "onboarding",
+                                    "offering_id": offering.identifier,
+                                    "product_id": package.storeProduct.productIdentifier
+                                ])
+                            } else {
+                                let price = Double(truncating: package.storeProduct.price as NSNumber)
+                                let currency = package.storeProduct.currencyCode ?? "USD"
+                                Singular.customRevenue(
+                                    "subscription_purchase",
+                                    currency: currency,
+                                    amount: price,
+                                    productSKU: package.storeProduct.productIdentifier,
+                                    productName: package.storeProduct.localizedTitle,
+                                    productCategory: "subscription",
+                                    productQuantity: 1,
+                                    productPrice: price
+                                )
+                            }
                         }
                         
                         didCompletePurchase = true
@@ -251,26 +254,29 @@ struct FreeTrialReminderView: View {
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                     }
                     .onPurchaseCompleted { customerInfo in
-                        Singular.event("trial_started", withArgs: [
-                            "source": "onboarding_fallback"
-                        ])
-                        
                         if let entitlement = customerInfo.entitlements.active.values.first {
-                            Task {
-                                let products = await Purchases.shared.products([entitlement.productIdentifier])
-                                if let product = products.first {
-                                    let price = Double(truncating: product.price as NSNumber)
-                                    let currency = product.currencyCode ?? "USD"
-                                    Singular.customRevenue(
-                                        "subscription_purchase",
-                                        currency: currency,
-                                        amount: price,
-                                        productSKU: product.productIdentifier,
-                                        productName: product.localizedTitle,
-                                        productCategory: "subscription",
-                                        productQuantity: 1,
-                                        productPrice: price
-                                    )
+                            if entitlement.periodType == .trial {
+                                Singular.event("sng_start_trial", withArgs: [
+                                    "source": "onboarding_fallback",
+                                    "product_id": entitlement.productIdentifier
+                                ])
+                            } else {
+                                Task {
+                                    let products = await Purchases.shared.products([entitlement.productIdentifier])
+                                    if let product = products.first {
+                                        let price = Double(truncating: product.price as NSNumber)
+                                        let currency = product.currencyCode ?? "USD"
+                                        Singular.customRevenue(
+                                            "subscription_purchase",
+                                            currency: currency,
+                                            amount: price,
+                                            productSKU: product.productIdentifier,
+                                            productName: product.localizedTitle,
+                                            productCategory: "subscription",
+                                            productQuantity: 1,
+                                            productPrice: price
+                                        )
+                                    }
                                 }
                             }
                         }
