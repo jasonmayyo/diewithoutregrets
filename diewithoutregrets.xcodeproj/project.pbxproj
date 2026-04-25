@@ -1147,7 +1147,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1186,7 +1186,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1254,7 +1254,7 @@
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 5.21.1;
+				minimumVersion = 5.27.1;
 			};
 		};
 		6BC21A1E2DB428EE00B777A0 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
