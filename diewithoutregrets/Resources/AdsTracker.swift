@@ -53,6 +53,13 @@ enum AdsTracker {
         config.setDelayForATTUserAuthorizationInSeconds(20)
         config.setLogLevel(TikTokLogLevelVerbose)
 
+        // Disable the SDK's automatic StoreKit observer. We fire Purchase / StartTrial /
+        // Subscribe manually from the paywall with rich properties and proper trial gating.
+        // Leaving this enabled causes the SDK to replay every historical transaction
+        // (including sandbox history) on launch, producing hundreds of duplicate Purchase
+        // events with sparse properties (content_type:"SUB", no content_name).
+        config.disablePaymentTracking()
+
         // Enable debug mode while we're verifying TestFlight events arrive.
         // Wrap in #if DEBUG once campaigns are live in production.
         config.enableDebugMode()

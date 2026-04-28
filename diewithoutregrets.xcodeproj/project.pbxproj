@@ -899,7 +899,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -925,7 +925,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -951,7 +951,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -977,7 +977,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -1128,7 +1128,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;
@@ -1167,7 +1167,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;
