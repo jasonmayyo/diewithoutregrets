@@ -49,20 +49,23 @@ enum AdsTracker {
             return
         }
 
-        // Match TikTok's recommended sample: short ATT wait, verbose logs while testing.
+        // ATT delay matches TikTok's recommended sample. Buffers events until the user
+        // responds to ATT so the SDK can attach IDFA when the response is "Allow".
         config.setDelayForATTUserAuthorizationInSeconds(20)
-        config.setLogLevel(TikTokLogLevelVerbose)
 
         // Disable the SDK's automatic StoreKit observer. We fire Purchase / StartTrial /
         // Subscribe manually from the paywall with rich properties and proper trial gating.
         // Leaving this enabled causes the SDK to replay every historical transaction
-        // (including sandbox history) on launch, producing hundreds of duplicate Purchase
-        // events with sparse properties (content_type:"SUB", no content_name).
+        // (including sandbox history) on launch, producing duplicate Purchase events with
+        // sparse properties (content_type:"SUB", no content_name).
         config.disablePaymentTracking()
 
-        // Enable debug mode while we're verifying TestFlight events arrive.
-        // Wrap in #if DEBUG once campaigns are live in production.
+        #if DEBUG
+        config.setLogLevel(TikTokLogLevelVerbose)
         config.enableDebugMode()
+        #else
+        config.setLogLevel(TikTokLogLevelInfo)
+        #endif
 
         TikTokBusiness.initializeSdk(config) { success, error in
             if let error = error {
@@ -92,6 +95,7 @@ enum AdsTracker {
     }
 
     static func trackStartTrial(productId: String,
+                                productName: String,
                                 price: Double,
                                 currency: String) {
         let event = TikTokBaseEvent(eventName: TTEventName.startTrial.rawValue)
@@ -99,11 +103,16 @@ enum AdsTracker {
         _ = event.addProperty(withKey: "content_type", value: "product")
         _ = event.addProperty(withKey: "currency", value: currency)
         _ = event.addProperty(withKey: "value", value: price)
+        _ = event.addProperty(withKey: "contents", value: [richContents(productId: productId,
+                                                                        productName: productName,
+                                                                        price: price,
+                                                                        currency: currency)])
         TikTokBusiness.trackTTEvent(event)
         recordStatus("trackStartTrial fired (\(productId), \(price) \(currency))")
     }
 
     static func trackSubscribe(productId: String,
+                               productName: String,
                                price: Double,
                                currency: String) {
         let event = TikTokBaseEvent(eventName: TTEventName.subscribe.rawValue)
@@ -111,6 +120,10 @@ enum AdsTracker {
         _ = event.addProperty(withKey: "content_type", value: "product")
         _ = event.addProperty(withKey: "currency", value: currency)
         _ = event.addProperty(withKey: "value", value: price)
+        _ = event.addProperty(withKey: "contents", value: [richContents(productId: productId,
+                                                                        productName: productName,
+                                                                        price: price,
+                                                                        currency: currency)])
         TikTokBusiness.trackTTEvent(event)
         recordStatus("trackSubscribe fired (\(productId), \(price) \(currency))")
     }
@@ -135,6 +148,21 @@ enum AdsTracker {
 
         TikTokBusiness.trackTTEvent(purchase)
         recordStatus("trackPurchase fired (\(productId), \(price) \(currency))")
+    }
+
+    private static func richContents(productId: String,
+                                     productName: String,
+                                     price: Double,
+                                     currency: String) -> [String: Any] {
+        return [
+            "content_id": productId,
+            "content_name": productName,
+            "content_type": "product",
+            "content_category": "subscription",
+            "price": String(price),
+            "quantity": "1",
+            "currency": currency
+        ]
     }
 
     static func trackViewContent(name: String) {

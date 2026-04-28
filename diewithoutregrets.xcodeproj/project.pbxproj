@@ -899,7 +899,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -910,7 +910,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -925,7 +925,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -936,7 +936,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -951,7 +951,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -962,7 +962,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -977,7 +977,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -988,7 +988,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.17;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1128,7 +1128,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;
@@ -1167,7 +1167,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				ENABLE_PREVIEWS = YES;

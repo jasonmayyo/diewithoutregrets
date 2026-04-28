@@ -425,12 +425,14 @@ struct ProfileView: View {
                             if entitlement.periodType == .trial {
                                 AdsTracker.trackStartTrial(
                                     productId: package.storeProduct.productIdentifier,
+                                    productName: package.storeProduct.localizedTitle,
                                     price: price,
                                     currency: currency
                                 )
                             } else {
                                 AdsTracker.trackSubscribe(
                                     productId: package.storeProduct.productIdentifier,
+                                    productName: package.storeProduct.localizedTitle,
                                     price: price,
                                     currency: currency
                                 )
@@ -482,12 +484,14 @@ struct ProfileView: View {
                                     if entitlement.periodType == .trial {
                                         AdsTracker.trackStartTrial(
                                             productId: product.productIdentifier,
+                                            productName: product.localizedTitle,
                                             price: price,
                                             currency: currency
                                         )
                                     } else {
                                         AdsTracker.trackSubscribe(
                                             productId: product.productIdentifier,
+                                            productName: product.localizedTitle,
                                             price: price,
                                             currency: currency
                                         )
