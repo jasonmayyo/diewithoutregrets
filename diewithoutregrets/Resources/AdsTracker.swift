@@ -13,6 +13,17 @@ import RevenueCat
 
 enum AdsTracker {
 
+    private static let statusKey = "AdsTracker.lastStatus"
+
+    private static func recordStatus(_ status: String) {
+        print("[AdsTracker] \(status)")
+        UserDefaults.standard.set("\(Date()): \(status)", forKey: statusKey)
+    }
+
+    static var lastStatus: String {
+        UserDefaults.standard.string(forKey: statusKey) ?? "(no status yet)"
+    }
+
     // MARK: - SDK lifecycle
 
     static func initializeSDK() {
@@ -27,29 +38,31 @@ enum AdsTracker {
               appId.hasPrefix("REPLACE_WITH") == false,
               tiktokAppId.hasPrefix("REPLACE_WITH") == false
         else {
-            print("[AdsTracker] TikTok credentials missing or unset in Info.plist; skipping SDK initialization.")
+            recordStatus("TikTok credentials missing or unset in Info.plist; skipping SDK initialization.")
             return
         }
 
         guard let config = TikTokConfig(accessToken: accessToken,
                                         appId: appId,
                                         tiktokAppId: tiktokAppId) else {
-            print("[AdsTracker] Failed to construct TikTokConfig.")
+            recordStatus("Failed to construct TikTokConfig.")
             return
         }
 
-        config.setDelayForATTUserAuthorizationInSeconds(120)
+        // Match TikTok's recommended sample: short ATT wait, verbose logs while testing.
+        config.setDelayForATTUserAuthorizationInSeconds(20)
+        config.setLogLevel(TikTokLogLevelVerbose)
 
-        #if DEBUG
+        // Enable debug mode while we're verifying TestFlight events arrive.
+        // Wrap in #if DEBUG once campaigns are live in production.
         config.enableDebugMode()
-        #endif
 
         TikTokBusiness.initializeSdk(config) { success, error in
             if let error = error {
-                print("[AdsTracker] TikTok init error: \(error.localizedDescription)")
+                recordStatus("TikTok init error: \(error.localizedDescription)")
             }
             if success {
-                print("[AdsTracker] TikTok SDK initialized.")
+                recordStatus("TikTok SDK initialized.")
                 identifyCurrentUser()
             }
         }
@@ -68,6 +81,7 @@ enum AdsTracker {
     static func trackCompleteRegistration() {
         let event = TikTokBaseEvent(eventName: TTEventName.registration.rawValue)
         TikTokBusiness.trackTTEvent(event)
+        recordStatus("trackCompleteRegistration fired")
     }
 
     static func trackStartTrial(productId: String,
@@ -79,6 +93,7 @@ enum AdsTracker {
         _ = event.addProperty(withKey: "currency", value: currency)
         _ = event.addProperty(withKey: "value", value: price)
         TikTokBusiness.trackTTEvent(event)
+        recordStatus("trackStartTrial fired (\(productId), \(price) \(currency))")
     }
 
     static func trackSubscribe(productId: String,
@@ -90,6 +105,7 @@ enum AdsTracker {
         _ = event.addProperty(withKey: "currency", value: currency)
         _ = event.addProperty(withKey: "value", value: price)
         TikTokBusiness.trackTTEvent(event)
+        recordStatus("trackSubscribe fired (\(productId), \(price) \(currency))")
     }
 
     static func trackPurchase(productId: String,
@@ -111,6 +127,7 @@ enum AdsTracker {
         purchase.setContents([item])
 
         TikTokBusiness.trackTTEvent(purchase)
+        recordStatus("trackPurchase fired (\(productId), \(price) \(currency))")
     }
 
     static func trackViewContent(name: String) {
@@ -118,5 +135,6 @@ enum AdsTracker {
         event.setContentType("product")
         event.setContentId(name)
         TikTokBusiness.trackTTEvent(event)
+        recordStatus("trackViewContent fired (\(name))")
     }
 }

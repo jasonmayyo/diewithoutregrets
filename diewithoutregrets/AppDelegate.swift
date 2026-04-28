@@ -5,6 +5,7 @@ import PostHog
 import UIKit
 import UserNotifications
 import AppTrackingTransparency
+import TikTokBusinessSDK
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -67,11 +68,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         // Initialize TikTok Business SDK for Spark Ads attribution.
         AdsTracker.initializeSDK()
-
-        // Request ATT independently of Branch so it isn't gated by the Branch callback.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.requestTrackingPermissionIfNeeded()
-        }
         
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
@@ -79,6 +75,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Note: Notification permissions are requested during onboarding flow
 
         return true
+    }
+
+    // Request ATT in applicationDidBecomeActive per TikTok's recommended pattern.
+    // TikTokBusiness.requestTrackingAuthorization wraps ATTrackingManager and notifies
+    // the SDK directly when the user responds, so events flush immediately after.
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        TikTokBusiness.requestTrackingAuthorization { status in
+            print("[AppDelegate] ATT status: \(status)")
+        }
     }
     
     // MARK: - URL & Universal Link Handling
@@ -97,15 +102,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         options: [UIApplication.OpenURLOptionsKey: Any] = [:]
     ) -> Bool {
         return Branch.getInstance().application(app, open: url, options: options)
-    }
-
-    private func requestTrackingPermissionIfNeeded() {
-        guard #available(iOS 14, *),
-              ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
-
-        ATTrackingManager.requestTrackingAuthorization { status in
-            print("[AppDelegate] ATT status: \(status.rawValue)")
-        }
     }
     
     // MARK: - UNUserNotificationCenterDelegate
