@@ -121,6 +121,7 @@ struct PayWallView: View {
                     "screen_time": onboardingViewModel.screenTime
                 ]
             )
+            AdsTracker.trackViewContent(name: "onboarding_paywall")
             
             // Trigger animations when view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

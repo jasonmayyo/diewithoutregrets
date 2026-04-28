@@ -5,7 +5,6 @@ import PostHog
 import UIKit
 import UserNotifications
 import AppTrackingTransparency
-import Singular
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -18,7 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Configure RevenueCat before attribution callbacks can set attributes.
         Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
         
-        // Initialize Branch with BranchScene for SwiftUI
+        // Initialize Branch with BranchScene for SwiftUI (deep linking only).
         BranchScene.shared().initSession(launchOptions: launchOptions) { params, error, scene in
             if let error = error {
                 print("Branch init failed: \(error.localizedDescription)")
@@ -48,8 +47,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             } else {
                 print("No influencer or campaign data found in Branch params.")
             }
-
-            self.requestTrackingPermissionIfNeeded()
         }
 
         // Configure PostHog
@@ -58,6 +55,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let posthogConfig = PostHogConfig(apiKey: POSTHOG_API_KEY, host: POSTHOG_HOST)
         posthogConfig.captureApplicationLifecycleEvents = true
         PostHogSDK.shared.setup(posthogConfig)
+        PostHogSDK.shared.identify(Purchases.shared.appUserID)
 
         if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
@@ -66,12 +64,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                 properties: ["timestamp": Date().ISO8601Format()]
             )
         }
-        
-        // Initialize Singular for TikTok Spark Ads attribution
-        if let singularConfig = getSingularConfig() {
-            Singular.start(singularConfig)
+
+        // Initialize TikTok Business SDK for Spark Ads attribution.
+        AdsTracker.initializeSDK()
+
+        // Request ATT independently of Branch so it isn't gated by the Branch callback.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.requestTrackingPermissionIfNeeded()
         }
-    
         
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
@@ -81,58 +81,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         return true
     }
     
-    // MARK: - Singular Configuration
-    
-    func getSingularConfig(openUrl: URL? = nil, userActivity: NSUserActivity? = nil) -> SingularConfig? {
-        guard let config = SingularConfig(apiKey: "tryonething_6e0547e1", andSecret: "b70c4ed63107874b7078333fec27658e") else {
-            print("[Singular] Failed to create config")
-            return nil
-        }
-        
-        // Wait up to 300s for the user's ATT response before finalizing attribution
-        config.waitForTrackingAuthorizationWithTimeoutInterval = 300
-        
-        config.skAdNetworkEnabled = true
-        
-        config.conversionValuesUpdatedCallback = { conversionValue, coarse, lock in
-            print("[Singular] Conversion value updated: \(conversionValue)")
-        }
-        
-        config.singularLinksHandler = { params in
-            if let params = params {
-                self.handleSingularDeeplink(params: params)
-            }
-        }
-        
-        if let openUrl = openUrl {
-            config.openUrl = openUrl
-        }
-        
-        if let userActivity = userActivity {
-            config.userActivity = userActivity
-        }
-        
-        return config
-    }
-    
-    private func handleSingularDeeplink(params: SingularLinkParams) {
-        let deeplink = params.getDeepLink()
-        let passthrough = params.getPassthrough()
-        let isDeferred = params.isDeferred()
-        print("[Singular] Deep link received - deeplink: \(deeplink ?? "nil"), passthrough: \(passthrough ?? "nil"), deferred: \(isDeferred)")
-    }
-    
-    // MARK: - URL & Universal Link Handling for Singular
+    // MARK: - URL & Universal Link Handling
     
     func application(
         _ application: UIApplication,
         continue userActivity: NSUserActivity,
         restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
     ) -> Bool {
-        if let config = getSingularConfig(userActivity: userActivity) {
-            Singular.start(config)
-        }
-        return true
+        return Branch.getInstance().continue(userActivity)
     }
     
     func application(
@@ -140,20 +96,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         open url: URL,
         options: [UIApplication.OpenURLOptionsKey: Any] = [:]
     ) -> Bool {
-        if let config = getSingularConfig(openUrl: url) {
-            Singular.start(config)
-        }
-        return true
+        return Branch.getInstance().application(app, open: url, options: options)
     }
 
     private func requestTrackingPermissionIfNeeded() {
         guard #available(iOS 14, *),
               ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
 
-        DispatchQueue.main.async {
-            ATTrackingManager.requestTrackingAuthorization { status in
-                print("[AppDelegate] ATT status: \(status.rawValue)")
-            }
+        ATTrackingManager.requestTrackingAuthorization { status in
+            print("[AppDelegate] ATT status: \(status.rawValue)")
         }
     }
     

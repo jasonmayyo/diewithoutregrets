@@ -10,7 +10,6 @@ import UserNotifications
 import RevenueCat
 import RevenueCatUI
 import PostHog
-import Singular
 
 struct FreeTrialReminderView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
@@ -210,24 +209,25 @@ struct FreeTrialReminderView: View {
                         
                         if let entitlement = customerInfo.entitlements.active.values.first,
                            let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
+                            let price = Double(truncating: package.storeProduct.price as NSNumber)
+                            let currency = package.storeProduct.currencyCode ?? "USD"
                             if entitlement.periodType == .trial {
-                                Singular.event("sng_start_trial", withArgs: [
-                                    "source": "onboarding",
-                                    "offering_id": offering.identifier,
-                                    "product_id": package.storeProduct.productIdentifier
-                                ])
+                                AdsTracker.trackStartTrial(
+                                    productId: package.storeProduct.productIdentifier,
+                                    price: price,
+                                    currency: currency
+                                )
                             } else {
-                                let price = Double(truncating: package.storeProduct.price as NSNumber)
-                                let currency = package.storeProduct.currencyCode ?? "USD"
-                                Singular.customRevenue(
-                                    "subscription_purchase",
-                                    currency: currency,
-                                    amount: price,
-                                    productSKU: package.storeProduct.productIdentifier,
+                                AdsTracker.trackSubscribe(
+                                    productId: package.storeProduct.productIdentifier,
+                                    price: price,
+                                    currency: currency
+                                )
+                                AdsTracker.trackPurchase(
+                                    productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    productCategory: "subscription",
-                                    productQuantity: 1,
-                                    productPrice: price
+                                    price: price,
+                                    currency: currency
                                 )
                             }
                         }
@@ -255,26 +255,28 @@ struct FreeTrialReminderView: View {
                     }
                     .onPurchaseCompleted { customerInfo in
                         if let entitlement = customerInfo.entitlements.active.values.first {
-                            if entitlement.periodType == .trial {
-                                Singular.event("sng_start_trial", withArgs: [
-                                    "source": "onboarding_fallback",
-                                    "product_id": entitlement.productIdentifier
-                                ])
-                            } else {
-                                Task {
-                                    let products = await Purchases.shared.products([entitlement.productIdentifier])
-                                    if let product = products.first {
-                                        let price = Double(truncating: product.price as NSNumber)
-                                        let currency = product.currencyCode ?? "USD"
-                                        Singular.customRevenue(
-                                            "subscription_purchase",
-                                            currency: currency,
-                                            amount: price,
-                                            productSKU: product.productIdentifier,
+                            Task {
+                                let products = await Purchases.shared.products([entitlement.productIdentifier])
+                                if let product = products.first {
+                                    let price = Double(truncating: product.price as NSNumber)
+                                    let currency = product.currencyCode ?? "USD"
+                                    if entitlement.periodType == .trial {
+                                        AdsTracker.trackStartTrial(
+                                            productId: product.productIdentifier,
+                                            price: price,
+                                            currency: currency
+                                        )
+                                    } else {
+                                        AdsTracker.trackSubscribe(
+                                            productId: product.productIdentifier,
+                                            price: price,
+                                            currency: currency
+                                        )
+                                        AdsTracker.trackPurchase(
+                                            productId: product.productIdentifier,
                                             productName: product.localizedTitle,
-                                            productCategory: "subscription",
-                                            productQuantity: 1,
-                                            productPrice: price
+                                            price: price,
+                                            currency: currency
                                         )
                                     }
                                 }

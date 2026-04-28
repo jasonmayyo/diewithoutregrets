@@ -34,10 +34,31 @@
         <key>live</key>
         <string>key_live_aEsipkz1RSZJpKjW53jqVkjaFCmVCwLigzmG</string>
     </dict>
-	<key>branch_universal_link_domains</key>
-	<array>
-		<string>studyguard.app.link</string>
-		<string>studyguard-alternate.app.link</string>
-	</array>
+    <key>branch_universal_link_domains</key>
+    <array>
+        <string>studyguard.app.link</string>
+        <string>studyguard-alternate.app.link</string>
+    </array>
+    <key>TikTokAccessToken</key>
+    <string>TTTfn92hUo1NzXnnFwP1QdR0jaUedn4T</string>
+    <key>TikTokAppID</key>
+    <string>7580752277875523602</string>
+    <key>AppStoreAppID</key>
+    <string>6744607430</string>
+    <key>SKAdNetworkItems</key>
+    <array>
+        <dict>
+            <key>SKAdNetworkIdentifier</key>
+            <string>5lm9lj6jb7.skadnetwork</string>
+        </dict>
+        <dict>
+            <key>SKAdNetworkIdentifier</key>
+            <string>238da6jt44.skadnetwork</string>
+        </dict>
+        <dict>
+            <key>SKAdNetworkIdentifier</key>
+            <string>22mmun2rn5.skadnetwork</string>
+        </dict>
+    </array>
 </dict>
 </plist>

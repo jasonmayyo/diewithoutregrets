@@ -1,5 +1,5 @@
 {
-  "originHash" : "619f4fd1605fddf0b41e52b9c35914d1e403a1fda5d7ae728fc7783c14473d41",
+  "originHash" : "02ff1a8110cb5a9607e18445ab6285937d99e4a5318fc9e480c94b3cf83ee120",
   "pins" : [
     {
       "identity" : "ios-branch-sdk-spm",
@@ -38,12 +38,12 @@
       }
     },
     {
-      "identity" : "singular-ios-sdk",
+      "identity" : "tiktok-business-ios-sdk",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/singular-labs/Singular-iOS-SDK",
+      "location" : "https://github.com/tiktok/tiktok-business-ios-sdk",
       "state" : {
-        "revision" : "f8b2d5ba562ad23795ac597d24482ef55fecc762",
-        "version" : "12.10.0"
+        "revision" : "4d330d4da158190d2c67b2142c2bd36c9eb5291e",
+        "version" : "1.6.1"
       }
     }
   ],

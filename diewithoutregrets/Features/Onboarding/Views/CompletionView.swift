@@ -67,7 +67,9 @@ struct CompletionView: View {
                             "selected_apps_count": onboardingViewModel.selectedApps.count
                         ]
                     )
-                    
+
+                    AdsTracker.trackCompleteRegistration()
+
                     hasCompletedOnboarding = true
                     onboardingViewModel.triggerHapticFeedback()
                 }) {

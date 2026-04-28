@@ -7,7 +7,6 @@
 
 import SwiftUI
 import RevenueCat
-import Singular
 
 struct BuyBackOfferView: View {
     @Environment(\.dismiss) var dismiss
@@ -231,21 +230,13 @@ struct BuyBackOfferView: View {
             if result.customerInfo.entitlements.active.isEmpty == false {
                 print("[BuyBackOfferView] Purchase success; completing onboarding and dismissing")
                 
-                Singular.event("subscription_purchase", withArgs: [
-                    "source": "buyback_offer"
-                ])
-                
-                let price = package.storeProduct.price as Decimal
+                let price = Double(truncating: package.storeProduct.price as NSNumber)
                 let currency = package.storeProduct.currencyCode ?? "USD"
-                Singular.customRevenue(
-                    "subscription_purchase",
-                    currency: currency,
-                    amount: Double(truncating: price as NSNumber),
-                    productSKU: package.storeProduct.productIdentifier,
+                AdsTracker.trackPurchase(
+                    productId: package.storeProduct.productIdentifier,
                     productName: package.storeProduct.localizedTitle,
-                    productCategory: "subscription",
-                    productQuantity: 1,
-                    productPrice: Double(truncating: price as NSNumber)
+                    price: price,
+                    currency: currency
                 )
                 
                 NotificationManager.shared.resetPaywallTracking()

@@ -8,7 +8,6 @@
 import SwiftUI
 import RevenueCat
 import RevenueCatUI
-import Singular
 
 struct ContentView: View {
     @State private var selectedTab = 0
@@ -419,24 +418,29 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        Singular.event("subscription_purchase", withArgs: [
-                            "source": "profile_paywall"
-                        ])
-                        
                         if let entitlement = customerInfo.entitlements.active.values.first,
                            let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
                             let price = Double(truncating: package.storeProduct.price as NSNumber)
                             let currency = package.storeProduct.currencyCode ?? "USD"
-                            Singular.customRevenue(
-                                "subscription_purchase",
-                                currency: currency,
-                                amount: price,
-                                productSKU: package.storeProduct.productIdentifier,
-                                productName: package.storeProduct.localizedTitle,
-                                productCategory: "subscription",
-                                productQuantity: 1,
-                                productPrice: price
-                            )
+                            if entitlement.periodType == .trial {
+                                AdsTracker.trackStartTrial(
+                                    productId: package.storeProduct.productIdentifier,
+                                    price: price,
+                                    currency: currency
+                                )
+                            } else {
+                                AdsTracker.trackSubscribe(
+                                    productId: package.storeProduct.productIdentifier,
+                                    price: price,
+                                    currency: currency
+                                )
+                                AdsTracker.trackPurchase(
+                                    productId: package.storeProduct.productIdentifier,
+                                    productName: package.storeProduct.localizedTitle,
+                                    price: price,
+                                    currency: currency
+                                )
+                            }
                         }
                         
                         hasSeenPaywall = true
@@ -445,11 +449,7 @@ struct ProfileView: View {
                         
                         NotificationManager.shared.resetPaywallTracking()
                     }
-                    .onRestoreCompleted { customerInfo in
-                        Singular.event("subscription_purchase", withArgs: [
-                            "source": "profile_restore"
-                        ])
-                        
+                    .onRestoreCompleted { _ in
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
@@ -473,26 +473,31 @@ struct ProfileView: View {
                         print("[ContentView] 📝 Marked fallback paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        Singular.event("subscription_purchase", withArgs: [
-                            "source": "profile_fallback_paywall"
-                        ])
-                        
                         if let entitlement = customerInfo.entitlements.active.values.first {
                             Task {
                                 let products = await Purchases.shared.products([entitlement.productIdentifier])
                                 if let product = products.first {
                                     let price = Double(truncating: product.price as NSNumber)
                                     let currency = product.currencyCode ?? "USD"
-                                    Singular.customRevenue(
-                                        "subscription_purchase",
-                                        currency: currency,
-                                        amount: price,
-                                        productSKU: product.productIdentifier,
-                                        productName: product.localizedTitle,
-                                        productCategory: "subscription",
-                                        productQuantity: 1,
-                                        productPrice: price
-                                    )
+                                    if entitlement.periodType == .trial {
+                                        AdsTracker.trackStartTrial(
+                                            productId: product.productIdentifier,
+                                            price: price,
+                                            currency: currency
+                                        )
+                                    } else {
+                                        AdsTracker.trackSubscribe(
+                                            productId: product.productIdentifier,
+                                            price: price,
+                                            currency: currency
+                                        )
+                                        AdsTracker.trackPurchase(
+                                            productId: product.productIdentifier,
+                                            productName: product.localizedTitle,
+                                            price: price,
+                                            currency: currency
+                                        )
+                                    }
                                 }
                             }
                         }
