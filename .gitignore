@@ -1,0 +1,5 @@
+# --- Secrets ---
+# Local-only override that injects the OpenAI key for archive builds.
+# Never commit. See diewithoutregrets/Secrets.local.xcconfig.example.
+diewithoutregrets/Secrets.local.xcconfig
+**/Secrets.local.xcconfig

@@ -15,6 +15,7 @@
 		407C18382F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
 		407C18392F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */ = {isa = PBXBuildFile; fileRef = 407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */; };
 		407C183B2F62DFC500A932E5 /* UnlockMethodChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */; };
+		40CF95A32FA88F4D00E217D8 /* Secrets.local.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 40CF95A22FA88F4D00E217D8 /* Secrets.local.xcconfig */; };
 		40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */; };
 		40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905822F3B73A000F8F5C0 /* GazeSignal.swift */; };
 		40E9058C2F3B73A000F8F5C0 /* FocusCalibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */; };
@@ -75,9 +76,6 @@
 		6B706FCE2DFB2AB3004743C9 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */; };
 		6B706FCF2DFB2AB3004743C9 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */; };
 		6B706FD02DFB2AB3004743C9 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */; };
-		6B74330D2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
-		6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
-		6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */; };
 		6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */; };
 		6B79AC332DEC91080039F063 /* PayWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B79AC322DEC91080039F063 /* PayWallView.swift */; };
 		6B79AC352DEC92000039F063 /* FreeTrialReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B79AC342DEC92000039F063 /* FreeTrialReminderView.swift */; };
@@ -111,7 +109,6 @@
 		6BDD79232DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */; };
 		6BDD79242DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */; };
 		6BDD79252DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */; };
-		6BDD79292DB0352A007DA0BE /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDD79282DB0352A007DA0BE /* AppSecrets.swift */; };
 		6BE29CFB2DB82D0800505D57 /* BranchSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 6BE29CFA2DB82D0800505D57 /* BranchSDK */; };
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
@@ -165,6 +162,7 @@
 		407C18342F62D1B700A932E5 /* sademotion.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = sademotion.lottie; sourceTree = "<group>"; };
 		407C18362F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "shortcut-setup-tutorial.MP4"; sourceTree = "<group>"; };
 		407C183A2F62DFC500A932E5 /* UnlockMethodChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockMethodChoiceView.swift; sourceTree = "<group>"; };
+		40CF95A22FA88F4D00E217D8 /* Secrets.local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.local.xcconfig; sourceTree = "<group>"; };
 		40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalibration.swift; sourceTree = "<group>"; };
 		40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusDetectionManager.swift; sourceTree = "<group>"; };
 		40E9057F2F3B73A000F8F5C0 /* FocusEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusEngine.swift; sourceTree = "<group>"; };
@@ -244,7 +242,6 @@
 		6BC04D442DF6EB5A0056609C /* AIFlashcardDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFlashcardDemo.swift; sourceTree = "<group>"; };
 		6BC73FAD2DB047EF00301AF1 /* mockupvideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = mockupvideo.mp4; sourceTree = SOURCE_ROOT; };
 		6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		6BDD79282DB0352A007DA0BE /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
 		6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
@@ -569,11 +566,11 @@
 		6B9D89C32D3552E000DE8B2E /* diewithoutregrets */ = {
 			isa = PBXGroup;
 			children = (
+				40CF95A22FA88F4D00E217D8 /* Secrets.local.xcconfig */,
 				407C18342F62D1B700A932E5 /* sademotion.lottie */,
 				40738F362F62BB6A0085DF60 /* hourglass.lottie */,
 				6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */,
 				6BC73FAC2DB046C700301AF1 /* Videos */,
-				6BDD79282DB0352A007DA0BE /* AppSecrets.swift */,
 				6BDD79222DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy */,
 				6B22E89F2D4C0F69003A5685 /* diewithoutregrets.entitlements */,
 				6B22E84B2D480446003A5685 /* Features */,
@@ -733,7 +730,6 @@
 				6BC73FAF2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
 				407C18392F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6BDD79242DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
-				6B74330E2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				6B706FBD2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -745,7 +741,6 @@
 				6BC73FB02DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
 				407C18382F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6BDD79252DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
-				6B74330F2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				6B706FBE2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -755,12 +750,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BC73FAE2DB047EF00301AF1 /* mockupvideo.mp4 in Resources */,
-				6B74330D2DB19E5F0007270C /* Secrets.xcconfig in Resources */,
 				407C18372F62DDC200A932E5 /* shortcut-setup-tutorial.MP4 in Resources */,
 				6B9D89CC2D3552E600DE8B2E /* Preview Assets.xcassets in Resources */,
 				407C18352F62D1B700A932E5 /* sademotion.lottie in Resources */,
 				6BDD79232DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
 				40738F372F62BB6A0085DF60 /* hourglass.lottie in Resources */,
+				40CF95A32FA88F4D00E217D8 /* Secrets.local.xcconfig in Resources */,
 				6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */,
 				6B706FBC2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
 			);
@@ -838,7 +833,6 @@
 				6BA90DFD2E09CF470025C01B /* GradeObstaclesView.swift in Sources */,
 				6B7CD4E22D50A5510065A0F7 /* AvgScreenTimeViewModel.swift in Sources */,
 				6B7CD4F62D50DB000065A0F7 /* OnboardingView.swift in Sources */,
-				6BDD79292DB0352A007DA0BE /* AppSecrets.swift in Sources */,
 				6B22E85D2D48D984003A5685 /* RegretGuardInstructionSheet.swift in Sources */,
 				6B9D89C72D3552E000DE8B2E /* ContentView.swift in Sources */,
 				6B706FCE2DFB2AB3004743C9 /* ColorExtension.swift in Sources */,

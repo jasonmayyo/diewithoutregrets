@@ -19,7 +19,7 @@ enum FlashcardGenerationError: Error {
     var userMessage: String {
         switch self {
         case .networkError(let message):
-            return "Network error: \(message). Please check your internet connection and try again."
+            return "Network error: \(message). Please try again."
         case .timeout:
             return "Request timed out. The text might be too long to process. Try with shorter content."
         case .fileTooLarge:
@@ -1497,8 +1497,15 @@ struct AutoGenerateFlashcardsSheet: View {
                         }
                     }
                 } else {
-                    self.currentError = .networkError("API request failed")
-                    self.errorMessage = "Failed to generate flashcards. Please check your internet connection and try again."
+                    // generateFlashcardsAPI already classified and set a specific
+                    // currentError/errorMessage (token limit, invalid key, rate limit,
+                    // truncated response, real network failure, etc.). Don't clobber
+                    // it with a generic "check your internet connection" — that
+                    // misleads users when the issue isn't connectivity at all.
+                    if self.errorMessage == nil {
+                        self.currentError = .invalidResponse
+                        self.errorMessage = "We couldn't generate flashcards from this content. Please try again, or try with shorter or different text."
+                    }
                     self.showingGenerationView = false
                     self.processingStep = .idle
                 }
@@ -1916,10 +1923,26 @@ struct AutoGenerateFlashcardsSheet: View {
           return nil
         }
         
-        // Check if the key is still a placeholder
-        if key.hasPrefix("$(") || key.contains("OPENAI_API_KEY") {
-            print("🔑 ERROR: OpenAIAPIKey appears to be a placeholder: \(key)")
-            print("🔑 Make sure the Secrets.xcconfig file is properly configured with a real API key")
+        // Reject obvious placeholder values so we fail loudly with an
+        // actionable error instead of silently 401-ing against OpenAI.
+        let lowered = key.lowercased()
+        let placeholderMarkers = [
+            "$(",                       // unresolved xcconfig substitution
+            "openai_api_key",           // any variant referencing the var name
+            "replace_me",               // template marker
+            "replace-with",             // older template marker
+            "your-real-key",            // older template marker
+            "your-key",
+            "sk-replace",
+            "sk-your"
+        ]
+        let looksLikePlaceholder = placeholderMarkers.contains { lowered.contains($0) }
+        // Real OpenAI keys are well over 40 chars (typically 50+). A short
+        // value almost always means the placeholder wasn't replaced.
+        let suspiciouslyShort = key.count < 40
+        if looksLikePlaceholder || suspiciouslyShort {
+            print("🔑 ERROR: OpenAIAPIKey appears to be a placeholder (length: \(key.count))")
+            print("🔑 Edit diewithoutregrets/Secrets.local.xcconfig and set OPENAI_API_KEY to your real key")
             return nil
         }
         
@@ -1952,7 +1975,11 @@ struct AutoGenerateFlashcardsSheet: View {
         guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
             DispatchQueue.main.async {
                 currentError = .networkError("API key configuration error")
-                errorMessage = "AI flashcard generation is currently unavailable. You can still create flashcards manually."
+                // This is a build/config problem (key missing or still a
+                // placeholder), not a connectivity issue. Surface that clearly
+                // so users don't think it's their internet — and so we don't
+                // get bug reports about a problem only the developer can fix.
+                errorMessage = "AI flashcard generation is temporarily unavailable in this build. You can still create flashcards manually for now."
             }
             completion(nil)
             return
@@ -1962,13 +1989,20 @@ struct AutoGenerateFlashcardsSheet: View {
         
         let prompt = createFlashcardPrompt(for: language)
         
+        // 50 flashcards × ~150 tokens each (question + context + 4 choices +
+        // index + detailed explanation) easily exceeds 4000 tokens, which
+        // caused OpenAI to truncate the response mid-card. Truncation produced
+        // an empty parse → users saw a misleading "internet connection" error.
+        // gpt-4o-mini supports up to 16,384 output tokens; 12,000 leaves
+        // generous headroom for 50 fully-formed flashcards.
+        let maxOutputTokens = 12000
         let jsonBody: [String: Any] = [
             "model": "gpt-4o-mini",
             "messages": [
                 ["role": "system", "content": prompt],
                 ["role": "user", "content": inputText]
             ],
-            "max_tokens": 4000,
+            "max_tokens": maxOutputTokens,
             "temperature": 0.7
         ]
         
@@ -1976,7 +2010,7 @@ struct AutoGenerateFlashcardsSheet: View {
         print("   Model: gpt-4o-mini")
         print("   System prompt length: \(prompt.count) characters")
         print("   User message length: \(inputText.count) characters")
-        print("   Max tokens: 4000")
+        print("   Max tokens: \(maxOutputTokens)")
         print("   Temperature: 0.7")
         
         guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonBody, options: []) else {
@@ -1999,12 +2033,23 @@ struct AutoGenerateFlashcardsSheet: View {
                     switch error.code {
                     case NSURLErrorTimedOut:
                         currentError = .timeout
-                    case NSURLErrorNotConnectedToInternet:
+                        errorMessage = currentError?.userMessage
+                    case NSURLErrorNotConnectedToInternet,
+                         NSURLErrorNetworkConnectionLost,
+                         NSURLErrorDataNotAllowed:
+                        // Only surface "internet connection" copy when the OS
+                        // actually says connectivity is the problem.
                         currentError = .networkError("No internet connection")
+                        errorMessage = "It looks like your device is offline. Please check your internet connection and try again."
+                    case NSURLErrorCannotFindHost,
+                         NSURLErrorCannotConnectToHost,
+                         NSURLErrorDNSLookupFailed:
+                        currentError = .networkError(error.localizedDescription)
+                        errorMessage = "Couldn't reach the AI service right now. Please try again in a moment."
                     default:
                         currentError = .networkError(error.localizedDescription)
+                        errorMessage = "Couldn't generate flashcards: \(error.localizedDescription). Please try again."
                     }
-                    errorMessage = currentError?.userMessage
                     completion(nil)
                     return
                 }
