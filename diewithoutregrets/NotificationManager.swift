@@ -37,11 +37,13 @@ class NotificationManager {
         // Check if we should schedule
         guard !hasSeenBuybackNotification() else {
             print("[NotificationManager] ⏭️ User has already seen buyback notification")
+            Analytics.buybackNotificationSkipped(reason: "already_seen")
             return
         }
         
         guard didViewPaywallWithoutPurchasing() else {
             print("[NotificationManager] ⏭️ User did not view paywall or already purchased")
+            Analytics.buybackNotificationSkipped(reason: "no_paywall_view")
             return
         }
         
@@ -49,12 +51,14 @@ class NotificationManager {
         Purchases.shared.getCustomerInfo { customerInfo, error in
             guard let customerInfo = customerInfo, error == nil else {
                 print("[NotificationManager] ❌ Error checking subscription: \(error?.localizedDescription ?? "unknown")")
+                Analytics.buybackNotificationSkipped(reason: "customer_info_error")
                 return
             }
             
             // Don't show notification if user has active entitlements
             if !customerInfo.entitlements.active.isEmpty {
                 print("[NotificationManager] ⏭️ User has active subscription, skipping notification")
+                Analytics.buybackNotificationSkipped(reason: "already_subscribed")
                 return
             }
             
@@ -79,8 +83,10 @@ class NotificationManager {
             UNUserNotificationCenter.current().add(request) { error in
                 if let error = error {
                     print("[NotificationManager] ❌ Failed to schedule notification: \(error.localizedDescription)")
+                    Analytics.buybackNotificationSkipped(reason: "schedule_failed")
                 } else {
                     print("[NotificationManager] ✅ Buyback notification scheduled for 3 seconds")
+                    Analytics.buybackNotificationScheduled()
                 }
             }
         }

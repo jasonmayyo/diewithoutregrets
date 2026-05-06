@@ -304,6 +304,8 @@ struct RegretEditorSheet: View {
         regret.backgroundExplanation = editedExplanation
         regret.choices = editedChoices
         regret.correctAnswerIndex = editedCorrectIndex
+        // We don't have the deck context here so we just track the edit.
+        Analytics.flashcardEdited(deckId: nil, deckName: nil)
         dismiss()
     }
 }

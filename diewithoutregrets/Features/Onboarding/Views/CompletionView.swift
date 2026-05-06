@@ -55,18 +55,17 @@ struct CompletionView: View {
                 Spacer()
                 
                 Button(action: {
-                    PostHogSDK.shared.capture(
-                        "onboarding_completed",
-                        properties: [
-                            "timestamp": Date().ISO8601Format(),
-                            "user_name": onboardingViewModel.userName,
-                            "selected_age": onboardingViewModel.selectedAge,
-                            "screen_time": onboardingViewModel.screenTime,
-                            "deck_name": onboardingViewModel.newDeckName,
-                            "flashcards_created": onboardingViewModel.regretEntries.count,
-                            "selected_apps_count": onboardingViewModel.selectedApps.count
-                        ]
-                    )
+                    Analytics.capture("onboarding_completed", properties: [
+                        "user_name": onboardingViewModel.userName,
+                        "selected_age": onboardingViewModel.selectedAge,
+                        "screen_time": onboardingViewModel.screenTime,
+                        "deck_name": onboardingViewModel.newDeckName,
+                        "flashcards_created": onboardingViewModel.regretEntries.count,
+                        "selected_apps_count": onboardingViewModel.selectedApps.count,
+                        "selected_apps": onboardingViewModel.selectedApps.map { $0.name },
+                        "feelings": Array(onboardingViewModel.selectedFeelings).sorted(),
+                        "obstacles": Array(onboardingViewModel.selectedObstacles).sorted()
+                    ])
 
                     AdsTracker.trackCompleteRegistration()
 

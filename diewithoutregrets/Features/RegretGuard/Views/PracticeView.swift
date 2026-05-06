@@ -58,6 +58,9 @@ struct PracticeView: View {
             .onAppear {
                 viewModel.setup(deck: deck)
             }
+            .onDisappear {
+                viewModel.trackAbandonIfNeeded()
+            }
         }
     }
     
@@ -330,8 +333,11 @@ struct PracticeView: View {
         @Published var hasIncorrectAnswers = false
         @Published var questions: [Regret] = []
         @Published var questionResults: [Bool?] = []
-        
+
         private var originalDeck: Deck?
+        private var sessionStartedAt: Date = Date()
+        private var didTrackCompletion: Bool = false
+        private var attemptCount: Int = 1
         
         var currentQuestion: Regret? {
             guard !questions.isEmpty else { return nil }
@@ -367,6 +373,17 @@ struct PracticeView: View {
             questionResults = Array(repeating: nil, count: questions.count) // Now works with the declared property
             currentStep = 0
             selectedAnswer = nil
+
+            // Only track session start on the first setup call (not retries —
+            // those reuse the same originalDeck via retryQuestions).
+            if !didTrackCompletion {
+                sessionStartedAt = Date()
+                Analytics.practiceSessionStarted(
+                    deckId: deck.id.uuidString,
+                    deckName: deck.name,
+                    cardCount: questions.count
+                )
+            }
         }
             
         
@@ -376,6 +393,7 @@ struct PracticeView: View {
                 selectedAnswer = nil
                 if currentStep >= questions.count * 2 {
                     showFinalMessage = true
+                    trackCompletion()
                 }
             } else if selectedAnswer != nil {
                 checkAnswer()
@@ -384,11 +402,38 @@ struct PracticeView: View {
         }
         
         func retryQuestions() {
+            attemptCount += 1
             setup(deck: originalDeck)
             showFinalMessage = false
             hasIncorrectAnswers = false
         }
-        
+
+        /// Called by the view when the user dismisses without finishing.
+        func trackAbandonIfNeeded() {
+            guard !didTrackCompletion, let deck = originalDeck else { return }
+            Analytics.practiceSessionAbandoned(
+                deckId: deck.id.uuidString,
+                deckName: deck.name,
+                currentStep: currentStep,
+                totalQuestions: questions.count
+            )
+            didTrackCompletion = true
+        }
+
+        private func trackCompletion() {
+            guard !didTrackCompletion, let deck = originalDeck else { return }
+            didTrackCompletion = true
+            let correct = questionResults.compactMap { $0 }.filter { $0 }.count
+            Analytics.practiceSessionCompleted(
+                deckId: deck.id.uuidString,
+                deckName: deck.name,
+                correctCount: correct,
+                totalQuestions: questions.count,
+                hadRetries: attemptCount > 1,
+                durationSec: Date().timeIntervalSince(sessionStartedAt)
+            )
+        }
+
         private func checkAnswer() {
                guard let currentQuestion = currentQuestion else { return }
                let isCorrect = selectedAnswer == currentQuestion.correctAnswerIndex

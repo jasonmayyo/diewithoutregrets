@@ -250,7 +250,13 @@ struct DeckListView: View {
                 Button("Delete", role: .destructive) {
                     if let deck = deckToDelete,
                        let index = deckStore.decks.firstIndex(where: { $0.id == deck.id }) {
+                        let cardCount = deck.cards.count
                         deckStore.decks.remove(at: index)
+                        Analytics.deckDeleted(
+                            name: deck.name,
+                            cardCount: cardCount,
+                            totalDecksAfter: deckStore.decks.count
+                        )
                     }
                     deckToDelete = nil
                 }
@@ -577,7 +583,13 @@ struct DeckView: View {
     }
     
     private func deleteCards(at offsets: IndexSet) {
+        let count = offsets.count
         deck.cards.remove(atOffsets: offsets)
+        Analytics.flashcardDeleted(
+            deckId: deck.id.uuidString,
+            deckName: deck.name,
+            count: count
+        )
     }
 }
 
@@ -659,6 +671,10 @@ struct NewDeckView: View {
                                 cards: []
                             )
                             deckStore.addDeck(newDeck)
+                            Analytics.deckCreated(
+                                name: trimmedName,
+                                totalDecksAfter: deckStore.decks.count
+                            )
                             dismiss()
                         }
                     }
@@ -738,6 +754,12 @@ struct EditDeckView: View {
                         } else {
                             var updatedDeck = deck
                             updatedDeck.name = trimmedName
+                            if trimmedName != deck.name {
+                                Analytics.deckRenamed(
+                                    oldName: deck.name,
+                                    newName: trimmedName
+                                )
+                            }
                             onSave(updatedDeck)
                             dismiss()
                         }

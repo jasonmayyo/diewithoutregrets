@@ -124,6 +124,13 @@ struct RegretGuard: View {
             HStack(spacing: 10) {
                 // Flashcards option
                 Button(action: {
+                    if unlockMethod != "flashcards" {
+                        Analytics.settingChanged(
+                            key: "unlock_method",
+                            oldValue: unlockMethod,
+                            newValue: "flashcards"
+                        )
+                    }
                     unlockMethod = "flashcards"
                     let generator = UIImpactFeedbackGenerator(style: .light)
                     generator.impactOccurred()
@@ -158,6 +165,13 @@ struct RegretGuard: View {
                 
                 // True Focus option
                 Button(action: {
+                    if unlockMethod != "trueFocus" {
+                        Analytics.settingChanged(
+                            key: "unlock_method",
+                            oldValue: unlockMethod,
+                            newValue: "trueFocus"
+                        )
+                    }
                     unlockMethod = "trueFocus"
                     let generator = UIImpactFeedbackGenerator(style: .light)
                     generator.impactOccurred()
@@ -214,6 +228,8 @@ struct RegretGuard: View {
             LazyVGrid(columns: columns, spacing: 9) {
                 ForEach(viewModel.apps) { app in
                     AppRestrictionButton(app: app) {
+                        Analytics.appSelectionToggled(app: app.name, surface: "guard")
+                        Analytics.appInstructionSheetViewed(app: app.name, surface: "guard")
                         viewModel.selectApp(app)
                     }
                 }
@@ -245,6 +261,9 @@ struct DeckSelectionView: View {
                         deck: deck,
                         isSelected: deckStore.selectedDeck?.id == deck.id
                     ) {
+                        if deckStore.selectedDeck?.id != deck.id {
+                            Analytics.deckSelected(name: deck.name, cardCount: deck.cards.count)
+                        }
                         deckStore.selectDeck(deck)
                     }
                     .tag(index)

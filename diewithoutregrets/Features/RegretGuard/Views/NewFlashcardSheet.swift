@@ -175,6 +175,11 @@ struct NewFlashcardSheet: View {
             backgroundExplanation: newExplanation
         )
         deck.cards.append(newRegret)
+        Analytics.flashcardCreated(
+            source: "manual",
+            deckId: deck.id.uuidString,
+            deckName: deck.name
+        )
         dismiss()
     }
 }

@@ -36,9 +36,18 @@ struct AppSelectionOnboarding: View {
                         ForEach(viewModel.apps) { app in
                             OnboardingAppButton(app: app) {
                                 viewModel.selectApp(app)
-                                if viewModel.selectedApps.contains(where: { $0.id == app.id }) {
+                                let isNowSelected = viewModel.selectedApps.contains(where: { $0.id == app.id })
+                                Analytics.onboardingAppToggled(
+                                    app: app.name,
+                                    isSelected: isNowSelected,
+                                    totalSelected: viewModel.selectedApps.count
+                                )
+                                if isNowSelected {
                                     viewModel.currentInstructionApp = app
                                     showInstructionSheet = true
+                                    Analytics.capture("onboarding_app_instruction_sheet_viewed", properties: [
+                                        "app": app.name
+                                    ])
                                 }
                             }
                             .environmentObject(viewModel)
