@@ -2,14 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>audio</string>
-    </array>
     <key>NSUserTrackingUsageDescription</key>
     <string>Study Guard uses tracking data to measure which ads bring in new users and improve our campaigns.</string>
     <key>NSCameraUsageDescription</key>
-    <string>StudyGuard uses the camera to verify you're studying during True Focus sessions.</string>
+    <string>Study Guard uses the front camera during True Focus study sessions to detect whether you are at your desk and looking at your work. All video is processed live on your device — frames are never recorded, stored, or transmitted off the device.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -29,6 +25,8 @@
     </array>
     <key>OpenAIAPIKey</key>
     <string>$(OPENAI_API_KEY)</string>
+    <key>SENTRY_DSN</key>
+    <string>$(SENTRY_DSN)</string>
     <key>branch_key</key>
     <dict>
         <key>live</key>

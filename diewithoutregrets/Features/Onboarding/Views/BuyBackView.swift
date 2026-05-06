@@ -18,6 +18,7 @@ struct BuyBackOfferView: View {
     @State private var showConfetti: Bool = false
     @State private var isPurchasing = false
     @State private var purchaseErrorMessage: String?
+    @State private var didCompletePurchase: Bool = false
     private let confettiShownKey = "buyback_confetti_shown"
     
     var body: some View {
@@ -187,6 +188,7 @@ struct BuyBackOfferView: View {
         }
         .onAppear {
             print("[BuyBackOfferView] onAppear: triggering animations & analytics")
+            Analytics.paywallViewed(surface: "buyback")
             showTitle = true
             showOfferCard = true
             showButton = true
@@ -196,6 +198,12 @@ struct BuyBackOfferView: View {
                 UserDefaults.standard.set(true, forKey: confettiShownKey)
                 startConfettiBurst()
             }
+        }
+        .onDisappear {
+            Analytics.paywallDismissed(
+                surface: "buyback",
+                didPurchase: didCompletePurchase
+            )
         }
         .alert("Purchase Error", isPresented: .constant(purchaseErrorMessage != nil)) {
             Button("OK") { purchaseErrorMessage = nil }
@@ -225,6 +233,9 @@ struct BuyBackOfferView: View {
             }
             
             print("[BuyBackOfferView] Purchasing package: \(package.identifier)")
+            Telemetry.breadcrumb("Purchase started", category: "paywall",
+                                 data: ["surface": "buyback",
+                                        "product_id": package.storeProduct.productIdentifier])
             let result = try await Purchases.shared.purchase(package: package)
             
             if result.customerInfo.entitlements.active.isEmpty == false {
@@ -238,6 +249,17 @@ struct BuyBackOfferView: View {
                     price: price,
                     currency: currency
                 )
+
+                Analytics.subscriptionStarted(
+                    surface: "buyback",
+                    productId: package.storeProduct.productIdentifier,
+                    price: price,
+                    currency: currency,
+                    isTrial: false,
+                    offeringId: nil,
+                    entitlements: result.customerInfo.entitlements.active.keys.map { $0 }
+                )
+                didCompletePurchase = true
                 
                 NotificationManager.shared.resetPaywallTracking()
                 NotificationManager.shared.markBuybackNotificationSeen()
@@ -250,9 +272,17 @@ struct BuyBackOfferView: View {
             }
         } catch {
             let nsError = error as NSError
-            if nsError.domain != "RevenueCat.PurchasesErrorCode" || nsError.code != 1 {
+            // Code 1 = purchaseCancelledError. User cancellations aren't bugs;
+            // don't surface to UI and don't ship to Sentry — they'd flood the
+            // dashboard and there's nothing to fix.
+            let isUserCancellation = nsError.domain == "RevenueCat.PurchasesErrorCode" && nsError.code == 1
+            if !isUserCancellation {
                 print("[BuyBackOfferView] Purchase error: \(nsError)")
                 purchaseErrorMessage = nsError.localizedDescription
+                Telemetry.capture(error,
+                                  context: ["error_domain": nsError.domain,
+                                            "error_code": nsError.code],
+                                  tags: ["feature": "paywall", "surface": "buyback"])
             }
         }
     }

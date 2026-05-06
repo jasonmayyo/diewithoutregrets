@@ -33,6 +33,9 @@ class RegretStore: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: "SavedRegrets")
         } catch {
             print("Error saving regrets: \(error)")
+            Telemetry.capture(error,
+                              context: ["regret_count": regrets.count],
+                              tags: ["feature": "decks", "operation": "save_regrets"])
         }
     }
     
@@ -122,6 +125,10 @@ class DeckStore: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: "SavedDecks")
         } catch {
             print("Error saving decks: \(error)")
+            let totalCards = decks.reduce(0) { $0 + $1.cards.count }
+            Telemetry.capture(error,
+                              context: ["deck_count": decks.count, "total_cards": totalCards],
+                              tags: ["feature": "decks", "operation": "save_decks"])
         }
     }
     

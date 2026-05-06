@@ -112,15 +112,13 @@ struct PayWallView: View {
         }
         .onAppear {
             // Track paywall viewed
-            PostHogSDK.shared.capture(
-                "paywall_viewed",
-                properties: [
-                    "timestamp": Date().ISO8601Format(),
-                    "user_name": onboardingViewModel.userName,
-                    "selected_age": onboardingViewModel.selectedAge,
-                    "screen_time": onboardingViewModel.screenTime
-                ]
-            )
+            Analytics.paywallViewed(surface: "onboarding_pre", properties: [
+                "user_name": onboardingViewModel.userName,
+                "selected_age": onboardingViewModel.selectedAge,
+                "screen_time": onboardingViewModel.screenTime
+            ])
+            Telemetry.breadcrumb("Paywall viewed", category: "paywall",
+                                 data: ["surface": "onboarding_pre"])
             AdsTracker.trackViewContent(name: "onboarding_paywall")
             
             // Trigger animations when view appears

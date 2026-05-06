@@ -194,6 +194,10 @@ struct PiPVideoPlayer: UIViewControllerRepresentable {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Failed to configure audio session: \(error)")
+            Telemetry.capture(error,
+                              context: ["video_name": videoName],
+                              tags: ["feature": "instruction_sheet", "operation": "audio_activate"],
+                              level: .warning)
         }
         
         guard let url = Bundle.main.url(forResource: videoName, withExtension: videoExtension) else {

@@ -22,8 +22,21 @@ struct RegretView: View {
     @AppStorage("useAllCards") private var useAllCards: Bool = false
     @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
     @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
-    
+
+    /// Wall-clock start of the current attempt — used to measure how long
+    /// users spend in the unlock flow before completing or rage-quitting.
+    @State private var attemptStartTime: Date = Date()
+    /// How many attempts (including retries) for this app open.
+    @State private var attemptNumber: Int = 1
+    /// Tracks which questions we've already emitted an "answered" event for
+    /// so we don't double-count if the view re-renders.
+    @State private var answeredQuestionIndices: Set<Int> = []
+
     let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+
+    private var currentAppName: String {
+        sharedDefaults?.string(forKey: "LastGuardedApp") ?? "unknown"
+    }
     
     var body: some View {
         ZStack {
@@ -351,6 +364,16 @@ struct RegretView: View {
                 if !isCorrect {
                     hasIncorrectAnswers = true
                 }
+
+                if !answeredQuestionIndices.contains(questionIndex) {
+                    answeredQuestionIndices.insert(questionIndex)
+                    Analytics.unlockQuestionAnswered(
+                        appName: currentAppName,
+                        questionIndex: questionIndex,
+                        totalQuestions: selectedRegrets.count,
+                        isCorrect: isCorrect
+                    )
+                }
             }
             
             if currentStep % 2 == 0 {
@@ -371,6 +394,10 @@ struct RegretView: View {
         // Validate deck selection
         guard let deck = deckStore.selectedDeck else {
             print("🚨 Critical error: No deck selected in RegretView")
+            // Track the broken state too — if this fires often it's a real bug.
+            Analytics.capture("unlock_attempted_no_deck", properties: [
+                "app_name": currentAppName
+            ])
             showFinalMessage = true
             return
         }
@@ -380,10 +407,31 @@ struct RegretView: View {
         
         guard !deck.cards.isEmpty else {
             print("⚠️ Empty deck selected")
+            Analytics.capture("unlock_attempted_empty_deck", properties: [
+                "app_name": currentAppName,
+                "deck_name": deck.name
+            ])
             showFinalMessage = true
             return
-        }                     
-        
+        }
+
+        Analytics.unlockAttempted(
+            appName: currentAppName,
+            unlockMethod: "flashcards",
+            flashcardCount: flashcardCount,
+            useAllCards: useAllCards,
+            animationType: selectedAnimationType,
+            deckId: deck.id.uuidString,
+            deckName: deck.name,
+            availableCards: deck.cards.count
+        )
+        Telemetry.breadcrumb("Unlock attempted", category: "core_product",
+                             data: ["app_name": currentAppName,
+                                    "deck_name": deck.name,
+                                    "available_cards": deck.cards.count])
+        attemptStartTime = Date()
+        attemptNumber = 1
+
         DispatchQueue.main.async {
                self.selectedRegrets = useAllCards || flashcardCount >= deck.cards.count
                    ? deck.cards.shuffled()
@@ -398,12 +446,22 @@ struct RegretView: View {
             selectedAnswer = nil
             hasIncorrectAnswers = false
             questionResults = Array(repeating: nil, count: selectedRegrets.count)
+            answeredQuestionIndices = []
             viewModel.reset() // Use viewModel's reset instead
         }
     
     private func retryQuestions() {
         guard let deck = deckStore.selectedDeck else { return }
-        
+
+        let correctSoFar = questionResults.compactMap { $0 }.filter { $0 }.count
+        Analytics.unlockRetried(
+            appName: currentAppName,
+            correctCount: correctSoFar,
+            totalQuestions: selectedRegrets.count,
+            attemptNumber: attemptNumber
+        )
+        attemptNumber += 1
+
         // If useAllCards is true or if user selected more cards than available, use all cards
         if useAllCards || flashcardCount >= deck.cards.count {
             selectedRegrets = deck.cards.shuffled()
@@ -415,7 +473,17 @@ struct RegretView: View {
     
     private func handleUnlock() {
         showUnlockAnimation = true
-        
+
+        let correctCount = questionResults.compactMap { $0 }.filter { $0 }.count
+        Analytics.unlockCompleted(
+            appName: currentAppName,
+            correctCount: correctCount,
+            totalQuestions: selectedRegrets.count,
+            hadRetries: attemptNumber > 1,
+            durationSec: Date().timeIntervalSince(attemptStartTime),
+            breakDurationMinutes: flashcardBreakDuration
+        )
+
         // Wait for animation to complete before proceeding
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Match animation duration
             let currentTime = Date().timeIntervalSince1970
@@ -437,6 +505,13 @@ struct RegretView: View {
     }
     
     private func navigateToReport() {
+        Analytics.unlockCloseAnyway(
+            appName: currentAppName,
+            currentStep: currentStep,
+            totalSteps: selectedRegrets.count * 2,
+            hadIncorrectAnswers: hasIncorrectAnswers,
+            durationSec: Date().timeIntervalSince(attemptStartTime)
+        )
         NavigationModel.shared.navigate(to: .regretReport)
     }
     

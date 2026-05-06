@@ -1,5 +1,17 @@
 # --- Secrets ---
-# Local-only override that injects the OpenAI key for archive builds.
+# Local-only override that injects the OpenAI key + Sentry DSN for archive builds.
 # Never commit. See diewithoutregrets/Secrets.local.xcconfig.example.
 diewithoutregrets/Secrets.local.xcconfig
 **/Secrets.local.xcconfig
+
+# Sentry CLI auth token (used by the dSYM upload Run Script and by
+# `sentry-cli` invocations from CI / fastlane). The wizard creates this at
+# repo root with `[auth] token=...`. Never commit.
+.sentryclirc
+
+# --- Xcode IDE state ---
+# Per-user UI state (open tabs, scroll position, breakpoint locations).
+# Changes every time you open Xcode and creates noise in PRs. Solo-project
+# convention is to ignore it; multi-developer projects sometimes commit it.
+*.xcuserstate
+xcuserdata/

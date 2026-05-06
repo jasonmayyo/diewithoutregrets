@@ -185,7 +185,14 @@ final class FocusDetectionManager: NSObject, ObservableObject {
             try camera.lockForConfiguration()
             camera.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 15)
             camera.unlockForConfiguration()
-        } catch { }
+        } catch {
+            // Frame-rate lock failed; the session still works at the camera's
+            // default rate, so we don't surface to UI. Log to Sentry as info
+            // so we know if it's happening on real devices.
+            Telemetry.capture(error,
+                              tags: ["feature": "true_focus", "operation": "camera_lock"],
+                              level: .info)
+        }
         #endif
 
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -238,6 +245,11 @@ final class FocusDetectionManager: NSObject, ObservableObject {
                 self.startDetectionTimer()
             }
         } catch {
+            // configureSession only throws on AVCaptureDeviceInput init —
+            // typically a hardware/permission edge case that surfaces to the
+            // user as "permission denied". Worth knowing about on real devices.
+            Telemetry.capture(error,
+                              tags: ["feature": "true_focus", "operation": "configure_session"])
             Task { @MainActor in self.permissionDenied = true }
         }
     }
@@ -359,6 +371,14 @@ final class FocusDetectionManager: NSObject, ObservableObject {
                     self.scheduleNextCheck()
                 }
             } catch {
+                // Vision request failed mid-session. We treat it as a missed
+                // signal (signalsPass: false) and continue, but capture a
+                // sample so we can spot a pattern across users — these
+                // failures fire many times per second so we throttle: capture
+                // is sampled, breadcrumb is always.
+                Telemetry.breadcrumb("Vision request failed: \(error.localizedDescription)",
+                                     category: "true_focus",
+                                     level: .warning)
                 Task { @MainActor in
                     self.debugReason = "Error: \(error.localizedDescription)"
                     if !self.isInSetup {

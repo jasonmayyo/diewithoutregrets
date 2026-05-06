@@ -190,50 +190,69 @@ struct FreeTrialReminderView: View {
                 PaywallView(offering: offering)
                     .onAppear {
                         print("🎯 Showing paywall with offering: \(offering.identifier)")
-                        
+                        Analytics.paywallViewed(surface: "onboarding_rc", properties: [
+                            "offering_id": offering.identifier,
+                            "has_offering": true
+                        ])
+
                         // Mark that user viewed the paywall
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                         print("[FreeTrialReminderView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
-                        // Track successful purchase
-                        PostHogSDK.shared.capture(
-                            "onboarding_purchase_completed",
-                            properties: [
-                                "timestamp": Date().ISO8601Format(),
-                                "user_name": viewModel.userName,
-                                "offering_id": offering.identifier,
-                                "entitlements": customerInfo.entitlements.active.keys.map { $0 }
-                            ]
-                        )
-                        
+                        var price: Double?
+                        var currency: String?
+                        var productId: String = "unknown"
+                        var isTrial: Bool = false
+
                         if let entitlement = customerInfo.entitlements.active.values.first,
                            let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                            let price = Double(truncating: package.storeProduct.price as NSNumber)
-                            let currency = package.storeProduct.currencyCode ?? "USD"
-                            if entitlement.periodType == .trial {
+                            price = Double(truncating: package.storeProduct.price as NSNumber)
+                            currency = package.storeProduct.currencyCode ?? "USD"
+                            productId = package.storeProduct.productIdentifier
+                            isTrial = entitlement.periodType == .trial
+
+                            if isTrial {
                                 AdsTracker.trackStartTrial(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                             } else {
                                 AdsTracker.trackSubscribe(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                                 AdsTracker.trackPurchase(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                             }
                         }
-                        
+
+                        // New unified subscription event (replaces the old
+                        // `onboarding_purchase_completed` event — kept below
+                        // for dashboards that haven't migrated yet).
+                        Analytics.subscriptionStarted(
+                            surface: "onboarding_rc",
+                            productId: productId,
+                            price: price,
+                            currency: currency,
+                            isTrial: isTrial,
+                            offeringId: offering.identifier,
+                            entitlements: customerInfo.entitlements.active.keys.map { $0 }
+                        )
+                        Analytics.capture("onboarding_purchase_completed", properties: [
+                            "user_name": viewModel.userName,
+                            "offering_id": offering.identifier,
+                            "entitlements": customerInfo.entitlements.active.keys.map { $0 }
+                        ])
+
                         didCompletePurchase = true
                         
                         NotificationManager.shared.resetPaywallTracking()
@@ -242,6 +261,11 @@ struct FreeTrialReminderView: View {
                         viewModel.nextStep()
                     }
                     .onRestoreCompleted { customerInfo in
+                        let hasActive = !customerInfo.entitlements.active.isEmpty
+                        Analytics.restorePurchasesSucceeded(
+                            surface: "onboarding_rc",
+                            hasActiveEntitlements: hasActive
+                        )
                         if customerInfo.entitlements["Pro Acess"]?.isActive == true {
                             didCompletePurchase = true
                             NotificationManager.shared.resetPaywallTracking()
@@ -249,10 +273,19 @@ struct FreeTrialReminderView: View {
                             viewModel.nextStep()
                         }
                     }
+                    .onDisappear {
+                        Analytics.paywallDismissed(
+                            surface: "onboarding_rc",
+                            didPurchase: didCompletePurchase
+                        )
+                    }
             } else {
                 PaywallView()
                     .onAppear {
                         print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
+                        Analytics.paywallViewed(surface: "onboarding_rc", properties: [
+                            "has_offering": false
+                        ])
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                     }
                     .onPurchaseCompleted { customerInfo in
@@ -262,7 +295,8 @@ struct FreeTrialReminderView: View {
                                 if let product = products.first {
                                     let price = Double(truncating: product.price as NSNumber)
                                     let currency = product.currencyCode ?? "USD"
-                                    if entitlement.periodType == .trial {
+                                    let isTrial = entitlement.periodType == .trial
+                                    if isTrial {
                                         AdsTracker.trackStartTrial(
                                             productId: product.productIdentifier,
                                             productName: product.localizedTitle,
@@ -283,22 +317,47 @@ struct FreeTrialReminderView: View {
                                             currency: currency
                                         )
                                     }
+                                    Analytics.subscriptionStarted(
+                                        surface: "onboarding_rc",
+                                        productId: product.productIdentifier,
+                                        price: price,
+                                        currency: currency,
+                                        isTrial: isTrial,
+                                        offeringId: nil,
+                                        entitlements: customerInfo.entitlements.active.keys.map { $0 }
+                                    )
                                 }
                             }
                         }
-                        
+                        Analytics.capture("onboarding_purchase_completed", properties: [
+                            "user_name": viewModel.userName,
+                            "offering_id": "fallback",
+                            "entitlements": customerInfo.entitlements.active.keys.map { $0 }
+                        ])
+
                         didCompletePurchase = true
                         NotificationManager.shared.resetPaywallTracking()
                         showingRevenueCatPaywall = false
                         viewModel.nextStep()
                     }
                     .onRestoreCompleted { customerInfo in
+                        let hasActive = !customerInfo.entitlements.active.isEmpty
+                        Analytics.restorePurchasesSucceeded(
+                            surface: "onboarding_rc",
+                            hasActiveEntitlements: hasActive
+                        )
                         if customerInfo.entitlements["Pro Acess"]?.isActive == true {
                             didCompletePurchase = true
                             NotificationManager.shared.resetPaywallTracking()
                             showingRevenueCatPaywall = false
                             viewModel.nextStep()
                         }
+                    }
+                    .onDisappear {
+                        Analytics.paywallDismissed(
+                            surface: "onboarding_rc",
+                            didPurchase: didCompletePurchase
+                        )
                     }
             }
         }
@@ -326,7 +385,9 @@ struct FreeTrialReminderView: View {
         guard !isRestoringPurchases else { return }
         isRestoringPurchases = true
         defer { isRestoringPurchases = false }
-        
+
+        Analytics.restorePurchasesAttempted(surface: "onboarding")
+
         do {
             print("🔄 Starting restore purchases...")
             
@@ -341,7 +402,8 @@ struct FreeTrialReminderView: View {
             // Check if user has active entitlements after restore
             if !customerInfo.entitlements.active.isEmpty {
                 print("✅ Restore successful - user has active entitlements: \(customerInfo.entitlements.active.keys)")
-                
+                Analytics.restorePurchasesSucceeded(surface: "onboarding", hasActiveEntitlements: true)
+
                 // Show success message
                 DispatchQueue.main.async {
                     self.restoreSuccessMessage = "Your purchases have been restored successfully!"
@@ -354,12 +416,16 @@ struct FreeTrialReminderView: View {
                 }
             } else {
                 print("ℹ️ Restore completed but no active entitlements found")
+                Analytics.restorePurchasesSucceeded(surface: "onboarding", hasActiveEntitlements: false)
                 DispatchQueue.main.async {
                     self.restoreErrorMessage = "No previous purchases found to restore."
                 }
             }
         } catch {
             print("❌ Restore purchases error: \(error)")
+            Analytics.restorePurchasesFailed(surface: "onboarding", error: error.localizedDescription)
+            Telemetry.capture(error,
+                              tags: ["feature": "paywall", "surface": "onboarding", "operation": "restore_purchases"])
             DispatchQueue.main.async {
                 self.restoreErrorMessage = error.localizedDescription
             }
@@ -368,7 +434,8 @@ struct FreeTrialReminderView: View {
     
     private func requestNotificationPermission() {
         isRequestingPermission = true
-        
+        Analytics.capture("onboarding_notification_permission_requested")
+
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             DispatchQueue.main.async {
                 isRequestingPermission = false
@@ -378,7 +445,8 @@ struct FreeTrialReminderView: View {
                 } else {
                     print("🔔 Notification permission granted: \(granted)")
                 }
-                
+                Analytics.onboardingNotificationPermission(granted: granted)
+
                 // Show the RevenueCat paywall after notification permission
                 if currentOffering != nil || !isLoadingOffering {
                     showingRevenueCatPaywall = true

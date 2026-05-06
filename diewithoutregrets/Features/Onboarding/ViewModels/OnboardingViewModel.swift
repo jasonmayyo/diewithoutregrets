@@ -38,7 +38,13 @@ enum OnboardingStep: CaseIterable {
 }
 
 class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: OnboardingStep = .theHook
+    @Published var currentStep: OnboardingStep = .theHook {
+        didSet {
+            // Fire `onboarding_step_viewed` whenever the step changes so we can
+            // build a 20-step funnel in PostHog from a single event.
+            trackStepViewed()
+        }
+    }
     @Published var userName: String = ""
     @Published var selectedAge: String = ""
     @Published var screenTime: String = ""
@@ -47,6 +53,10 @@ class OnboardingViewModel: ObservableObject {
     @Published var selectedApps: [RegretApp] = []
     @Published var selectedFeelings: Set<String> = []
     @Published var selectedObstacles: Set<String> = []
+
+    /// Tracks when each step was first shown so we can compute time-on-step
+    /// when the user advances. Keyed by step name.
+    private var stepStartTimes: [String: Date] = [:]
 
     private var hapticEngine: CHHapticEngine?
     
@@ -57,6 +67,26 @@ class OnboardingViewModel: ObservableObject {
         
     init() {
         prepareHaptics()
+        // Fire for the initial step (didSet doesn't run during init).
+        trackStepViewed()
+    }
+
+    private func trackStepViewed() {
+        let stepName = "\(currentStep)"
+        stepStartTimes[stepName] = Date()
+        Analytics.onboardingStepViewed(
+            step: stepName,
+            stepIndex: currentStepIndex,
+            totalSteps: totalSteps
+        )
+    }
+
+    /// Time the user spent on the given step before advancing, in seconds.
+    /// Returns nil if we never recorded an entry time for that step.
+    func timeOnStep(_ step: OnboardingStep) -> Double? {
+        let key = "\(step)"
+        guard let start = stepStartTimes[key] else { return nil }
+        return Date().timeIntervalSince(start)
     }
     
     var totalSteps: Int { OnboardingStep.allCases.count }
@@ -72,7 +102,12 @@ class OnboardingViewModel: ObservableObject {
     
     func nextStep() {
         triggerHapticFeedback()
-        
+
+        // Emit a step-specific completion event with the data we just captured.
+        // This is what powers the "where did the user actually drop?" analysis
+        // alongside the generic `onboarding_step_viewed` funnel.
+        trackStepCompleted()
+
         switch currentStep {
         case .theHook:
             currentStep = .theFeeling
@@ -117,22 +152,62 @@ class OnboardingViewModel: ObservableObject {
             break
         }
     }
+
+    /// Fire a step-specific event with whatever data the user just captured on
+    /// that step. Lets you slice retention by *what they answered* rather than
+    /// just *how far they got*.
+    private func trackStepCompleted() {
+        let stepName = "\(currentStep)"
+        let durationSec = timeOnStep(currentStep)
+
+        switch currentStep {
+        case .theFeeling:
+            Analytics.onboardingFeelingsSelected(Array(selectedFeelings))
+        case .theObstacle:
+            Analytics.onboardingObstaclesSelected(Array(selectedObstacles))
+        case .yourScreenTime:
+            if !screenTime.isEmpty {
+                Analytics.onboardingScreenTimeSelected(screenTime)
+            }
+        case .yourName:
+            Analytics.onboardingNameEntered(name: userName)
+        case .yourAge:
+            if !selectedAge.isEmpty {
+                Analytics.onboardingAgeSelected(selectedAge)
+            }
+        case .unlockMethodChoice:
+            let method = UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards"
+            Analytics.onboardingUnlockMethodSelected(method)
+        case .appSelection:
+            Analytics.onboardingAppsConfirmed(apps: selectedApps.map { $0.name })
+        default:
+            break
+        }
+
+        // Generic completion event so every step has duration data, not just
+        // the ones with interactions above.
+        var props: [String: Any] = [
+            "step_name": stepName,
+            "step_index": currentStepIndex
+        ]
+        if let durationSec = durationSec {
+            props["duration_sec"] = durationSec
+        }
+        Analytics.capture("onboarding_step_completed", properties: props)
+    }
     
     func skipToCompletion() {
         // Trigger haptic feedback
         triggerHapticFeedback()
         
         // Track skipping to completion in PostHog
-        PostHogSDK.shared.capture(
-            "onboarding_skipped", 
-            properties: [
-                "timestamp": Date().ISO8601Format(),
-                "skipped_from_step": "\(currentStep)",
-                "user_name": userName.isEmpty ? "not_provided" : userName,
-                "selected_age": selectedAge.isEmpty ? "not_provided" : selectedAge,
-                "screen_time": screenTime.isEmpty ? "not_provided" : screenTime
-            ]
-        )
+        Analytics.capture("onboarding_skipped", properties: [
+            "skipped_from_step": "\(currentStep)",
+            "skipped_from_step_index": currentStepIndex,
+            "user_name": userName.isEmpty ? "not_provided" : userName,
+            "selected_age": selectedAge.isEmpty ? "not_provided" : selectedAge,
+            "screen_time": screenTime.isEmpty ? "not_provided" : screenTime
+        ])
         
         // Save user data before completing
         saveUserData()
@@ -160,6 +235,9 @@ class OnboardingViewModel: ObservableObject {
             try hapticEngine?.start()
         } catch {
             print("There was an error creating the haptic engine: \(error.localizedDescription)")
+            Telemetry.capture(error,
+                              tags: ["feature": "onboarding", "operation": "haptic_engine_start"],
+                              level: .warning)
         }
     }
     
@@ -179,6 +257,9 @@ class OnboardingViewModel: ObservableObject {
             try player.start(atTime: 0)
         } catch {
             print("Failed to play haptic pattern: \(error.localizedDescription)")
+            Telemetry.capture(error,
+                              tags: ["feature": "onboarding", "operation": "haptic_play"],
+                              level: .warning)
         }
     }
     
@@ -187,5 +268,19 @@ class OnboardingViewModel: ObservableObject {
         UserDefaults.standard.set(selectedAge, forKey: "selectedAge")
         UserDefaults.standard.set(screenTime, forKey: "screenTime")
         UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
+
+        // Push the demographic answers as person properties so every future
+        // event auto-segments by them in PostHog (no joins needed).
+        var personProps: [String: Any] = [
+            "selected_apps": selectedApps.map { $0.name },
+            "selected_apps_count": selectedApps.count,
+            "feelings": Array(selectedFeelings).sorted(),
+            "obstacles": Array(selectedObstacles).sorted(),
+            "unlock_method": UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards"
+        ]
+        if !userName.isEmpty { personProps["name"] = userName }
+        if !selectedAge.isEmpty { personProps["age_range"] = selectedAge }
+        if !screenTime.isEmpty { personProps["screen_time"] = screenTime }
+        Analytics.setPersonProperties(personProps)
     }
 }

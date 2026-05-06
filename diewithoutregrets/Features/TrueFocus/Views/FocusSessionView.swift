@@ -30,6 +30,16 @@ struct FocusSessionView: View {
     /// Frosted glass intro overlay -- dismissed on tap.
     @State private var showIntroOverlay = true
 
+    /// Wall-clock when the user entered the focus screen — used to compute
+    /// total time including setup phase.
+    @State private var sessionStartTime: Date = Date()
+    /// Whether we've already emitted `focus_session_started` (after setup
+    /// completes the timer actually starts running).
+    @State private var didTrackSessionStart = false
+    /// Have we asked for camera permission yet? Tracks first transition only
+    /// so we don't double-send the permission event.
+    @State private var didTrackCameraPermission = false
+
     private let cameraCornerRadius: CGFloat = 28
     private let cameraPadding: CGFloat = 16
 
@@ -39,6 +49,10 @@ struct FocusSessionView: View {
         self.onEndSession = onEndSession
         _focusManager = StateObject(wrappedValue: FocusDetectionManager(strictness: strictness))
         _pomodoroTimer = StateObject(wrappedValue: PomodoroTimer(durationMinutes: durationMinutes))
+    }
+
+    private var sharedAppName: String? {
+        sharedDefaults?.string(forKey: "LastGuardedApp")
     }
 
     var body: some View {
@@ -79,6 +93,15 @@ struct FocusSessionView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
+            sessionStartTime = Date()
+            Analytics.focusSessionEntered(
+                durationMinutes: durationMinutes,
+                strictness: "\(strictness)"
+            )
+            Telemetry.breadcrumb("Focus session entered", category: "true_focus",
+                                 data: ["duration_minutes": durationMinutes,
+                                        "strictness": "\(strictness)"])
+
             // Show lock animation on entry
             withAnimation(.easeInOut(duration: 0.3)) {
                 showLockAnimation = true
@@ -92,13 +115,49 @@ struct FocusSessionView: View {
             startBorderAnimation()
         }
         .onDisappear {
+            // If the user hit X (or otherwise dismissed) before the session
+            // completed, treat it as abandoned. `sessionCompleted` is true
+            // only when the pomodoro timer hit zero and the success view is
+            // already showing.
+            if !sessionCompleted {
+                let focusedSecondsCompleted = (durationMinutes * 60) - pomodoroTimer.remainingSeconds
+                let totalSeconds = max(durationMinutes * 60, 1)
+                Analytics.focusSessionAbandoned(
+                    durationMinutes: durationMinutes,
+                    strictness: "\(strictness)",
+                    focusedSecondsCompleted: focusedSecondsCompleted,
+                    completionPct: Double(focusedSecondsCompleted) / Double(totalSeconds),
+                    wasInSetup: focusManager.isInSetup
+                )
+            }
             focusManager.stopMonitoring()
             pomodoroTimer.stop()
+        }
+        .onChange(of: focusManager.hasCameraPermission) { _, granted in
+            if granted && !didTrackCameraPermission {
+                didTrackCameraPermission = true
+                Analytics.focusCameraPermission(granted: true)
+            }
+        }
+        .onChange(of: focusManager.permissionDenied) { _, denied in
+            if denied && !didTrackCameraPermission {
+                didTrackCameraPermission = true
+                Analytics.focusCameraPermission(granted: false)
+            }
         }
         .onChange(of: focusManager.isInSetup) { _, inSetup in
             if !inSetup {
                 pomodoroTimer.setFocused(true)
                 pomodoroTimer.start()
+
+                if !didTrackSessionStart {
+                    didTrackSessionStart = true
+                    Analytics.focusSessionStarted(
+                        durationMinutes: durationMinutes,
+                        strictness: "\(strictness)",
+                        setupSec: Date().timeIntervalSince(sessionStartTime)
+                    )
+                }
             }
         }
         .onChange(of: focusManager.isFocused) { _, focused in
@@ -115,6 +174,14 @@ struct FocusSessionView: View {
 
     private func handleSessionComplete() {
         focusManager.stopMonitoring()
+
+        Analytics.focusSessionCompleted(
+            durationMinutes: durationMinutes,
+            strictness: "\(strictness)",
+            breakDurationMinutes: trueFocusBreakDuration,
+            appName: sharedAppName,
+            wallClockSec: Date().timeIntervalSince(sessionStartTime)
+        )
 
         let currentTime = Date().timeIntervalSince1970
         sharedDefaults?.set(currentTime, forKey: "LastBreakTime")

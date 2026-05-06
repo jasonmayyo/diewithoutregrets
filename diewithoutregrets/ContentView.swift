@@ -75,10 +75,22 @@ struct ContentView: View {
                     #endif
                 }
                 .tint(Color(hex: 0x184449))
-                .onChange(of: selectedTab) {
+                .onChange(of: selectedTab) { _, newTab in
                     let generator = UIImpactFeedbackGenerator(style: .soft)
                     generator.prepare()
                     generator.impactOccurred()
+
+                    let tabName: String
+                    switch newTab {
+                    case 0: tabName = "guard"
+                    case 1: tabName = "study"
+                    case 2: tabName = "profile"
+                    case 3: tabName = "debug"
+                    default: tabName = "unknown"
+                    }
+                    Analytics.tabSelected(tabName)
+                    Telemetry.breadcrumb("Tab selected", category: "ui.navigation",
+                                         data: ["tab": tabName])
                 }
             }
         }
@@ -145,6 +157,13 @@ struct ProfileView: View {
                         HStack(spacing: 12) {
                             // Flashcards option
                             Button(action: {
+                                if unlockMethod != "flashcards" {
+                                    Analytics.settingChanged(
+                                        key: "unlock_method",
+                                        oldValue: unlockMethod,
+                                        newValue: "flashcards"
+                                    )
+                                }
                                 unlockMethod = "flashcards"
                                 let generator = UIImpactFeedbackGenerator(style: .light)
                                 generator.impactOccurred()
@@ -174,6 +193,13 @@ struct ProfileView: View {
                             
                             // True Focus option
                             Button(action: {
+                                if unlockMethod != "trueFocus" {
+                                    Analytics.settingChanged(
+                                        key: "unlock_method",
+                                        oldValue: unlockMethod,
+                                        newValue: "trueFocus"
+                                    )
+                                }
                                 unlockMethod = "trueFocus"
                                 let generator = UIImpactFeedbackGenerator(style: .light)
                                 generator.impactOccurred()
@@ -294,6 +320,13 @@ struct ProfileView: View {
                             type: .lockAnimation,
                             isSelected: selectedAnimationType == AnimationType.lockAnimation.rawValue,
                             onSelect: { 
+                                if selectedAnimationType != AnimationType.lockAnimation.rawValue {
+                                    Analytics.settingChanged(
+                                        key: "animation_type",
+                                        oldValue: selectedAnimationType,
+                                        newValue: AnimationType.lockAnimation.rawValue
+                                    )
+                                }
                                 selectedAnimationType = AnimationType.lockAnimation.rawValue
                                 // Haptic feedback
                                 let generator = UIImpactFeedbackGenerator(style: .light)
@@ -306,6 +339,13 @@ struct ProfileView: View {
                             type: .memeVideo,
                             isSelected: selectedAnimationType == AnimationType.memeVideo.rawValue,
                             onSelect: { 
+                                if selectedAnimationType != AnimationType.memeVideo.rawValue {
+                                    Analytics.settingChanged(
+                                        key: "animation_type",
+                                        oldValue: selectedAnimationType,
+                                        newValue: AnimationType.memeVideo.rawValue
+                                    )
+                                }
                                 selectedAnimationType = AnimationType.memeVideo.rawValue
                                 // Haptic feedback
                                 let generator = UIImpactFeedbackGenerator(style: .light)
@@ -322,6 +362,7 @@ struct ProfileView: View {
                     
                     Button(action: {
                         didCompletePurchase = false  // Reset flag when showing paywall
+                        Analytics.upgradeButtonTapped(surface: "profile")
                         showingPaywall = true
                     }) {
                         HStack {
@@ -413,45 +454,72 @@ struct ProfileView: View {
             if let offering = currentOffering {
                 PaywallView(offering: offering)
                     .onAppear {
+                        Analytics.paywallViewed(surface: "profile", properties: [
+                            "offering_id": offering.identifier,
+                            "has_offering": true
+                        ])
                         // Mark that user viewed the paywall
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                         print("[ContentView] 📝 Marked paywall as viewed")
                     }
                     .onPurchaseCompleted { customerInfo in
+                        var price: Double?
+                        var currency: String?
+                        var productId: String = "unknown"
+                        var isTrial: Bool = false
+
                         if let entitlement = customerInfo.entitlements.active.values.first,
                            let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                            let price = Double(truncating: package.storeProduct.price as NSNumber)
-                            let currency = package.storeProduct.currencyCode ?? "USD"
-                            if entitlement.periodType == .trial {
+                            price = Double(truncating: package.storeProduct.price as NSNumber)
+                            currency = package.storeProduct.currencyCode ?? "USD"
+                            productId = package.storeProduct.productIdentifier
+                            isTrial = entitlement.periodType == .trial
+
+                            if isTrial {
                                 AdsTracker.trackStartTrial(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                             } else {
                                 AdsTracker.trackSubscribe(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                                 AdsTracker.trackPurchase(
                                     productId: package.storeProduct.productIdentifier,
                                     productName: package.storeProduct.localizedTitle,
-                                    price: price,
-                                    currency: currency
+                                    price: price ?? 0,
+                                    currency: currency ?? "USD"
                                 )
                             }
                         }
-                        
+
+                        Analytics.subscriptionStarted(
+                            surface: "profile",
+                            productId: productId,
+                            price: price,
+                            currency: currency,
+                            isTrial: isTrial,
+                            offeringId: offering.identifier,
+                            entitlements: customerInfo.entitlements.active.keys.map { $0 }
+                        )
+
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
                         
                         NotificationManager.shared.resetPaywallTracking()
                     }
-                    .onRestoreCompleted { _ in
+                    .onRestoreCompleted { customerInfo in
+                        let hasActive = !customerInfo.entitlements.active.isEmpty
+                        Analytics.restorePurchasesSucceeded(
+                            surface: "profile",
+                            hasActiveEntitlements: hasActive
+                        )
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
@@ -459,6 +527,10 @@ struct ProfileView: View {
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
+                        Analytics.paywallDismissed(
+                            surface: "profile",
+                            didPurchase: didCompletePurchase
+                        )
                         // Mark as seen even if user dismisses without purchasing
                         hasSeenPaywall = true
                         
@@ -470,6 +542,9 @@ struct ProfileView: View {
                 // Fallback paywall without specific offering
                 PaywallView()
                     .onAppear {
+                        Analytics.paywallViewed(surface: "profile", properties: [
+                            "has_offering": false
+                        ])
                         // Mark that user viewed the paywall
                         NotificationManager.shared.markPaywallViewedWithoutPurchase()
                         print("[ContentView] 📝 Marked fallback paywall as viewed")
@@ -481,7 +556,8 @@ struct ProfileView: View {
                                 if let product = products.first {
                                     let price = Double(truncating: product.price as NSNumber)
                                     let currency = product.currencyCode ?? "USD"
-                                    if entitlement.periodType == .trial {
+                                    let isTrial = entitlement.periodType == .trial
+                                    if isTrial {
                                         AdsTracker.trackStartTrial(
                                             productId: product.productIdentifier,
                                             productName: product.localizedTitle,
@@ -502,10 +578,19 @@ struct ProfileView: View {
                                             currency: currency
                                         )
                                     }
+                                    Analytics.subscriptionStarted(
+                                        surface: "profile",
+                                        productId: product.productIdentifier,
+                                        price: price,
+                                        currency: currency,
+                                        isTrial: isTrial,
+                                        offeringId: nil,
+                                        entitlements: customerInfo.entitlements.active.keys.map { $0 }
+                                    )
                                 }
                             }
                         }
-                        
+
                         hasSeenPaywall = true
                         didCompletePurchase = true
                         showingPaywall = false
@@ -513,6 +598,10 @@ struct ProfileView: View {
                         NotificationManager.shared.resetPaywallTracking()
                     }
                     .onDisappear {
+                        Analytics.paywallDismissed(
+                            surface: "profile",
+                            didPurchase: didCompletePurchase
+                        )
                         hasSeenPaywall = true
                         
                         print("[ContentView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
@@ -524,6 +613,21 @@ struct ProfileView: View {
                 print("[ContentView] 🚪 Received dismiss signal, closing paywall")
                 showingPaywall = false
             }
+        }
+        .onChange(of: flashcardCount) { oldValue, newValue in
+            Analytics.settingChanged(key: "flashcard_count", oldValue: oldValue, newValue: newValue)
+        }
+        .onChange(of: useAllCards) { oldValue, newValue in
+            Analytics.settingChanged(key: "use_all_cards", oldValue: oldValue, newValue: newValue)
+        }
+        .onChange(of: focusDuration) { oldValue, newValue in
+            Analytics.settingChanged(key: "focus_duration_minutes", oldValue: oldValue, newValue: newValue)
+        }
+        .onChange(of: flashcardBreakDuration) { oldValue, newValue in
+            Analytics.settingChanged(key: "flashcard_break_minutes", oldValue: oldValue, newValue: newValue)
+        }
+        .onChange(of: trueFocusBreakDuration) { oldValue, newValue in
+            Analytics.settingChanged(key: "true_focus_break_minutes", oldValue: oldValue, newValue: newValue)
         }
     }
 }
@@ -566,6 +670,9 @@ struct LinkMenuItem: View {
             .background(Color.white)
             .cornerRadius(12)
         }
+        .simultaneousGesture(TapGesture().onEnded {
+            Analytics.helpLinkClicked(link: title, url: url)
+        })
     }
 }
 
@@ -951,6 +1058,71 @@ struct DebugView: View {
                 } label: {
                     Label("Reset to Home", systemImage: "house")
                 }
+            }
+
+            Section {
+                // Handled paths — these run regardless of whether the
+                // debugger is attached. They flow through beforeSend, so in
+                // a real DEBUG run from Xcode they're DROPPED. To verify
+                // them on Sentry's dashboard you need a TestFlight build
+                // (env=testflight) or Run-without-debugger on a Release
+                // build (env=production).
+                Button {
+                    let err = NSError(domain: "TestError",
+                                      code: 1,
+                                      userInfo: [NSLocalizedDescriptionKey: "Telemetry.capture smoke test"])
+                    Telemetry.capture(err,
+                                      context: ["triggered_from": "DebugView"],
+                                      tags: ["test": "true"])
+                    lastAction = "Captured handled error (dropped in DEBUG by beforeSend — verify on TestFlight)"
+                } label: {
+                    Label("Capture handled error", systemImage: "exclamationmark.triangle")
+                }
+
+                Button {
+                    Telemetry.captureMessage("Test message from Study Guard",
+                                             level: .info,
+                                             tags: ["test": "true"])
+                    lastAction = "Captured message (dropped in DEBUG)"
+                } label: {
+                    Label("Capture message", systemImage: "text.bubble")
+                }
+
+                // Crash paths — these BYPASS beforeSend (they're written to
+                // the on-disk crash file by the signal handler before
+                // Sentry has a chance to filter), so they will reach Sentry
+                // even from a Release build run from Xcode without the
+                // debugger attached. With debugger attached, Xcode catches
+                // the signal first and Sentry never sees it.
+                Button(role: .destructive) {
+                    fatalError("Sentry test crash: Swift fatalError from DebugView")
+                } label: {
+                    Label("Crash (Swift fatalError)", systemImage: "bolt.fill")
+                }
+
+                Button(role: .destructive) {
+                    NSException(name: .genericException,
+                                reason: "Sentry test crash: NSException from DebugView",
+                                userInfo: nil).raise()
+                } label: {
+                    Label("Crash (NSException)", systemImage: "bolt.trianglebadge.exclamationmark.fill")
+                }
+
+                Button(role: .destructive) {
+                    // Force a SIGSEGV by dereferencing a null pointer.
+                    // UnsafePointer<Int>(bitPattern: 0)!.pointee triggers a
+                    // signal-level crash that exercises the Mach exception
+                    // path, not the Swift runtime path.
+                    let nullPtr = UnsafePointer<Int>(bitPattern: 0)!
+                    _ = nullPtr.pointee
+                } label: {
+                    Label("Crash (SIGSEGV null deref)", systemImage: "memorychip.fill")
+                }
+            } header: {
+                Text("Sentry — test crash menu")
+            } footer: {
+                Text("⚠️ Crashes only reach Sentry when running WITHOUT the debugger attached. Either uncheck Scheme → Run → Info → \"Debug Executable\", or test on a TestFlight build.")
+                    .font(.caption2)
             }
 
             if !lastAction.isEmpty {

@@ -62,6 +62,9 @@ struct MemeVideoView: View {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Failed to set up audio session: \(error)")
+            Telemetry.capture(error,
+                              tags: ["feature": "meme_video", "operation": "audio_activate"],
+                              level: .warning)
         }
         
         guard let videoURL = Bundle.main.url(forResource: "dog-side-eye", withExtension: "mp4") else {
@@ -105,6 +108,9 @@ struct MemeVideoView: View {
             try AVAudioSession.sharedInstance().setActive(false)
         } catch {
             print("Failed to deactivate audio session: \(error)")
+            Telemetry.capture(error,
+                              tags: ["feature": "meme_video", "operation": "audio_deactivate"],
+                              level: .warning)
         }
     }
 }

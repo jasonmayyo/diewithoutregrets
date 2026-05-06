@@ -350,6 +350,7 @@ struct AutoGenerateFlashcardsSheet: View {
                             errorMessage = nil
                             currentError = nil
                         }
+                        Analytics.aiInputSourceSelected(source.rawValue)
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: source.icon)
@@ -1393,14 +1394,32 @@ struct AutoGenerateFlashcardsSheet: View {
     private func generateFlashcards() {
         // Use fresh text every time
         let processingText = inputText.isEmpty ? pdfExtractedText : inputText
-        
+
+        let analyticsSource = analyticsSourceName()
+
         // Validate text input before proceeding
         if let validationError = validateTextInput(processingText) {
             currentError = validationError
             errorMessage = validationError.userMessage
+            Analytics.aiGenerateFailed(
+                source: analyticsSource,
+                errorType: "\(validationError)",
+                message: validationError.userMessage
+            )
             return
         }
-        
+
+        Analytics.aiGenerateAttempted(
+            source: analyticsSource,
+            language: selectedLanguage,
+            charCount: processingText.count
+        )
+        Telemetry.breadcrumb("AI generate attempted", category: "ai_flashcards",
+                             data: ["source": analyticsSource,
+                                    "language": selectedLanguage,
+                                    "char_count": processingText.count])
+        let generateStartedAt = Date()
+
         // Show generation view
         showingGenerationView = true
         processingStep = .generating
@@ -1473,6 +1492,11 @@ struct AutoGenerateFlashcardsSheet: View {
                         self.errorMessage = "No valid flashcards were generated from your text. Try providing more detailed educational content with clear concepts and facts."
                         self.showingGenerationView = false
                         self.processingStep = .idle
+                        Analytics.aiGenerateFailed(
+                            source: analyticsSource,
+                            errorType: "invalidResponse",
+                            message: "no_cards_parsed"
+                        )
                     } else {
                         // Show 100% completion
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -1490,7 +1514,14 @@ struct AutoGenerateFlashcardsSheet: View {
                         
                         // Update deck store to ensure proper state synchronization
                         self.deckStore.updateDeck(self.deck)
-                        
+
+                        Analytics.aiGenerateSucceeded(
+                            source: analyticsSource,
+                            language: self.selectedLanguage,
+                            cardCount: newFlashcards.count,
+                            durationSec: Date().timeIntervalSince(generateStartedAt)
+                        )
+
                         // Dismiss the sheet after a short delay to show completion
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.dismiss()
@@ -1508,8 +1539,30 @@ struct AutoGenerateFlashcardsSheet: View {
                     }
                     self.showingGenerationView = false
                     self.processingStep = .idle
+                    let errorType: String = {
+                        if let err = self.currentError { return "\(err)" }
+                        return "unknown"
+                    }()
+                    Analytics.aiGenerateFailed(
+                        source: analyticsSource,
+                        errorType: errorType,
+                        message: self.errorMessage
+                    )
                 }
             }
+        }
+    }
+
+    /// Maps the on-screen `selectedSource` enum to the canonical analytics
+    /// source string. Quizlet is split into "quizlet" (AI-enhanced) vs
+    /// "quizlet_direct" (no-AI direct import) at the call site since they
+    /// follow different code paths.
+    private func analyticsSourceName() -> String {
+        switch selectedSource {
+        case .pdf: return "pdf"
+        case .text: return "text"
+        case .youtube: return "youtube"
+        case .quizlet: return useAIEnhanced ? "quizlet" : "quizlet_direct"
         }
     }
     
@@ -1668,6 +1721,7 @@ struct AutoGenerateFlashcardsSheet: View {
     private func fetchYouTubeTranscript() {
         guard let videoID = YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) else {
             errorMessage = YouTubeTranscriptError.invalidURL.userMessage
+            Analytics.aiYoutubeTranscriptFetched(success: false, charCount: 0, error: "invalidURL")
             return
         }
         
@@ -1682,9 +1736,19 @@ struct AutoGenerateFlashcardsSheet: View {
                 youtubeTranscript = transcript
                 inputText = transcript
                 errorMessage = nil
+                Analytics.aiYoutubeTranscriptFetched(
+                    success: true,
+                    charCount: transcript.count,
+                    error: nil
+                )
             case .failure(let error):
                 errorMessage = error.userMessage
                 youtubeTranscript = ""
+                Analytics.aiYoutubeTranscriptFetched(
+                    success: false,
+                    charCount: 0,
+                    error: "\(error)"
+                )
             }
         }
     }
@@ -1704,6 +1768,11 @@ struct AutoGenerateFlashcardsSheet: View {
         }
         
         parsedPairs = QuizletImportService.shared.parseExport(text: quizletText, delimiter: delimiter)
+        Analytics.aiQuizletParsed(
+            pairCount: parsedPairs.count,
+            delimiter: "\(selectedDelimiter)",
+            useAi: useAIEnhanced
+        )
     }
     
     private func performQuizletDirectImport() {
@@ -1713,9 +1782,15 @@ struct AutoGenerateFlashcardsSheet: View {
         case .success(let flashcards):
             deck.cards.append(contentsOf: flashcards)
             deckStore.updateDeck(deck)
+            Analytics.aiQuizletDirectImported(cardCount: flashcards.count)
             dismiss()
         case .failure(let error):
             errorMessage = error.userMessage
+            Analytics.aiGenerateFailed(
+                source: "quizlet_direct",
+                errorType: "\(error)",
+                message: error.userMessage
+            )
         }
     }
     
@@ -1738,13 +1813,19 @@ struct AutoGenerateFlashcardsSheet: View {
         
         do {
             let data = try Data(contentsOf: url)
-            
+            Analytics.aiPdfPicked(fileName: url.lastPathComponent, sizeBytes: data.count)
+
             // Check PDF size before processing
             if !checkPDFSize(data) {
                 let pageCount = PDFDocument(data: data)?.pageCount ?? 0
                 currentError = .fileTooLarge
                 errorMessage = "PDF is too large (\(pageCount) pages). Please use a PDF with 50 pages or fewer for optimal processing."
                 processingStep = .idle
+                Analytics.aiGenerateFailed(
+                    source: "pdf",
+                    errorType: "fileTooLarge",
+                    message: "pages=\(pageCount)"
+                )
                 return
             }
             
@@ -1783,6 +1864,8 @@ struct AutoGenerateFlashcardsSheet: View {
             currentError = .networkError(error.localizedDescription)
             errorMessage = "Failed to read PDF file: \(error.localizedDescription). Please ensure the file is not corrupted and try again."
             processingStep = .idle
+            Telemetry.capture(error,
+                              tags: ["feature": "ai_flashcards", "operation": "pdf_read"])
         }
     }
     
