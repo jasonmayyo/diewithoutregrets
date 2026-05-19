@@ -96,6 +96,9 @@ struct OnboardingView: View {
                 case .aiFlashcards:
                     AIFlashcardDemo()
                         .environmentObject(onboardingViewModel)
+                case .flashcardSources:
+                    FlashcardSourcesView()
+                        .environmentObject(onboardingViewModel)
                 case .retentionStudy:
                     LongTermResultsView()
                         .environmentObject(onboardingViewModel)
@@ -118,6 +121,9 @@ struct OnboardingView: View {
                         .environmentObject(onboardingViewModel)
                 case .appSelection:
                     AppSelectionOnboarding()
+                        .environmentObject(onboardingViewModel)
+                case .createFirstCards:
+                    CreateFirstCardsOnboardingView()
                         .environmentObject(onboardingViewModel)
                 case .completion:
                     CompletionView()

@@ -60,29 +60,33 @@ struct AutoGenerateFlashcardsSheet: View {
     @Environment(\.dismiss) var dismiss
     @Binding var deck: Deck
     @EnvironmentObject var deckStore: DeckStore
+
+    /// Optional initial source to pre-select (e.g. when opened from onboarding)
+    var initialSource: InputSource?
+
     @State private var inputText: String = ""
     @State private var errorMessage: String?
     @State private var showingDocumentPicker = false
     @State private var pdfExtractedText: String = ""
     @State private var isProcessingError = false
     @State private var currentError: FlashcardGenerationError?
-    
+
     // Enhanced loading states
     @State private var processingStep: ProcessingStep = .idle
     @State private var processingProgress: Double = 0
     @State private var currentPDFData: Data? = nil
     @State private var fileName: String = ""
-    
+
     @AppStorage("freeAutoGenerateUses") private var freeAutoGenerateUses = 1
     @State private var showPaywall = false
     @State private var currentOffering: Offering?
-    
+
     // Animation states
     @State private var showUploadAnimation = false
     @State private var cardScale: CGFloat = 0.9
     @State private var cardOpacity: Double = 0.8
     @State private var meshOffset: CGFloat = 0
-    
+
     // Input source selection
     @State private var selectedSource: InputSource = .pdf
     
@@ -281,6 +285,9 @@ struct AutoGenerateFlashcardsSheet: View {
             }
         }
         .onAppear {
+            if let initial = initialSource {
+                selectedSource = initial
+            }
             resetState()
             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                 cardScale = 1.0

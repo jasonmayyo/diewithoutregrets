@@ -26,6 +26,7 @@ enum OnboardingStep: CaseIterable {
     // Phase 4: The Solution
     case howItWorks
     case aiFlashcards
+    case flashcardSources
     case retentionStudy
     case socialProof
     // Phase 5: Setup & Commitment
@@ -34,6 +35,7 @@ enum OnboardingStep: CaseIterable {
     case notificationPermission
     case unlockMethodChoice
     case appSelection
+    case createFirstCards
     case completion
 }
 
@@ -132,6 +134,8 @@ class OnboardingViewModel: ObservableObject {
         case .howItWorks:
             currentStep = .aiFlashcards
         case .aiFlashcards:
+            currentStep = .flashcardSources
+        case .flashcardSources:
             currentStep = .retentionStudy
         case .retentionStudy:
             currentStep = .socialProof
@@ -147,6 +151,8 @@ class OnboardingViewModel: ObservableObject {
             saveUserData()
             currentStep = .appSelection
         case .appSelection:
+            currentStep = .createFirstCards
+        case .createFirstCards:
             currentStep = .completion
         case .completion:
             break
@@ -180,6 +186,8 @@ class OnboardingViewModel: ObservableObject {
             Analytics.onboardingUnlockMethodSelected(method)
         case .appSelection:
             Analytics.onboardingAppsConfirmed(apps: selectedApps.map { $0.name })
+        case .createFirstCards:
+            Analytics.capture("onboarding_create_cards_completed")
         default:
             break
         }

@@ -16,6 +16,12 @@ struct RegretGuard: View {
     @AppStorage("focusDuration") private var focusDuration: Int = 5
     @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
     @AppStorage("trueFocusBreakDuration") private var trueFocusBreakDuration: Int = 30
+    @AppStorage("hasSetUpShortcut") private var hasSetUpShortcut = false
+
+    // Checklist action sheets
+    @State private var showChecklistNewDeck = false
+    @State private var showChecklistAutoGenerate = false
+    @State private var checklistShortcutApp: RegretApp? = nil
     
     var body: some View {
         VStack {
@@ -31,11 +37,42 @@ struct RegretGuard: View {
                     headerSection
                     ScrollView {
                         VStack(alignment: .leading) {
+                            // Onboarding checklist card
+                            if !checklistAllCompleted {
+                                OnboardingChecklistCard(
+                                    onSetupShortcut: {
+                                        // Open instruction sheet for first app; mark complete on dismiss
+                                        if let firstApp = viewModel.apps.first {
+                                            Analytics.capture("checklist_step_tapped", properties: ["step": "shortcut"])
+                                            checklistShortcutApp = firstApp
+                                        }
+                                    },
+                                    onCreateDeck: {
+                                        Analytics.capture("checklist_step_tapped", properties: ["step": "create_deck"])
+                                        showChecklistNewDeck = true
+                                    },
+                                    onGenerateCards: {
+                                        Analytics.capture("checklist_step_tapped", properties: ["step": "generate_cards"])
+                                        if deckStore.decks.isEmpty {
+                                            // Create a deck first so auto-generate has something to target
+                                            let newDeck = Deck(name: "My First Deck")
+                                            deckStore.addDeck(newDeck)
+                                            deckStore.selectDeck(newDeck)
+                                        }
+                                        showChecklistAutoGenerate = true
+                                    }
+                                )
+                                .padding(.horizontal, 16)
+                                .padding(.top, 4)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+
                             deckSelectionSection
                             unlockMethodSection
                             appRestrictionSection
                                 .padding(.top)
                         }
+                        .animation(.easeInOut(duration: 0.4), value: checklistAllCompleted)
                     }
                 }
                 
@@ -55,10 +92,41 @@ struct RegretGuard: View {
                             .environmentObject(regretStore)
                     }
                 }
+                .sheet(item: $checklistShortcutApp, onDismiss: {
+                    // Mark shortcut as set up once the user has seen the instruction sheet
+                    hasSetUpShortcut = true
+                }) { app in
+                    RegretGuardInstructionSheet(app: app)
+                        .presentationDetents([.large])
+                        .presentationCornerRadius(30)
+                }
+                .sheet(isPresented: $showChecklistNewDeck) {
+                    NewDeckView()
+                        .presentationDetents([.large])
+                        .presentationCornerRadius(30)
+                }
+                .sheet(isPresented: $showChecklistAutoGenerate) {
+                    if let selectedDeck = deckStore.selectedDeck,
+                       let index = deckStore.decks.firstIndex(where: { $0.id == selectedDeck.id }) {
+                        AutoGenerateFlashcardsSheet(deck: $deckStore.decks[index])
+                            .presentationCornerRadius(30)
+                            .environmentObject(deckStore)
+                    } else if !deckStore.decks.isEmpty {
+                        AutoGenerateFlashcardsSheet(deck: $deckStore.decks[0])
+                            .presentationCornerRadius(30)
+                            .environmentObject(deckStore)
+                    }
+                }
             }
             .preferredColorScheme(.light)
         }
         .background(Color(.systemGroupedBackground))
+    }
+
+    private var checklistAllCompleted: Bool {
+        hasSetUpShortcut
+            && !deckStore.decks.isEmpty
+            && deckStore.decks.contains { !$0.cards.isEmpty }
     }
     
     

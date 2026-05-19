@@ -72,6 +72,9 @@ struct AppSelectionOnboarding: View {
                 
                 Button(action: {
                     onboardingViewModel.selectedApps = viewModel.selectedApps
+                    if !viewModel.selectedApps.isEmpty {
+                        UserDefaults.standard.set(true, forKey: "hasSetUpShortcut")
+                    }
                     onboardingViewModel.nextStep()
                 }) {
                     Text("Lock them down")
