@@ -81,8 +81,6 @@
 		6B706FCF2DFB2AB3004743C9 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */; };
 		6B706FD02DFB2AB3004743C9 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */; };
 		6B774E632DA9003A0048A97E /* AppSelectionOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */; };
-		AA00010100000000CARD0002 /* CreateFirstCardsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */; };
-		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
 		6B79AC332DEC91080039F063 /* PayWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B79AC322DEC91080039F063 /* PayWallView.swift */; };
 		6B79AC352DEC92000039F063 /* FreeTrialReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B79AC342DEC92000039F063 /* FreeTrialReminderView.swift */; };
 		6B7CD4DC2D509E2D0065A0F7 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */; };
@@ -119,6 +117,8 @@
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
+		AA00010100000000CARD0002 /* CreateFirstCardsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */; };
+		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
 		C0A100012F61000100000001 /* TheHookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100012F61000000000001 /* TheHookView.swift */; };
 		C0A100022F61000100000002 /* TheFeelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100022F61000000000002 /* TheFeelingView.swift */; };
 		C0A100032F61000100000003 /* TheObstacleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100032F61000000000003 /* TheObstacleView.swift */; };
@@ -226,8 +226,6 @@
 		6B706FCD2DFB2AB3004743C9 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		6B74330C2DB19E5F0007270C /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		6B774E622DA9003A0048A97E /* AppSelectionOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSelectionOnboarding.swift; sourceTree = "<group>"; };
-		AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFirstCardsOnboardingView.swift; sourceTree = "<group>"; };
-		AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingChecklistCard.swift; sourceTree = "<group>"; };
 		6B79AC322DEC91080039F063 /* PayWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWallView.swift; sourceTree = "<group>"; };
 		6B79AC342DEC92000039F063 /* FreeTrialReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTrialReminderView.swift; sourceTree = "<group>"; };
 		6B7CD4DB2D509E2D0065A0F7 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
@@ -259,6 +257,8 @@
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
+		AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFirstCardsOnboardingView.swift; sourceTree = "<group>"; };
+		AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingChecklistCard.swift; sourceTree = "<group>"; };
 		ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTranscriptService.swift; sourceTree = "<group>"; };
 		C0A100012F61000000000001 /* TheHookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheHookView.swift; sourceTree = "<group>"; };
 		C0A100022F61000000000002 /* TheFeelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheFeelingView.swift; sourceTree = "<group>"; };
@@ -1162,7 +1162,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -1181,7 +1181,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18;
+				MARKETING_VERSION = 1.19;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1203,7 +1203,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -1222,7 +1222,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18;
+				MARKETING_VERSION = 1.19;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
