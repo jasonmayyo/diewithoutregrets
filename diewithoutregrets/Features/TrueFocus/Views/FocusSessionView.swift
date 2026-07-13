@@ -55,9 +55,12 @@ struct FocusSessionView: View {
         sharedDefaults?.string(forKey: "LastGuardedApp")
     }
 
+    /// v2 = Screen Time engine live; legacy = Shortcuts flow (pre-migration).
+    private var isV2: Bool { StudyGuardManager.shared.isSetupComplete }
+
     var body: some View {
         ZStack {
-            Color(white: 0.04)
+            SGTheme.ink
                 .ignoresSafeArea()
 
             if sessionCompleted {
@@ -72,7 +75,7 @@ struct FocusSessionView: View {
 
             // Lock animation overlay (plays on entry, same as flashcards)
             if showLockAnimation {
-                LockView()
+                MascotLockOverlay()
                     .transition(.opacity)
                     .zIndex(10)
             }
@@ -86,12 +89,39 @@ struct FocusSessionView: View {
 
             // Unlock animation overlay (plays on session complete)
             if showUnlockAnimation {
-                UnlockView()
+                MascotUnlockOverlay()
                     .transition(.opacity)
                     .zIndex(10)
             }
+
+            // v2 invariant: a locked user must always have another unlock
+            // path. Camera denied → flashcards, prominently; otherwise a
+            // quiet always-available switch while the session hasn't started.
+            if isV2, !sessionCompleted, !showLockAnimation,
+               focusManager.permissionDenied || showIntroOverlay {
+                VStack {
+                    Spacer()
+                    Button {
+                        NavigationModel.shared.unlockMethodOverride = "flashcards"
+                    } label: {
+                        Text(focusManager.permissionDenied
+                             ? "Camera unavailable. Answer flashcards instead"
+                             : "Answer flashcards instead")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(focusManager.permissionDenied ? .white : .white.opacity(0.7))
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 20)
+                            .background(
+                                (focusManager.permissionDenied ? SGTheme.mint : Color.white.opacity(0.08)),
+                                in: Capsule()
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 24)
+                }
+                .zIndex(11)
+            }
         }
-        .preferredColorScheme(.dark)
         .onAppear {
             sessionStartTime = Date()
             Analytics.focusSessionEntered(
@@ -183,15 +213,23 @@ struct FocusSessionView: View {
             wallClockSec: Date().timeIntervalSince(sessionStartTime)
         )
 
-        let currentTime = Date().timeIntervalSince1970
-        sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
-        sharedDefaults?.set(true, forKey: "UserAllowedBreak")
-        sharedDefaults?.set(trueFocusBreakDuration, forKey: "BreakDurationMinutes")
-        sharedDefaults?.synchronize()
+        if isV2 {
+            // Grant synchronously the moment the session is earned — never
+            // inside an animation delay (a background/kill mid-animation
+            // would eat the earned unlock).
+            StudyGuardManager.shared.grantFreshBudget(reason: .focusSession)
+        } else {
+            // Legacy Shortcuts flow — unchanged until the user migrates.
+            let currentTime = Date().timeIntervalSince1970
+            sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
+            sharedDefaults?.set(true, forKey: "UserAllowedBreak")
+            sharedDefaults?.set(trueFocusBreakDuration, forKey: "BreakDurationMinutes")
+            sharedDefaults?.synchronize()
 
-        // Deep-link back to the blocked app
-        if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
-            UIApplication.shared.open(getAppURL(for: appName), options: [:])
+            // Deep-link back to the blocked app
+            if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
+                UIApplication.shared.open(getAppURL(for: appName), options: [:])
+            }
         }
 
         // Show unlock animation, then transition to complete view
@@ -220,11 +258,13 @@ struct FocusSessionView: View {
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(.white)
 
-            Text("You've earned a \(trueFocusBreakDuration)-minute break!")
+            Text(isV2
+                 ? "Your apps are unlocked for the next \(StudyGuardManager.shared.intervalMinutes) minutes of use!"
+                 : "You've earned a \(trueFocusBreakDuration)-minute break!")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.white.opacity(0.6))
 
-            if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
+            if !isV2, let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
                 Text("\(appName) has been unlocked")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.white.opacity(0.4))
@@ -237,7 +277,6 @@ struct FocusSessionView: View {
             Spacer()
 
             Button {
-                NavigationModel.shared.navigate(to: .regretReport)
                 onEndSession()
             } label: {
                 Text("Done")

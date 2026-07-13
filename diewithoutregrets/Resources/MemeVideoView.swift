@@ -15,8 +15,8 @@ struct MemeVideoView: View {
     
     var body: some View {
         ZStack {
-            // Background color similar to lock animation
-            Color.white.ignoresSafeArea()
+            // Teal Ink canvas behind the video
+            SGTheme.ink.ignoresSafeArea()
             
             if let player = player {
                 VideoPlayer(player: player)
@@ -33,10 +33,12 @@ struct MemeVideoView: View {
                 // Fallback loading state
                 VStack {
                     ProgressView()
+                        .tint(SGTheme.mint)
                         .scaleEffect(1.5)
-                    
+
                     Text("Loading...")
                         .font(.headline)
+                        .foregroundColor(SGTheme.paperSecondary)
                         .padding(.top, 16)
                 }
                 .opacity(videoOpacity)

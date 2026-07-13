@@ -4,11 +4,6 @@ struct CreateFirstCardsOnboardingView: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
     @StateObject private var deckStore = DeckStore.shared
 
-    @State private var showTitle = false
-    @State private var showSubtitle = false
-    @State private var showOptions = false
-    @State private var showSkip = false
-
     @State private var showGenerateSheet = false
     @State private var selectedSource: InputSource = .text
     @State private var onboardingDeckIndex: Int? = nil
@@ -30,94 +25,56 @@ struct CreateFirstCardsOnboardingView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Create your first\nflash cards")
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .lineSpacing(3)
-                        .opacity(showTitle ? 1 : 0)
-                        .offset(y: showTitle ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.2), value: showTitle)
-
-                    Text("Choose how you'd like to add study material.")
-                        .font(.system(size: 15))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .padding(.top, 8)
-                        .opacity(showSubtitle ? 1 : 0)
-                        .offset(y: showSubtitle ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.4), value: showSubtitle)
-
-                    Spacer()
-
-                    VStack(spacing: 14) {
-                        SourceOptionCard(
-                            icon: "text.alignleft",
-                            title: "Paste Text",
-                            subtitle: "Paste notes, articles, or any text",
-                            accentColor: Color(hex: 0x184449)
-                        ) {
-                            selectedSource = .text
-                            Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "text"])
-                            showGenerateSheet = true
-                        }
-
-                        SourceOptionCard(
-                            imageName: "youtube-icon",
-                            title: "YouTube Video",
-                            subtitle: "Paste a YouTube link to generate cards",
-                            accentColor: Color(hex: 0x3FA4AE)
-                        ) {
-                            selectedSource = .youtube
-                            Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "youtube"])
-                            showGenerateSheet = true
-                        }
-
-                        SourceOptionCard(
-                            imageName: "quizlet",
-                            title: "Import from Quizlet",
-                            subtitle: "Import your existing Quizlet sets",
-                            accentColor: Color(hex: 0x2BC391)
-                        ) {
-                            selectedSource = .quizlet
-                            Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "quizlet"])
-                            showGenerateSheet = true
-                        }
-                    }
-                    .opacity(showOptions ? 1 : 0)
-                    .offset(y: showOptions ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(0.6), value: showOptions)
-
-                    Spacer()
-
-                    Button(action: {
-                        Analytics.capture("onboarding_create_cards_skipped")
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("Skip for now")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(Color(hex: 0x184449).opacity(0.4))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                    }
-                    .opacity(showSkip ? 1 : 0)
-                    .animation(.easeOut(duration: 0.8).delay(0.9), value: showSkip)
-                    .padding(.bottom, 8)
-                }
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
-                .padding(.top, 20)
-                .padding(.bottom, 12)
+        OnboardingScaffold(
+            mascot: .clipboard,
+            headline: "Create your first\nflash cards",
+            subtitle: "Choose how you'd like to add study material.",
+            secondaryTitle: "Skip for now",
+            secondaryAction: {
+                Analytics.capture("onboarding_create_cards_skipped")
+                onboardingViewModel.nextStep()
             }
+        ) {
+            Spacer()
+
+            VStack(spacing: 14) {
+                SourceOptionCard(
+                    icon: "text.alignleft",
+                    title: "Paste Text",
+                    subtitle: "Paste notes, articles, or any text",
+                    accentColor: SGTheme.mint
+                ) {
+                    selectedSource = .text
+                    Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "text"])
+                    showGenerateSheet = true
+                }
+
+                SourceOptionCard(
+                    imageName: "youtube-icon",
+                    title: "YouTube Video",
+                    subtitle: "Paste a YouTube link to generate cards",
+                    accentColor: SGTheme.teal
+                ) {
+                    selectedSource = .youtube
+                    Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "youtube"])
+                    showGenerateSheet = true
+                }
+
+                SourceOptionCard(
+                    imageName: "quizlet",
+                    title: "Import from Quizlet",
+                    subtitle: "Import your existing Quizlet sets",
+                    accentColor: SGTheme.mint
+                ) {
+                    selectedSource = .quizlet
+                    Analytics.capture("onboarding_create_cards_source_tapped", properties: ["source": "quizlet"])
+                    showGenerateSheet = true
+                }
+            }
+
+            Spacer()
         }
         .onAppear {
-            showTitle = true
-            showSubtitle = true
-            showOptions = true
-            showSkip = true
             ensureDeckExists()
         }
         .sheet(isPresented: $showGenerateSheet, onDismiss: {
@@ -137,7 +94,7 @@ struct CreateFirstCardsOnboardingView: View {
                 initialSource: selectedSource
             )
             .environmentObject(deckStore)
-            .presentationCornerRadius(30)
+            .sgSheetChrome()
         }
     }
 
@@ -170,8 +127,8 @@ struct SourceOptionCard: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(accentColor.opacity(0.1))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(accentColor.opacity(0.12))
                         .frame(width: 52, height: 52)
 
                     if let imageName = imageName {
@@ -189,11 +146,11 @@ struct SourceOptionCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
 
                     Text(subtitle)
                         .font(.system(size: 14))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                        .foregroundColor(SGTheme.paperSecondary)
                         .lineLimit(2)
                 }
 
@@ -201,19 +158,19 @@ struct SourceOptionCard: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(Color(hex: 0x184449).opacity(0.25))
+                    .foregroundColor(SGTheme.paperTertiary)
             }
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(hex: 0xF5F7FA))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(SGTheme.inkRaised)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(hex: 0x184449).opacity(0.06), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(SGTheme.hairline, lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SGPressStyle())
     }
 }
 

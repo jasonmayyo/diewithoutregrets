@@ -1,196 +1,124 @@
+//
+//  StudyConsistancy.swift
+//  diewithoutregrets
+//
+//  Onboarding v2 — ScienceView: "The Study Guard Method" credibility beat.
+//  The teaching mascot floats over one line of method framing, a mint
+//  hairline, and the peer-review citation row (Cepeda 2006 + Steel 2007).
+//  Merges the four old science screens into a single daylight beat.
+//
+
 import SwiftUI
 
-struct StudyConsistancy: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    
-    @State private var showTitle = false
-    @State private var showAnimation = false
-    @State private var showButton = false
-    
+struct ScienceView: View {
+    @EnvironmentObject var viewModel: OnboardingViewModel
+
+    @State private var shown = false
+    @State private var ctaShown = false
+    @State private var bobbing = false
+    @State private var started = false
+
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack(alignment: .leading) {
-                    Text("Imagine being as consistent with studying as you are with scrolling")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .multilineTextAlignment(.leading)
-                        .lineSpacing(3)
-                        .opacity(showTitle ? 1 : 0)
-                        .offset(y: showTitle ? 0 : 30)
-                        .animation(.easeOut(duration: 0.8).delay(0.2), value: showTitle)
-                    
-                    Spacer()
-                    
-                    VStack(spacing: 24) {
-                        VStack(spacing: 4) {
-                            Text("If you scroll 20 times a day.")
-                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 18, weight: .medium))
-                                .foregroundColor(Color(hex: 0x184449).opacity(0.7))
-                                .opacity(showAnimation ? 1 : 0)
-                                .animation(.easeOut(duration: 0.8).delay(0.6), value: showAnimation)
+        VStack(spacing: 0) {
+            Spacer()
 
-                            Text("And we help you study for just 5 minutes before each scroll")
-                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16))
-                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .opacity(showAnimation ? 1 : 0)
-                                .animation(.easeOut(duration: 0.8).delay(0.8), value: showAnimation)
-                        }
-                        .padding(.horizontal)
-
-                        ConsistencyGraph(showAnimation: $showAnimation)
-                        
-                        VStack(spacing: 8) {
-                            Text("That's 11 extra hours of study per week.")
-                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 26 : 20, weight: .bold))
-                                .foregroundColor(Color(hex: 0x184449))
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .opacity(showAnimation ? 1 : 0)
-                                .animation(.easeOut(duration: 0.8).delay(2.0), value: showAnimation)
-                            
-                            Text("Without changing your routine.")
-                                .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 18 : 14, weight: .medium))
-                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .opacity(showAnimation ? 1 : 0)
-                                .animation(.easeOut(duration: 0.8).delay(2.2), value: showAnimation)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .opacity(showAnimation ? 1 : 0)
-                    .offset(y: showAnimation ? 0 : 30)
-                    .animation(.easeOut(duration: 0.8).delay(0.6), value: showAnimation)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        onboardingViewModel.triggerHapticFeedback()
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("Show me how")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.6 : .infinity)
-                            .frame(height: 55)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(50)
-                    }
-                    .opacity(showButton ? 1 : 0)
-                    .offset(y: showButton ? 0 : 30)
-                    .animation(.easeOut(duration: 0.8).delay(2.0), value: showButton)
-                }
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
-                .padding(.top, 20)
+            MascotView(pose: .teaching, loops: nil)
+                .frame(width: 150, height: 150)
+                .offset(y: bobbing ? -8 : 4)
+                .fadeRise(shown, delay: 0.2)
                 .padding(.bottom, 20)
-            }
-        }
-        .onAppear {
-            showTitle = true
-            showAnimation = true
-            showButton = true
-        }
-    }
-}
 
-struct ConsistencyGraph: View {
-    @Binding var showAnimation: Bool
-    @State private var animatedValue: CGFloat = 0
-    @State private var showNumber: Bool = false
-    
-    var body: some View {
-        VStack(spacing: 30) {
-            ZStack {
-                Circle()
-                    .stroke(Color(hex: 0x184449).opacity(0.08), lineWidth: 8)
-                    .frame(width: 180, height: 180)
-                
-                Circle()
-                    .trim(from: 0, to: animatedValue)
-                    .stroke(
-                        Color(hex: 0x184449),
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 180, height: 180)
-                    .rotationEffect(.degrees(-90))
-                
-                VStack(spacing: 4) {
-                    Text("11")
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .opacity(showNumber ? 1 : 0)
-                        .scaleEffect(showNumber ? 1 : 0.5)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(1.2), value: showNumber)
-                    
-                    Text("hours/week")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .opacity(showNumber ? 1 : 0)
-                        .offset(y: showNumber ? 0 : 10)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(1.4), value: showNumber)
+            Text("The Study Guard Method")
+                .font(SGTheme.display(30))
+                .foregroundColor(SGTheme.paper)
+                .multilineTextAlignment(.center)
+                .fadeRise(shown, delay: 0.5)
+
+            Text("Built on proven learning science: spaced repetition and friction design, grounded in peer-reviewed research.")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(SGTheme.paperSecondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+                .padding(.horizontal, 32)
+                .padding(.top, 10)
+                .fadeRise(shown, delay: 0.8)
+
+            Rectangle()
+                .fill(SGTheme.mint.opacity(0.5))
+                .frame(width: 56, height: 1)
+                .padding(.vertical, 24)
+                .fadeRise(shown, delay: 1.1)
+
+            VStack(spacing: 14) {
+                HStack(spacing: 28) {
+                    // Equal-height logo slots; each logo keeps its established
+                    // treatment (steel raw, common sense on a paper chip).
+                    HStack {
+                        Image("steel-logo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 22)
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    }
+                    .frame(height: 30)
+
+                    HStack {
+                        Image("common-sense-media-logo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 18)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(SGTheme.paper)
+                            )
+                    }
+                    .frame(height: 30)
                 }
+
+                Text("Based on Cepeda et al. 2006 (spaced repetition) and Steel 2007 (procrastination research)")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(SGTheme.paperTertiary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                    .padding(.horizontal, 44)
             }
-            
-            HStack(spacing: 30) {
-                VStack(spacing: 4) {
-                    Text("20")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                    Text("scrolls/day")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.45))
-                }
-                .opacity(showNumber ? 1 : 0)
-                .offset(y: showNumber ? 0 : 20)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(1.6), value: showNumber)
-                
-                Text("×")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(Color(hex: 0x184449).opacity(0.3))
-                    .opacity(showNumber ? 1 : 0)
-                    .animation(.easeOut(duration: 0.3).delay(1.8), value: showNumber)
-                
-                VStack(spacing: 4) {
-                    Text("5")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                    Text("min/study")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.45))
-                }
-                .opacity(showNumber ? 1 : 0)
-                .offset(y: showNumber ? 0 : 20)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(2.0), value: showNumber)
+            .fadeRise(shown, delay: 1.4)
+
+            Spacer()
+
+            OnbCTA(title: "Continue", visible: ctaShown) {
+                viewModel.screenAction("science_continue")
+                viewModel.nextStep()
             }
+            .padding(.bottom, 12)
         }
         .onAppear {
-            if showAnimation {
-                withAnimation(.easeInOut(duration: 1.5).delay(0.5)) {
-                    animatedValue = 0.65
-                }
-                showNumber = true
+            guard !started else { return }
+            started = true
+
+            if UIAccessibility.isReduceMotionEnabled {
+                shown = true
+                ctaShown = true
+                return
             }
-        }
-        .onChange(of: showAnimation) { newValue in
-            if newValue {
-                animatedValue = 0.65
-                showNumber = true
-            } else {
-                animatedValue = 0
-                showNumber = false
+
+            shown = true
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                bobbing = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                ctaShown = true
             }
         }
     }
 }
 
 #Preview {
-    StudyConsistancy()
-        .environmentObject(OnboardingViewModel())
+    ZStack {
+        SGTheme.ink.ignoresSafeArea()
+        ScienceView()
+            .environmentObject(OnboardingViewModel())
+    }
 }

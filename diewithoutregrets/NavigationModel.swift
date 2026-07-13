@@ -4,16 +4,36 @@ import SwiftUI
 // Define the destination enum
 public enum NavigationDestination {
     case regretView
-    case regretReport
 }
 
 public final class NavigationModel: ObservableObject {
     public static let shared = NavigationModel()
-    
+
     @Published public var currentDestination: NavigationDestination?
     @Published public var showBuyBackOffer: Bool = false
     @Published public var hasPendingBuyBackOffer: Bool = false
     @Published public var shouldDismissPaywall: Bool = false
+    /// Set when the buyback offer is purchased while onboarding is still in
+    /// progress. HardPaywallView observes this, advances the flow into
+    /// post-purchase setup, and resets it back to false once handled.
+    @Published public var buyBackPurchasedDuringOnboarding: Bool = false
+    /// Transient override for the unlock method — lets a locked user switch
+    /// to the other method ("Answer flashcards instead" / "Use True Focus
+    /// instead") without changing their saved preference. Cleared when the
+    /// unlock flow dismisses.
+    @Published public var unlockMethodOverride: String?
+
+    public func returnHome() {
+        if Thread.isMainThread {
+            currentDestination = nil
+            unlockMethodOverride = nil
+        } else {
+            DispatchQueue.main.async {
+                self.currentDestination = nil
+                self.unlockMethodOverride = nil
+            }
+        }
+    }
     
     private init() {
         print("[NavigationModel] Initialized")
@@ -63,6 +83,17 @@ public final class NavigationModel: ObservableObject {
                         self.shouldDismissPaywall = false
                     }
                 }
+            }
+        }
+    }
+
+    public func signalBuyBackPurchaseDuringOnboarding() {
+        print("[NavigationModel] signalBuyBackPurchaseDuringOnboarding called")
+        if Thread.isMainThread {
+            self.buyBackPurchasedDuringOnboarding = true
+        } else {
+            DispatchQueue.main.async {
+                self.buyBackPurchasedDuringOnboarding = true
             }
         }
     }

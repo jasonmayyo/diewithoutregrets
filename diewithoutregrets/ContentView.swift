@@ -14,16 +14,36 @@ struct ContentView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
-    
+
+    init() {
+        #if DEBUG
+        // Screenshot harness: launch with `-sg-preview-tab <index>`.
+        let args = ProcessInfo.processInfo.arguments
+        if let idx = args.firstIndex(of: "-sg-preview-tab"), idx + 1 < args.count,
+           let tab = Int(args[idx + 1]) {
+            _selectedTab = State(initialValue: tab)
+        }
+        #endif
+    }
+
+    private var tabItems: [SGTabItem] {
+        [
+            SGTabItem(id: 0, title: "Guard", icon: "house.fill", asset: "home (2)"),
+            SGTabItem(id: 1, title: "Study", icon: "rectangle.stack.fill"),
+            SGTabItem(id: 2, title: "Blocks", icon: "lock.fill"),
+            SGTabItem(id: 3, title: "Profile", icon: "person.fill"),
+        ]
+    }
+
     var body: some View {
         Group {
             if navigationModel.currentDestination == .regretView {
-                if unlockMethod == "trueFocus" {
+                if (navigationModel.unlockMethodOverride ?? unlockMethod) == "trueFocus" {
                     FocusSessionView(
                         durationMinutes: focusDuration,
                         strictness: .standard,
                         onEndSession: {
-                            NavigationModel.shared.navigate(to: .regretReport)
+                            NavigationModel.shared.returnHome()
                         }
                     )
                 } else {
@@ -37,44 +57,39 @@ struct ContentView: View {
                     NavigationStack {
                         RegretGuard()
                             .environmentObject(DeckStore.shared)
-                    }
-                    .tabItem {
-                        Label("Guard", systemImage: "shield.lefthalf.filled")
+                            .toolbar(.hidden, for: .tabBar)
                     }
                     .tag(0)
-                    
+
                     // Second Tab - Decks
                     NavigationStack {
                         DeckListView()
                             .environmentObject(DeckStore.shared)
-                    }
-                    .tabItem {
-                        Label("Study", systemImage: "rectangle.stack.fill")
+                            .toolbar(.hidden, for: .tabBar)
                     }
                     .tag(1)
-                    
-                    // Third Tab - Profile
+
+                    // Third Tab - Blocks
+                    NavigationStack {
+                        BlocksView()
+                            .environmentObject(DeckStore.shared)
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+                    .tag(2)
+
+                    // Fourth Tab - Profile
                     NavigationStack {
                         ProfileView()
                             .environmentObject(DeckStore.shared)
-                    }
-                    .tabItem {
-                        Label("Profile", systemImage: "person.fill")
-                    }
-                    .tag(2)
-                    
-                    #if DEBUG
-                    // Fourth Tab - Debug (only in debug builds)
-                    NavigationStack {
-                        DebugView()
-                    }
-                    .tabItem {
-                        Label("Debug", systemImage: "ant.fill")
+                            .toolbar(.hidden, for: .tabBar)
                     }
                     .tag(3)
-                    #endif
                 }
-                .tint(Color(hex: 0x184449))
+                .tint(SGTheme.mint)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    SGTabBar(selection: $selectedTab, items: tabItems)
+                }
+                .background(SGTheme.ink.ignoresSafeArea())
                 .onChange(of: selectedTab) { _, newTab in
                     let generator = UIImpactFeedbackGenerator(style: .soft)
                     generator.prepare()
@@ -84,8 +99,8 @@ struct ContentView: View {
                     switch newTab {
                     case 0: tabName = "guard"
                     case 1: tabName = "study"
-                    case 2: tabName = "profile"
-                    case 3: tabName = "debug"
+                    case 2: tabName = "blocks"
+                    case 3: tabName = "profile"
                     default: tabName = "unknown"
                     }
                     Analytics.tabSelected(tabName)
@@ -94,883 +109,8 @@ struct ContentView: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
     }
 }
-
-struct ProfileView: View {
-    @EnvironmentObject var deckStore: DeckStore
-    @EnvironmentObject var navigationModel: NavigationModel
-    @State private var showingSettings = false
-    @State private var showingFlashcardSettings = false
-    @AppStorage("flashcardCount") private var flashcardCount: Int = 3
-    @AppStorage("useAllCards") private var useAllCards: Bool = false
-    @State private var showingPaywall = false
-    @State private var currentOffering: Offering?
-    @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
-    @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
-    @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
-    @AppStorage("focusDuration") private var focusDuration: Int = 5
-    @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
-    @AppStorage("trueFocusBreakDuration") private var trueFocusBreakDuration: Int = 30
-    @State private var didCompletePurchase = false
-    @State private var showingFocusDurationSettings = false
-    @State private var showingBreakDurationSettings = false
-    
-    private var totalAvailableCards: Int {
-        deckStore.decks.reduce(0) { $0 + $1.cards.count }
-    }
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Stats Overview
-                VStack(spacing: 20) {
-                    HStack(spacing: 40) {
-                        StatItem(title: "Decks", value: "\(deckStore.decks.count)", icon: "rectangle.stack.fill")
-                        StatItem(title: "Cards", value: "\(totalAvailableCards)", icon: "doc.text.fill")
-                        StatItem(title: "To Unlock", value: useAllCards ? "All" : "\(flashcardCount)", icon: "lock.fill")
-                    }
-                }
-                .padding(24)
-                .background(
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color.white)
-                        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
-                )
-                .padding(.horizontal)
-                
-                // Study Settings Section
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "Study Settings")
-                    
-                    // Unlock Method Picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Unlock Method")
-                            .font(.headline)
-                            .foregroundColor(Color(hex: 0x184449))
-                        
-                        Text("How you unlock blocked apps")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 12) {
-                            // Flashcards option
-                            Button(action: {
-                                if unlockMethod != "flashcards" {
-                                    Analytics.settingChanged(
-                                        key: "unlock_method",
-                                        oldValue: unlockMethod,
-                                        newValue: "flashcards"
-                                    )
-                                }
-                                unlockMethod = "flashcards"
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "rectangle.stack.fill")
-                                        .font(.title2)
-                                    Text("Flashcards")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(unlockMethod == "flashcards"
-                                            ? Color(hex: 0x2BC391).opacity(0.15)
-                                            : Color.gray.opacity(0.08))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(unlockMethod == "flashcards"
-                                            ? Color(hex: 0x2BC391) : Color.clear, lineWidth: 2)
-                                )
-                                .foregroundColor(Color(hex: 0x184449))
-                            }
-                            
-                            // True Focus option
-                            Button(action: {
-                                if unlockMethod != "trueFocus" {
-                                    Analytics.settingChanged(
-                                        key: "unlock_method",
-                                        oldValue: unlockMethod,
-                                        newValue: "trueFocus"
-                                    )
-                                }
-                                unlockMethod = "trueFocus"
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "eye.fill")
-                                        .font(.title2)
-                                    Text("True Focus")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(unlockMethod == "trueFocus"
-                                            ? Color(hex: 0x2BC391).opacity(0.15)
-                                            : Color.gray.opacity(0.08))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(unlockMethod == "trueFocus"
-                                            ? Color(hex: 0x2BC391) : Color.clear, lineWidth: 2)
-                                )
-                                .foregroundColor(Color(hex: 0x184449))
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    
-                    // Flashcard count setting - only relevant when flashcards is selected
-                    if unlockMethod == "flashcards" {
-                        Button(action: { showingFlashcardSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Flashcards before unlocking")
-                                        .font(.headline)
-                                        .foregroundColor(Color(hex: 0x184449))
-                                    
-                                    Text(useAllCards ? "All cards" : "\(flashcardCount) cards")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
-                        }
-                    }
-                    
-                    // Focus duration setting - only relevant when True Focus is selected
-                    if unlockMethod == "trueFocus" {
-                        Button(action: { showingFocusDurationSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Focus session length")
-                                        .font(.headline)
-                                        .foregroundColor(Color(hex: 0x184449))
-                                    
-                                    Text("\(focusDuration) minutes")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
-                        }
-                    }
-                    
-                    // Break duration setting - shown for both methods
-                    Button(action: { showingBreakDurationSettings = true }) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Break duration")
-                                    .font(.headline)
-                                    .foregroundColor(Color(hex: 0x184449))
-                                
-                                Text("\(unlockMethod == "trueFocus" ? trueFocusBreakDuration : flashcardBreakDuration) minutes")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // App Experience Section
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "App Experience")
-                    
-                    VStack(spacing: 12) {
-                        // Lock Animation Option
-                        AnimationOptionRow(
-                            type: .lockAnimation,
-                            isSelected: selectedAnimationType == AnimationType.lockAnimation.rawValue,
-                            onSelect: { 
-                                if selectedAnimationType != AnimationType.lockAnimation.rawValue {
-                                    Analytics.settingChanged(
-                                        key: "animation_type",
-                                        oldValue: selectedAnimationType,
-                                        newValue: AnimationType.lockAnimation.rawValue
-                                    )
-                                }
-                                selectedAnimationType = AnimationType.lockAnimation.rawValue
-                                // Haptic feedback
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }
-                        )
-                        
-                        // Meme Video Option  
-                        AnimationOptionRow(
-                            type: .memeVideo,
-                            isSelected: selectedAnimationType == AnimationType.memeVideo.rawValue,
-                            onSelect: { 
-                                if selectedAnimationType != AnimationType.memeVideo.rawValue {
-                                    Analytics.settingChanged(
-                                        key: "animation_type",
-                                        oldValue: selectedAnimationType,
-                                        newValue: AnimationType.memeVideo.rawValue
-                                    )
-                                }
-                                selectedAnimationType = AnimationType.memeVideo.rawValue
-                                // Haptic feedback
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Account Section
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "Account")
-                    
-                    Button(action: {
-                        didCompletePurchase = false  // Reset flag when showing paywall
-                        Analytics.upgradeButtonTapped(surface: "profile")
-                        showingPaywall = true
-                    }) {
-                        HStack {
-                            Image(systemName: "crown.fill")
-                                .foregroundColor(.yellow)
-                            Text("Upgrade to Pro")
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                        }
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [Color(hex: 0x3FA4AE), Color(hex: 0x2BC391)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Help Section
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "Help & Legal")
-                    
-                    VStack(spacing: 2) {
-                        LinkMenuItem(icon: "questionmark.circle", title: "FAQs", url: "https://studyguard.framer.website/")
-                        LinkMenuItem(icon: "exclamationmark.triangle", title: "Report an Error", url: "https://studyguard.framer.website/support")
-                        LinkMenuItem(icon: "doc.text", title: "Terms of Use", url: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
-                        LinkMenuItem(icon: "hand.raised", title: "Privacy Policy", url: "https://studyguard.framer.website/legal/privacy-policy")
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.vertical)
-        }
-        .background(Color(hex: 0xF8F9FA))
-        .navigationTitle("Profile")
-        .onAppear {
-            // Fetch the offering when view appears
-            Purchases.shared.getOfferings { offerings, error in
-                DispatchQueue.main.async {
-                    // Use the default/current offering (can be changed in RevenueCat dashboard)
-                    self.currentOffering = offerings?.current
-                    
-                    if let current = offerings?.current {
-                        print("✅ Using default offering: \(current.identifier)")
-                    } else {
-                        print("⚠️ No current offering set - check RevenueCat dashboard")
-                    }
-                }
-            }
-            
-            // Show paywall for existing users who haven't seen it
-            if !hasSeenPaywall {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    showingPaywall = true
-                }
-            }
-        }
-        .sheet(isPresented: $showingFlashcardSettings) {
-            FlashcardSettingsSheet(flashcardCount: $flashcardCount, useAllCards: $useAllCards)
-                .presentationCornerRadius(30)
-                .presentationDetents([.fraction(0.8)])
-                .presentationDragIndicator(.hidden)
-        }
-        .sheet(isPresented: $showingFocusDurationSettings) {
-            FocusDurationSettingsSheet(focusDuration: $focusDuration)
-                .presentationCornerRadius(30)
-                .presentationDetents([.fraction(0.8)])
-                .presentationDragIndicator(.hidden)
-        }
-        .sheet(isPresented: $showingBreakDurationSettings) {
-            BreakDurationSettingsSheet(
-                breakDuration: unlockMethod == "trueFocus"
-                    ? $trueFocusBreakDuration
-                    : $flashcardBreakDuration,
-                unlockMethod: unlockMethod
-            )
-                .presentationCornerRadius(30)
-                .presentationDetents([.fraction(0.8)])
-                .presentationDragIndicator(.hidden)
-        }
-        .sheet(isPresented: $showingPaywall) {
-            if let offering = currentOffering {
-                PaywallView(offering: offering)
-                    .onAppear {
-                        Analytics.paywallViewed(surface: "profile", properties: [
-                            "offering_id": offering.identifier,
-                            "has_offering": true
-                        ])
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[ContentView] 📝 Marked paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        var price: Double?
-                        var currency: String?
-                        var productId: String = "unknown"
-                        var isTrial: Bool = false
-
-                        if let entitlement = customerInfo.entitlements.active.values.first,
-                           let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                            price = Double(truncating: package.storeProduct.price as NSNumber)
-                            currency = package.storeProduct.currencyCode ?? "USD"
-                            productId = package.storeProduct.productIdentifier
-                            isTrial = entitlement.periodType == .trial
-
-                            if isTrial {
-                                AdsTracker.trackStartTrial(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                            } else {
-                                AdsTracker.trackSubscribe(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                                AdsTracker.trackPurchase(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                            }
-                        }
-
-                        Analytics.subscriptionStarted(
-                            surface: "profile",
-                            productId: productId,
-                            price: price,
-                            currency: currency,
-                            isTrial: isTrial,
-                            offeringId: offering.identifier,
-                            entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                        )
-
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        let hasActive = !customerInfo.entitlements.active.isEmpty
-                        Analytics.restorePurchasesSucceeded(
-                            surface: "profile",
-                            hasActiveEntitlements: hasActive
-                        )
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onDisappear {
-                        Analytics.paywallDismissed(
-                            surface: "profile",
-                            didPurchase: didCompletePurchase
-                        )
-                        // Mark as seen even if user dismisses without purchasing
-                        hasSeenPaywall = true
-                        
-                        print("[ContentView] 🔍 Paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                        // Note: Paywall was already marked as viewed in onAppear
-                        // We don't need to do anything here since the flag is already set
-                    }
-            } else {
-                // Fallback paywall without specific offering
-                PaywallView()
-                    .onAppear {
-                        Analytics.paywallViewed(surface: "profile", properties: [
-                            "has_offering": false
-                        ])
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[ContentView] 📝 Marked fallback paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        if let entitlement = customerInfo.entitlements.active.values.first {
-                            Task {
-                                let products = await Purchases.shared.products([entitlement.productIdentifier])
-                                if let product = products.first {
-                                    let price = Double(truncating: product.price as NSNumber)
-                                    let currency = product.currencyCode ?? "USD"
-                                    let isTrial = entitlement.periodType == .trial
-                                    if isTrial {
-                                        AdsTracker.trackStartTrial(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                    } else {
-                                        AdsTracker.trackSubscribe(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                        AdsTracker.trackPurchase(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                    }
-                                    Analytics.subscriptionStarted(
-                                        surface: "profile",
-                                        productId: product.productIdentifier,
-                                        price: price,
-                                        currency: currency,
-                                        isTrial: isTrial,
-                                        offeringId: nil,
-                                        entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                                    )
-                                }
-                            }
-                        }
-
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onDisappear {
-                        Analytics.paywallDismissed(
-                            surface: "profile",
-                            didPurchase: didCompletePurchase
-                        )
-                        hasSeenPaywall = true
-                        
-                        print("[ContentView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                    }
-            }
-        }
-        .onChange(of: navigationModel.shouldDismissPaywall) { oldValue, newValue in
-            if newValue {
-                print("[ContentView] 🚪 Received dismiss signal, closing paywall")
-                showingPaywall = false
-            }
-        }
-        .onChange(of: flashcardCount) { oldValue, newValue in
-            Analytics.settingChanged(key: "flashcard_count", oldValue: oldValue, newValue: newValue)
-        }
-        .onChange(of: useAllCards) { oldValue, newValue in
-            Analytics.settingChanged(key: "use_all_cards", oldValue: oldValue, newValue: newValue)
-        }
-        .onChange(of: focusDuration) { oldValue, newValue in
-            Analytics.settingChanged(key: "focus_duration_minutes", oldValue: oldValue, newValue: newValue)
-        }
-        .onChange(of: flashcardBreakDuration) { oldValue, newValue in
-            Analytics.settingChanged(key: "flashcard_break_minutes", oldValue: oldValue, newValue: newValue)
-        }
-        .onChange(of: trueFocusBreakDuration) { oldValue, newValue in
-            Analytics.settingChanged(key: "true_focus_break_minutes", oldValue: oldValue, newValue: newValue)
-        }
-    }
-}
-
-struct SectionHeader: View {
-    let title: String
-    
-    var body: some View {
-        Text(title)
-            .font(.headline)
-            .foregroundColor(Color(hex: 0x184449))
-            .padding(.leading, 4)
-    }
-}
-
-struct LinkMenuItem: View {
-    let icon: String
-    let title: String
-    let url: String
-    
-    var body: some View {
-        Link(destination: URL(string: url)!) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(Color(hex: 0x184449))
-                    .frame(width: 24)
-                
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(Color(hex: 0x184449))
-                
-                Spacer()
-                
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
-            }
-            .padding()
-            .background(Color.white)
-            .cornerRadius(12)
-        }
-        .simultaneousGesture(TapGesture().onEnded {
-            Analytics.helpLinkClicked(link: title, url: url)
-        })
-    }
-}
-
-struct StatItem: View {
-    let title: String
-    let value: String
-    let icon: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: 0x184449).opacity(0.1))
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(hex: 0x184449))
-            }
-            
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(Color(hex: 0x184449))
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct SettingsView: View {
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                Section(header: Text("Account")) {
-                    NavigationLink {
-                        Text("Account Settings")
-                    } label: {
-                        Label("Account Settings", systemImage: "person.circle")
-                    }
-                    
-                    NavigationLink {
-                        Text("Notifications")
-                    } label: {
-                        Label("Notifications", systemImage: "bell")
-                    }
-                }
-                
-                Section(header: Text("Preferences")) {
-                    NavigationLink {
-                        Text("Study Settings")
-                    } label: {
-                        Label("Study Settings", systemImage: "book")
-                    }
-                    
-                    NavigationLink {
-                        Text("Appearance")
-                    } label: {
-                        Label("Appearance", systemImage: "paintbrush")
-                    }
-                }
-                
-                Section(header: Text("Support")) {
-                    NavigationLink {
-                        Text("Help Center")
-                    } label: {
-                        Label("Help Center", systemImage: "questionmark.circle")
-                    }
-                    
-                    NavigationLink {
-                        Text("Contact Us")
-                    } label: {
-                        Label("Contact Us", systemImage: "envelope")
-                    }
-                }
-            }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct FlashcardSettingsSheet: View {
-    @Environment(\.dismiss) var dismiss
-    @Binding var flashcardCount: Int
-    @Binding var useAllCards: Bool
-    
-    let options = [3, 5, 10, 15, 20, 25]
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(options, id: \.self) { number in
-                        Button(action: {
-                            flashcardCount = number
-                            useAllCards = false
-                            dismiss()
-                        }) {
-                            HStack {
-                                Text("\(number) cards")
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                if !useAllCards && flashcardCount == number {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(Color(hex: 0x184449))
-                                }
-                            }
-                        }
-                    }
-                    
-                    Button(action: {
-                        useAllCards = true
-                        dismiss()
-                    }) {
-                        HStack {
-                            Text("All cards")
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            if useAllCards {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(Color(hex: 0x184449))
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Select the number of flashcards required to unlock")
-                } footer: {
-                    Text("If you select more cards than available in a deck, all cards from that deck will be used.")
-                }
-            }
-            .navigationTitle("Flashcard Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.height(UIScreen.main.bounds.height * 0.6)])
-        .presentationDragIndicator(.visible)
-    }
-}
-
-struct FocusDurationSettingsSheet: View {
-    @Environment(\.dismiss) var dismiss
-    @Binding var focusDuration: Int
-    
-    let options = [1, 3, 5, 10, 15, 20, 25, 30]
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(options, id: \.self) { minutes in
-                        Button(action: {
-                            focusDuration = minutes
-                            dismiss()
-                        }) {
-                            HStack {
-                                Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")")
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                if focusDuration == minutes {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(Color(hex: 0x184449))
-                                }
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Select how long your True Focus session should be")
-                } footer: {
-                    Text("After completing a focus session, you'll earn a break to use the blocked app. You can set the break length separately.")
-                }
-            }
-            .navigationTitle("Focus Duration")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.height(UIScreen.main.bounds.height * 0.6)])
-        .presentationDragIndicator(.visible)
-    }
-}
-
-struct BreakDurationSettingsSheet: View {
-    @Environment(\.dismiss) var dismiss
-    @Binding var breakDuration: Int
-    let unlockMethod: String
-    
-    let options = [5, 10, 15, 20, 30, 45, 60]
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                // Explanation section
-                Section {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(Color(hex: 0x3FA4AE))
-                            
-                            Text("How breaks work")
-                                .font(.headline)
-                                .foregroundColor(Color(hex: 0x184449))
-                        }
-                        
-                        Text("After you complete \(unlockMethod == "trueFocus" ? "a True Focus session" : "your flashcards"), your blocked app is unlocked and you can use it freely.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Once your break time is up, the app won't suddenly close or lock you out. Instead, the next time you try to open that app after the break has expired, you'll need to complete \(unlockMethod == "trueFocus" ? "another focus session" : "flashcards again") to unlock it.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "hand.raised.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color(hex: 0x2BC391))
-                            
-                            Text("You're always in control — no sudden interruptions.")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(Color(hex: 0x184449))
-                        }
-                        .padding(.top, 4)
-                    }
-                    .padding(.vertical, 4)
-                }
-                
-                // Duration options
-                Section {
-                    ForEach(options, id: \.self) { minutes in
-                        Button(action: {
-                            breakDuration = minutes
-                            dismiss()
-                        }) {
-                            HStack {
-                                Text(minutes >= 60 ? "\(minutes / 60) hour" : "\(minutes) minutes")
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                if breakDuration == minutes {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(Color(hex: 0x184449))
-                                }
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Select your break length")
-                } footer: {
-                    Text("This is how long you can freely use the app before needing to \(unlockMethod == "trueFocus" ? "focus" : "study") again.")
-                }
-            }
-            .navigationTitle("Break Duration")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.height(UIScreen.main.bounds.height * 0.75)])
-        .presentationDragIndicator(.visible)
-    }
-}
-
-// MARK: - Debug View (only included in debug builds)
 
 #if DEBUG
 struct DebugView: View {
@@ -979,8 +119,78 @@ struct DebugView: View {
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
+    // Home-screen ripple tuner — read live by RegretGuard's MeadowDotRipple.
+    @AppStorage("sgRippleSagitta") private var rippleSagitta: Double = 32
+    @AppStorage("sgRippleApexInset") private var rippleApexInset: Double = 94
+    @AppStorage("sgRippleShiftY") private var rippleShiftY: Double = 0
+    @AppStorage("sgHomeBackdrop") private var homeBackdrop: String = "dots"
+
     var body: some View {
         List {
+            StudyGuardDebugSection()
+
+            Section {
+                Picker("Backdrop", selection: $homeBackdrop) {
+                    Text("Dots").tag("dots")
+                    Text("Clouds").tag("clouds")
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("Home backdrop")
+            } footer: {
+                Text("Switches the animated background on the Guard tab between the dot ripple and Clouds.lottie.")
+                    .font(.caption2)
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Curve (sagitta)")
+                        Spacer()
+                        Text("\(Int(rippleSagitta))")
+                            .font(.caption.monospaced())
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $rippleSagitta, in: 1...160, step: 1)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Line offset")
+                        Spacer()
+                        Text("\(Int(rippleApexInset))")
+                            .font(.caption.monospaced())
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $rippleApexInset, in: -600...300, step: 2)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Shift down")
+                        Spacer()
+                        Text("\(Int(rippleShiftY))")
+                            .font(.caption.monospaced())
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $rippleShiftY, in: 0...700, step: 5)
+                }
+
+                Button {
+                    rippleSagitta = 32
+                    rippleApexInset = 94
+                    rippleShiftY = 0
+                    lastAction = "Ripple tuner reset to defaults"
+                } label: {
+                    Label("Reset to defaults", systemImage: "arrow.counterclockwise")
+                }
+            } header: {
+                Text("Meadow dot ripple")
+            } footer: {
+                Text("Curve: how rounded the ripple's base arc is (32 matches the hill; smaller = flatter). Line offset: how far below the meadow's top edge the arc sits. Negative raises it into the white area. Shift down: moves the WHOLE dot field down, opening a gap at the top of the screen. Changes apply live on the Guard tab.")
+                    .font(.caption2)
+            }
+
             Section("Break / Unlock State") {
                 // Current values
                 VStack(alignment: .leading, spacing: 6) {
@@ -1038,20 +248,13 @@ struct DebugView: View {
             Section("Onboarding") {
                 Button(role: .destructive) {
                     hasCompletedOnboarding = false
-                    lastAction = "Onboarding reset — relaunch the app"
+                    lastAction = "Onboarding reset, relaunch the app"
                 } label: {
                     Label("Reset Onboarding", systemImage: "arrow.counterclockwise")
                 }
             }
 
             Section("Navigation") {
-                Button {
-                    NavigationModel.shared.navigate(to: .regretReport)
-                    lastAction = "Navigated to regretReport"
-                } label: {
-                    Label("Go to Regret Report", systemImage: "doc.text")
-                }
-
                 Button {
                     NavigationModel.shared.currentDestination = nil
                     lastAction = "Reset navigation to home"
@@ -1074,7 +277,7 @@ struct DebugView: View {
                     Telemetry.capture(err,
                                       context: ["triggered_from": "DebugView"],
                                       tags: ["test": "true"])
-                    lastAction = "Captured handled error (dropped in DEBUG by beforeSend — verify on TestFlight)"
+                    lastAction = "Captured handled error (dropped in DEBUG by beforeSend, verify on TestFlight)"
                 } label: {
                     Label("Capture handled error", systemImage: "exclamationmark.triangle")
                 }
@@ -1119,7 +322,7 @@ struct DebugView: View {
                     Label("Crash (SIGSEGV null deref)", systemImage: "memorychip.fill")
                 }
             } header: {
-                Text("Sentry — test crash menu")
+                Text("Sentry: test crash menu")
             } footer: {
                 Text("⚠️ Crashes only reach Sentry when running WITHOUT the debugger attached. Either uncheck Scheme → Run → Info → \"Debug Executable\", or test on a TestFlight build.")
                     .font(.caption2)
@@ -1152,14 +355,30 @@ struct DebugView: View {
                 .frame(width: 140, alignment: .leading)
             Text(value)
                 .font(.caption.monospaced())
-                .foregroundColor(Color(hex: 0x184449))
+                .foregroundColor(Color(hex: 0x184449))  
         }
     }
 }
 #endif
 
-#Preview {
+#Preview("Empty / not set up") {
     ContentView()
         .environmentObject(RegretStore.shared)
         .environmentObject(NavigationModel.shared)
 }
+
+#if DEBUG
+#Preview("Metering") {
+    SGPreviewHarness.seed(.metering)
+    return ContentView()
+        .environmentObject(RegretStore.shared)
+        .environmentObject(NavigationModel.shared)
+}
+
+#Preview("Locked") {
+    SGPreviewHarness.seed(.locked)
+    return ContentView()
+        .environmentObject(RegretStore.shared)
+        .environmentObject(NavigationModel.shared)
+}
+#endif

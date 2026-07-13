@@ -39,7 +39,7 @@ enum SecretsLoader {
               host != "REPLACE_ME_SENTRY_DSN" else {
             // assertionFailure trips in DEBUG so we notice locally; in
             // Release we swallow it and Sentry init will be a no-op below.
-            assertionFailure("SENTRY_DSN missing from Info.plist — did you set it in Secrets.local.xcconfig?")
+            assertionFailure("SENTRY_DSN missing from Info.plist. Did you set it in Secrets.local.xcconfig?")
             return ""
         }
         // Defensive: if someone pastes a full URL anyway (with scheme), use

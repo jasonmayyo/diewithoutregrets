@@ -17,73 +17,54 @@ struct AnimationOptionRow: View {
             HStack(spacing: 16) {
                 // Icon/Preview area
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            LinearGradient(
-                                colors: isSelected ?
-                                    [Color(hex: 0x3FA4AE), Color(hex: 0x2BC391)] :
-                                    [Color.gray.opacity(0.2), Color.gray.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(isSelected ? SGTheme.mint.opacity(0.12) : SGTheme.inkHigh)
                         .frame(width: 60, height: 60)
-                    
+
                     Image(systemName: type.systemImageName)
                         .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(isSelected ? .white : Color(hex: 0x184449))
+                        .foregroundColor(isSelected ? SGTheme.mint : SGTheme.paperSecondary)
                         .scaleEffect(isSelected ? 1.1 : 1.0)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
                 }
-                
+
                 // Text content
                 VStack(alignment: .leading, spacing: 4) {
                     Text(type.displayName)
-                        .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
-                    
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
+
                     Text(type.description)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperSecondary)
                         .multilineTextAlignment(.leading)
                 }
-                
+
                 Spacer()
-                
+
                 // Selection indicator
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(Color(hex: 0x2BC391))
+                        .foregroundColor(SGTheme.mint)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(16)
+            .padding(SGTheme.cardPadding)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white)
-                    .shadow(
-                        color: isSelected ?
-                            Color(hex: 0x2BC391).opacity(0.2) :
-                            Color.black.opacity(0.05),
-                        radius: isSelected ? 8 : 4,
-                        x: 0,
-                        y: isSelected ? 4 : 2
-                    )
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                    .fill(SGTheme.inkRaised)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isSelected ?
-                            Color(hex: 0x2BC391).opacity(0.3) :
-                            Color.clear,
-                        lineWidth: 2
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? SGTheme.mint : SGTheme.hairline,
+                        lineWidth: isSelected ? 1.5 : 1
                     )
             )
-            .scaleEffect(isSelected ? 1.02 : 1.0)
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
+            .animation(SGTheme.springFast, value: isSelected)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SGPressStyle())
     }
 }
 
@@ -103,6 +84,6 @@ struct AnimationOptionRow_Previews: PreviewProvider {
             )
         }
         .padding()
-        .background(Color(hex: 0xF8F9FA))
+        .background(SGTheme.ink)
     }
 } 

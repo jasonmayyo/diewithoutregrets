@@ -23,16 +23,8 @@ struct BuyBackOfferView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(hex: 0x3FA4AE),
-                    Color(hex: 0x2BC391)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
+            SGAuroraBackground(intensity: 1.0)
+
             if showConfetti {
                 ForEach(confettiPieces) { piece in
                     ConfettiBuyBackView(piece: piece)
@@ -49,10 +41,13 @@ struct BuyBackOfferView: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(SGTheme.paper)
                             .frame(width: 32, height: 32)
-                            .background(Color.white.opacity(0.3))
-                            .clipShape(Circle())
+                            .background(
+                                Circle()
+                                    .fill(SGTheme.glaze(0.08))
+                                    .overlay(Circle().strokeBorder(SGTheme.hairline, lineWidth: 1))
+                            )
                     }
                     .padding(.trailing, 20)
                     .padding(.top, 50)
@@ -66,75 +61,80 @@ struct BuyBackOfferView: View {
                 VStack(spacing: 30) {
                     VStack(spacing: 8) {
                         Text("One Time Offer")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(SGTheme.paper)
                             .multilineTextAlignment(.center)
                             .opacity(showTitle ? 1 : 0)
                             .offset(y: showTitle ? 0 : 30)
                             .animation(.easeOut(duration: 1.0).delay(0.2), value: showTitle)
-                        
+
                         Text("You will never see this again")
                             .font(.system(size: 16, weight: .regular))
-                            .foregroundColor(.white)
+                            .foregroundColor(SGTheme.paperSecondary)
                             .multilineTextAlignment(.center)
                             .opacity(showTitle ? 1 : 0)
                             .offset(y: showTitle ? 0 : 30)
                             .animation(.easeOut(duration: 1.0).delay(0.4), value: showTitle)
                     }
-                    
+
                     VStack(spacing: 25) {
                         ZStack {
                             Circle()
-                                .fill(Color.white)
+                                .fill(SGTheme.inkRaised)
                                 .frame(width: 80, height: 80)
-                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-                            
+                                .overlay(Circle().strokeBorder(SGTheme.hairline, lineWidth: 1))
+
                             Image(systemName: "gift.fill")
                                 .font(.system(size: 40))
-                                .foregroundColor(.brown)
+                                .foregroundColor(SGTheme.mint)
                         }
                         .opacity(showOfferCard ? 1 : 0)
                         .scaleEffect(showOfferCard ? 1.0 : 0.5)
                         .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.6), value: showOfferCard)
-                        
+
                         HStack() {
                             Text("Here's an")
                                 .font(.system(size: 18, weight: .regular))
-                                .foregroundColor(.white)
-                            
+                                .foregroundColor(SGTheme.paper)
+
                             Text("70% off")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.black)
+                                .foregroundColor(SGTheme.ink)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(Color.white)
+                                .background(SGTheme.mint)
                                 .cornerRadius(20)
-                            
+
                             Text("discount")
                                 .font(.system(size: 18, weight: .regular))
-                                .foregroundColor(.white)
-                            
+                                .foregroundColor(SGTheme.paper)
+
                             Image(systemName: "hands.sparkles")
                                 .font(.system(size: 16))
-                                .foregroundColor(.white)
+                                .foregroundColor(SGTheme.mint)
                         }
                         .opacity(showOfferCard ? 1 : 0)
                         .offset(y: showOfferCard ? 0 : 20)
                         .animation(.easeOut(duration: 1.0).delay(0.8), value: showOfferCard)
-                        
+
                         VStack(spacing: 8) {
                             Text("Only $1.67 / month")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.black)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(SGTheme.paper)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .shadow(color: .white.opacity(0.2), radius: 3, x: 0, y: 1)
-                            
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(SGTheme.inkRaised)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                                        )
+                                )
+
                             Text("Lowest price ever")
                                 .font(.system(size: 14, weight: .regular))
-                                .foregroundColor(.white)
+                                .foregroundColor(SGTheme.paperSecondary)
                         }
                         .opacity(showOfferCard ? 1 : 0)
                         .offset(y: showOfferCard ? 0 : 20)
@@ -149,13 +149,13 @@ struct BuyBackOfferView: View {
                     Task { await startWinBackPurchase() }
                 }) {
                     Text("Claim your limited offer now!")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.black)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(SGTheme.ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(Color.white)
-                        .cornerRadius(28)
+                        .background(SGTheme.mint, in: Capsule(style: .continuous))
                 }
+                .buttonStyle(SGPressStyle())
                 .padding(.horizontal, 20)
                 .disabled(isPurchasing)
                 .opacity(showButton ? 1 : 0)
@@ -264,9 +264,18 @@ struct BuyBackOfferView: View {
                 NotificationManager.shared.resetPaywallTracking()
                 NotificationManager.shared.markBuybackNotificationSeen()
                 
-                // Complete onboarding (same as paywall purchase)
-                hasCompletedOnboarding = true
-                
+                if hasCompletedOnboarding {
+                    // Post-onboarding deep-link path: nothing to advance,
+                    // keep existing behavior.
+                    hasCompletedOnboarding = true
+                } else {
+                    // Purchased mid-onboarding: do NOT end onboarding here.
+                    // Mark the paywall as seen and signal HardPaywallView to
+                    // advance the buyer into post-purchase setup.
+                    UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
+                    NavigationModel.shared.signalBuyBackPurchaseDuringOnboarding()
+                }
+
                 // Dismiss the buyback sheet
                 dismiss()
             }
@@ -318,7 +327,7 @@ struct ConfettiPiece: Identifiable {
         self.x = CGFloat.random(in: 0...width)
         self.y = startY
         self.rotation = Double.random(in: 0...180)
-        self.color = [.yellow, .blue, .cyan, .orange, .pink, .purple].randomElement() ?? .yellow
+        self.color = [SGTheme.mint, SGTheme.teal, SGTheme.paper, SGTheme.ember].randomElement() ?? SGTheme.mint
         self.size = CGFloat.random(in: 4...8)
     }
 }

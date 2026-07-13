@@ -25,9 +25,21 @@ struct RegretGuardIntent: AppIntent {
     
     func perform() async throws -> some IntentResult & ReturnsValue<Bool> {
         let currentTime = Date().timeIntervalSince1970
-        
+
         // Use shared UserDefaults
         let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
+
+        // v2 kill switch: once Screen Time setup is complete, the old Shortcut
+        // automations become silent no-ops (returning false means the shortcut
+        // never calls OpenGuardIntent). Counted so analytics can watch the
+        // automation tail before the targets are removed in 3.0.
+        if sharedDefaults?.bool(forKey: SGContract.Keys.setupComplete) == true {
+            let fires = (sharedDefaults?.integer(forKey: SGContract.Keys.legacyIntentFireCount) ?? 0) + 1
+            sharedDefaults?.set(fires, forKey: SGContract.Keys.legacyIntentFireCount)
+            sharedDefaults?.synchronize()
+            print("RegretGuardIntent: v2 active, legacy automation no-op (fire #\(fires))")
+            return .result(value: false)
+        }
         let lastBreakTime = sharedDefaults?.double(forKey: "LastBreakTime") ?? 0
         
         // Read the user's chosen break duration (in minutes), default to 5 if not set

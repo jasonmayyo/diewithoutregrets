@@ -1,145 +1,122 @@
+//
+//  UnlockMethodChoiceView.swift
+//  diewithoutregrets
+//
+//  Post-purchase setup (v2, screen 26): pick how locked apps unlock —
+//  flashcards or a True Focus session. Writes "unlockMethod" on selection;
+//  the view model persists quiz answers + person properties automatically
+//  when this step advances (nextStep → saveUserData).
+//
+
 import SwiftUI
 
 struct UnlockMethodChoiceView: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
+    @EnvironmentObject var viewModel: OnboardingViewModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
-    
-    @State private var showTitle = false
-    @State private var showSubtitle = false
-    @State private var showCards = false
-    @State private var showButton = false
-    
+
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("How do you want to earn your scroll time?")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .lineSpacing(3)
-                        .opacity(showTitle ? 1 : 0)
-                        .offset(y: showTitle ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.2), value: showTitle)
-                    
-                    Text("You can always change this later.")
-                        .font(.system(size: 15))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .padding(.top, 6)
-                        .opacity(showSubtitle ? 1 : 0)
-                        .offset(y: showSubtitle ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.4), value: showSubtitle)
-                    
-                    Spacer()
-                    
-                    VStack(spacing: 16) {
-                        UnlockMethodCard(
-                            icon: "rectangle.stack.fill",
-                            title: "Flashcards",
-                            subtitle: "Answer a few quick questions from your own study material before you can scroll.",
-                            isSelected: unlockMethod == "flashcards"
-                        ) {
-                            unlockMethod = "flashcards"
-                            onboardingViewModel.triggerHapticFeedback()
-                        }
-                        
-                        UnlockMethodCard(
-                            icon: "eye.fill",
-                            title: "True Focus",
-                            subtitle: "Prove you're studying with camera-verified focus sessions to earn your break.",
-                            isSelected: unlockMethod == "trueFocus"
-                        ) {
-                            unlockMethod = "trueFocus"
-                            onboardingViewModel.triggerHapticFeedback()
-                        }
-                    }
-                    .opacity(showCards ? 1 : 0)
-                    .offset(y: showCards ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(0.6), value: showCards)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        onboardingViewModel.triggerHapticFeedback()
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("Continue")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.6 : .infinity)
-                            .frame(height: 55)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(50)
-                    }
-                    .opacity(showButton ? 1 : 0)
-                    .offset(y: showButton ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(0.8), value: showButton)
-                }
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
-                .padding(.top, 20)
-                .padding(.bottom, 20)
+        OnboardingScaffold(
+            mascot: .clipboard,
+            mascotReplayKey: unlockMethod.hashValue,
+            headline: "How do you want to unlock your apps?",
+            subtitle: "You can always change this later.",
+            ctaTitle: "Continue",
+            ctaAction: {
+                viewModel.nextStep()
             }
-        }
-        .onAppear {
-            showTitle = true
-            showSubtitle = true
-            showCards = true
-            showButton = true
+        ) {
+            Spacer()
+
+            VStack(spacing: 14) {
+                UnlockMethodCard(
+                    icon: "rectangle.stack.fill",
+                    title: "Flashcards",
+                    subtitle: "Answer cards from your decks",
+                    selected: unlockMethod == "flashcards"
+                ) {
+                    unlockMethod = "flashcards"
+                    viewModel.triggerHapticFeedback()
+                }
+
+                UnlockMethodCard(
+                    icon: "eye.fill",
+                    title: "True Focus",
+                    subtitle: "Camera-verified focus sessions",
+                    selected: unlockMethod == "trueFocus"
+                ) {
+                    unlockMethod = "trueFocus"
+                    viewModel.triggerHapticFeedback()
+                }
+            }
+
+            Spacer()
         }
     }
 }
 
-struct UnlockMethodCard: View {
+/// Large selectable card in the SGOptionTile language: mint wash + border
+/// when selected, raised ink tile otherwise.
+private struct UnlockMethodCard: View {
     let icon: String
     let title: String
     let subtitle: String
-    let isSelected: Bool
+    let selected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color(hex: 0x184449).opacity(0.12) : Color(hex: 0xF5F7FA))
-                        .frame(width: 56, height: 56)
-                    
+                        .fill(selected ? SGTheme.mint.opacity(0.15) : SGTheme.inkHigh)
+                        .frame(width: 52, height: 52)
+
                     Image(systemName: icon)
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(isSelected ? Color(hex: 0x184449) : Color(hex: 0x184449).opacity(0.4))
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(selected ? SGTheme.mint : SGTheme.paperTertiary)
                 }
-                
-                VStack(alignment: .leading, spacing: 4) {
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(Color(hex: 0x184449))
-                    
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
+
                     Text(subtitle)
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.55))
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                
+
                 Spacer()
-                
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? Color(hex: 0x184449) : Color.gray.opacity(0.3))
+
+                ZStack {
+                    Circle()
+                        .strokeBorder(selected ? SGTheme.mint : SGTheme.hairline, lineWidth: 1.5)
+                        .frame(width: 26, height: 26)
+                    if selected {
+                        Circle()
+                            .fill(SGTheme.mint)
+                            .frame(width: 26, height: 26)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
             }
-            .padding(16)
+            .padding(SGTheme.cardPadding)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color(hex: 0x184449).opacity(0.06) : Color(hex: 0xF5F7FA))
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                    .fill(selected ? SGTheme.mint.opacity(0.12) : SGTheme.inkRaised)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                            .strokeBorder(selected ? SGTheme.mint : SGTheme.hairline,
+                                          lineWidth: selected ? 1.5 : 1)
+                    )
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color(hex: 0x184449).opacity(0.3) : Color.clear, lineWidth: 1.5)
-            )
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .buttonStyle(SGPressStyle())
+        .animation(SGTheme.springFast, value: selected)
     }
 }
 

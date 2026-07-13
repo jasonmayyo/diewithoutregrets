@@ -1,119 +1,110 @@
+//
+//  ProcrastinationStudyView.swift
+//  diewithoutregrets
+//
+//  Onboarding v2 quiz question 4 (night): peak scroll time. Three larger
+//  image-card options with tinted SF symbol thumbs, so we know which hours
+//  to protect first.
+//
+
 import SwiftUI
 
-struct ProcrastinationStudyView: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    
-    @State private var showLabel = false
-    @State private var showHeadline = false
-    @State private var showSource = false
-    @State private var showReframe1 = false
-    @State private var showReframe2 = false
-    @State private var showButton = false
-    @State private var showAnimation = false
-    
+struct QuizScrollTimesView: View {
+    @EnvironmentObject var viewModel: OnboardingViewModel
+
+    private let options: [(title: String, icon: String, tint: Color)] = [
+        ("While studying", "sun.max.fill", Color(hex: 0xFFC83D)),
+        ("In bed", "moon.fill", Color(hex: 0x7BA3FF)),
+        ("Honestly, all day", "infinity", SGTheme.ember),
+    ]
+
+    @State private var answered = false
+
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    DotLottieView(fileName: "sademotion", speed: 0.8)
-                        .frame(height: min(180, geometry.size.height * 0.22))
-                        .frame(maxWidth: .infinity)
-                        .opacity(showAnimation ? 1 : 0)
-                        .scaleEffect(showAnimation ? 1 : 0.85)
-                        .animation(.easeOut(duration: 0.8).delay(0.1), value: showAnimation)
-                        .padding(.top, 10)
-                    
-                    Spacer()
-                        .frame(height: 24)
-                    
-                    Text("Here's what the science says.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .tracking(1.5)
-                        .textCase(.uppercase)
-                        .opacity(showLabel ? 1 : 0)
-                        .offset(y: showLabel ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.3), value: showLabel)
-                        .padding(.bottom, 16)
-                    
-                    Text("86% of students say procrastination negatively affects their grades.")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .lineSpacing(4)
-                        .opacity(showHeadline ? 1 : 0)
-                        .offset(y: showHeadline ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.6), value: showHeadline)
-                        .padding(.bottom, 12)
-                    
-                    HStack(spacing: 10) {
-                        Image("steel-logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 22)
-                        
-                        Text("Steel, 2007. Psychological Bulletin")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Color(hex: 0x184449).opacity(0.4))
+        QuizScreenContainer(
+            number: 4,
+            question: "When do you scroll when you should be studying?",
+            subtitle: "This helps us protect your most vulnerable hours.",
+            progress: OnboardingStep.quizScrollTimes.quizProgress
+        ) {
+            ForEach(options, id: \.title) { option in
+                ScrollTimeCard(
+                    title: option.title,
+                    icon: option.icon,
+                    tint: option.tint,
+                    selected: viewModel.peakScrollTime == option.title
+                ) {
+                    guard !answered else { return }
+                    answered = true
+                    viewModel.selectQuizAnswer {
+                        viewModel.peakScrollTime = option.title
                     }
-                    .opacity(showSource ? 1 : 0)
-                    .animation(.easeOut(duration: 0.8).delay(0.9), value: showSource)
-                    .padding(.bottom, 32)
-                    
-                    Text("But it's not a willpower problem.\nIt's a system problem.")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.8))
-                        .lineSpacing(4)
-                        .opacity(showReframe1 ? 1 : 0)
-                        .offset(y: showReframe1 ? 0 : 15)
-                        .animation(.easeOut(duration: 0.8).delay(1.5), value: showReframe1)
-                        .padding(.bottom, 12)
-                    
-                    Text("You don't need more discipline.\nYou need a better system.")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .lineSpacing(3)
-                        .opacity(showReframe2 ? 1 : 0)
-                        .offset(y: showReframe2 ? 0 : 15)
-                        .animation(.easeOut(duration: 0.8).delay(2.0), value: showReframe2)
-                    
-                    Spacer()
-                    Spacer()
-                    
-                    Button(action: {
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("Show me the system")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.5 : .infinity)
-                            .frame(height: 55)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(50)
-                    }
-                    .opacity(showButton ? 1 : 0)
-                    .offset(y: showButton ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(2.5), value: showButton)
                 }
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
-                .padding(.bottom, 20)
             }
-        }
-        .onAppear {
-            showLabel = true
-            showHeadline = true
-            showSource = true
-            showReframe1 = true
-            showReframe2 = true
-            showButton = true
-            showAnimation = true
         }
     }
 }
 
+/// Larger image-card option for the scroll-times question: 56pt tinted
+/// symbol circle + title + radio, night styling.
+private struct ScrollTimeCard: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(tint.opacity(0.18))
+                        .frame(width: 56, height: 56)
+                    Image(systemName: icon)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(tint)
+                }
+
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(OnbNight.textPrimary)
+
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .strokeBorder(selected ? Color.white : Color.white.opacity(0.35), lineWidth: 1.5)
+                        .frame(width: 24, height: 24)
+                    if selected {
+                        Circle().fill(Color.white).frame(width: 24, height: 24)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Color(hex: 0x0B1C33))
+                    }
+                }
+            }
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                    .fill(OnbNight.cardFill)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                            .strokeBorder(selected ? OnbNight.cardBorderSelected : OnbNight.cardBorder,
+                                          lineWidth: selected ? 1.5 : 1)
+                    )
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SGPressStyle())
+        .animation(SGTheme.springFast, value: selected)
+    }
+}
+
 #Preview {
-    ProcrastinationStudyView()
-        .environmentObject(OnboardingViewModel())
+    ZStack {
+        NightSkyBackdrop()
+        QuizScrollTimesView()
+            .environmentObject(OnboardingViewModel())
+    }
 }

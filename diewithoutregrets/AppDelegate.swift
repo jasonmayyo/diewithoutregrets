@@ -7,6 +7,7 @@ import UIKit
 import UserNotifications
 import AppTrackingTransparency
 import TikTokBusinessSDK
+import FamilyControls
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -251,7 +252,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         print("[AppDelegate] 🔔 User tapped notification: \(response.notification.request.identifier)")
-        
+
+        // Study Guard lock/warning notifications route into the unlock flow.
+        let identifier = response.notification.request.identifier
+        if identifier == SGContract.lockNotificationID || identifier == SGContract.warningNotificationID {
+            Analytics.capture("lock_notification_tapped", properties: ["identifier": identifier])
+            DispatchQueue.main.async {
+                StudyGuardManager.shared.reconcileOnForeground()
+                if StudyGuardManager.shared.state == .locked {
+                    NavigationModel.shared.navigate(to: .regretView)
+                }
+            }
+        }
+
         if response.notification.request.identifier == "buyback_offer_notification" {
             Analytics.buybackNotificationTapped()
             // Mark notification as seen
@@ -303,6 +316,70 @@ enum Analytics {
             Purchases.shared.appUserID,
             userProperties: properties
         )
+    }
+
+    // MARK: Study Guard — extension analytics drain
+
+    /// PostHog can't run inside the Screen Time extensions, so they queue
+    /// events into the app group (`sg_pendingEvents`). Drained on every
+    /// foreground. The queue is swapped to a drain key first so an extension
+    /// appending mid-drain can't be lost to a read-modify-write race.
+    static func flushStudyGuardExtensionEvents() {
+        guard let defaults = SGContract.sharedDefaults else { return }
+        defaults.synchronize()
+
+        // Swap: move pending → draining, clear pending.
+        if let data = defaults.data(forKey: SGContract.Keys.pendingEvents) {
+            defaults.set(data, forKey: SGContract.Keys.pendingEventsDraining)
+            defaults.removeObject(forKey: SGContract.Keys.pendingEvents)
+            defaults.synchronize()
+        }
+
+        guard let draining = defaults.data(forKey: SGContract.Keys.pendingEventsDraining),
+              let events = try? JSONSerialization.jsonObject(with: draining) as? [[String: Any]],
+              !events.isEmpty else {
+            defaults.removeObject(forKey: SGContract.Keys.pendingEventsDraining)
+            return
+        }
+
+        for event in events {
+            guard let name = event["event"] as? String else { continue }
+            var props: [String: Any] = [:]
+            for (key, value) in event where key != "event" {
+                props[key] = value
+            }
+            // Original timestamp is preserved as a property; PostHog ingestion
+            // time will differ (events arrive at next foreground).
+            if let ts = event["timestamp"] as? Double {
+                props["original_timestamp"] = Date(timeIntervalSince1970: ts).ISO8601Format()
+            }
+            capture(name, properties: props)
+        }
+        defaults.removeObject(forKey: SGContract.Keys.pendingEventsDraining)
+        defaults.synchronize()
+
+        // Legacy automation tail: how often old Shortcut automations still
+        // fire post-migration (drives the 3.0 decision to delete the intent
+        // targets). Flushed as a delta since the last drain.
+        let totalFires = defaults.integer(forKey: SGContract.Keys.legacyIntentFireCount)
+        let lastFlushed = UserDefaults.standard.integer(forKey: "lastFlushedLegacyIntentFireCount")
+        if totalFires > lastFlushed {
+            capture("legacy_intent_noop", properties: [
+                "count": totalFires - lastFlushed,
+                "total": totalFires,
+            ])
+            UserDefaults.standard.set(totalFires, forKey: "lastFlushedLegacyIntentFireCount")
+        }
+
+        // Keep Study Guard person properties fresh (cheap; piggybacks the drain).
+        var personProps: [String: Any] = [
+            "screen_time_setup_complete": defaults.bool(forKey: SGContract.Keys.setupComplete),
+            "usage_interval_minutes": defaults.integer(forKey: SGContract.Keys.intervalMinutes),
+        ]
+        if let selection = SGContract.decodeSelection(defaults) {
+            personProps["guarded_token_count"] = SGContract.tokenCount(selection)
+        }
+        setPersonProperties(personProps)
     }
 
     // MARK: Onboarding — funnel

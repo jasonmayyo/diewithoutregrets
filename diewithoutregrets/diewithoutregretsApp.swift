@@ -6,6 +6,12 @@ import UIKit
 @main
 struct diewithoutregretsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    init() {
+        #if DEBUG
+        SGPreviewHarness.applyLaunchArguments()
+        #endif
+    }
     @StateObject private var navigationModel = NavigationModel.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @StateObject private var regretStore = RegretStore()
@@ -37,6 +43,13 @@ struct diewithoutregretsApp: App {
                 if url.scheme == "diewithoutregrets" && url.host == "buyback" {
                     navigationModel.presentBuyBackOffer()
                 }
+
+                if url.scheme == "diewithoutregrets" && url.host == "unlock" {
+                    StudyGuardManager.shared.reconcileOnForeground()
+                    if StudyGuardManager.shared.state == .locked {
+                        navigationModel.navigate(to: .regretView)
+                    }
+                }
             }
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
                 _ = Branch.getInstance().continue(userActivity)
@@ -52,6 +65,11 @@ struct diewithoutregretsApp: App {
                 if newPhase == .active {
                     print("[App] ✅ App became active - clearing badge")
                     NotificationManager.shared.clearBadge()
+
+                    // Study Guard third reliability layer: reconcile state with
+                    // the extension + Screen Time system on every foreground.
+                    StudyGuardManager.shared.reconcileOnForeground()
+                    Analytics.flushStudyGuardExtensionEvents()
                 }
                 
                 // When app moves to background, schedule notification if applicable

@@ -14,7 +14,7 @@ enum AnimationType: String, CaseIterable {
     var displayName: String {
         switch self {
         case .lockAnimation:
-            return "Lock Animation"
+            return "Monster"
         case .memeVideo:
             return "Meme Video"
         }
@@ -23,16 +23,16 @@ enum AnimationType: String, CaseIterable {
     var description: String {
         switch self {
         case .lockAnimation:
-            return "Classic animated lock with colorful background"
+            return "The monster catches you scrolling"
         case .memeVideo:
             return "Short meme video to brighten your day"
         }
     }
-    
+
     var systemImageName: String {
         switch self {
         case .lockAnimation:
-            return "lock.circle.fill"
+            return "pawprint.fill"
         case .memeVideo:
             return "play.circle.fill"
         }

@@ -106,33 +106,9 @@ struct AutoGenerateFlashcardsSheet: View {
     // Gradient animation timer
     let timer = Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()
     
-    // Add new color constants
-    private let primaryGradient = LinearGradient(
-        colors: [
-            Color(hex: 0x3FA4AE),
-            Color(hex: 0x2BC391)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
-    private let grayGradient = LinearGradient(
-        colors: [
-            Color.gray.opacity(60),
-            Color.gray.opacity(60)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
-    private let secondaryGradient = LinearGradient(
-        colors: [
-            Color(hex: 0x184449).opacity(0.8),
-            Color(hex: 0x065961).opacity(0.8)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    // Teal Ink fills — CTAs are solid mint with ink labels; disabled is dim white.
+    private let mintFill = SGTheme.mint
+    private let dimFill = SGTheme.glaze(0.12)
     
     // Add new state variables
     @State private var showingGenerationView = false
@@ -183,39 +159,10 @@ struct AutoGenerateFlashcardsSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Enhanced background
-                GeometryReader { geometry in
-                    ZStack {
-                        // Base gradient
-                        LinearGradient(
-                            colors: [
-                                Color(hex: 0x3FA4AE).opacity(0.1),
-                                Color(hex: 0x2BC391).opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        
-                        // Animated mesh pattern
-                        ForEach(0..<3) { index in
-                            Circle()
-                                .fill(Color(hex: 0x3FA4AE).opacity(0.05))
-                                .frame(width: geometry.size.width * 0.8)
-                                .offset(x: meshOffset + CGFloat(index * 50), y: CGFloat(index * 30))
-                                .blur(radius: 30)
-                        }
-                        
-                        // Subtle pattern overlay
-                        Image("dwr-background")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geometry.size.width)
-                            .opacity(0.5)
-                            .blur(radius: 2)
-                    }
-                }
-                .ignoresSafeArea()
-                
+                // Ink canvas
+                SGTheme.ink
+                    .ignoresSafeArea()
+
                 // Content
                 ScrollView {
                     VStack(spacing: 15) {
@@ -270,7 +217,7 @@ struct AutoGenerateFlashcardsSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paperSecondary)
                 }
             }
             .fullScreenCover(isPresented: $showingGenerationView) {
@@ -302,44 +249,31 @@ struct AutoGenerateFlashcardsSheet: View {
         HStack(spacing: 12) {
             Image(systemName: "sparkles")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.yellow)
-                    
+                        .foregroundColor(SGTheme.mint)
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text("AI Flashcard Generator")
-                            .font(.headline)
-                            .foregroundColor(Color(hex: 0x184449))
-                        
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(SGTheme.paper)
+
                         Text("Auto-detects language • Supports 20+ languages")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(SGTheme.paperSecondary)
                     }
-                    
+
                     Image(systemName: "sparkles")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(SGTheme.mint)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(
-            ZStack {
-                Color.white.opacity(0.9)
-                
-                // Subtle gradient overlay
-                LinearGradient(
-                    colors: [
-                        Color.yellow.opacity(0.1),
-                        Color.yellow.opacity(0.05)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
+            Capsule(style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(Capsule())
-        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
         .overlay(
-            Capsule()
-                .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
+            Capsule(style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
         .scaleEffect(cardScale)
         .opacity(cardOpacity)
@@ -370,23 +304,19 @@ struct AutoGenerateFlashcardsSheet: View {
                         .padding(.vertical, 10)
                         .background(
                             selectedSource == source
-                                ? AnyShapeStyle(primaryGradient)
-                                : AnyShapeStyle(Color.white)
+                                ? AnyShapeStyle(mintFill)
+                                : AnyShapeStyle(SGTheme.inkRaised)
                         )
-                        .foregroundColor(selectedSource == source ? .white : Color(hex: 0x184449))
+                        .foregroundColor(selectedSource == source ? SGTheme.ink : SGTheme.paper)
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
                                 .stroke(
                                     selectedSource == source
-                                        ? Color.clear
-                                        : Color(hex: 0x3FA4AE).opacity(0.3),
+                                        ? SGTheme.mint
+                                        : SGTheme.hairline,
                                     lineWidth: 1
                                 )
-                        )
-                        .shadow(
-                            color: selectedSource == source ? Color(hex: 0x3FA4AE).opacity(0.3) : Color.clear,
-                            radius: 8, x: 0, y: 4
                         )
                     }
                 }
@@ -415,13 +345,12 @@ struct AutoGenerateFlashcardsSheet: View {
                 VStack(spacing: 20) {
                     ZStack {
                         Circle()
-                            .fill(primaryGradient)
+                            .fill(mintFill)
                             .frame(width: 90, height: 90)
-                            .shadow(color: Color(hex: 0x3FA4AE).opacity(0.3), radius: 15, x: 0, y: 8)
-                        
+
                         Image(systemName: "arrow.up.doc")
                             .font(.system(size: 32, weight: .medium))
-                            .foregroundColor(.white)
+                            .foregroundColor(SGTheme.ink)
                     }
                     .scaleEffect(showUploadAnimation ? 1.1 : 1.0)
                     .onAppear {
@@ -432,13 +361,12 @@ struct AutoGenerateFlashcardsSheet: View {
                     
                     VStack(spacing: 8) {
                         Text("Upload PDF")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: 0x184449))
-                        
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .foregroundColor(SGTheme.paper)
+
                         Text("Select a PDF file (up to 50 pages)")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(SGTheme.paperSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -453,18 +381,14 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                Color(hex: 0x3FA4AE).opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -475,7 +399,7 @@ struct AutoGenerateFlashcardsSheet: View {
             HStack {
                 Text("Paste your text")
                     .font(.headline)
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
                 
                 Spacer()
                 
@@ -486,56 +410,50 @@ struct AutoGenerateFlashcardsSheet: View {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("\(stats.characters) characters")
                                 .font(.caption2)
-                                .foregroundColor(stats.characters < 50 ? .orange : stats.characters > 100000 ? .red : .secondary)
-                            
+                                .foregroundColor(stats.characters < 50 ? SGTheme.ember : stats.characters > 100000 ? SGTheme.ember : SGTheme.paperTertiary)
+
                             Text("\(stats.words) words")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(SGTheme.paperTertiary)
                         }
                         
                         if let _ = validateTextInput(inputText) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.caption)
-                                .foregroundColor(.orange)
+                                .foregroundColor(SGTheme.ember)
                         } else if inputText.count >= 50 {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(.green)
+                                .foregroundColor(SGTheme.mint)
                         }
                     }
                 }
             }
             
             TextEditor(text: $inputText)
+                .scrollContentBackground(.hidden)
+                .foregroundColor(SGTheme.paper)
                 .frame(height: 180)
                 .padding(12)
-                .background(Color.white)
-                .cornerRadius(16)
+                .background(SGTheme.ink)
+                .cornerRadius(SGTheme.tileRadius)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius)
                         .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color(hex: 0x3FA4AE).opacity(inputText.isEmpty ? 0.2 : 0.5),
-                                    Color(hex: 0x2BC391).opacity(inputText.isEmpty ? 0.2 : 0.5)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
+                            inputText.isEmpty ? SGTheme.hairline : SGTheme.mint,
                             lineWidth: inputText.isEmpty ? 1 : 2
                         )
                 )
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
             
             if !inputText.isEmpty, let validationError = validateTextInput(inputText) {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(SGTheme.ember)
                     
                     Text(validationError.userMessage)
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(SGTheme.ember)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.horizontal, 4)
@@ -546,35 +464,31 @@ struct AutoGenerateFlashcardsSheet: View {
                     Text("Tips for best results:")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     
                     Text("• Paste educational content (textbook, notes, articles)")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("• Include at least 50 characters for meaningful flashcards")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("• Limit to 25,000 words for optimal processing")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                 }
                 .padding(.top, 4)
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                Color(hex: 0x3FA4AE).opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -583,25 +497,24 @@ struct AutoGenerateFlashcardsSheet: View {
             HStack(spacing: 16) {
                 // Enhanced PDF icon
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(primaryGradient)
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                        .fill(mintFill)
                         .frame(width: 60, height: 60)
-                    
+
                     Image(systemName: "doc.fill")
                         .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(SGTheme.ink)
                 }
-                .shadow(color: Color(hex: 0x3FA4AE).opacity(0.3), radius: 8, x: 0, y: 4)
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(fileName.isEmpty ? "Document" : fileName)
                         .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                         .lineLimit(1)
                     
                     Text("\(pdfExtractedText.count) characters extracted")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                 }
                 
                 Spacer()
@@ -611,7 +524,7 @@ struct AutoGenerateFlashcardsSheet: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 24))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        .foregroundColor(SGTheme.paperTertiary)
                 }
             }
             
@@ -619,39 +532,28 @@ struct AutoGenerateFlashcardsSheet: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Preview")
                         .font(.subheadline)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                         .fontWeight(.medium)
                     
                     Text(pdfExtractedText)
                         .font(.system(.body, design: .serif))
+                        .foregroundColor(SGTheme.paperSecondary)
                         .lineLimit(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color(hex: 0x184449).opacity(0.05))
+                        .background(SGTheme.ink)
                         .cornerRadius(12)
                 }
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                
-                // Subtle pattern overlay
-                Color(hex: 0x3FA4AE)
-                    .opacity(0.02)
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(
-            color: Color.black.opacity(0.1),
-            radius: 20,
-            x: 0,
-            y: 10
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -663,42 +565,36 @@ struct AutoGenerateFlashcardsSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "play.rectangle.fill")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     Text("YouTube Video URL")
                         .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                 }
                 
                 HStack(spacing: 12) {
                     TextField("Paste YouTube link here...", text: $youtubeURL)
                         .textFieldStyle(.plain)
+                        .foregroundColor(SGTheme.paper)
                         .padding(12)
-                        .background(Color.white)
+                        .background(SGTheme.ink)
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(hex: 0x3FA4AE).opacity(youtubeURL.isEmpty ? 0.2 : 0.5),
-                                            Color(hex: 0x2BC391).opacity(youtubeURL.isEmpty ? 0.2 : 0.5)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
+                                    youtubeURL.isEmpty ? SGTheme.hairline : SGTheme.mint,
                                     lineWidth: youtubeURL.isEmpty ? 1 : 2
                                 )
                         )
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
-                    
+
                     Button {
                         fetchYouTubeTranscript()
                     } label: {
                         Group {
                             if isFetchingTranscript {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.ink))
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "arrow.down.circle.fill")
@@ -708,10 +604,14 @@ struct AutoGenerateFlashcardsSheet: View {
                         .frame(width: 44, height: 44)
                         .background(
                             YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) != nil
-                                ? primaryGradient
-                                : grayGradient
+                                ? mintFill
+                                : dimFill
                         )
-                        .foregroundColor(.white)
+                        .foregroundColor(
+                            YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) != nil
+                                ? SGTheme.ink
+                                : SGTheme.paperDisabled
+                        )
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) == nil || isFetchingTranscript)
@@ -723,17 +623,17 @@ struct AutoGenerateFlashcardsSheet: View {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundColor(.green)
+                            .foregroundColor(SGTheme.mint)
                         Text("Transcript loaded")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(Color(hex: 0x184449))
+                            .foregroundColor(SGTheme.paper)
                         
                         Spacer()
                         
                         Text("\(getTextStats(youtubeTranscript).words) words")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(SGTheme.paperSecondary)
                         
                         Button {
                             youtubeTranscript = ""
@@ -742,18 +642,19 @@ struct AutoGenerateFlashcardsSheet: View {
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 18))
-                                .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                                .foregroundColor(SGTheme.paperTertiary)
                         }
                     }
                     
                     ScrollView {
                         Text(youtubeTranscript)
                             .font(.system(.caption, design: .serif))
+                            .foregroundColor(SGTheme.paperSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(12)
                     }
                     .frame(height: 100)
-                    .background(Color(hex: 0x184449).opacity(0.05))
+                    .background(SGTheme.ink)
                     .cornerRadius(12)
                 }
             }
@@ -763,19 +664,19 @@ struct AutoGenerateFlashcardsSheet: View {
                     Text("How it works:")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     
                     Text("1. Paste a YouTube video URL above")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("2. Tap the download button to fetch the transcript")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("3. AI will generate flashcards from the video content")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     HStack(spacing: 4) {
                         Image(systemName: "info.circle")
@@ -783,24 +684,20 @@ struct AutoGenerateFlashcardsSheet: View {
                         Text("If auto-fetch fails, copy the transcript from YouTube (... > Show transcript) and use the Paste Text tab.")
                             .font(.caption2)
                     }
-                    .foregroundColor(.secondary)
+                    .foregroundColor(SGTheme.paperSecondary)
                     .padding(.top, 4)
                 }
                 .padding(.top, 4)
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                Color(hex: 0x3FA4AE).opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -812,38 +709,32 @@ struct AutoGenerateFlashcardsSheet: View {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.stack.fill")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     Text("Import from Quizlet")
                         .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                 }
                 
                 Text("Paste your exported Quizlet flashcards below")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(SGTheme.paperSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
             TextEditor(text: $quizletText)
+                .scrollContentBackground(.hidden)
+                .foregroundColor(SGTheme.paper)
                 .frame(height: 150)
                 .padding(12)
-                .background(Color.white)
-                .cornerRadius(16)
+                .background(SGTheme.ink)
+                .cornerRadius(SGTheme.tileRadius)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius)
                         .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color(hex: 0x3FA4AE).opacity(quizletText.isEmpty ? 0.2 : 0.5),
-                                    Color(hex: 0x2BC391).opacity(quizletText.isEmpty ? 0.2 : 0.5)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
+                            quizletText.isEmpty ? SGTheme.hairline : SGTheme.mint,
                             lineWidth: quizletText.isEmpty ? 1 : 2
                         )
                 )
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                 .onChange(of: quizletText) { _ in
                     parseQuizletInput()
                 }
@@ -853,7 +744,7 @@ struct AutoGenerateFlashcardsSheet: View {
                 Text("Delimiter")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
                 
                 HStack(spacing: 8) {
                     ForEach(QuizletDelimiter.allCases.filter { $0 != .custom }, id: \.self) { delimiter in
@@ -868,17 +759,17 @@ struct AutoGenerateFlashcardsSheet: View {
                                 .padding(.vertical, 8)
                                 .background(
                                     selectedDelimiter == delimiter
-                                        ? AnyShapeStyle(primaryGradient)
-                                        : AnyShapeStyle(Color.white)
+                                        ? AnyShapeStyle(mintFill)
+                                        : AnyShapeStyle(SGTheme.ink)
                                 )
-                                .foregroundColor(selectedDelimiter == delimiter ? .white : Color(hex: 0x184449))
+                                .foregroundColor(selectedDelimiter == delimiter ? SGTheme.ink : SGTheme.paper)
                                 .clipShape(Capsule())
                                 .overlay(
                                     Capsule()
                                         .stroke(
                                             selectedDelimiter == delimiter
                                                 ? Color.clear
-                                                : Color(hex: 0x3FA4AE).opacity(0.3),
+                                                : SGTheme.hairline,
                                             lineWidth: 1
                                         )
                                 )
@@ -895,17 +786,17 @@ struct AutoGenerateFlashcardsSheet: View {
                             .padding(.vertical, 8)
                             .background(
                                 selectedDelimiter == .custom
-                                    ? AnyShapeStyle(primaryGradient)
-                                    : AnyShapeStyle(Color.white)
+                                    ? AnyShapeStyle(mintFill)
+                                    : AnyShapeStyle(SGTheme.ink)
                             )
-                            .foregroundColor(selectedDelimiter == .custom ? .white : Color(hex: 0x184449))
+                            .foregroundColor(selectedDelimiter == .custom ? SGTheme.ink : SGTheme.paper)
                             .clipShape(Capsule())
                             .overlay(
                                 Capsule()
                                     .stroke(
                                         selectedDelimiter == .custom
                                             ? Color.clear
-                                            : Color(hex: 0x3FA4AE).opacity(0.3),
+                                            : SGTheme.hairline,
                                         lineWidth: 1
                                     )
                             )
@@ -915,12 +806,13 @@ struct AutoGenerateFlashcardsSheet: View {
                 if selectedDelimiter == .custom {
                     TextField("Enter custom delimiter", text: $customDelimiter)
                         .textFieldStyle(.plain)
+                        .foregroundColor(SGTheme.paper)
                         .padding(10)
-                        .background(Color.white)
+                        .background(SGTheme.ink)
                         .cornerRadius(10)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color(hex: 0x3FA4AE).opacity(0.3), lineWidth: 1)
+                                .stroke(SGTheme.hairline, lineWidth: 1)
                         )
                         .onChange(of: customDelimiter) { _ in
                             parseQuizletInput()
@@ -934,11 +826,11 @@ struct AutoGenerateFlashcardsSheet: View {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundColor(.green)
+                            .foregroundColor(SGTheme.mint)
                         Text("\(parsedPairs.count) cards detected")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(Color(hex: 0x184449))
+                            .foregroundColor(SGTheme.paper)
                     }
                     
                     ScrollView {
@@ -948,27 +840,27 @@ struct AutoGenerateFlashcardsSheet: View {
                                     Text(pair.term)
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .foregroundColor(Color(hex: 0x184449))
+                                        .foregroundColor(SGTheme.paper)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                    
+
                                     Rectangle()
-                                        .fill(Color(hex: 0x3FA4AE).opacity(0.3))
+                                        .fill(SGTheme.hairline)
                                         .frame(width: 1)
-                                    
+
                                     Text(pair.definition)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(SGTheme.paperSecondary)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .padding(10)
-                                .background(Color(hex: 0x184449).opacity(0.03))
+                                .background(SGTheme.glaze(0.04))
                                 .cornerRadius(8)
                             }
                             
                             if parsedPairs.count > 5 {
                                 Text("+ \(parsedPairs.count - 5) more cards")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(SGTheme.paperSecondary)
                                     .padding(.top, 4)
                             }
                         }
@@ -983,7 +875,7 @@ struct AutoGenerateFlashcardsSheet: View {
                     Text("Import Mode")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     
                     HStack(spacing: 0) {
                         Button {
@@ -996,12 +888,12 @@ struct AutoGenerateFlashcardsSheet: View {
                                 .padding(.vertical, 10)
                                 .background(
                                     !useAIEnhanced
-                                        ? AnyShapeStyle(primaryGradient)
-                                        : AnyShapeStyle(Color.white)
+                                        ? AnyShapeStyle(mintFill)
+                                        : AnyShapeStyle(SGTheme.ink)
                                 )
-                                .foregroundColor(!useAIEnhanced ? .white : Color(hex: 0x184449))
+                                .foregroundColor(!useAIEnhanced ? SGTheme.ink : SGTheme.paper)
                         }
-                        
+
                         Button {
                             useAIEnhanced = true
                         } label: {
@@ -1016,32 +908,32 @@ struct AutoGenerateFlashcardsSheet: View {
                             .padding(.vertical, 10)
                             .background(
                                 useAIEnhanced
-                                    ? AnyShapeStyle(primaryGradient)
-                                    : AnyShapeStyle(Color.white)
+                                    ? AnyShapeStyle(mintFill)
+                                    : AnyShapeStyle(SGTheme.ink)
                             )
-                            .foregroundColor(useAIEnhanced ? .white : Color(hex: 0x184449))
+                            .foregroundColor(useAIEnhanced ? SGTheme.ink : SGTheme.paper)
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(hex: 0x3FA4AE).opacity(0.3), lineWidth: 1)
+                            .stroke(SGTheme.hairline, lineWidth: 1)
                     )
                     
                     Text(useAIEnhanced
                          ? "AI will generate diverse multiple-choice questions from your terms"
                          : "Creates flashcards directly using other definitions as answer choices")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     if !useAIEnhanced && parsedPairs.count < 4 {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.caption)
-                                .foregroundColor(.orange)
+                                .foregroundColor(SGTheme.ember)
                             Text("Direct import requires at least 4 cards. Add more or use AI Enhanced mode.")
                                 .font(.caption)
-                                .foregroundColor(.orange)
+                                .foregroundColor(SGTheme.ember)
                         }
                     }
                 }
@@ -1052,35 +944,31 @@ struct AutoGenerateFlashcardsSheet: View {
                     Text("How to export from Quizlet:")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                     
                     Text("1. Open your Quizlet set in a browser")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("2. Click '...' (More) > Export")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                     
                     Text("3. Copy the exported text and paste it above")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                 }
                 .padding(.top, 4)
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                Color(hex: 0x3FA4AE).opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -1104,81 +992,51 @@ struct AutoGenerateFlashcardsSheet: View {
             }
             .padding(.vertical, 16)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isDisabled ? grayGradient : primaryGradient)
+                Capsule(style: .continuous)
+                    .fill(isDisabled ? dimFill : mintFill)
             )
-            .foregroundColor(.white)
+            .foregroundColor(isDisabled ? SGTheme.paperDisabled : SGTheme.ink)
             .font(.headline)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-            )
-            .shadow(
-                color: isDisabled ? Color.gray.opacity(0.2) : Color(hex: 0x3FA4AE).opacity(0.3),
-                radius: 15, x: 0, y: 8
-            )
         }
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.6 : 1.0)
     }
-    
+
     var contentPreviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "text.alignleft")
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
                 
                 Text("Content Preview")
                     .font(.headline)
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
             }
             
             ScrollView {
                 Text(inputText.isEmpty ? pdfExtractedText : inputText)
                     .font(.system(.body, design: .serif))
+                    .foregroundColor(SGTheme.paperSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
             }
             .frame(height: 200)
-            .background(Color.white)
-            .cornerRadius(16)
+            .background(SGTheme.ink)
+            .cornerRadius(SGTheme.tileRadius)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(hex: 0x3FA4AE).opacity(0.2),
-                                Color(hex: 0x2BC391).opacity(0.2)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius)
+                    .stroke(SGTheme.hairline, lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                
-                // Subtle pattern overlay
-                Color(hex: 0x3FA4AE)
-                    .opacity(0.02)
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(
-            color: Color.black.opacity(0.1),
-            radius: 20,
-            x: 0,
-            y: 10
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -1196,34 +1054,33 @@ struct AutoGenerateFlashcardsSheet: View {
                         // Status icon with dynamic styling
                         ZStack {
                             Circle()
-                                .fill(currentStepIndex >= stepIndex(step) ? primaryGradient : grayGradient)
+                                .fill(currentStepIndex >= stepIndex(step) ? mintFill : dimFill)
                                 .frame(width: 36, height: 36)
-                            
+
                             if currentStepIndex > stepIndex(step) {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(SGTheme.ink)
                             } else if currentStepIndex == stepIndex(step) {
                                 if processingStep == .finalizing {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(SGTheme.ink)
                                 } else {
                                     ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.ink))
                                         .scaleEffect(0.7)
                                 }
                             } else {
                                 Image(systemName: step.icon)
                                     .font(.system(size: 14))
-                                    .foregroundColor(.white.opacity(0.5))
+                                    .foregroundColor(SGTheme.paperTertiary)
                             }
                         }
-                        .shadow(color: currentStepIndex >= stepIndex(step) ? Color(hex: 0x3FA4AE).opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
-                        
+
                         Text(step.rawValue)
                             .font(.subheadline)
-                            .foregroundColor(currentStepIndex >= stepIndex(step) ? Color(hex: 0x184449) : .secondary)
+                            .foregroundColor(currentStepIndex >= stepIndex(step) ? SGTheme.paper : SGTheme.paperTertiary)
                             .fontWeight(currentStepIndex == stepIndex(step) ? .medium : .regular)
                         
                         Spacer()
@@ -1234,26 +1091,14 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
             }
         }
-        .padding(24)
+        .padding(SGTheme.cardPadding)
         .background(
-            ZStack {
-                Color.white
-                
-                // Subtle pattern overlay
-                Color(hex: 0x3FA4AE)
-                    .opacity(0.02)
-            }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(
-            color: Color.black.opacity(0.1),
-            radius: 20,
-            x: 0,
-            y: 10
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
     
@@ -1262,11 +1107,11 @@ struct AutoGenerateFlashcardsSheet: View {
             HStack(spacing: 8) {
                 Image(systemName: "globe")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
                 
                 Text("Flashcard Language")
                     .font(.headline)
-                    .foregroundColor(Color(hex: 0x184449))
+                    .foregroundColor(SGTheme.paper)
             }
             
             Menu {
@@ -1285,51 +1130,37 @@ struct AutoGenerateFlashcardsSheet: View {
             } label: {
                 HStack {
                     Text(selectedLanguage)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .foregroundColor(SGTheme.paper)
                         .font(.body)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.down")
                         .font(.system(size: 14))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        .foregroundColor(SGTheme.paperTertiary)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.white)
+                .background(SGTheme.ink)
                 .cornerRadius(12)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color(hex: 0x3FA4AE).opacity(0.3),
-                                    Color(hex: 0x2BC391).opacity(0.3)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
+                        .stroke(SGTheme.hairline, lineWidth: 1)
                 )
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, SGTheme.cardPadding)
         .padding(.vertical, 16)
         .background(
-            ZStack {
-                Color.white
-                Color(hex: 0x3FA4AE).opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color(hex: 0x3FA4AE).opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
     }
-    
+
     var generateButton: some View {
         let quizletAIReady = selectedSource == .quizlet && useAIEnhanced && !parsedPairs.isEmpty
         let currentText = quizletAIReady
@@ -1347,7 +1178,7 @@ struct AutoGenerateFlashcardsSheet: View {
                 HStack(spacing: 12) {
                     if processingStep != .idle {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.paperSecondary))
                             .scaleEffect(0.8)
                         Text("Processing...")
                     } else if !hasValidText && !currentText.isEmpty {
@@ -1370,21 +1201,11 @@ struct AutoGenerateFlashcardsSheet: View {
             }
             .padding(.vertical, 16)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isDisabled ? grayGradient : primaryGradient)
+                Capsule(style: .continuous)
+                    .fill(isDisabled ? dimFill : mintFill)
             )
-            .foregroundColor(.white)
+            .foregroundColor(isDisabled ? SGTheme.paperDisabled : SGTheme.ink)
             .font(.headline)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-            )
-            .shadow(
-                color: isDisabled ? Color.gray.opacity(0.2) : Color(hex: 0x3FA4AE).opacity(0.3),
-                radius: 15,
-                x: 0,
-                y: 8
-            )
         }
         .buttonStyle(GenerateButtonStyle())
         .disabled(isDisabled)
@@ -1578,41 +1399,41 @@ struct AutoGenerateFlashcardsSheet: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.orange.opacity(0.1))
+                        .fill(SGTheme.ember.opacity(0.12))
                         .frame(width: 36, height: 36)
-                    
+
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.orange)
+                        .foregroundColor(SGTheme.ember)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Validation Error")
-                        .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
-                    
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
+
                     Text("Issues found with your content")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(SGTheme.paperSecondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     errorMessage = nil
                     currentError = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 24))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
+                        .foregroundColor(SGTheme.paperTertiary)
                 }
             }
-            
+
             // Scrollable detailed error message
             ScrollView {
                 Text(message)
                     .font(.system(.body, design: .monospaced))
-                    .foregroundColor(.primary)
+                    .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .lineLimit(nil)
@@ -1635,13 +1456,13 @@ struct AutoGenerateFlashcardsSheet: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color(hex: 0x184449).opacity(0.1))
-                    .foregroundColor(Color(hex: 0x184449))
-                    .cornerRadius(8)
+                    .background(SGTheme.glaze(0.06))
+                    .foregroundColor(SGTheme.paper)
+                    .clipShape(Capsule(style: .continuous))
                 }
-                
+
                 Spacer()
-                
+
                 // Try again button
                 Button {
                     errorMessage = nil
@@ -1656,32 +1477,20 @@ struct AutoGenerateFlashcardsSheet: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color(hex: 0x184449))
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .background(SGTheme.mint)
+                    .foregroundColor(SGTheme.ink)
+                    .clipShape(Capsule(style: .continuous))
                 }
             }
         }
         .padding(20)
         .background(
-            ZStack {
-                Color.white
-                
-                // Subtle pattern overlay
-                Color.orange
-                    .opacity(0.02)
-            }
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
-        )
-        .shadow(
-            color: Color.orange.opacity(0.1),
-            radius: 15,
-            x: 0,
-            y: 8
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .strokeBorder(SGTheme.ember.opacity(0.3), lineWidth: 1)
         )
     }
     
@@ -2419,53 +2228,18 @@ struct CustomProgressViewStyle: ProgressViewStyle {
             ZStack(alignment: .leading) {
                 // Background track
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(hex: 0x184449).opacity(0.1))
+                    .fill(SGTheme.glaze(0.1))
                     .frame(height: 12)
-                
+
                 // Progress bar
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(hex: 0x3FA4AE),
-                                Color(hex: 0x2BC391)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .fill(SGTheme.mint)
                     .frame(width: max(0, CGFloat(progress) * geometry.size.width), height: 12)
-                    .overlay(
-                        // Shimmer effect
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0),
-                                Color.white.opacity(0.3),
-                                Color.white.opacity(0)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .offset(x: -geometry.size.width)
-                        .animation(
-                            Animation
-                                .linear(duration: 1.5)
-                                .repeatForever(autoreverses: false),
-                            value: progress
-                        )
-                    )
-                    // Glow effect
-                    .shadow(
-                        color: Color(hex: 0x2BC391).opacity(0.3),
-                        radius: 4,
-                        x: 0,
-                        y: 2
-                    )
-                
+
                 // Progress percentage
                 Text("\(Int(progress * 100))%")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(SGTheme.ink)
                     .padding(.horizontal, 8)
                     .frame(width: 40)
                     .opacity(progress > 0.1 ? 1 : 0)
@@ -2499,14 +2273,6 @@ extension PDFPage {
 struct UploadButtonStyle: SwiftUI.ButtonStyle {
     func makeBody(configuration: SwiftUI.ButtonStyleConfiguration) -> some View {
         configuration.label
-            .background(Color.white)
-            .cornerRadius(20)
-            .shadow(
-                color: Color.black.opacity(0.1),
-                radius: configuration.isPressed ? 5 : 10,
-                x: 0,
-                y: configuration.isPressed ? 2 : 5
-            )
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
@@ -2530,79 +2296,60 @@ struct GenerationView: View {
     
     var body: some View {
         ZStack {
-            // Background
-            GeometryReader { geometry in
-                ZStack {
-                    // Base gradient
-                    LinearGradient(
-                        colors: [
-                            Color(hex: 0x3FA4AE),
-                            Color(hex: 0x2BC391)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    
-                    // Background image
-                    Image("dwr-background2")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: geometry.size.width)
-                        .opacity(0.15)
-                        .blur(radius: 3)
-                }
-            }
-            .ignoresSafeArea()
-            
+            // Ink canvas
+            SGTheme.ink
+                .ignoresSafeArea()
+
             // Content
             VStack(spacing: 30) {
                 Spacer()
-                
-                // Status icon
+
+                // The guard teaches while the AI writes the cards.
+                MascotView(pose: .teaching, loops: nil)
+                    .frame(width: 160, height: 160)
+
+                // Progress indicator
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.2))
+                        .stroke(SGTheme.glaze(0.1), lineWidth: 4)
                         .frame(width: 120, height: 120)
-                    
-                    Circle()
-                        .stroke(Color.white.opacity(0.3), lineWidth: 4)
-                        .frame(width: 120, height: 120)
-                    
+
                     Circle()
                         .trim(from: 0, to: progress)
-                        .stroke(Color.white, lineWidth: 4)
+                        .stroke(SGTheme.mint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .frame(width: 120, height: 120)
                         .rotationEffect(.degrees(-90))
-                    
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 40))
-                        .foregroundColor(.white)
+
+                    Text("\(Int(progress * 100))%")
+                        .font(SGTheme.display(24))
+                        .monospacedDigit()
+                        .foregroundColor(SGTheme.paper)
                 }
-                
+
                 // Status text
                 Text(status)
-                    .font(.title2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                
-                // Progress percentage
-                Text("\(Int(progress * 100))%")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                
+
                 Spacer()
-                
+
                 // Cancel button
                 Button(action: onCancel) {
                     Text("Cancel")
-                        .font(.headline)
-                        .foregroundColor(Color(hex: 0x184449))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(SGTheme.paper)
                         .padding(.horizontal, 30)
                         .padding(.vertical, 15)
-                        .background(Color.white)
-                        .cornerRadius(25)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(SGTheme.glaze(0.06))
+                                .overlay(
+                                    Capsule(style: .continuous)
+                                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                                )
+                        )
                 }
                 .padding(.bottom, 50)
             }

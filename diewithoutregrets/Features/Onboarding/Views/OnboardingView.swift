@@ -1,136 +1,115 @@
+//
+//  OnboardingView.swift
+//  diewithoutregrets
+//
+//  Onboarding v2 container. Screens crossfade (0.3s opacity); the backdrop
+//  runs the narrative arc — daylight hook, night sky through the villain
+//  arc and reality check, dawn at the turn (.reclaim) and daylight after.
+//  The clipboard mascot "interviewer" is rendered ONCE here as an overlay
+//  above the four quiz screens, so he floats continuously while questions
+//  swap beneath him and takes a note on every answer.
+//
+
 import SwiftUI
-import RevenueCat
-import RevenueCatUI
 
 struct OnboardingView: View {
     @StateObject private var onboardingViewModel = OnboardingViewModel()
-    
-    private var showProgressBar: Bool {
-        let step = onboardingViewModel.currentStep
-        return step != .theHook
-            && step != .completion
-            && step != .paywall
-            && step != .notificationPermission
-    }
-    
-    private var isDarkStep: Bool {
-        switch onboardingViewModel.currentStep {
-        case .theHook:
-            return true
-        default:
-            return false
-        }
-    }
-    
+
     var body: some View {
-        VStack(spacing: 0) {
-            if showProgressBar {
-                ZStack(alignment: .top) {
-                    (isDarkStep ? Color(hex: 0x184449) : Color.white)
-                        .ignoresSafeArea(.all, edges: .top)
-                        .frame(height: 40)
-                    
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            Rectangle()
-                                .fill(isDarkStep ? Color.white.opacity(0.15) : Color(hex: 0x184449).opacity(0.1))
-                                .frame(height: 5)
-                                .cornerRadius(2.5)
-                            
-                            Rectangle()
-                                .fill(isDarkStep ? Color.white : Color(hex: 0x184449))
-                                .frame(width: geometry.size.width * CGFloat(onboardingViewModel.progress), height: 5)
-                                .cornerRadius(2.5)
-                                .animation(.easeInOut(duration: 0.5), value: onboardingViewModel.progress)
-                        }
-                    }
-                    .frame(height: 5)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
-                    .padding(.top, 24)
-                }
-            }
-            
+        ZStack {
+            SGTheme.ink.ignoresSafeArea()
+
+            NightSkyBackdrop()
+                .opacity(onboardingViewModel.currentStep.isNight ? 1 : 0)
+                .animation(.easeInOut(duration: 1.2), value: onboardingViewModel.currentStep.isNight)
+
             Group {
                 switch onboardingViewModel.currentStep {
-                // Phase 1: Emotional Hook
-                case .theHook:
-                    TheHookView()
-                        .environmentObject(onboardingViewModel)
-                case .theFeeling:
-                    TheFeelingView()
-                        .environmentObject(onboardingViewModel)
-                case .theObstacle:
-                    TheObstacleView()
-                        .environmentObject(onboardingViewModel)
-                    
-                // Phase 2: Reality Check
-                case .screenTimeStudy:
-                    ScreenTimeStudyView()
-                        .environmentObject(onboardingViewModel)
-                case .yourScreenTime:
-                    YourScreenTimeView()
-                        .environmentObject(onboardingViewModel)
-                case .yourName:
-                    NameView()
-                        .environmentObject(onboardingViewModel)
-                case .yourAge:
-                    AgeSelectView()
-                        .environmentObject(onboardingViewModel)
-                case .theCost:
-                    BreakdownView()
-                        .environmentObject(onboardingViewModel)
-                    
-                // Phase 3: The Shift
-                case .procrastinationStudy:
-                    ProcrastinationStudyView()
-                        .environmentObject(onboardingViewModel)
-                case .consistencyReframe:
-                    StudyConsistancy()
-                        .environmentObject(onboardingViewModel)
-                    
-                // Phase 4: The Solution
-                case .howItWorks:
-                    HowItWorksView()
-                        .environmentObject(onboardingViewModel)
-                case .aiFlashcards:
-                    AIFlashcardDemo()
-                        .environmentObject(onboardingViewModel)
-                case .flashcardSources:
-                    FlashcardSourcesView()
-                        .environmentObject(onboardingViewModel)
-                case .retentionStudy:
-                    LongTermResultsView()
-                        .environmentObject(onboardingViewModel)
-                case .socialProof:
-                    RatingView()
-                        .environmentObject(onboardingViewModel)
-                    
-                // Phase 5: Setup & Commitment
-                case .readyView:
-                    StudyGuardReadyView()
-                        .environmentObject(onboardingViewModel)
+                // Phase 1 — Discovery
+                case .hook:
+                    HookView()
+                case .notYourFault:
+                    NotYourFaultView()
+                case .fightingBack:
+                    FightingBackView()
+                case .meetYourGuard:
+                    MeetYourGuardView()
+                case .quizAge:
+                    QuizAgeView()
+                case .quizStudentType:
+                    QuizStudentTypeView()
+                case .quizScreenTime:
+                    QuizScreenTimeView()
+                case .quizScrollTimes:
+                    QuizScrollTimesView()
+
+                // Phase 2 — Reality check
+                case .calculating:
+                    CalculatingView()
+                case .lifeDrain:
+                    LifeDrainView()
+                case .studyVsScroll:
+                    StudyVsScrollChartView()
+                case .hoursLost:
+                    HoursLostCycleView()
+                case .reclaim:
+                    ReclaimView()
+                case .afterChart:
+                    AfterChartView()
+
+                // Phase 3 — Convert
+                case .science:
+                    ScienceView()
+                case .coreMechanic:
+                    CoreMechanicView()
+                case .moreFeatures:
+                    MoreFeaturesView()
+                case .founderStory:
+                    FounderStoryView()
+                case .reviews:
+                    ReviewsView()
                 case .paywall:
-                    PayWallView()
-                        .environmentObject(onboardingViewModel)
-                case .notificationPermission:
-                    FreeTrialReminderView()
-                        .environmentObject(onboardingViewModel)
-                case .unlockMethodChoice:
+                    HardPaywallView()
+
+                // Phase 4 — Post-purchase setup
+                case .screenTimeExplainer:
+                    ScreenTimeExplainerView()
+                case .screenTimePermission:
+                    ScreenTimePermissionView()
+                case .guardedApps:
+                    GuardedAppsOnboarding()
+                case .usageInterval:
+                    UsageIntervalOnboarding()
+                case .notificationPrimer:
+                    NotificationPrimerView()
+                case .unlockMethod:
                     UnlockMethodChoiceView()
-                        .environmentObject(onboardingViewModel)
-                case .appSelection:
-                    AppSelectionOnboarding()
-                        .environmentObject(onboardingViewModel)
                 case .createFirstCards:
                     CreateFirstCardsOnboardingView()
-                        .environmentObject(onboardingViewModel)
                 case .completion:
                     CompletionView()
-                        .environmentObject(onboardingViewModel)
                 }
             }
+            .environmentObject(onboardingViewModel)
+            .id(onboardingViewModel.currentStep)
+            .transition(.opacity)
+
+            // The interviewer: one mascot instance floating above all four
+            // quiz screens, replaying his note-taking on every answer.
+            if onboardingViewModel.currentStep.isQuizStep {
+                VStack {
+                    MascotView(pose: .clipboard, loops: nil,
+                               replayKey: onboardingViewModel.quizNoteKey)
+                        .frame(width: 112, height: 112)
+                        .shadow(color: SGTheme.mint.opacity(0.35), radius: 22)
+                        .padding(.top, 56)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+                .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: onboardingViewModel.currentStep)
     }
 }
 

@@ -17,192 +17,133 @@ struct DeckListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
-                ZStack(alignment: .top) {
-                    // Background image
-                    Image("dwr-background3")
-                        .resizable()
-                        .frame(height: 145)
-                        .edgesIgnoringSafeArea(.all)
-                        .accessibilityHidden(true)
+            ZStack {
+                SGTheme.ink.ignoresSafeArea()
 
-                    // Content
-                    VStack(spacing: 0) {
-                        // Header
-                        VStack {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text("Decks")
-                                        .font(.title)
-                                        .bold()
-                                        .foregroundColor(.white)
-                                    Text("Feed Your Brain Before Your Feed.")
-                                        .foregroundColor(.white)
-                                }
-                                Spacer()
-                                Button(action: { showingNewDeckSheet = true }) {
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .background(Color(hex: 0x184449).opacity(0.7))
-                                        .clipShape(Circle())
-                                        .shadow(radius: 5)
-                                }
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, 25)
+                VStack(spacing: 0) {
+                    SGScreenHeader(eyebrow: "Your decks", title: "Decks") {
+                        Button(action: { showingNewDeckSheet = true }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(SGTheme.ink)
+                                .frame(width: 44, height: 44)
+                                .background(SGTheme.mint, in: Circle())
                         }
+                        .buttonStyle(SGPressStyle())
+                        .accessibilityLabel("Create new deck")
+                    }
 
-                        // List of decks with swipe delete
-                        if deckStore.decks.isEmpty {
-                            // Premium Empty State
-                            VStack(spacing: 24) {
-                                Spacer()
-                                
-                                // Icon with gradient background
+                    // List of decks with swipe delete
+                    if deckStore.decks.isEmpty {
+                        // Empty State
+                        VStack(spacing: 24) {
+                            Spacer()
+
+                            MascotView(pose: .clipboard)
+                                .frame(width: 140, height: 140)
+
+                            VStack(spacing: 10) {
+                                Text("Create your first deck")
+                                    .font(SGTheme.display(24))
+                                    .foregroundColor(SGTheme.paper)
+
+                                Text("Start building your knowledge base with flashcard decks tailored to your learning goals.")
+                                    .font(SGTheme.body)
+                                    .foregroundColor(SGTheme.paperSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.horizontal, 40)
+
+                            SGPrimaryButton(title: "Create Deck", icon: "plus", fullWidth: false) {
+                                showingNewDeckSheet = true
+                            }
+
+                            Spacer()
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, SGTheme.screenPadding)
+                        .padding(.bottom, SGTheme.tabBarClearance)
+                    } else {
+                        List {
+                            ForEach($deckStore.decks) { $deck in
                                 ZStack {
-                                    Circle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color(hex: 0x3FA4AE).opacity(0.1),
-                                                    Color(hex: 0x2BC391).opacity(0.1)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(width: 120, height: 120)
-                                        .scaleEffect(1.0)
-                                        .animation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true), value: UUID())
-                                    
-                                    Image(systemName: "rectangle.stack.badge.plus")
-                                        .font(.system(size: 48, weight: .medium))
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color(hex: 0x3FA4AE),
-                                                    Color(hex: 0x2BC391)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .scaleEffect(1.0)
-                                        .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: UUID())
-                                }
-                                
-                                VStack(spacing: 12) {
-                                    Text("Create Your First Deck")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color(hex: 0x184449))
-                                    
-                                    Text("Start building your knowledge base with flashcard decks tailored to your learning goals.")
-                                        .font(.body)
-                                        .foregroundColor(Color(hex: 0x184449).opacity(0.7))
-                                        .multilineTextAlignment(.center)
-                                        .lineLimit(nil)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                .padding(.horizontal, 40)
-                                
-                                // Premium CTA Button
-                                Button(action: { showingNewDeckSheet = true }) {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 18, weight: .medium))
-                                        
-                                        Text("Create Deck")
-                                            .font(.headline)
-                                            .fontWeight(.semibold)
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 32)
-                                    .padding(.vertical, 16)
-                                    .background(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(hex: 0x3FA4AE),
-                                                Color(hex: 0x2BC391)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .cornerRadius(25)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 25)
-                                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                    )
-                                    .shadow(
-                                        color: Color(hex: 0x3FA4AE).opacity(0.3),
-                                        radius: 20,
-                                        x: 0,
-                                        y: 10
-                                    )
-                                }
-                                .scaleEffect(1.0)
-                                .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: UUID())
-                                
-                                Spacer()
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 24)
-                        } else {
-                            List {
-                                ForEach($deckStore.decks) { $deck in
                                     NavigationLink(destination: DeckView(deck: $deck)) {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 7) {
-                                                Text(deck.name)
-                                                    .font(.headline)
-                                                    .foregroundColor(.black)
+                                        EmptyView()
+                                    }
+                                    .opacity(0)
 
-                                                HStack(spacing: 3) {
-                                                    Image(systemName: "rectangle.on.rectangle")
-                                                        .foregroundColor(.black)
-                                                        .font(.caption)
-                                                    Text("\(deck.cards.count)")
-                                                        .foregroundColor(Color(hex: 0x184449))
-                                                        .font(.caption)
-                                                }
+                                    HStack(spacing: 14) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(deck.name)
+                                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                                .foregroundColor(SGTheme.paper)
+
+                                            HStack(spacing: 5) {
+                                                Image(systemName: "rectangle.on.rectangle")
+                                                    .font(.system(size: 11))
+                                                Text("\(deck.cards.count) cards")
+                                                    .font(SGTheme.caption)
                                             }
+                                            .foregroundColor(SGTheme.paperSecondary)
+                                        }
 
-                                            Spacer()
-                                           
-                                        }
-                                        .padding(8)
-                                        .background(Color.white)
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(SGTheme.mint)
                                     }
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                        Button(role: .destructive) {
-                                            deckToDelete = deck
-                                            showDeleteAlert = true
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                        
-                                        Button {
-                                            deckToEdit = deck
-                                            showEditSheet = true
-                                        } label: {
-                                            Label("Edit", systemImage: "pencil")
-                                        }
-                                        .tint(.blue)
+                                    .padding(SGTheme.cardPadding)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                                            .fill(SGTheme.inkRaised)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                                                    .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                                            )
+                                    )
+                                }
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 6, leading: SGTheme.screenPadding, bottom: 6, trailing: SGTheme.screenPadding))
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        deckToDelete = deck
+                                        showDeleteAlert = true
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
+                                    .tint(SGTheme.ember)
+
+                                    Button {
+                                        deckToEdit = deck
+                                        showEditSheet = true
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
+                                    }
+                                    .tint(SGTheme.teal)
                                 }
                             }
-                            .listStyle(PlainListStyle())
-                            // Remove extra separators if needed
-                            .padding(.top, 8)
+
+                            // Clearance so the floating tab bar never covers the last row.
+                            Color.clear
+                                .frame(height: SGTheme.tabBarClearance)
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets())
                         }
+                        .listStyle(PlainListStyle())
+                        .scrollContentBackground(.hidden)
+                        .background(SGTheme.ink)
+                        .padding(.top, 8)
                     }
                 }
                 .sheet(isPresented: $showingNewDeckSheet) {
                     NewDeckView()
+                        .sgSheetChrome()
                 }
                 .sheet(isPresented: $showEditSheet, onDismiss: {
                     deckToEdit = nil
@@ -218,30 +159,33 @@ struct DeckListView: View {
                             }
                             showEditSheet = false
                         })
+                        .sgSheetChrome()
                     } else {
                         // Fallback view if deckToEdit is nil
-                        VStack(spacing: 20) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 48))
-                                .foregroundColor(.orange)
-                            
-                            Text("Error Loading Deck")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                            
-                            Text("Unable to load the deck for editing. Please try again.")
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(.secondary)
-                            
-                            Button("Close") {
-                                showEditSheet = false
+                        ZStack {
+                            SGTheme.ink.ignoresSafeArea()
+
+                            VStack(spacing: 20) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(SGTheme.ember)
+
+                                Text("Error Loading Deck")
+                                    .font(SGTheme.display(22))
+                                    .foregroundColor(SGTheme.paper)
+
+                                Text("Unable to load the deck for editing. Please try again.")
+                                    .font(SGTheme.body)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(SGTheme.paperSecondary)
+
+                                SGPrimaryButton(title: "Close", fullWidth: false) {
+                                    showEditSheet = false
+                                }
                             }
                             .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
                         }
-                        .padding()
+                        .sgSheetChrome()
                     }
                 }
             }
@@ -271,7 +215,7 @@ struct DeckListView: View {
                 }
             }
         }
-        .tint(Color(hex: 0x184449))
+        .tint(SGTheme.mint)
         .navigationBarHidden(true)
     }
 }
@@ -296,141 +240,59 @@ struct DeckView: View {
     var body: some View {
         VStack(spacing: 0) {
             if deck.cards.isEmpty {
-                // Premium Empty State for No Flashcards
-                VStack(spacing: 28) {
+                // Empty State for No Flashcards
+                VStack(spacing: 24) {
                     Spacer()
-                    
-                    // Animated Icon Stack
-                    ZStack {
-                        // Background circles with gradient
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: 0x3FA4AE).opacity(0.08),
-                                        Color(hex: 0x2BC391).opacity(0.08)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 140, height: 140)
-                            .scaleEffect(1.0)
-                            .animation(.easeInOut(duration: 4.0).repeatForever(autoreverses: true), value: UUID())
-                        
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: 0x3FA4AE).opacity(0.15),
-                                        Color(hex: 0x2BC391).opacity(0.15)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 100, height: 100)
-                            .scaleEffect(1.0)
-                            .animation(.easeInOut(duration: 3.5).repeatForever(autoreverses: true), value: UUID())
-                        
-                        // Main icon
-                        Image(systemName: "rectangle.on.rectangle")
-                            .font(.system(size: 52, weight: .light))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: 0x3FA4AE),
-                                        Color(hex: 0x2BC391)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .scaleEffect(1.0)
-                            .animation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true), value: UUID())
-                    }
-                    
-                    VStack(spacing: 16) {
-                        Text("No Flashcards Yet")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color(hex: 0x184449))
-                        
+
+                    MascotView(pose: .clipboard)
+                        .frame(width: 140, height: 140)
+
+                    VStack(spacing: 10) {
+                        Text("No flashcards yet")
+                            .font(SGTheme.display(24))
+                            .foregroundColor(SGTheme.paper)
+
                         Text("Add your first flashcard to start learning. You can create them manually or use AI to generate them automatically.")
-                            .font(.body)
-                            .foregroundColor(Color(hex: 0x184449).opacity(0.75))
+                            .font(SGTheme.body)
+                            .foregroundColor(SGTheme.paperSecondary)
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, 32)
-                    
+
                     // Action Buttons
                     VStack(spacing: 12) {
                         // Manual Add Button
-                        Button(action: { showingNewCardSheet = true }) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 18, weight: .medium))
-                                
-                                Text("Add Flashcard")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(20)
-                            .shadow(
-                                color: Color(hex: 0x184449).opacity(0.3),
-                                radius: 15,
-                                x: 0,
-                                y: 8
-                            )
+                        SGPrimaryButton(title: "Add Flashcard", icon: "plus.circle.fill") {
+                            showingNewCardSheet = true
                         }
-                        
+
                         // AI Generate Button
                         Button(action: { showAutoGenerateSheet = true }) {
-                            HStack(spacing: 12) {
+                            HStack(spacing: 8) {
                                 Image(systemName: "sparkles")
-                                    .font(.system(size: 16, weight: .medium))
-                                
+                                    .font(.system(size: 15, weight: .semibold))
+
                                 Text("AI Generate")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 16, weight: .semibold))
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(SGTheme.mint)
+                            .padding(.vertical, 15)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
                             .background(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: 0x3FA4AE),
-                                        Color(hex: 0x2BC391)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                            )
-                            .shadow(
-                                color: Color(hex: 0x3FA4AE).opacity(0.3),
-                                radius: 15,
-                                x: 0,
-                                y: 8
+                                Capsule(style: .continuous)
+                                    .fill(SGTheme.mint.opacity(0.08))
+                                    .overlay(
+                                        Capsule(style: .continuous)
+                                            .strokeBorder(SGTheme.mint.opacity(0.6), lineWidth: 1)
+                                    )
                             )
                         }
+                        .buttonStyle(SGPressStyle())
                     }
-                    .padding(.horizontal, 24)
-                    
+                    .padding(.horizontal, SGTheme.screenPadding)
+
                     Spacer()
                     Spacer()
                 }
@@ -442,116 +304,103 @@ struct DeckView: View {
                             selectedCard = $card
                             showEditSheet = true
                         } label: {
-                            VStack(alignment: .leading) {
+                            VStack(alignment: .leading, spacing: 5) {
                                 Text(card.regretPrompt)
-                                    .font(.headline)
+                                    .font(SGTheme.cardTitle)
+                                    .foregroundColor(SGTheme.paper)
                                     .lineLimit(nil)
                                     .multilineTextAlignment(.leading)
                                 Text(card.regret)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                                    .font(SGTheme.caption)
+                                    .foregroundColor(SGTheme.paperSecondary)
                                     .lineLimit(nil)
                                     .multilineTextAlignment(.leading)
                             }
+                            .padding(SGTheme.cardPadding)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                                    .fill(SGTheme.inkRaised)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                                            .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                                    )
+                            )
                         }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: SGTheme.screenPadding, bottom: 6, trailing: SGTheme.screenPadding))
                     }
                     .onDelete(perform: deleteCards)
                 }
                 .listStyle(PlainListStyle())
-                .tint(.black)
-                
+                .scrollContentBackground(.hidden)
+                .tint(SGTheme.mint)
+
                 // Practice & Auto Generate Buttons
-                VStack(spacing: 12) {
-                    // Add Practice Button
-                    Button {
-                        deckStore.selectDeck(deck) // Ensure this deck is selected
-                        showingPractice = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "play.fill")
-                            Text("Practice Deck")
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(SGTheme.hairline)
+                        .frame(height: 1)
+
+                    VStack(spacing: 12) {
+                        // Add Practice Button
+                        SGPrimaryButton(title: "Practice Deck", icon: "play.fill") {
+                            deckStore.selectDeck(deck) // Ensure this deck is selected
+                            showingPractice = true
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color(hex: 0x184449))
-                        .foregroundColor(.white)
-                        .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .shadow(
-                            color: Color(hex: 0x184449).opacity(0.3),
-                            radius: 15,
-                            x: 0,
-                            y: 8
-                        )
-                    }
-                    .disabled(deck.cards.isEmpty)
-                                .fullScreenCover(isPresented: $showingPractice) {
-                                    PracticeView(deck: deck)
-                                        .environmentObject(deckStore)
-                                }
-                    
-                    // Existing Auto Generate Button
-                    Button {
-                        showAutoGenerateSheet = true
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .medium))
-                            
-                            Text("Auto Generate Flashcards")
-                                .font(.headline)
-                            
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .medium))
+                        .disabled(deck.cards.isEmpty)
+                        .fullScreenCover(isPresented: $showingPractice) {
+                            PracticeView(deck: deck)
+                                .environmentObject(deckStore)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(hex: 0x3FA4AE),
-                                    Color(hex: 0x2BC391)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+
+                        // Existing Auto Generate Button
+                        Button {
+                            showAutoGenerateSheet = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 15, weight: .semibold))
+
+                                Text("Auto Generate Flashcards")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .foregroundColor(SGTheme.mint)
+                            .padding(.vertical, 15)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(SGTheme.mint.opacity(0.08))
+                                    .overlay(
+                                        Capsule(style: .continuous)
+                                            .strokeBorder(SGTheme.mint.opacity(0.6), lineWidth: 1)
+                                    )
                             )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .shadow(
-                            color: Color(hex: 0x3FA4AE).opacity(0.3),
-                            radius: 15,
-                            x: 0,
-                            y: 8
-                        )
+                        }
+                        .buttonStyle(SGPressStyle())
                     }
-                    .buttonStyle(GenerateButtonStyle())
+                    .padding(.horizontal, SGTheme.screenPadding)
+                    .padding(.vertical, 16)
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 16)
-                .background(Color(hex: 0xF8F9FA))
+                .background(SGTheme.inkRaised)
             }
         }
+        .background(SGTheme.ink.ignoresSafeArea())
         .navigationTitle(deck.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     Button(action: { showEditDeckSheet = true }) {
                         Image(systemName: "pencil")
-                            .foregroundColor(Color(hex: 0x184449))
+                            .foregroundColor(SGTheme.mint)
                     }
                     .accessibilityLabel("Edit deck name")
-                    
+
                     Button(action: { showingNewCardSheet = true }) {
                         Image(systemName: "plus")
-                            .foregroundColor(Color(hex: 0x184449))
+                            .foregroundColor(SGTheme.mint)
                     }
                     .accessibilityLabel("Add new flashcard")
                 }
@@ -559,15 +408,17 @@ struct DeckView: View {
         }
         .sheet(isPresented: $showAutoGenerateSheet) {
             AutoGenerateFlashcardsSheet(deck: $deck)
-                .presentationCornerRadius(30)
+                .sgSheetChrome()
         }
         .sheet(isPresented: $showingNewCardSheet) {
             NewFlashcardSheet(deck: $deck)
+                .sgSheetChrome()
         }
         .sheet(isPresented: $showEditSheet, onDismiss: { selectedCard = nil }) {
             if let selectedCard = selectedCard,
                let cardIndex = deck.cards.firstIndex(where: { $0.id == selectedCard.wrappedValue.id }) {
                 RegretEditorSheet(regret: $deck.cards[cardIndex])
+                    .sgSheetChrome()
             }
         }
         .sheet(isPresented: $showEditDeckSheet) {
@@ -575,13 +426,14 @@ struct DeckView: View {
                 deck = updatedDeck
                 deckStore.updateDeck(updatedDeck)
             })
+            .sgSheetChrome()
         }
         .onChange(of: deck) { newDeck in
             // Update the deck store whenever the deck changes
             deckStore.updateDeck(newDeck)
         }
     }
-    
+
     private func deleteCards(at offsets: IndexSet) {
         let count = offsets.count
         deck.cards.remove(atOffsets: offsets)
@@ -595,24 +447,31 @@ struct DeckView: View {
 
 struct CardDetailView: View {
     let card: Regret
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Question")
-                    .font(.title2)
+                    .font(SGTheme.display(20))
+                    .foregroundColor(SGTheme.paper)
                 Text(card.regretPrompt)
-                
+                    .foregroundColor(SGTheme.paperSecondary)
+
                 Text("Answer")
-                    .font(.title2)
+                    .font(SGTheme.display(20))
+                    .foregroundColor(SGTheme.paper)
                 Text(card.regret)
-                
+                    .foregroundColor(SGTheme.paperSecondary)
+
                 Text("Explanation")
-                    .font(.title2)
+                    .font(SGTheme.display(20))
+                    .foregroundColor(SGTheme.paper)
                 Text(card.backgroundExplanation)
+                    .foregroundColor(SGTheme.paperSecondary)
             }
             .padding()
         }
+        .background(SGTheme.ink.ignoresSafeArea())
         .navigationTitle("Card Details")
     }
 }
@@ -623,43 +482,48 @@ struct NewDeckView: View {
     @Environment(\.dismiss) var dismiss
     @State private var deckName = ""
     @State private var showDuplicateAlert = false
-    
+
     private var isDuplicateName: Bool {
         let trimmedName = deckName.trimmingCharacters(in: .whitespaces).lowercased()
         return deckStore.decks.contains { $0.name.lowercased() == trimmedName }
     }
-    
+
     private var isValidName: Bool {
         !deckName.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicateName
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Deck Information")) {
+                Section(header: SGMicroLabel(text: "Deck information")) {
                     TextField("Deck Name", text: $deckName)
+                        .foregroundColor(SGTheme.paper)
                         .accessibilityLabel("Deck name entry field")
-                    
+
                     if isDuplicateName && !deckName.trimmingCharacters(in: .whitespaces).isEmpty {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
+                                .foregroundColor(SGTheme.ember)
                             Text("A deck with this name already exists")
-                                .font(.caption)
-                                .foregroundColor(.red)
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.ember)
                         }
                     }
                 }
+                .listRowBackground(SGTheme.inkRaised)
             }
+            .scrollContentBackground(.hidden)
+            .background(SGTheme.ink.ignoresSafeArea())
             .navigationTitle("New Deck")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(SGTheme.paperSecondary)
                     .accessibilityLabel("Cancel deck creation")
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
@@ -678,6 +542,8 @@ struct NewDeckView: View {
                             dismiss()
                         }
                     }
+                    .fontWeight(.semibold)
+                    .tint(SGTheme.mint)
                     .disabled(!isValidName)
                 }
             }
@@ -697,55 +563,60 @@ struct EditDeckView: View {
     @EnvironmentObject var deckStore: DeckStore
     let deck: Deck
     let onSave: (Deck) -> Void
-    
+
     @State private var deckName: String
     @State private var showDuplicateAlert = false
-    
+
     init(deck: Deck, onSave: @escaping (Deck) -> Void) {
         self.deck = deck
         self.onSave = onSave
         self._deckName = State(initialValue: deck.name)
     }
-    
+
     private var isDuplicateName: Bool {
         let trimmedName = deckName.trimmingCharacters(in: .whitespaces).lowercased()
         let originalName = deck.name.lowercased()
         // Don't consider it a duplicate if it's the same as the original name
         return trimmedName != originalName && deckStore.decks.contains { $0.name.lowercased() == trimmedName }
     }
-    
+
     private var isValidName: Bool {
         let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
         return !trimmedName.isEmpty && !isDuplicateName
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Deck Information")) {
+                Section(header: SGMicroLabel(text: "Deck information")) {
                     TextField("Deck Name", text: $deckName)
+                        .foregroundColor(SGTheme.paper)
                         .accessibilityLabel("Deck name entry field")
-                    
+
                     if isDuplicateName && !deckName.trimmingCharacters(in: .whitespaces).isEmpty {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
+                                .foregroundColor(SGTheme.ember)
                             Text("A deck with this name already exists")
-                                .font(.caption)
-                                .foregroundColor(.red)
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.ember)
                         }
                     }
                 }
+                .listRowBackground(SGTheme.inkRaised)
             }
+            .scrollContentBackground(.hidden)
+            .background(SGTheme.ink.ignoresSafeArea())
             .navigationTitle("Edit Deck")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(SGTheme.paperSecondary)
                     .accessibilityLabel("Cancel deck editing")
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
@@ -764,6 +635,8 @@ struct EditDeckView: View {
                             dismiss()
                         }
                     }
+                    .fontWeight(.semibold)
+                    .tint(SGTheme.mint)
                     .disabled(!isValidName)
                 }
             }
@@ -777,4 +650,3 @@ struct EditDeckView: View {
         }
     }
 }
-

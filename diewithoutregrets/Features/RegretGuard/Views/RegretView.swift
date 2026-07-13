@@ -14,7 +14,6 @@ struct RegretView: View {
     @State private var showFinalMessage = false
     @State private var selectedAnswer: Int?
     @State private var showLockAnimation = true
-    @State private var showUnlockAnimation = false
     @State private var hasIncorrectAnswers = false
     @State private var questionResults: [Bool?] = []
     @State private var selectedRegrets: [Regret] = []
@@ -34,41 +33,72 @@ struct RegretView: View {
 
     let sharedDefaults = UserDefaults(suiteName: "group.com.jasonmayo.diewithoutregrets")
 
+    @ObservedObject private var studyGuard = StudyGuardManager.shared
+    /// v2 = Screen Time engine live; legacy = Shortcuts flow (pre-migration).
+    private var isV2: Bool { studyGuard.isSetupComplete }
+
+    /// v2 invariant: a locked user must always have a legitimate unlock path.
+    /// When the selected deck is missing/empty, this state routes into card
+    /// creation instead of the success screen (which would be a free unlock).
+    @State private var showDeckRescue = false
+    /// v2: entered via a stale notification while already unlocked.
+    @State private var alreadyUnlocked = false
+    @State private var showNewCardSheet = false
+    @State private var showEmergencySheet = false
+
     private var currentAppName: String {
-        sharedDefaults?.string(forKey: "LastGuardedApp") ?? "unknown"
+        isV2 ? "your apps" : (sharedDefaults?.string(forKey: "LastGuardedApp") ?? "unknown")
     }
     
     var body: some View {
         ZStack {
+            // Endings own the whole canvas — no quiz header above them.
+            if showFinalMessage && !showDeckRescue && !alreadyUnlocked {
+                if hasIncorrectAnswers {
+                    QuizFailureView(
+                        correctCount: questionResults.compactMap { $0 }.filter { $0 }.count,
+                        totalCount: selectedRegrets.count,
+                        emergencyUnlocksRemaining: isV2 ? studyGuard.emergencyUnlocksRemaining : nil,
+                        giveUpTitle: isV2 ? "Give up for now" : "Close \(currentAppName)",
+                        onRetry: retryQuestions,
+                        onEmergency: { showEmergencySheet = true },
+                        onGiveUp: {
+                            if isV2 {
+                                NavigationModel.shared.returnHome()
+                            } else {
+                                navigateToReport()
+                            }
+                        }
+                    )
+                } else {
+                    // The time-unlocked celebration: circle-mask reveal,
+                    // count-up with ticking haptics, ring draw, confetti.
+                    UnlockCelebrationView(
+                        minutes: isV2 ? studyGuard.intervalMinutes : flashcardBreakDuration,
+                        ctaTitle: isV2
+                            ? "Start my \(studyGuard.intervalMinutes) minutes"
+                            : "Unlock \(currentAppName)",
+                        onStart: handleUnlock
+                    )
+                }
+            } else {
             VStack {
                 // Lock Icon and Progress Bar
                 VStack {
-                    Image(systemName: "lock.fill")
-                        .font(.title)
-                        .bold()
-                        .foregroundColor(.black)
-                        .padding(5)
+                    MascotView(pose: .lookingDown, loops: 2)
+                        .frame(width: 72, height: 72)
+                        .padding(.top, 2)
                     
-                    GeometryReader { geometry in
-                        HStack(spacing: 3) {
-                            ForEach(0..<selectedRegrets.count, id: \.self) { index in
-                                let segmentWidth = geometry.size.width / CGFloat(selectedRegrets.count)
-                                
-                                Rectangle()
-                                    .frame(width: segmentWidth, height: 5)
-                                    .foregroundColor(colorForQuestion(at: index))
-                                    .cornerRadius(10)
-                                    .animation(.easeInOut(duration: 0.3), value: questionResults)
-                            }
-                        }
-                    }
-                    .frame(height: 4)
-                    .padding(.horizontal, 20)
+                    QuizProgressBar(results: questionResults, currentIndex: currentStep / 2)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 6)
                 }
                 
                 // Main Content
                 Group {
-                    if !showFinalMessage {
+                    if showDeckRescue || alreadyUnlocked {
+                        rescueView
+                    } else if !showFinalMessage {
                         VStack(spacing: 0) {
                             // Guard against index out of range
                             if !selectedRegrets.isEmpty && currentStep/2 < selectedRegrets.count {
@@ -78,8 +108,10 @@ struct RegretView: View {
                                 Text(currentRegret.regretPrompt)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(nil)
-                                    .foregroundColor(.black)
-                                    .font(currentStep % 2 == 1 ? .headline : .title3)
+                                    .foregroundColor(SGTheme.paper)
+                                    .font(currentStep % 2 == 1
+                                          ? .system(size: 17, weight: .semibold, design: .rounded)
+                                          : .system(size: 21, weight: .bold, design: .rounded))
                                     .padding(.horizontal, 30)
                                     .padding(.top, currentStep % 2 == 1 ? 20 : 70)
                                     .padding(.bottom, currentStep % 2 == 1 ? 5 : 15)
@@ -91,7 +123,7 @@ struct RegretView: View {
                                     ScrollView {
                                         Text(currentRegret.backgroundExplanation)
                                             .font(.subheadline)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(SGTheme.paperSecondary)
                                             .padding(.horizontal, 30)
                                             .padding(.top, 5)
                                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -104,36 +136,15 @@ struct RegretView: View {
                                 // Answer Options
                                 if currentStep % 2 == 0 {
                                     ScrollView {
-                                        VStack(spacing: 16) {
+                                        VStack(spacing: 14) {
                                             ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
-                                                Button(action: {
+                                                QuizAnswerTile(
+                                                    text: choice,
+                                                    state: selectedAnswer == index ? .selected : .idle
+                                                ) {
+                                                    QuizHaptics.selectTick()
                                                     selectedAnswer = index
-                                                }) {
-                                                    HStack {
-                                                        Text(choice)
-                                                            .foregroundColor(.black)
-                                                            .multilineTextAlignment(.leading)
-                                                            .lineLimit(nil)
-                                                            .fixedSize(horizontal: false, vertical: true)
-                                                            .padding(.vertical, 16)
-                                                            .padding(.horizontal, 20)
-                                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                                            .background(
-                                                                selectedAnswer == index ?
-                                                                Color.gray.opacity(0.2) : Color.clear
-                                                            )
-                                                            .cornerRadius(12)
-                                                            .overlay(
-                                                                RoundedRectangle(cornerRadius: 12)
-                                                                    .stroke(
-                                                                        selectedAnswer == index ?
-                                                                        Color.gray : Color.gray.opacity(0.3),
-                                                                        lineWidth: 2
-                                                                    )
-                                                            )
-                                                    }
                                                 }
-                                                .buttonStyle(PlainButtonStyle())
                                             }
                                         }
                                         .padding(.horizontal, 20)
@@ -141,37 +152,15 @@ struct RegretView: View {
                                     }
                                     .frame(maxHeight: 300) // Limit height to prevent overflow
                                 } else {
-                                    // Answer Reveal
+                                    // Answer Reveal: the correct tile sweeps
+                                    // mint, the miss shakes, the rest dim.
                                     ScrollView {
-                                        VStack(spacing: 16) {
+                                        VStack(spacing: 14) {
                                             ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
-                                                HStack {
-                                                    Text(choice)
-                                                        .foregroundColor(
-                                                            index == currentRegret.correctAnswerIndex ?
-                                                                .white : .black
-                                                        )
-                                                        .multilineTextAlignment(.leading)
-                                                        .lineLimit(nil)
-                                                        .fixedSize(horizontal: false, vertical: true)
-                                                        .padding(.vertical, 16)
-                                                        .padding(.horizontal, 20)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                                        .background(
-                                                            index == currentRegret.correctAnswerIndex ?
-                                                            Color.green :
-                                                                (index == selectedAnswer ? Color.red.opacity(0.2) : Color.clear)
-                                                        )
-                                                        .cornerRadius(12)
-                                                        .overlay(
-                                                            RoundedRectangle(cornerRadius: 12)
-                                                                .stroke(
-                                                                    index == currentRegret.correctAnswerIndex ?
-                                                                    Color.green : Color.clear,
-                                                                    lineWidth: 2
-                                                                )
-                                                        )
-                                                }
+                                                QuizAnswerTile(
+                                                    text: choice,
+                                                    state: revealState(for: index, in: currentRegret)
+                                                )
                                             }
                                         }
                                         .padding(.horizontal, 20)
@@ -182,123 +171,62 @@ struct RegretView: View {
                             } else {
                                 // Fallback if no regrets or index out of range
                                 Text("No questions available")
-                                    .foregroundColor(.black)
+                                    .foregroundColor(SGTheme.paperSecondary)
                                     .padding()
                             }
                         }
                         .frame(maxHeight: .infinity)
-                    } else {
-                        // Final Screen
-                        VStack {
-                            Spacer()
-                            
-                            let appName = sharedDefaults?.string(forKey: "LastGuardedApp") ?? ""
-                            
-                            if hasIncorrectAnswers {
-                                Text("Looks like you don't know what you're doing, let's pause \(appName) for now")
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.black)
-                                    .font(.title2)
-                                    .padding(.horizontal, 30)
-                            } else {
-                                Text("Successfully unlocked! You've earned access to \(appName)!")
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.black)
-                                    .font(.title2)
-                                    .padding(.horizontal, 30)
-                            }
-                            
-                            Spacer()
-                                
-                            // Action Buttons
-                            VStack(spacing: 15) {
-                                if hasIncorrectAnswers {
-                                    Button(action: retryQuestions) {
-                                        Text("Retry Questions")
-                                            .foregroundColor(.black)
-                                            .padding()
-                                            .frame(maxWidth: .infinity)
-                                            .background(Color.red.opacity(0.2))
-                                            .cornerRadius(10)
-                                    }
-                                } else {
-                                    Button(action: handleUnlock) {
-                                        Text("Unlock \(appName)")
-                                            .foregroundColor(.black)
-                                            .padding()
-                                            .frame(maxWidth: .infinity)
-                                            .background(Color.gray.opacity(0.3))
-                                            .cornerRadius(10)
-                                    }
-                                }
-                                
-                                Button(action: navigateToReport) {
-                                    Text(hasIncorrectAnswers ? "Close \(appName)" : "Close Anyway")
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.red.opacity(0.7))
-                                        .cornerRadius(10)
-                                }
-                            }
-                            .padding(.horizontal, 30)
-                        }
                     }
                 }
                 
                 // Bottom Control
-                if !showFinalMessage {
-                    VStack {
-                        Divider()
-                            .background(Color.white.opacity(0.2))
-                        
-                        Text(controlButtonText)
-                            .font(.subheadline)
-                            .foregroundColor(.black.opacity(0.7))
-                            .padding(.vertical, 35)
-                            .contentShape(Rectangle())
-                            .onTapGesture(perform: handleTap)
-                    }
-                    .background(Color.gray.opacity(0.2))
-                    .transition(.move(edge: .bottom))
+                if !showFinalMessage && !showDeckRescue && !alreadyUnlocked {
+                    SGPrimaryButton(
+                        title: controlButtonText,
+                        tint: canAdvance ? SGTheme.mint : SGTheme.inkHigh,
+                        labelColor: canAdvance ? .white : SGTheme.paperTertiary,
+                        action: handleTap
+                    )
+                    .disabled(!canAdvance)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 12)
+                    .animation(SGTheme.springFast, value: canAdvance)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .overlay(
-                RoundedRectangle(cornerRadius: 0)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(hex: 0x36B8C4).opacity(0.1),
-                                Color(hex: 0x238A94).opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 4
-                    )
-                    .blur(radius: 20)
-                    .ignoresSafeArea()
-            )
-            
+            }
+
             if showLockAnimation {
                 if selectedAnimationType == AnimationType.memeVideo.rawValue {
                     MemeVideoView()
                         .transition(.opacity)
                         .zIndex(1)
                 } else {
-                    LockView()
+                    MascotLockOverlay()
                         .transition(.opacity)
                         .zIndex(1)
                 }
             }
-            
-            if showUnlockAnimation {
-                UnlockView()
-                    .transition(.opacity)
-                    .zIndex(1)
+
+        }
+        .background(SGAuroraBackground(intensity: 0.6).ignoresSafeArea())
+        .sheet(isPresented: $showNewCardSheet, onDismiss: {
+            // Card added? Reload the quiz with it.
+            if let deck = deckStore.selectedDeck, !deck.cards.isEmpty {
+                showDeckRescue = false
+                setupView()
+            }
+        }) {
+            if let binding = rescueDeckBinding {
+                NewFlashcardSheet(deck: binding)
+                    .sgSheetChrome()
             }
         }
-        .preferredColorScheme(.light)
+        .sheet(isPresented: $showEmergencySheet) {
+            EmergencyUnlockSheet {
+                NavigationModel.shared.returnHome()
+            }
+        }
         .onAppear {
             setupView()
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -314,20 +242,130 @@ struct RegretView: View {
         }
     }
     
-    private func colorForQuestion(at index: Int) -> Color {
-        guard index < questionResults.count else { return .gray.opacity(0.2) }
-        
-        if let isCorrect = questionResults[index] {
-            return isCorrect ? .green : .red
-        }
-        return .gray.opacity(0.2)
+    // MARK: - v2 rescue states
+
+    /// Binding into the selected deck for the rescue card-creation sheet.
+    private var rescueDeckBinding: Binding<Deck>? {
+        guard let deck = deckStore.selectedDeck else { return nil }
+        return Binding(
+            get: { deckStore.selectedDeck ?? deck },
+            set: { updated in
+                deckStore.updateDeck(updated)
+            }
+        )
     }
-    
+
+    @ViewBuilder
+    private var rescueView: some View {
+        VStack(spacing: 16) {
+            Spacer()
+
+            if alreadyUnlocked {
+                Image(systemName: "lock.open.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(SGTheme.mint)
+                Text("You're already unlocked")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(SGTheme.paper)
+                Text("You've got about \(max(0, studyGuard.totalMinutes - studyGuard.usedMinutes)) minutes left before your apps lock again.")
+                    .font(.subheadline)
+                    .foregroundColor(SGTheme.paperSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+            } else {
+                Image(systemName: "rectangle.stack.badge.plus")
+                    .font(.system(size: 44))
+                    .foregroundColor(SGTheme.paper)
+                Text("Your deck is empty")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(SGTheme.paper)
+                Text("Add a flashcard and answer it to unlock your apps.")
+                    .font(.subheadline)
+                    .foregroundColor(SGTheme.paperSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+            }
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                if alreadyUnlocked {
+                    Button {
+                        NavigationModel.shared.returnHome()
+                    } label: {
+                        Text("Done")
+                            .foregroundColor(SGTheme.paper)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(SGTheme.inkHigh)
+                            .cornerRadius(50)
+                    }
+                } else {
+                    Button {
+                        ensureDeckExists()
+                        showNewCardSheet = true
+                    } label: {
+                        Text("Add a flashcard")
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(SGTheme.mint)
+                            .cornerRadius(50)
+                    }
+
+                    Button {
+                        NavigationModel.shared.unlockMethodOverride = "trueFocus"
+                    } label: {
+                        Text("Do a focus session instead")
+                            .foregroundColor(SGTheme.paper)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(SGTheme.glaze(0.08))
+                            .cornerRadius(50)
+                    }
+
+                    Button {
+                        showEmergencySheet = true
+                    } label: {
+                        Text("Emergency unlock (\(studyGuard.emergencyUnlocksRemaining) left this week)")
+                            .foregroundColor(SGTheme.paperSecondary)
+                            .font(.subheadline)
+                    }
+                    .padding(.top, 4)
+                }
+            }
+            .padding(.horizontal, 30)
+            .padding(.bottom, 20)
+        }
+    }
+
+    /// Rescue path may fire with no deck at all — create and select one so
+    /// NewFlashcardSheet has somewhere to save.
+    private func ensureDeckExists() {
+        if deckStore.selectedDeck == nil {
+            let deck = Deck(name: "My First Deck")
+            deckStore.addDeck(deck)
+            deckStore.selectDeck(deck)
+        }
+    }
+
+    /// Reveal-step tile states: the correct tile sweeps mint, the user's
+    /// miss shakes, everything else dims.
+    private func revealState(for index: Int, in regret: Regret) -> QuizTileState {
+        if index == regret.correctAnswerIndex { return .revealedCorrect }
+        if index == selectedAnswer { return .revealedWrong }
+        return .dimmed
+    }
+
+    private var canAdvance: Bool {
+        currentStep % 2 == 1 || selectedAnswer != nil
+    }
+
     private var controlButtonText: String {
         if currentStep % 2 == 0 {
-            return selectedAnswer == nil ? "Select an answer" : "Reveal Answer"
+            return selectedAnswer == nil ? "Select an answer" : "Check answer"
         }
-        return "Next Question"
+        return "Next question"
     }
     
     private func handleTap() {
@@ -360,8 +398,12 @@ struct RegretView: View {
                 }
                 
                 questionResults[questionIndex] = isCorrect
-                
-                if !isCorrect {
+
+                // The moment of truth gets its own haptic composition.
+                if isCorrect {
+                    QuizHaptics.correctBurst()
+                } else {
+                    QuizHaptics.wrongBuzz()
                     hasIncorrectAnswers = true
                 }
 
@@ -390,7 +432,16 @@ struct RegretView: View {
         // Add debug prints
         print("RegretView setup started")
         defer { print("RegretView setup completed") }
-        
+
+        // v2: entered while already unlocked (stale notification / deeplink) —
+        // nothing to unlock, don't run a pointless quiz.
+        if isV2, studyGuard.state != .locked {
+            alreadyUnlocked = true
+            showDeckRescue = false
+            return
+        }
+        alreadyUnlocked = false
+
         // Validate deck selection
         guard let deck = deckStore.selectedDeck else {
             print("🚨 Critical error: No deck selected in RegretView")
@@ -398,22 +449,33 @@ struct RegretView: View {
             Analytics.capture("unlock_attempted_no_deck", properties: [
                 "app_name": currentAppName
             ])
-            showFinalMessage = true
+            if isV2 {
+                // Free-unlock guard: the success screen would hand out a grant
+                // with zero questions answered. Route into card creation instead.
+                showDeckRescue = true
+            } else {
+                showFinalMessage = true
+            }
             return
         }
-        
+
         print("Processing deck: \(deck.name)")
         print("Deck contains \(deck.cards.count) cards")
-        
+
         guard !deck.cards.isEmpty else {
             print("⚠️ Empty deck selected")
             Analytics.capture("unlock_attempted_empty_deck", properties: [
                 "app_name": currentAppName,
                 "deck_name": deck.name
             ])
-            showFinalMessage = true
+            if isV2 {
+                showDeckRescue = true
+            } else {
+                showFinalMessage = true
+            }
             return
         }
+        showDeckRescue = false
 
         Analytics.unlockAttempted(
             appName: currentAppName,
@@ -472,38 +534,48 @@ struct RegretView: View {
     }
     
     private func handleUnlock() {
-        showUnlockAnimation = true
-
         let correctCount = questionResults.compactMap { $0 }.filter { $0 }.count
+
+        if isV2 {
+            // Invariant: a grant requires at least one correctly answered
+            // question — the empty-deck path can never reach here.
+            guard correctCount > 0, !hasIncorrectAnswers else { return }
+            // Grant synchronously the moment the unlock is earned — never
+            // inside the animation delay (a background/kill mid-animation
+            // would eat the earned unlock).
+            StudyGuardManager.shared.grantFreshBudget(reason: .quiz)
+        }
+
         Analytics.unlockCompleted(
             appName: currentAppName,
             correctCount: correctCount,
             totalQuestions: selectedRegrets.count,
             hadRetries: attemptNumber > 1,
             durationSec: Date().timeIntervalSince(attemptStartTime),
-            breakDurationMinutes: flashcardBreakDuration
+            breakDurationMinutes: isV2 ? studyGuard.intervalMinutes : flashcardBreakDuration
         )
 
-        // Wait for animation to complete before proceeding
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Match animation duration
+        // The celebration screen WAS the unlock moment — go straight home,
+        // where the countdown rolls the new minutes in.
+        if isV2 {
+            NavigationModel.shared.returnHome()
+        } else {
+            // Legacy Shortcuts flow — unchanged until the user migrates.
             let currentTime = Date().timeIntervalSince1970
             sharedDefaults?.set(currentTime, forKey: "LastBreakTime")
             sharedDefaults?.set(true, forKey: "UserAllowedBreak")
             sharedDefaults?.set(flashcardBreakDuration, forKey: "BreakDurationMinutes")
             sharedDefaults?.synchronize()
-            
+
             if let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
                 UIApplication.shared.open(getAppURL(for: appName), options: [:])
             }
-            NavigationModel.shared.navigate(to: .regretReport)
-            
-            // Hide unlock animation after transition
-            withAnimation {
-                showUnlockAnimation = false
-            }
+            NavigationModel.shared.returnHome()
         }
     }
     
+    /// Legacy-only escape hatch ("Close Anyway"). v2 uses the emergency
+    /// unlock ledger instead.
     private func navigateToReport() {
         Analytics.unlockCloseAnyway(
             appName: currentAppName,
@@ -512,7 +584,7 @@ struct RegretView: View {
             hadIncorrectAnswers: hasIncorrectAnswers,
             durationSec: Date().timeIntervalSince(attemptStartTime)
         )
-        NavigationModel.shared.navigate(to: .regretReport)
+        NavigationModel.shared.returnHome()
     }
     
     private func getAppURL(for appName: String) -> URL {

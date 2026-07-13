@@ -154,7 +154,7 @@ final class FocusDetectionManager: NSObject, ObservableObject {
 
     var displayDebugReason: String {
         if let sec = graceRemaining {
-            return "\(debugReason) — Timer stops in \(sec)s"
+            return "\(debugReason), timer stops in \(sec)s"
         }
         return debugReason
     }
@@ -450,9 +450,9 @@ final class FocusDetectionManager: NSObject, ObservableObject {
             if !hasFace && !hasScene {
                 debugReason = "Position your phone to see you and your workspace"
             } else if !hasFace {
-                debugReason = "We can see your workspace — now show your face"
+                debugReason = "We can see your workspace. Now show your face"
             } else {
-                debugReason = "We can see you — now include your laptop or notebook"
+                debugReason = "We can see you. Now include your laptop or notebook"
             }
         }
     }

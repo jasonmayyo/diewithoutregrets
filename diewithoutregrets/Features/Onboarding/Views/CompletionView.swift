@@ -1,116 +1,169 @@
+//
+//  CompletionView.swift
+//  diewithoutregrets
+//
+//  Final onboarding screen (v2, screen 28): mascot celebration on the
+//  aurora meadow with confetti. Re-verifies Pro before completing — a
+//  lapsed entitlement bounces back to the paywall, OneThing-style — then
+//  flips hasCompletedOnboarding and fires the completion analytics.
+//
+
 import SwiftUI
-import PostHog
+import RevenueCat
 
 struct CompletionView: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
+    @EnvironmentObject var viewModel: OnboardingViewModel
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var showIcon = false
-    @State private var showTitle = false
-    @State private var showSubtitle = false
-    @State private var showButton = false
+
+    @State private var shown = false
     @State private var showConfetti = false
-    @Environment(\.dismiss) private var dismiss
-    
+    @State private var isVerifying = false
+    @State private var showVerifyError = false
+
     var body: some View {
         ZStack {
-            Color.white
-                .ignoresSafeArea()
-            
+            SGAuroraBackground(intensity: 0.5)
+
             if showConfetti {
                 ConfettiView()
                     .transition(.opacity)
                     .zIndex(1)
+                    .allowsHitTesting(false)
             }
-            
-            VStack(spacing: 20) {
+
+            VStack(spacing: 0) {
                 Spacer()
-                
-                Image(systemName: "checkmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 70, height: 70)
-                    .foregroundColor(Color(hex: 0x184449))
-                    .opacity(showIcon ? 1 : 0)
-                    .scaleEffect(showIcon ? 1 : 0.5)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.2), value: showIcon)
-                
-                Text("You just took\nthe hardest step.")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(Color(hex: 0x184449))
+
+                MascotView(pose: .idle, loops: nil)
+                    .frame(height: 160)
+                    .opacity(shown ? 1 : 0)
+                    .scaleEffect(shown ? 1 : 0.6)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.2), value: shown)
+
+                Text("You're all set.")
+                    .font(SGTheme.headline)
+                    .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .opacity(showTitle ? 1 : 0)
-                    .offset(y: showTitle ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(0.4), value: showTitle)
-                
-                Text("Most people never do.\nLet's make it count, \(onboardingViewModel.userName).")
+                    .padding(.top, 24)
+                    .fadeRise(shown, delay: 0.4)
+
+                Text("Your monster is on duty.\nTime to make your hours count.")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(Color(hex: 0x184449).opacity(0.5))
+                    .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
-                    .opacity(showSubtitle ? 1 : 0)
-                    .offset(y: showSubtitle ? 0 : 15)
-                    .animation(.easeOut(duration: 0.8).delay(0.6), value: showSubtitle)
-                
+                    .padding(.top, 10)
+                    .padding(.horizontal, 36)
+                    .fadeRise(shown, delay: 0.55)
+
                 Spacer()
-                
-                Button(action: {
-                    Analytics.capture("onboarding_completed", properties: [
-                        "user_name": onboardingViewModel.userName,
-                        "selected_age": onboardingViewModel.selectedAge,
-                        "screen_time": onboardingViewModel.screenTime,
-                        "deck_name": onboardingViewModel.newDeckName,
-                        "flashcards_created": onboardingViewModel.regretEntries.count,
-                        "selected_apps_count": onboardingViewModel.selectedApps.count,
-                        "selected_apps": onboardingViewModel.selectedApps.map { $0.name },
-                        "feelings": Array(onboardingViewModel.selectedFeelings).sorted(),
-                        "obstacles": Array(onboardingViewModel.selectedObstacles).sorted()
-                    ])
 
-                    AdsTracker.trackCompleteRegistration()
-
-                    hasCompletedOnboarding = true
-                    onboardingViewModel.triggerHapticFeedback()
-                }) {
-                    Text("Let's go")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(Color(hex: 0x184449))
-                        .cornerRadius(50)
+                Button(action: completeIfPro) {
+                    HStack(spacing: 8) {
+                        if isVerifying {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        }
+                        Text("Let's go")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(SGTheme.mint, in: Capsule(style: .continuous))
+                    .shadow(color: SGTheme.mint.opacity(0.25), radius: 14, y: 4)
                 }
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 20)
-                .animation(.easeOut(duration: 0.8).delay(0.8), value: showButton)
-                .padding(.horizontal, 24)
-                .padding(.bottom)
+                .buttonStyle(SGPressStyle())
+                .disabled(isVerifying)
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.bottom, 16)
+                .fadeRise(shown, delay: 0.7)
             }
-            .padding()
+            .frame(maxWidth: 600)
+            .frame(maxWidth: .infinity)
         }
         .onAppear {
-            showIcon = true
-            showTitle = true
-            showSubtitle = true
-            showButton = true
-            withAnimation(.easeOut(duration: 0.5)) {
-                showConfetti = true
+            shown = true
+            SGTheme.successHaptic()
+            if !UIAccessibility.isReduceMotionEnabled {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    showConfetti = true
+                }
+            }
+        }
+        .alert("Verification failed", isPresented: $showVerifyError) {
+            Button("Retry") { completeIfPro() }
+            Button("Not now", role: .cancel) {}
+        } message: {
+            Text("Couldn't verify your subscription. Check your connection and try again.")
+        }
+    }
+
+    // MARK: - Completion
+
+    /// The Pro re-check: onboarding v2 has no skip past the paywall, so a
+    /// lapsed or refunded entitlement here goes back to it instead of
+    /// unlocking the app.
+    private func completeIfPro() {
+        guard !isVerifying else { return }
+        isVerifying = true
+
+        Purchases.shared.getCustomerInfo { customerInfo, error in
+            DispatchQueue.main.async {
+                isVerifying = false
+
+                // Couldn't reach RevenueCat: don't bounce a paying user to
+                // the paywall on a network hiccup. Stay here and offer retry.
+                guard error == nil, let customerInfo = customerInfo else {
+                    showVerifyError = true
+                    return
+                }
+
+                // Only bounce when we positively see zero active entitlements.
+                guard !customerInfo.entitlements.active.isEmpty else {
+                    Analytics.capture("onboarding_completion_pro_recheck_failed", properties: [
+                        "flow_version": "sg_v2"
+                    ])
+                    viewModel.currentStep = .paywall
+                    return
+                }
+                complete()
             }
         }
     }
+
+    private func complete() {
+        Analytics.capture("onboarding_completed", properties: [
+            "age_range": viewModel.selectedAge,
+            "student_type": viewModel.studentType,
+            "screen_time": viewModel.screenTime,
+            "peak_scroll_time": viewModel.peakScrollTime,
+            "deck_name": viewModel.newDeckName,
+            "guarded_token_count": SGContract.sharedDefaults.flatMap { SGContract.decodeSelection($0) }.map { SGContract.tokenCount($0) } ?? 0,
+            "flow_version": "sg_v2"
+        ])
+
+        AdsTracker.trackCompleteRegistration()
+
+        SGTheme.successHaptic()
+        hasCompletedOnboarding = true
+    }
 }
+
+// MARK: - Confetti (also used by QuizKit's session completion)
 
 struct ConfettiView: View {
     @State private var particles: [ConfettiParticle] = []
     @State private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
-    let colors: [Color] = [
-        Color(hex: 0x184449),
-        Color(hex: 0x184449).opacity(0.6),
-        Color(hex: 0x3FA4AE),
-        Color(hex: 0x64FFDA),
-        Color(hex: 0x184449).opacity(0.3)
+    /// Celebration palette — every piece reads on the ink canvas.
+    var colors: [Color] = [
+        SGTheme.mint,
+        SGTheme.teal,
+        SGTheme.paper,
+        SGTheme.ember
     ]
-    
+
     var body: some View {
         ZStack {
             ForEach(particles) { particle in
@@ -125,18 +178,18 @@ struct ConfettiView: View {
         .onAppear { createParticles() }
         .onReceive(timer) { _ in updateParticles() }
     }
-    
+
     private func createParticles() {
         particles = (0..<40).map { _ in
             ConfettiParticle(
                 x: UIScreen.main.bounds.width / 2,
                 y: UIScreen.main.bounds.height / 3,
-                color: colors.randomElement() ?? Color(hex: 0x184449),
+                color: colors.randomElement() ?? SGTheme.mint,
                 rotation: Double.random(in: 0...360)
             )
         }
     }
-    
+
     private func updateParticles() {
         withAnimation(.linear(duration: 0.1)) {
             particles = particles.filter { $0.isActive }

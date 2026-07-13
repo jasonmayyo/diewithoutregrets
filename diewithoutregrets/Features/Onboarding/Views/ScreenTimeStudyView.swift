@@ -1,107 +1,154 @@
+//
+//  ScreenTimeStudyView.swift
+//  diewithoutregrets
+//
+//  Onboarding v2 screen 4 (night): the mascot reveal. Your monster stands
+//  center stage while fake notification banners bombard him from the top.
+//  As the flood peaks he snaps angry, three descriptor words land on you
+//  (Distracted. Exhausted. Behind.), then the mint pivot: he's here to win
+//  your time back.
+//
+
 import SwiftUI
 
-struct ScreenTimeStudyView: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    
-    @State private var showAnimation = false
-    @State private var showLabel = false
-    @State private var showHeadline = false
-    @State private var showSource = false
-    @State private var showSubtext = false
-    @State private var showButton = false
-    
+struct MeetYourGuardView: View {
+    @EnvironmentObject var viewModel: OnboardingViewModel
+
+    private let descriptors = ["Distracted.", "Exhausted.", "Behind."]
+
+    @State private var started = false
+    @State private var bannersActive = false
+    @State private var angry = false
+    @State private var showTitle = false
+    @State private var descriptorCount = 0
+    @State private var showPivot = false
+    @State private var showCTA = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    DotLottieView(fileName: "hourglass", speed: 0.8)
-                        .frame(height: min(200, geometry.size.height * 0.25))
-                        .frame(maxWidth: .infinity)
-                        .opacity(showAnimation ? 1 : 0)
-                        .scaleEffect(showAnimation ? 1 : 0.85)
-                        .animation(.easeOut(duration: 0.8).delay(0.1), value: showAnimation)
-                        .padding(.top, 10)
-                    
-                    Spacer()
-                        .frame(height: 24)
-                    
-                    Text("The research is clear.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                        .tracking(1.5)
-                        .textCase(.uppercase)
-                        .opacity(showLabel ? 1 : 0)
-                        .offset(y: showLabel ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.3), value: showLabel)
-                        .padding(.bottom, 16)
-                    
-                    Text("The average student spends over 7 hours a day on their phone.")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(Color(hex: 0x184449))
-                        .lineSpacing(4)
-                        .opacity(showHeadline ? 1 : 0)
-                        .offset(y: showHeadline ? 0 : 20)
-                        .animation(.easeOut(duration: 0.8).delay(0.6), value: showHeadline)
-                        .padding(.bottom, 16)
-                    
-                    HStack(spacing: 10) {
-                        Image("common-sense-media-logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 22)
-                        
-                        Text("Common Sense Media, 2023")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Color(hex: 0x184449).opacity(0.4))
-                    }
-                    .opacity(showSource ? 1 : 0)
-                    .animation(.easeOut(duration: 0.8).delay(0.9), value: showSource)
-                    .padding(.bottom, 24)
-                    
-                    Text("That's more time than they spend in class and studying combined.")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(Color(hex: 0x184449).opacity(0.6))
-                        .lineSpacing(3)
-                        .opacity(showSubtext ? 1 : 0)
-                        .offset(y: showSubtext ? 0 : 15)
-                        .animation(.easeOut(duration: 0.8).delay(1.2), value: showSubtext)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("How much time do I spend?")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.5 : .infinity)
-                            .frame(height: 55)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(50)
-                    }
-                    .opacity(showButton ? 1 : 0)
-                    .offset(y: showButton ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(1.6), value: showButton)
+        ZStack {
+            Color.clear
+
+            VStack(spacing: 0) {
+                Spacer()
+
+                // The monster, glowing mint until the notifications get to him.
+                ZStack {
+                    MascotView(pose: .idle, loops: nil)
+                        .opacity(angry ? 0 : 1)
+
+                    Image("angrey")
+                        .resizable()
+                        .scaledToFit()
+                        .opacity(angry ? 1 : 0)
+                        .scaleEffect(angry ? 1 : 0.7)
                 }
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? geometry.size.width * 0.1 : 24)
-                .padding(.bottom, 20)
+                .frame(width: 200, height: 200)
+                .shadow(color: SGTheme.mint.opacity(0.4), radius: 28)
+                .animation(.spring(response: 0.35, dampingFraction: 0.55), value: angry)
+
+                Text("This is your study monster.")
+                    .font(SGTheme.display(26))
+                    .foregroundColor(OnbNight.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .fadeRise(showTitle)
+                    .padding(.top, 26)
+                    .padding(.horizontal, 32)
+
+                // The descriptors are about YOU, not him.
+                HStack(spacing: 10) {
+                    ForEach(descriptors.indices, id: \.self) { index in
+                        Text(descriptors[index])
+                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .foregroundColor(SGTheme.ember)
+                            .opacity(descriptorCount > index ? 1 : 0)
+                            .scaleEffect(descriptorCount > index ? 1 : 1.5)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: descriptorCount)
+                    }
+                }
+                .padding(.top, 18)
+
+                Text("He's here to win your time back.")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(SGTheme.mint)
+                    .fadeRise(showPivot)
+                    .padding(.top, 16)
+                    .padding(.horizontal, 32)
+
+                Spacer()
+
+                OnbCTA(title: "I'm ready", night: true, visible: showCTA) {
+                    viewModel.screenAction("im_ready_tapped")
+                    viewModel.nextStep()
+                }
+                .padding(.bottom, 12)
+            }
+
+            // The bombardment. Soft haptic per banner comes from the overlay.
+            NotificationBannerOverlay(active: bannersActive)
+                .padding(.top, 8)
+        }
+        .onAppear(perform: start)
+    }
+
+    // MARK: - Choreography
+
+    private func start() {
+        guard !started else { return }
+        started = true
+
+        if reduceMotion {
+            // Collapse to the final beat: angry monster, all copy, CTA.
+            viewModel.screenAction("notification_cascade_started")
+            viewModel.screenAction("monster_angry")
+            showTitle = true
+            angry = true
+            descriptorCount = descriptors.count
+            showPivot = true
+            showCTA = true
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showTitle = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            bannersActive = true
+            viewModel.screenAction("notification_cascade_started")
+        }
+
+        // The flood peaks and he snaps.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+            angry = true
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            viewModel.screenAction("monster_angry")
+        }
+
+        for index in descriptors.indices {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0 + Double(index) * 0.35) {
+                descriptorCount = index + 1
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             }
         }
-        .onAppear {
-            showAnimation = true
-            showLabel = true
-            showHeadline = true
-            showSource = true
-            showSubtext = true
-            showButton = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.2) {
+            bannersActive = false
+            showPivot = true
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.6) {
+            showCTA = true
         }
     }
 }
 
 #Preview {
-    ScreenTimeStudyView()
-        .environmentObject(OnboardingViewModel())
+    ZStack {
+        NightSkyBackdrop()
+        MeetYourGuardView()
+            .environmentObject(OnboardingViewModel())
+    }
 }

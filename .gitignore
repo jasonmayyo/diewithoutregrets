@@ -22,3 +22,4 @@ xcuserdata/
 # are huge (Lottie alone is ~440 MB) and will trip GitHub's 100 MB hard
 # limit if committed. Never commit this directory.
 .spm/
+.gstack/

@@ -1,225 +1,184 @@
-import SwiftUI
+//
+//  LongTermResults.swift
+//  diewithoutregrets
+//
+//  Onboarding v2 — ReviewsView: the social proof wall before the paywall.
+//  Trust badges over two opposing review marquees; the CTA fires the system
+//  rating request and advances after it lands.
+//
 
-struct LongTermResultsView: View {
-    @EnvironmentObject var onboardingViewModel: OnboardingViewModel
-    
-    @State private var showTitle = false
-    @State private var showGraph = false
-    @State private var showText = false
-    @State private var showButton = false
-    
-    @State private var traditionPathProgress: CGFloat = 0
-    @State private var studyGuardPathProgress: CGFloat = 0
-    
+import SwiftUI
+import StoreKit
+
+struct ReviewsView: View {
+    @EnvironmentObject var viewModel: OnboardingViewModel
+
+    @Environment(\.requestReview) private var requestReview
+
+    @State private var shown = false
+    @State private var ctaShown = false
+    @State private var started = false
+    @State private var requested = false
+
+    private var reduceMotion: Bool { UIAccessibility.isReduceMotionEnabled }
+
+    private let reviews: [OnbReview] = [
+        OnbReview(name: "Ella P.", title: "Saved my finals week",
+                  text: "My apps locked and suddenly I had three free hours a night. Passed every single exam."),
+        OnbReview(name: "Marcus T.", title: "The monster guilt-trips me",
+                  text: "He just stares at me until I answer my flashcards. Somehow it actually works."),
+        OnbReview(name: "Priya S.", title: "Finally works with my ADHD",
+                  text: "Blocking apps never stuck. Earning time back does. My focus is completely different now."),
+        OnbReview(name: "Jake L.", title: "I sleep before 1am now",
+                  text: "No more 2am TikTok spirals. My phone locks and I just go to bed. Wild concept."),
+        OnbReview(name: "Sofia R.", title: "From C's to A's",
+                  text: "Two months of flashcards made from my own notes. My GPA finally moved."),
+        OnbReview(name: "Daniel K.", title: "Screen time cut in half",
+                  text: "Six hours a day down to three. And the three I get now, I actually earned."),
+        OnbReview(name: "Amara J.", title: "Better than deleting apps",
+                  text: "I always reinstalled them by Friday. Now they stay locked until I study. No willpower needed."),
+        OnbReview(name: "Leo M.", title: "Carried my MCAT prep",
+                  text: "Every scroll break turned into a review session. Genuinely the reason I stayed on schedule."),
+    ]
+
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("The science behind it.")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                                .tracking(1.5)
-                                .textCase(.uppercase)
-                                .opacity(showTitle ? 1 : 0)
-                                .animation(.easeOut(duration: 0.8).delay(0.2), value: showTitle)
-                                .padding(.top, 20)
-                            
-                            Text("Spaced repetition helps you remember 80% more than cramming.")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(Color(hex: 0x184449))
-                                .lineSpacing(3)
-                                .opacity(showTitle ? 1 : 0)
-                                .offset(y: showTitle ? 0 : 20)
-                                .animation(.easeOut(duration: 0.8).delay(0.3), value: showTitle)
-                            
-                            HStack(spacing: 10) {
-                                Image("steel-logo")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(height: 22)
-                                
-                                Text("Cepeda et al., 2006. Psychological Bulletin")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(hex: 0x184449).opacity(0.4))
-                            }
-                            .opacity(showTitle ? 1 : 0)
-                            .animation(.easeOut(duration: 0.8).delay(0.5), value: showTitle)
-                            
-                            Spacer().frame(height: 20)
-                            
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color(hex: 0xF5F7FA))
-                                    .opacity(showTitle ? 1 : 0)
-                                    .animation(.easeOut(duration: 0.8).delay(0.4), value: showTitle)
-                                
-                                VStack(alignment: .leading, spacing: 20) {
-                                    Text("Flashcards studied over time")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(Color(hex: 0x184449))
-                                        .padding(.top, 20)
-                                        .padding(.leading, 20)
-                                        .opacity(showText ? 1 : 0)
-                                        .offset(y: showText ? 0 : 10)
-                                        .animation(.easeOut(duration: 0.8).delay(0.8), value: showText)
-                                    
-                                    GraphView(
-                                        traditionalPathProgress: $traditionPathProgress,
-                                        studyGuardPathProgress: $studyGuardPathProgress
-                                    )
-                                    .frame(height: min(200, geometry.size.height * 0.25))
-                                    .padding(.horizontal, 20)
-                                    .opacity(showGraph ? 1 : 0)
-                                    .animation(.easeOut(duration: 0.8).delay(0.4), value: showGraph)
-                                    
-                                    HStack {
-                                        Text("Month 1")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                                        Spacer()
-                                        Text("Month 6")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                                    }
-                                    .padding(.horizontal)
-                                    .opacity(showText ? 1 : 0)
-                                    .animation(.easeOut(duration: 0.8).delay(0.8), value: showText)
-                                    
-                                    Text("Study Guard uses this science automatically.\nEvery flashcard is timed for maximum retention.")
-                                        .font(.system(size: 15, weight: .medium))
-                                        .multilineTextAlignment(.center)
-                                        .foregroundColor(Color(hex: 0x184449).opacity(0.45))
-                                        .frame(maxWidth: .infinity)
-                                        .lineSpacing(2)
-                                        .padding(.bottom, 20)
-                                        .opacity(showText ? 1 : 0)
-                                        .animation(.easeOut(duration: 0.8).delay(1.0), value: showText)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    Button(action: {
-                        onboardingViewModel.nextStep()
-                    }) {
-                        Text("Continue")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 55)
-                            .background(Color(hex: 0x184449))
-                            .cornerRadius(50)
-                    }
-                    .opacity(showButton ? 1 : 0)
-                    .offset(y: showButton ? 0 : 20)
-                    .animation(.easeOut(duration: 0.8).delay(1.0), value: showButton)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 20)
-                }
-                .frame(width: min(geometry.size.width, 500))
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 0) {
+            TrustBadges(night: false)
+                .padding(.top, 24)
+                .fadeRise(shown, delay: 0.2)
+
+            Text("Students are taking back their time")
+                .font(SGTheme.display(26))
+                .foregroundColor(SGTheme.paper)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 36)
+                .padding(.top, 18)
+                .fadeRise(shown, delay: 0.4)
+
+            Spacer()
+
+            VStack(spacing: 14) {
+                reviewStrip(Array(reviews.prefix(4)), speed: 26, reverse: false)
+                reviewStrip(Array(reviews.suffix(4)), speed: 21, reverse: true)
             }
+            .fadeRise(shown, delay: 0.7)
+
+            Spacer()
+
+            OnbCTA(title: "Continue", visible: ctaShown) {
+                guard !requested else { return }
+                requested = true
+                viewModel.screenAction("rating_request_triggered")
+                requestReview()
+                // Give the system rating sheet time to land before the step
+                // changes underneath it.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    viewModel.nextStep()
+                }
+            }
+            .padding(.bottom, 12)
         }
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { showTitle = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                showGraph = true
-                withAnimation(.easeInOut(duration: 2.0).delay(0.5)) { traditionPathProgress = 1.0 }
-                withAnimation(.easeInOut(duration: 2.0).delay(0.7)) { studyGuardPathProgress = 1.0 }
+            guard !started else { return }
+            started = true
+
+            if reduceMotion {
+                shown = true
+                ctaShown = true
+                return
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showText = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { showButton = true }
+
+            shown = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                ctaShown = true
+            }
+        }
+    }
+
+    /// One marquee strip; under Reduce Motion it renders a static row
+    /// instead of drifting forever.
+    @ViewBuilder
+    private func reviewStrip(_ items: [OnbReview], speed: Double, reverse: Bool) -> some View {
+        if reduceMotion {
+            HStack(spacing: 12) {
+                ForEach(items) { review in
+                    OnbReviewCard(review: review)
+                }
+            }
+            .padding(.horizontal, 6)
+            .frame(maxWidth: .infinity, alignment: reverse ? .trailing : .leading)
+            .clipped()
+        } else {
+            MarqueeRow(speed: speed, reverse: reverse) {
+                HStack(spacing: 12) {
+                    ForEach(items) { review in
+                        OnbReviewCard(review: review)
+                    }
+                }
+                .padding(.horizontal, 6)
+            }
         }
     }
 }
 
-struct GraphView: View {
-    @Binding var traditionalPathProgress: CGFloat
-    @Binding var studyGuardPathProgress: CGFloat
-    
+// MARK: - Review card
+
+private struct OnbReview: Identifiable {
+    let id = UUID()
+    let name: String
+    let title: String
+    let text: String
+}
+
+private struct OnbReviewCard: View {
+    let review: OnbReview
+
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                Divider().background(Color(hex: 0x184449).opacity(0.1))
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(review.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(SGTheme.paperSecondary)
+
                 Spacer()
-                Divider().background(Color(hex: 0x184449).opacity(0.1))
-                Spacer()
-                Divider().background(Color(hex: 0x184449).opacity(0.1))
-            }
-            
-            GeometryReader { geometry in
-                Path { path in
-                    let width = geometry.size.width
-                    let height = geometry.size.height
-                    path.move(to: CGPoint(x: 0, y: height * 0.3))
-                    path.addCurve(
-                        to: CGPoint(x: width, y: height * 0.1),
-                        control1: CGPoint(x: width * 0.3, y: height * 0.7),
-                        control2: CGPoint(x: width * 0.7, y: height * 0.1)
-                    )
-                }
-                .trim(from: 0, to: traditionalPathProgress)
-                .stroke(Color(hex: 0x184449), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                
-                Path { path in
-                    let width = geometry.size.width
-                    let height = geometry.size.height
-                    path.move(to: CGPoint(x: 0, y: height * 0.3))
-                    path.addCurve(
-                        to: CGPoint(x: width, y: height * 0.9),
-                        control1: CGPoint(x: width * 0.4, y: height * 0.4),
-                        control2: CGPoint(x: width * 0.6, y: height * 0.9)
-                    )
-                }
-                .trim(from: 0, to: studyGuardPathProgress)
-                .stroke(Color(hex: 0x184449).opacity(0.25), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                
-                Circle()
-                    .fill(Color(hex: 0x184449))
-                    .frame(width: 10, height: 10)
-                    .position(x: 0, y: geometry.size.height * 0.3)
-                
-                Circle()
-                    .fill(Color(hex: 0x184449))
-                    .frame(width: 10, height: 10)
-                    .position(x: geometry.size.width, y: geometry.size.height * 0.9)
-                    .opacity(studyGuardPathProgress == 1.0 ? 1 : 0)
-                    .animation(.easeIn(duration: 0.3), value: studyGuardPathProgress)
-                
-                HStack {
-                    VStack(alignment: .leading) {
-                        Spacer()
-                        VStack(spacing: 4) {
-                            HStack(spacing: 4) {
-                                Circle().fill(Color(hex: 0x184449)).frame(width: 8, height: 8)
-                                Text("Study Guard")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(hex: 0x184449))
-                            }
-                            HStack(spacing: 4) {
-                                Circle().fill(Color(hex: 0x184449).opacity(0.25)).frame(width: 8, height: 8)
-                                Text("Traditional study")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(hex: 0x184449).opacity(0.5))
-                            }
-                        }
-                        .padding(.bottom, 5)
+
+                HStack(spacing: 2) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color(hex: 0xFFC83D))
                     }
                 }
-                .padding(.horizontal, 2)
             }
+
+            Text(review.title)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(SGTheme.paper)
+                .lineLimit(1)
+
+            Text(review.text)
+                .font(.system(size: 13))
+                .foregroundColor(SGTheme.paperSecondary)
+                .lineSpacing(2)
+                .lineLimit(2, reservesSpace: true)
         }
+        .padding(14)
+        .frame(width: 268, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
+                .overlay(
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                )
+        )
     }
 }
 
 #Preview {
-    LongTermResultsView()
-        .environmentObject(OnboardingViewModel())
+    ZStack {
+        SGTheme.ink.ignoresSafeArea()
+        ReviewsView()
+            .environmentObject(OnboardingViewModel())
+    }
 }
