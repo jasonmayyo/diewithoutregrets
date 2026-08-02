@@ -973,8 +973,8 @@
 				6B9D89BE2D3552DF00DE8B2E /* Frameworks */,
 				6B9D89BF2D3552DF00DE8B2E /* Resources */,
 				6B22E88C2D4A1D78003A5685 /* Embed ExtensionKit Extensions */,
-				51D9D3B18DD54F578E91D5DD /* Upload Debug Symbols to Sentry */,
 				879A2A49C3EC1EACEDC197CA /* Embed Foundation Extensions */,
+				51D9D3B18DD54F578E91D5DD /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
 			);
