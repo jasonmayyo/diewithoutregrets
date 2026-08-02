@@ -75,7 +75,7 @@ struct GuardedAppsPickerSheet: View {
                 .font(SGTheme.caption.weight(.semibold))
                 .foregroundColor(overLimit ? SGTheme.emberDeep : SGTheme.paperSecondary)
 
-            SGPrimaryButton(title: "Save") {
+            SGButton(title: "Save") {
                 save()
             }
         }
@@ -95,7 +95,7 @@ struct GuardedAppsPickerSheet: View {
             Spacer()
 
             Image(systemName: "lock.shield.fill")
-                .font(.system(size: 44))
+                .font(SGTheme.display(44, weight: .regular))
                 .foregroundColor(SGTheme.mint)
 
             Text("Allow Screen Time access")
@@ -108,7 +108,7 @@ struct GuardedAppsPickerSheet: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 30)
 
-            SGPrimaryButton(title: "Allow access", fullWidth: false) {
+            SGButton(title: "Allow access", fullWidth: false) {
                 Task { @MainActor in
                     await manager.requestAuthorization()
                 }

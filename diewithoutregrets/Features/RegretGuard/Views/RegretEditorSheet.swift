@@ -25,70 +25,47 @@ struct RegretEditorSheet: View {
         _editedCorrectIndex = State(initialValue: regret.wrappedValue.correctAnswerIndex)
     }
 
+    // Saveable once the question and the marked correct answer have content.
+    private var isValidInput: Bool {
+        !editedPrompt.trimmingCharacters(in: .whitespaces).isEmpty &&
+        editedChoices.indices.contains(editedCorrectIndex) &&
+        !editedChoices[editedCorrectIndex].trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header — flat ink, no gradient
-            ZStack {
-                SGTheme.ink
+            // Header — standard sheet anatomy in place of the old fixed bar
+            SGSheetHeader(title: "Edit Flashcard", onClose: { dismiss() })
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.top, 24)
 
-                VStack(spacing: 8) {
-                    // Top bar
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Text("Cancel")
-                                .foregroundColor(SGTheme.paperSecondary)
+            // Tab selector
+            HStack(spacing: 5) {
+                ForEach(0..<tabs.count, id: \.self) { index in
+                    Button(action: { selectedTab = index }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: tabIcons[index])
+                            Text(tabs[index])
                         }
-
-                        Spacer()
-
-                        Text("Edit Flashcard")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
-                            .foregroundColor(SGTheme.paper)
-
-                        Spacer()
-
-                        Button(action: { saveChanges() }) {
-                            Text("Save")
-                                .fontWeight(.bold)
-                                .foregroundColor(SGTheme.mint)
-                        }
+                        .font(SGTheme.rowLabel)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 5)
+                        .background(
+                            selectedTab == index ?
+                            SGTheme.glaze(0.08) :
+                            Color.clear
+                        )
+                        .clipShape(Capsule(style: .continuous))
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
-
-                    // Tab selector
-                    HStack(spacing: 5) {
-                        ForEach(0..<tabs.count, id: \.self) { index in
-                            Button(action: { selectedTab = index }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: tabIcons[index])
-                                        .font(.system(size: 14))
-                                    Text(tabs[index])
-                                        .font(.subheadline)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 5)
-                                .background(
-                                    selectedTab == index ?
-                                    SGTheme.glaze(0.08) :
-                                    Color.clear
-                                )
-                                .cornerRadius(50)
-                            }
-                            .foregroundColor(selectedTab == index ? SGTheme.mint : SGTheme.paperTertiary)
-                        }
-                    }
-
-                    .background(SGTheme.glaze(0.04))
-                    .cornerRadius(50)
-
-                    .padding(.bottom, 8)
-                    .padding(.top, 8)
-                }.padding(.horizontal, 10)
+                    .foregroundColor(selectedTab == index ? SGTheme.mint : SGTheme.paperTertiary)
+                }
             }
-            .frame(height: 120)
+            .background(SGTheme.glaze(0.04))
+            .clipShape(Capsule(style: .continuous))
+            .padding(.horizontal, SGTheme.screenPadding)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
 
             // Content
             TabView(selection: $selectedTab) {
@@ -137,24 +114,13 @@ struct RegretEditorSheet: View {
                     .frame(height: 1)
 
                 HStack {
-                    Button(action: { selectedTab = max(0, selectedTab - 1) }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Previous")
-                        }
-                        .foregroundColor(selectedTab > 0 ? SGTheme.paper : SGTheme.paperDisabled)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(SGTheme.glaze(0.06))
-                                .overlay(
-                                    Capsule(style: .continuous)
-                                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                                )
-                        )
+                    SGButton(title: "Previous",
+                             icon: "chevron.left",
+                             variant: .ghost,
+                             fullWidth: false,
+                             enabled: selectedTab > 0) {
+                        selectedTab = max(0, selectedTab - 1)
                     }
-                    .disabled(selectedTab == 0)
 
                     Spacer()
 
@@ -169,22 +135,15 @@ struct RegretEditorSheet: View {
 
                     Spacer()
 
-                    Button(action: {
+                    // Last page turns Next into Save; Save dims until the card is valid.
+                    SGButton(title: selectedTab == tabs.count - 1 ? "Save" : "Next",
+                             fullWidth: false,
+                             enabled: selectedTab < tabs.count - 1 || isValidInput) {
                         if selectedTab < tabs.count - 1 {
                             selectedTab += 1
                         } else {
                             saveChanges()
                         }
-                    }) {
-                        HStack {
-                            Text(selectedTab == tabs.count - 1 ? "Save" : "Next")
-                            Image(systemName: selectedTab == tabs.count - 1 ? "" : "chevron.right")
-                        }
-                        .fontWeight(.semibold)
-                        .foregroundColor(SGTheme.ink)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(SGTheme.mint, in: Capsule(style: .continuous))
                     }
                 }
                 .padding()
@@ -195,118 +154,88 @@ struct RegretEditorSheet: View {
     }
 
     private func textEditorSection(title: String, subtitle: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(SGTheme.cardTitle)
-                    .foregroundColor(SGTheme.paper)
+        SGCard(shadowed: false) {
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
 
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(SGTheme.paperTertiary)
+                    Text(subtitle)
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperTertiary)
+                }
+
+                SGField(placeholder: title, text: text, multiline: true, minHeight: 180)
             }
-
-            TextEditor(text: text)
-                .scrollContentBackground(.hidden)
-                .foregroundColor(SGTheme.paper)
-                .frame(minHeight: 180)
-                .padding()
-                .background(SGTheme.ink)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(SGTheme.hairline, lineWidth: 1)
-                )
         }
-        .padding(SGTheme.cardPadding)
-        .background(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .fill(SGTheme.inkRaised)
-                .overlay(
-                    RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                )
-        )
     }
 
     private var answerOptionsSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Answer Options")
-                    .font(SGTheme.cardTitle)
-                    .foregroundColor(SGTheme.paper)
+        SGCard(shadowed: false) {
+            VStack(alignment: .leading, spacing: 15) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Answer Options")
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
 
-                Text("Select the correct answer and add options")
-                    .font(.caption)
-                    .foregroundColor(SGTheme.paperTertiary)
-            }
+                    Text("Select the correct answer and add options")
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperTertiary)
+                }
 
-            VStack(spacing: 12) {
-                ForEach(0..<editedChoices.count, id: \.self) { index in
-                    HStack {
-                        Button(action: { editedCorrectIndex = index }) {
-                            ZStack {
-                                Circle()
-                                    .stroke(editedCorrectIndex == index ? SGTheme.mint : SGTheme.glaze(0.2), lineWidth: 2)
-                                    .frame(width: 24, height: 24)
-
-                                if editedCorrectIndex == index {
+                VStack(spacing: 12) {
+                    ForEach(0..<editedChoices.count, id: \.self) { index in
+                        HStack {
+                            Button(action: { editedCorrectIndex = index }) {
+                                ZStack {
                                     Circle()
-                                        .fill(SGTheme.mint)
-                                        .frame(width: 16, height: 16)
+                                        .stroke(editedCorrectIndex == index ? SGTheme.mint : SGTheme.glaze(0.2), lineWidth: 2)
+                                        .frame(width: 24, height: 24)
+
+                                    if editedCorrectIndex == index {
+                                        Circle()
+                                            .fill(SGTheme.mint)
+                                            .frame(width: 16, height: 16)
+                                    }
+                                }
+                            }
+
+                            SGField(placeholder: "Option \(index + 1)", text: $editedChoices[index])
+
+                            if editedChoices.count > 2 {
+                                Button(action: { removeOption(at: index) }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(SGTheme.display(20, weight: .regular))
+                                        .foregroundColor(SGTheme.ember.opacity(0.8))
                                 }
                             }
                         }
+                    }
 
-                        TextField("Option \(index + 1)", text: $editedChoices[index])
-                            .foregroundColor(SGTheme.paper)
-                            .padding()
-                            .background(SGTheme.ink)
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(SGTheme.hairline, lineWidth: 1)
-                            )
-
-                        if editedChoices.count > 2 {
-                            Button(action: { removeOption(at: index) }) {
-                                Image(systemName: "minus.circle.fill")
-                                    .foregroundColor(SGTheme.ember.opacity(0.8))
-                            }
+                    Button(action: addNewOption) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Option")
                         }
+                        .font(SGTheme.buttonSmall)
+                        .foregroundColor(SGTheme.mint)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(SGTheme.mint.opacity(0.08))
+                                .overlay(
+                                    Capsule(style: .continuous)
+                                        .strokeBorder(SGTheme.mint.opacity(0.5), lineWidth: 1)
+                                )
+                        )
                     }
+                    .buttonStyle(SGPressStyle())
+                    .disabled(editedChoices.count >= 6)
                 }
-
-                Button(action: addNewOption) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Option")
-                    }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(SGTheme.mint)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(SGTheme.mint.opacity(0.08))
-                            .overlay(
-                                Capsule(style: .continuous)
-                                    .strokeBorder(SGTheme.mint.opacity(0.5), lineWidth: 1)
-                            )
-                    )
-                }
-                .disabled(editedChoices.count >= 6)
             }
         }
-        .padding(SGTheme.cardPadding)
-        .background(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .fill(SGTheme.inkRaised)
-                .overlay(
-                    RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                )
-        )
     }
 
     private func addNewOption() {

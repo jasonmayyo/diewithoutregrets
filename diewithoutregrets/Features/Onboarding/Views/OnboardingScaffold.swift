@@ -13,11 +13,11 @@
 //                bump mascotReplayKey to make it re-play, e.g. the
 //                clipboard pose "taking a note" whenever an answer is picked
 //    eyebrow   — optional SGMicroLabel
-//    headline  — 28pt rounded bold, paper
-//    subtitle  — 15pt paperSecondary
+//    headline  — stepTitle (rounded 30 bold), paper
+//    subtitle  — body, paperSecondary
 //    content   — free-form middle (add Spacers inside to center things)
-//    ctaTitle  — SGPrimaryButton (mint capsule, ink label)
-//    secondary — optional text button under the CTA
+//    ctaTitle  — SGButton (.mint chunky capsule, white label)
+//    secondary — optional SGButton .text under the CTA
 //
 
 import SwiftUI
@@ -116,7 +116,7 @@ struct OnboardingScaffold<Hero: View, Content: View>: View {
             }
             .padding(.horizontal, SGTheme.screenPadding)
             .padding(.top, 20)
-            .padding(.bottom, 20)
+            .padding(.bottom, 12)
             .frame(maxWidth: 600)
             .frame(maxWidth: .infinity)
         }
@@ -132,14 +132,14 @@ struct OnboardingScaffold<Hero: View, Content: View>: View {
             }
             if let headline {
                 Text(headline)
-                    .font(SGTheme.headline)
+                    .font(SGTheme.stepTitle)
                     .foregroundColor(SGTheme.paper)
                     .lineSpacing(3)
                     .multilineTextAlignment(centerHeader ? .center : .leading)
             }
             if let subtitle {
                 Text(subtitle)
-                    .font(.system(size: 15))
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .lineSpacing(3)
                     .multilineTextAlignment(centerHeader ? .center : .leading)
@@ -152,19 +152,10 @@ struct OnboardingScaffold<Hero: View, Content: View>: View {
     private var footer: some View {
         VStack(spacing: 6) {
             if let ctaTitle {
-                SGPrimaryButton(title: ctaTitle, action: ctaAction)
-                    .disabled(!ctaEnabled)
-                    .opacity(ctaEnabled ? 1 : 0.45)
-                    .animation(.easeInOut(duration: 0.2), value: ctaEnabled)
+                SGButton(title: ctaTitle, enabled: ctaEnabled, action: ctaAction)
             }
             if let secondaryTitle, let secondaryAction {
-                Button(action: secondaryAction) {
-                    Text(secondaryTitle)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(SGTheme.paperSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 40)
-                }
+                SGButton(title: secondaryTitle, variant: .text, action: secondaryAction)
             }
         }
         .padding(.top, 12)

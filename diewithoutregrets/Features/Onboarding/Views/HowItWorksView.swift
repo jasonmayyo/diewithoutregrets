@@ -30,25 +30,22 @@ struct CoreMechanicView: View {
     @State private var showFlashcard = false
     @State private var cardFlipped = false
 
-    private let tiles: [(icon: String, tint: Color)] = [
-        ("play.rectangle.fill", Color(hex: 0xFF3B30)),
-        ("camera.fill", Color(hex: 0xE1306C)),
-        ("music.note", Color(hex: 0x1C1C1E)),
-        ("message.fill", Color(hex: 0x34C759)),
-    ]
+    // Real app icons (shared with OneThing's asset set) so the demo shows
+    // the apps students actually lose their time to.
+    private let tiles = ["Instagram", "TikTok", "YouTube", "Snapchat"]
 
     var body: some View {
         VStack(spacing: 0) {
             // Header — swaps per beat with a crossfade.
             VStack(spacing: 8) {
                 Text(beatTitle)
-                    .font(SGTheme.display(24))
+                    .font(SGTheme.stepTitle)
                     .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
 
                 Text(beatSub)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -83,8 +80,9 @@ struct CoreMechanicView: View {
 
     // MARK: - Stage
 
-    /// Mini meadow stage: the giant readout above four app tiles standing on
-    /// a green hill, all inside one raised card.
+    /// The demo stage, stripped of chrome: the giant readout floats on the
+    /// open canvas with the four real app icons in a row beneath it. No
+    /// card, no hill; the type and icons carry the whole beat.
     private var stage: some View {
         VStack(spacing: 0) {
             Text("\(minutes)m")
@@ -93,11 +91,10 @@ struct CoreMechanicView: View {
                 .foregroundColor(readoutTint)
                 .contentTransition(.numericText(countsDown: countsDown))
                 .animation(.easeInOut(duration: 0.35), value: readoutTint)
-                .padding(.top, 26)
                 .overlay(alignment: .topTrailing) {
                     if showGain {
                         Text("+15m")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(SGTheme.display(18))
                             .foregroundColor(SGTheme.mintDeep)
                             .offset(x: 44, y: 18)
                             .transition(.asymmetric(
@@ -114,37 +111,15 @@ struct CoreMechanicView: View {
                 .textCase(.uppercase)
                 .padding(.top, 2)
 
-            HStack(spacing: 14) {
+            HStack(spacing: 16) {
                 ForEach(tiles.indices, id: \.self) { index in
-                    AppDemoTile(icon: tiles[index].icon,
-                                tint: tiles[index].tint,
+                    AppDemoTile(imageName: tiles[index],
                                 locked: locked[index])
                 }
             }
-            .padding(.top, 26)
-            .padding(.bottom, 22)
+            .padding(.top, 30)
         }
         .frame(maxWidth: .infinity)
-        .background(
-            ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                    .fill(SGTheme.inkRaised)
-
-                // The meadow hill the tiles stand on.
-                Ellipse()
-                    .fill(SGTheme.meadowGradient)
-                    .frame(height: 130)
-                    .scaleEffect(x: 1.6)
-                    .offset(y: 58)
-                    .opacity(0.9)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                    .strokeBorder(SGTheme.hairline, lineWidth: 1)
-            )
-            .shadow(color: SGTheme.cardShadow, radius: 12, y: 4)
-        )
     }
 
     /// Beside the stage: the mascot (or the angry still) plus the flashcard
@@ -190,10 +165,10 @@ struct CoreMechanicView: View {
 
     private var beatSub: String {
         switch beat {
-        case 1: return "No more mindless scrolling."
-        case 2: return "He asks. You answer. Apps unlock."
+        case 1: return "Automatically. No snooze, no \u{201C}five more minutes.\u{201D}"
+        case 2: return "Answer correctly and your apps open again."
         case 3: return "The only screen time you get is time you earned."
-        default: return "No willpower needed. It's just how your phone works now."
+        default: return "Zero willpower needed. It's just how your phone works now."
         }
     }
 
@@ -240,7 +215,7 @@ struct CoreMechanicView: View {
             tickReadout(to: 0, interval: 0.09, up: false, tint: SGTheme.paper) {
                 lockTilesSequentially {
                     withAnimation(SGTheme.spring) { mascotPose = .lookingDown }
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    SGTheme.beat()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         withAnimation { ctaVisible = true }
                     }
@@ -266,11 +241,11 @@ struct CoreMechanicView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             withAnimation(SGTheme.spring) { showFlashcard = true }
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            SGTheme.gain()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.7) {
             cardFlipped = true
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            SGTheme.beat()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation(SGTheme.springFast) { showGain = true }
@@ -309,7 +284,7 @@ struct CoreMechanicView: View {
                 mascotPose = nil
                 showAngry = true
             }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            SGTheme.beat()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
             tickReadout(to: 8, interval: 0.14, up: false, tint: SGTheme.emberDeep) {
@@ -368,7 +343,7 @@ struct CoreMechanicView: View {
         for index in locked.indices {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.24) {
                 withAnimation(SGTheme.springFast) { locked[index] = true }
-                UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                SGTheme.lock()
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + Double(locked.count) * 0.24 + 0.2) {
@@ -379,33 +354,29 @@ struct CoreMechanicView: View {
 
 // MARK: - Pieces
 
-/// Generic app tile that grays out under a lock when the balance hits zero.
+/// Real app icon tile that grays out under a lock when the balance hits zero.
 private struct AppDemoTile: View {
-    let icon: String
-    let tint: Color
+    let imageName: String
     let locked: Bool
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(tint)
+        Image(imageName)
+            .resizable()
+            .scaledToFill()
             .frame(width: 54, height: 54)
-            .overlay(
-                Image(systemName: icon)
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(.white)
-            )
+            .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
             .grayscale(locked ? 1 : 0)
             .opacity(locked ? 0.55 : 1)
             .overlay {
                 if locked {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(SGTheme.display(18))
                         .foregroundColor(.white)
                         .shadow(color: .black.opacity(0.4), radius: 3)
                         .transition(.scale(scale: 1.6).combined(with: .opacity))
                 }
             }
-            .shadow(color: SGTheme.cardShadow, radius: 6, y: 2)
+            .sgShadow(SGTheme.shadowCard)
     }
 }
 
@@ -420,7 +391,7 @@ private struct FlashcardDemoChip: View {
                 .opacity(flipped ? 0 : 1)
 
             side(label: "A", text: "Mitochondria",
-                 fill: SGTheme.mint.opacity(0.14), accent: SGTheme.mintDeep)
+                 fill: SGTheme.mintTint, accent: SGTheme.mintDeep)
                 .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                 .opacity(flipped ? 1 : 0)
         }
@@ -431,10 +402,10 @@ private struct FlashcardDemoChip: View {
     private func side(label: String, text: String, fill: Color, accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: 11, weight: .bold))
+                .font(SGTheme.micro)
                 .foregroundColor(accent)
             Text(text)
-                .font(.system(size: 15, weight: .semibold))
+                .font(SGTheme.rowLabel)
                 .foregroundColor(SGTheme.paper)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -447,7 +418,7 @@ private struct FlashcardDemoChip: View {
                     RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                         .strokeBorder(SGTheme.hairline, lineWidth: 1)
                 )
-                .shadow(color: SGTheme.cardShadow, radius: 8, y: 3)
+                .sgShadow(SGTheme.shadowCard)
         )
     }
 }

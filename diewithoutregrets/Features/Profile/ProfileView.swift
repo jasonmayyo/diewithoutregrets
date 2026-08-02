@@ -7,31 +7,28 @@
 //
 
 import SwiftUI
-import RevenueCat
-import RevenueCatUI
+import StoreKit
 
 struct ProfileView: View {
     @EnvironmentObject var deckStore: DeckStore
     @EnvironmentObject var navigationModel: NavigationModel
-    @State private var showingSettings = false
     @State private var showingFlashcardSettings = false
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
     @AppStorage("useAllCards") private var useAllCards: Bool = false
-    @State private var showingPaywall = false
-    @State private var currentOffering: Offering?
-    @AppStorage("hasSeenPaywall") private var hasSeenPaywall = false
-    @AppStorage("selectedAnimationType") private var selectedAnimationType: String = AnimationType.lockAnimation.rawValue
+    @State private var showingManageSubscriptions = false
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
     @AppStorage("flashcardBreakDuration") private var flashcardBreakDuration: Int = 5
     @AppStorage("trueFocusBreakDuration") private var trueFocusBreakDuration: Int = 30
-    @State private var didCompletePurchase = false
     @State private var showingFocusDurationSettings = false
     @State private var showingBreakDurationSettings = false
     @ObservedObject private var studyGuard = StudyGuardManager.shared
     @State private var showingUsageIntervalSettings = false
     @State private var showingGuardedAppsPicker = false
     @State private var showingLockedEditAlert = false
+    #if DEBUG
+    @State private var showingDebug = false
+    #endif
 
     private var totalAvailableCards: Int {
         deckStore.decks.reduce(0) { $0 + $1.cards.count }
@@ -66,7 +63,7 @@ struct ProfileView: View {
                 Spacer(minLength: 8)
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(SGTheme.rowLabel)
                     .foregroundColor(SGTheme.mint)
             }
             .padding(.vertical, 10)
@@ -105,7 +102,7 @@ struct ProfileView: View {
                 feedbackCard
 
                 // Stats Overview
-                VStack(spacing: 20) {
+                SGCard(shadowed: false) {
                     HStack(spacing: 40) {
                         StatItem(title: "Decks", value: "\(deckStore.decks.count)", icon: "rectangle.stack.fill")
                         StatItem(title: "Cards", value: "\(totalAvailableCards)", icon: "doc.text.fill")
@@ -113,15 +110,6 @@ struct ProfileView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .padding(SGTheme.cardPadding)
-                .background(
-                    RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                        .fill(SGTheme.inkRaised)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                                .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                        )
-                )
                 .padding(.horizontal, SGTheme.screenPadding)
                 
                 // Study Settings Section
@@ -148,184 +136,56 @@ struct ProfileView: View {
 
                     // Flashcard count setting - only relevant when flashcards is selected
                     if unlockMethod == "flashcards" {
-                        Button(action: { showingFlashcardSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Flashcards before unlocking")
-                                        .font(SGTheme.cardTitle)
-                                        .foregroundColor(SGTheme.paper)
-                                    
-                                    Text(useAllCards ? "All cards" : "\(flashcardCount) cards")
-                                        .font(SGTheme.caption)
-                                        .foregroundColor(SGTheme.paperSecondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(SGTheme.mint)
-                            }
-                            .padding(SGTheme.cardPadding)
-                            .sgRowCard()
+                        SGListRow(
+                            title: "Flashcards before unlocking",
+                            subtitle: useAllCards ? "All cards" : "\(flashcardCount) cards"
+                        ) {
+                            showingFlashcardSettings = true
                         }
-                        .buttonStyle(SGPressStyle())
                     }
-                    
+
                     // Focus duration setting - only relevant when True Focus is selected
                     if unlockMethod == "trueFocus" {
-                        Button(action: { showingFocusDurationSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Focus session length")
-                                        .font(SGTheme.cardTitle)
-                                        .foregroundColor(SGTheme.paper)
-                                    
-                                    Text("\(focusDuration) minutes")
-                                        .font(SGTheme.caption)
-                                        .foregroundColor(SGTheme.paperSecondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(SGTheme.mint)
-                            }
-                            .padding(SGTheme.cardPadding)
-                            .sgRowCard()
+                        SGListRow(
+                            title: "Focus session length",
+                            subtitle: "\(focusDuration) minutes"
+                        ) {
+                            showingFocusDurationSettings = true
                         }
-                        .buttonStyle(SGPressStyle())
                     }
-                    
+
                     if studyGuard.isSetupComplete {
                         // v2: usage interval — how long the apps are usable
                         // before they lock (replaces the legacy break duration).
-                        Button(action: { showingUsageIntervalSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Usage interval")
-                                        .font(SGTheme.cardTitle)
-                                        .foregroundColor(SGTheme.paper)
-
-                                    Text("\(studyGuard.intervalMinutes) minutes of app use before they lock")
-                                        .font(SGTheme.caption)
-                                        .foregroundColor(SGTheme.paperSecondary)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(SGTheme.mint)
-                            }
-                            .padding(SGTheme.cardPadding)
-                            .sgRowCard()
+                        SGListRow(
+                            title: "Usage interval",
+                            subtitle: "\(studyGuard.intervalMinutes) minutes of app use before they lock"
+                        ) {
+                            showingUsageIntervalSettings = true
                         }
-                        .buttonStyle(SGPressStyle())
 
                         // v2: guarded apps
-                        Button(action: {
+                        SGListRow(
+                            title: "Guarded apps",
+                            subtitle: SGContract.isSelectionEmpty(studyGuard.selection)
+                                ? "No apps guarded yet. Tap to choose"
+                                : "\(SGContract.tokenCount(studyGuard.selection)) of \(SGContract.maxSelectionTokens) guarded"
+                        ) {
                             if studyGuard.state == .locked {
                                 showingLockedEditAlert = true
                             } else {
                                 showingGuardedAppsPicker = true
                             }
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Guarded apps")
-                                        .font(SGTheme.cardTitle)
-                                        .foregroundColor(SGTheme.paper)
-
-                                    Text(SGContract.isSelectionEmpty(studyGuard.selection)
-                                         ? "No apps guarded yet. Tap to choose"
-                                         : "\(SGContract.tokenCount(studyGuard.selection)) of \(SGContract.maxSelectionTokens) guarded")
-                                        .font(SGTheme.caption)
-                                        .foregroundColor(SGTheme.paperSecondary)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(SGTheme.mint)
-                            }
-                            .padding(SGTheme.cardPadding)
-                            .sgRowCard()
                         }
-                        .buttonStyle(SGPressStyle())
                     } else {
                         // Legacy Shortcuts users keep their break-duration
                         // setting until they migrate to Screen Time.
-                        Button(action: { showingBreakDurationSettings = true }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Break duration")
-                                        .font(SGTheme.cardTitle)
-                                        .foregroundColor(SGTheme.paper)
-
-                                    Text("\(unlockMethod == "trueFocus" ? trueFocusBreakDuration : flashcardBreakDuration) minutes")
-                                        .font(SGTheme.caption)
-                                        .foregroundColor(SGTheme.paperSecondary)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(SGTheme.mint)
-                            }
-                            .padding(SGTheme.cardPadding)
-                            .sgRowCard()
+                        SGListRow(
+                            title: "Break duration",
+                            subtitle: "\(unlockMethod == "trueFocus" ? trueFocusBreakDuration : flashcardBreakDuration) minutes"
+                        ) {
+                            showingBreakDurationSettings = true
                         }
-                        .buttonStyle(SGPressStyle())
-                    }
-                }
-                .padding(.horizontal, SGTheme.screenPadding)
-                
-                // App Experience Section
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionHeader(title: "App Experience")
-                    
-                    VStack(spacing: 10) {
-                        // Lock Animation Option
-                        AnimationOptionRow(
-                            type: .lockAnimation,
-                            isSelected: selectedAnimationType == AnimationType.lockAnimation.rawValue,
-                            onSelect: { 
-                                if selectedAnimationType != AnimationType.lockAnimation.rawValue {
-                                    Analytics.settingChanged(
-                                        key: "animation_type",
-                                        oldValue: selectedAnimationType,
-                                        newValue: AnimationType.lockAnimation.rawValue
-                                    )
-                                }
-                                selectedAnimationType = AnimationType.lockAnimation.rawValue
-                                // Haptic feedback
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }
-                        )
-                        
-                        // Meme Video Option  
-                        AnimationOptionRow(
-                            type: .memeVideo,
-                            isSelected: selectedAnimationType == AnimationType.memeVideo.rawValue,
-                            onSelect: { 
-                                if selectedAnimationType != AnimationType.memeVideo.rawValue {
-                                    Analytics.settingChanged(
-                                        key: "animation_type",
-                                        oldValue: selectedAnimationType,
-                                        newValue: AnimationType.memeVideo.rawValue
-                                    )
-                                }
-                                selectedAnimationType = AnimationType.memeVideo.rawValue
-                                // Haptic feedback
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                            }
-                        )
                     }
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
@@ -333,11 +193,11 @@ struct ProfileView: View {
                 // Account Section
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeader(title: "Account")
-                    
-                    SGPrimaryButton(title: "Upgrade to Pro", icon: "crown.fill") {
-                        didCompletePurchase = false  // Reset flag when showing paywall
-                        Analytics.upgradeButtonTapped(surface: "profile")
-                        showingPaywall = true
+
+                    // Every user is either subscribed or in a trial, so the
+                    // only account action is managing that subscription.
+                    SGListRow(title: "Manage Subscription", icon: "crown.fill") {
+                        showingManageSubscriptions = true
                     }
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
@@ -356,33 +216,14 @@ struct ProfileView: View {
                 .padding(.horizontal, SGTheme.screenPadding)
 
                 #if DEBUG
-                // Developer Section (debug builds only)
+                // Developer Section (debug builds only). The push happens via
+                // navigationDestination so the row can be a standard SGListRow.
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeader(title: "Developer")
 
-                    NavigationLink {
-                        DebugView()
-                    } label: {
-                        HStack {
-                            Image(systemName: "ant.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(SGTheme.mint)
-                                .frame(width: 24)
-
-                            Text("Debug")
-                                .font(SGTheme.cardTitle)
-                                .foregroundColor(SGTheme.paper)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(SGTheme.mint)
-                        }
-                        .padding(SGTheme.cardPadding)
-                        .sgRowCard()
+                    SGListRow(title: "Debug", icon: "ant.fill") {
+                        showingDebug = true
                     }
-                    .buttonStyle(SGPressStyle())
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
                 #endif
@@ -393,28 +234,12 @@ struct ProfileView: View {
             }
         }
         .navigationBarHidden(true)
-        .onAppear {
-            // Fetch the offering when view appears
-            Purchases.shared.getOfferings { offerings, error in
-                DispatchQueue.main.async {
-                    // Use the default/current offering (can be changed in RevenueCat dashboard)
-                    self.currentOffering = offerings?.current
-                    
-                    if let current = offerings?.current {
-                        print("✅ Using default offering: \(current.identifier)")
-                    } else {
-                        print("⚠️ No current offering set - check RevenueCat dashboard")
-                    }
-                }
-            }
-            
-            // Show paywall for existing users who haven't seen it
-            if !hasSeenPaywall {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    showingPaywall = true
-                }
-            }
+        #if DEBUG
+        .navigationDestination(isPresented: $showingDebug) {
+            DebugView()
         }
+        #endif
+        .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
         .sheet(isPresented: $showingFlashcardSettings) {
             FlashcardSettingsSheet(flashcardCount: $flashcardCount, useAllCards: $useAllCards)
         }
@@ -439,170 +264,6 @@ struct ProfileView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Unlock your apps first to edit which ones are guarded.")
-        }
-        .sheet(isPresented: $showingPaywall) {
-            if let offering = currentOffering {
-                PaywallView(offering: offering)
-                    .onAppear {
-                        Analytics.paywallViewed(surface: "profile", properties: [
-                            "offering_id": offering.identifier,
-                            "has_offering": true
-                        ])
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[ContentView] 📝 Marked paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        var price: Double?
-                        var currency: String?
-                        var productId: String = "unknown"
-                        var isTrial: Bool = false
-
-                        if let entitlement = customerInfo.entitlements.active.values.first,
-                           let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                            price = Double(truncating: package.storeProduct.price as NSNumber)
-                            currency = package.storeProduct.currencyCode ?? "USD"
-                            productId = package.storeProduct.productIdentifier
-                            isTrial = entitlement.periodType == .trial
-
-                            if isTrial {
-                                AdsTracker.trackStartTrial(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                            } else {
-                                AdsTracker.trackSubscribe(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                                AdsTracker.trackPurchase(
-                                    productId: package.storeProduct.productIdentifier,
-                                    productName: package.storeProduct.localizedTitle,
-                                    price: price ?? 0,
-                                    currency: currency ?? "USD"
-                                )
-                            }
-                        }
-
-                        Analytics.subscriptionStarted(
-                            surface: "profile",
-                            productId: productId,
-                            price: price,
-                            currency: currency,
-                            isTrial: isTrial,
-                            offeringId: offering.identifier,
-                            entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                        )
-
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onRestoreCompleted { customerInfo in
-                        let hasActive = !customerInfo.entitlements.active.isEmpty
-                        Analytics.restorePurchasesSucceeded(
-                            surface: "profile",
-                            hasActiveEntitlements: hasActive
-                        )
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onDisappear {
-                        Analytics.paywallDismissed(
-                            surface: "profile",
-                            didPurchase: didCompletePurchase
-                        )
-                        // Mark as seen even if user dismisses without purchasing
-                        hasSeenPaywall = true
-                        
-                        print("[ContentView] 🔍 Paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                        // Note: Paywall was already marked as viewed in onAppear
-                        // We don't need to do anything here since the flag is already set
-                    }
-            } else {
-                // Fallback paywall without specific offering
-                PaywallView()
-                    .onAppear {
-                        Analytics.paywallViewed(surface: "profile", properties: [
-                            "has_offering": false
-                        ])
-                        // Mark that user viewed the paywall
-                        NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                        print("[ContentView] 📝 Marked fallback paywall as viewed")
-                    }
-                    .onPurchaseCompleted { customerInfo in
-                        if let entitlement = customerInfo.entitlements.active.values.first {
-                            Task {
-                                let products = await Purchases.shared.products([entitlement.productIdentifier])
-                                if let product = products.first {
-                                    let price = Double(truncating: product.price as NSNumber)
-                                    let currency = product.currencyCode ?? "USD"
-                                    let isTrial = entitlement.periodType == .trial
-                                    if isTrial {
-                                        AdsTracker.trackStartTrial(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                    } else {
-                                        AdsTracker.trackSubscribe(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                        AdsTracker.trackPurchase(
-                                            productId: product.productIdentifier,
-                                            productName: product.localizedTitle,
-                                            price: price,
-                                            currency: currency
-                                        )
-                                    }
-                                    Analytics.subscriptionStarted(
-                                        surface: "profile",
-                                        productId: product.productIdentifier,
-                                        price: price,
-                                        currency: currency,
-                                        isTrial: isTrial,
-                                        offeringId: nil,
-                                        entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                                    )
-                                }
-                            }
-                        }
-
-                        hasSeenPaywall = true
-                        didCompletePurchase = true
-                        showingPaywall = false
-                        
-                        NotificationManager.shared.resetPaywallTracking()
-                    }
-                    .onDisappear {
-                        Analytics.paywallDismissed(
-                            surface: "profile",
-                            didPurchase: didCompletePurchase
-                        )
-                        hasSeenPaywall = true
-                        
-                        print("[ContentView] 🔍 Fallback paywall disappeared - didCompletePurchase: \(didCompletePurchase)")
-                    }
-            }
-        }
-        .onChange(of: navigationModel.shouldDismissPaywall) { oldValue, newValue in
-            if newValue {
-                print("[ContentView] 🚪 Received dismiss signal, closing paywall")
-                showingPaywall = false
-            }
         }
         .onChange(of: flashcardCount) { oldValue, newValue in
             Analytics.settingChanged(key: "flashcard_count", oldValue: oldValue, newValue: newValue)
@@ -630,36 +291,22 @@ struct SectionHeader: View {
     }
 }
 
+/// Help/legal row: an SGListRow that opens an external URL (arrow instead of
+/// chevron) and logs the tap before leaving the app.
 struct LinkMenuItem: View {
     let icon: String
     let title: String
     let url: String
-    
+
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
-        Link(destination: URL(string: url)!) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(SGTheme.mint)
-                    .frame(width: 24)
-
-                Text(title)
-                    .font(SGTheme.cardTitle)
-                    .foregroundColor(SGTheme.paper)
-
-                Spacer()
-
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(SGTheme.mint)
-            }
-            .padding(SGTheme.cardPadding)
-            .sgRowCard()
-        }
-        .buttonStyle(SGPressStyle())
-        .simultaneousGesture(TapGesture().onEnded {
+        SGListRow(title: title, icon: icon, trailingIcon: "arrow.up.right") {
             Analytics.helpLinkClicked(link: title, url: url)
-        })
+            if let destination = URL(string: url) {
+                openURL(destination)
+            }
+        }
     }
 }
 
@@ -676,7 +323,7 @@ struct StatItem: View {
                     .frame(width: 44, height: 44)
 
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(SGTheme.display(20, weight: .medium))
                     .foregroundColor(SGTheme.mint)
             }
 
@@ -688,82 +335,6 @@ struct StatItem: View {
             Text(title)
                 .font(SGTheme.caption)
                 .foregroundColor(SGTheme.paperSecondary)
-        }
-    }
-}
-
-struct SettingsView: View {
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                Section(header: Text("Account").foregroundColor(SGTheme.paperSecondary)) {
-                    NavigationLink {
-                        Text("Account Settings")
-                    } label: {
-                        Label("Account Settings", systemImage: "person.circle")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-
-                    NavigationLink {
-                        Text("Notifications")
-                    } label: {
-                        Label("Notifications", systemImage: "bell")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-                }
-
-                Section(header: Text("Preferences").foregroundColor(SGTheme.paperSecondary)) {
-                    NavigationLink {
-                        Text("Study Settings")
-                    } label: {
-                        Label("Study Settings", systemImage: "book")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-
-                    NavigationLink {
-                        Text("Appearance")
-                    } label: {
-                        Label("Appearance", systemImage: "paintbrush")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-                }
-
-                Section(header: Text("Support").foregroundColor(SGTheme.paperSecondary)) {
-                    NavigationLink {
-                        Text("Help Center")
-                    } label: {
-                        Label("Help Center", systemImage: "questionmark.circle")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-
-                    NavigationLink {
-                        Text("Contact Us")
-                    } label: {
-                        Label("Contact Us", systemImage: "envelope")
-                            .foregroundColor(SGTheme.paper)
-                    }
-                    .listRowBackground(SGTheme.inkRaised)
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .background(SGTheme.ink)
-            .tint(SGTheme.mint)
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
         }
     }
 }
@@ -885,22 +456,6 @@ struct BreakDurationSettingsSheet: View {
             .padding(.top, 24)
             .padding(.bottom, 8)
         }
-    }
-}
-
-// MARK: - Teal Ink helpers
-
-private extension View {
-    /// Settings-row surface: inkRaised fill + hairline stroke, no drop shadow.
-    func sgRowCard(radius: CGFloat = SGTheme.cardRadius) -> some View {
-        background(
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(SGTheme.inkRaised)
-                .overlay(
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                )
-        )
     }
 }
 

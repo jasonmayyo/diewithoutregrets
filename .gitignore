@@ -23,3 +23,7 @@ xcuserdata/
 # limit if committed. Never commit this directory.
 .spm/
 .gstack/
+
+# --- Local build output ---
+# xcodebuild output directory (multi-GB); never commit.
+build/

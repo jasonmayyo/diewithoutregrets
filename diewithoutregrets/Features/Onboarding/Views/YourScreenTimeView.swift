@@ -2,9 +2,10 @@
 //  YourScreenTimeView.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 quiz question 3 (night): self-reported daily screen time.
-//  The chosen range drives every personalized number downstream (the life
-//  grid drain, the chart, the reclaim promise, the paywall headline).
+//  Onboarding v3 quiz question 3 (night): self-reported daily screen time.
+//  The chosen range drives every personalized number downstream (the
+//  semester grid drain, the chart, the imagine promise, the paywall
+//  headline and countdown).
 //
 
 import SwiftUI
@@ -14,9 +15,9 @@ struct QuizScreenTimeView: View {
 
     private let options: [(range: String, judgment: String)] = [
         ("2-4 hours", "About average"),
-        ("4-6 hours", "Higher than ideal"),
-        ("6-8 hours", "This is affecting your grades"),
-        ("8+ hours", "Time to take back control"),
+        ("4-6 hours", "More than a part-time job"),
+        ("6-8 hours", "This is costing you grades"),
+        ("8+ hours", "Time to take it back"),
     ]
 
     @State private var answered = false
@@ -25,7 +26,7 @@ struct QuizScreenTimeView: View {
         QuizScreenContainer(
             number: 3,
             question: "How much time do you spend on your phone each day?",
-            subtitle: "Be honest, this is just between us.",
+            subtitle: "Be honest, this stays between us.",
             progress: OnboardingStep.quizScreenTime.quizProgress
         ) {
             ForEach(options, id: \.range) { option in

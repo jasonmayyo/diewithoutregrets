@@ -24,7 +24,7 @@ struct DeckListView: View {
                     SGScreenHeader(eyebrow: "Your decks", title: "Decks") {
                         Button(action: { showingNewDeckSheet = true }) {
                             Image(systemName: "plus")
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(SGTheme.cardTitle) // 17 semibold — header icon size
                                 .foregroundColor(SGTheme.ink)
                                 .frame(width: 44, height: 44)
                                 .background(SGTheme.mint, in: Circle())
@@ -54,9 +54,9 @@ struct DeckListView: View {
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                            .padding(.horizontal, 40)
+                            .padding(.horizontal, 32)
 
-                            SGPrimaryButton(title: "Create Deck", icon: "plus", fullWidth: false) {
+                            SGButton(title: "Create Deck", icon: "plus", fullWidth: false) {
                                 showingNewDeckSheet = true
                             }
 
@@ -78,12 +78,12 @@ struct DeckListView: View {
                                     HStack(spacing: 14) {
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(deck.name)
-                                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                                .font(SGTheme.cardTitle)
                                                 .foregroundColor(SGTheme.paper)
 
                                             HStack(spacing: 5) {
                                                 Image(systemName: "rectangle.on.rectangle")
-                                                    .font(.system(size: 11))
+                                                    .font(SGTheme.caption) // matches the count label beside it
                                                 Text("\(deck.cards.count) cards")
                                                     .font(SGTheme.caption)
                                             }
@@ -93,7 +93,7 @@ struct DeckListView: View {
                                         Spacer()
 
                                         Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .semibold))
+                                            .font(SGTheme.rowLabel) // 14 semibold — the disclosure chevron
                                             .foregroundColor(SGTheme.mint)
                                     }
                                     .padding(SGTheme.cardPadding)
@@ -143,7 +143,6 @@ struct DeckListView: View {
                 }
                 .sheet(isPresented: $showingNewDeckSheet) {
                     NewDeckView()
-                        .sgSheetChrome()
                 }
                 .sheet(isPresented: $showEditSheet, onDismiss: {
                     deckToEdit = nil
@@ -159,7 +158,6 @@ struct DeckListView: View {
                             }
                             showEditSheet = false
                         })
-                        .sgSheetChrome()
                     } else {
                         // Fallback view if deckToEdit is nil
                         ZStack {
@@ -167,7 +165,7 @@ struct DeckListView: View {
 
                             VStack(spacing: 20) {
                                 Image(systemName: "exclamationmark.triangle")
-                                    .font(.system(size: 48))
+                                    .font(SGTheme.display(48, weight: .regular))
                                     .foregroundColor(SGTheme.ember)
 
                                 Text("Error Loading Deck")
@@ -179,7 +177,7 @@ struct DeckListView: View {
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(SGTheme.paperSecondary)
 
-                                SGPrimaryButton(title: "Close", fullWidth: false) {
+                                SGButton(title: "Close", variant: .ghost, fullWidth: false) {
                                     showEditSheet = false
                                 }
                             }
@@ -239,6 +237,33 @@ struct DeckView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header — same pattern as DeckListView: eyebrow + big rounded
+            // title with 44pt mint circle actions. The system nav bar keeps
+            // its back button but the title is hidden (the header owns it).
+            SGScreenHeader(eyebrow: "Deck", title: deck.name) {
+                HStack(spacing: 10) {
+                    Button(action: { showEditDeckSheet = true }) {
+                        Image(systemName: "pencil")
+                            .font(SGTheme.cardTitle) // 17 semibold — header icon size
+                            .foregroundColor(SGTheme.ink)
+                            .frame(width: 44, height: 44)
+                            .background(SGTheme.mint, in: Circle())
+                    }
+                    .buttonStyle(SGPressStyle())
+                    .accessibilityLabel("Edit deck name")
+
+                    Button(action: { showingNewCardSheet = true }) {
+                        Image(systemName: "plus")
+                            .font(SGTheme.cardTitle)
+                            .foregroundColor(SGTheme.ink)
+                            .frame(width: 44, height: 44)
+                            .background(SGTheme.mint, in: Circle())
+                    }
+                    .buttonStyle(SGPressStyle())
+                    .accessibilityLabel("Add new flashcard")
+                }
+            }
+
             if deck.cards.isEmpty {
                 // Empty State for No Flashcards
                 VStack(spacing: 24) {
@@ -264,32 +289,14 @@ struct DeckView: View {
                     // Action Buttons
                     VStack(spacing: 12) {
                         // Manual Add Button
-                        SGPrimaryButton(title: "Add Flashcard", icon: "plus.circle.fill") {
+                        SGButton(title: "Add Flashcard", icon: "plus.circle.fill") {
                             showingNewCardSheet = true
                         }
 
                         // AI Generate Button
-                        Button(action: { showAutoGenerateSheet = true }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 15, weight: .semibold))
-
-                                Text("AI Generate")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            .foregroundColor(SGTheme.mint)
-                            .padding(.vertical, 15)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(SGTheme.mint.opacity(0.08))
-                                    .overlay(
-                                        Capsule(style: .continuous)
-                                            .strokeBorder(SGTheme.mint.opacity(0.6), lineWidth: 1)
-                                    )
-                            )
+                        AIGenerateButton(title: "AI Generate") {
+                            showAutoGenerateSheet = true
                         }
-                        .buttonStyle(SGPressStyle())
                     }
                     .padding(.horizontal, SGTheme.screenPadding)
 
@@ -346,40 +353,19 @@ struct DeckView: View {
 
                     VStack(spacing: 12) {
                         // Add Practice Button
-                        SGPrimaryButton(title: "Practice Deck", icon: "play.fill") {
+                        SGButton(title: "Practice Deck", icon: "play.fill", enabled: !deck.cards.isEmpty) {
                             deckStore.selectDeck(deck) // Ensure this deck is selected
                             showingPractice = true
                         }
-                        .disabled(deck.cards.isEmpty)
                         .fullScreenCover(isPresented: $showingPractice) {
                             PracticeView(deck: deck)
                                 .environmentObject(deckStore)
                         }
 
                         // Existing Auto Generate Button
-                        Button {
+                        AIGenerateButton(title: "Auto Generate Flashcards") {
                             showAutoGenerateSheet = true
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 15, weight: .semibold))
-
-                                Text("Auto Generate Flashcards")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            .foregroundColor(SGTheme.mint)
-                            .padding(.vertical, 15)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(SGTheme.mint.opacity(0.08))
-                                    .overlay(
-                                        Capsule(style: .continuous)
-                                            .strokeBorder(SGTheme.mint.opacity(0.6), lineWidth: 1)
-                                    )
-                            )
                         }
-                        .buttonStyle(SGPressStyle())
                     }
                     .padding(.horizontal, SGTheme.screenPadding)
                     .padding(.vertical, 16)
@@ -388,24 +374,10 @@ struct DeckView: View {
             }
         }
         .background(SGTheme.ink.ignoresSafeArea())
-        .navigationTitle(deck.name)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button(action: { showEditDeckSheet = true }) {
-                        Image(systemName: "pencil")
-                            .foregroundColor(SGTheme.mint)
-                    }
-                    .accessibilityLabel("Edit deck name")
-
-                    Button(action: { showingNewCardSheet = true }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(SGTheme.mint)
-                    }
-                    .accessibilityLabel("Add new flashcard")
-                }
-            }
-        }
+        // The system bar keeps only the back button; the deck name lives in
+        // the SGScreenHeader above (same chrome as the Decks tab).
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showAutoGenerateSheet) {
             AutoGenerateFlashcardsSheet(deck: $deck)
                 .sgSheetChrome()
@@ -426,7 +398,6 @@ struct DeckView: View {
                 deck = updatedDeck
                 deckStore.updateDeck(updatedDeck)
             })
-            .sgSheetChrome()
         }
         .onChange(of: deck) { newDeck in
             // Update the deck store whenever the deck changes
@@ -442,6 +413,36 @@ struct DeckView: View {
             deckName: deck.name,
             count: count
         )
+    }
+}
+
+/// The mint-outline secondary capsule shared by both AI-generate entry
+/// points (the empty state and the bottom bar). One fill, one stroke, one
+/// label size — the two hand-rolled copies converged here.
+private struct AIGenerateButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                Text(title)
+            }
+            .font(SGTheme.buttonSmall)
+            .foregroundColor(SGTheme.mint)
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(SGTheme.mint.opacity(0.08))
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .strokeBorder(SGTheme.mint.opacity(0.5), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(SGPressStyle())
     }
 }
 
@@ -493,67 +494,58 @@ struct NewDeckView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: SGMicroLabel(text: "Deck information")) {
-                    TextField("Deck Name", text: $deckName)
-                        .foregroundColor(SGTheme.paper)
+        // Standard sheet anatomy: fitted detent, round-close header, one
+        // input well, mint primary pinned at the bottom — no nav-bar chrome.
+        SGFittedSheet(estimatedHeight: 320) {
+            VStack(alignment: .leading, spacing: 20) {
+                SGSheetHeader(title: "New Deck", onClose: { dismiss() })
+
+                VStack(alignment: .leading, spacing: 10) {
+                    SGMicroLabel(text: "Deck information")
+
+                    SGField(placeholder: "Deck Name", text: $deckName)
                         .accessibilityLabel("Deck name entry field")
 
                     if isDuplicateName && !deckName.trimmingCharacters(in: .whitespaces).isEmpty {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(SGTheme.ember)
+                                .font(SGTheme.caption) // matches the warning text beside it
                             Text("A deck with this name already exists")
                                 .font(SGTheme.caption)
-                                .foregroundColor(SGTheme.ember)
                         }
+                        .foregroundColor(SGTheme.ember)
                     }
-                }
-                .listRowBackground(SGTheme.inkRaised)
-            }
-            .scrollContentBackground(.hidden)
-            .background(SGTheme.ink.ignoresSafeArea())
-            .navigationTitle("New Deck")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .accessibilityLabel("Cancel deck creation")
                 }
 
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
-                        if isDuplicateName {
-                            showDuplicateAlert = true
-                        } else {
-                            let newDeck = Deck(
-                                name: trimmedName,
-                                cards: []
-                            )
-                            deckStore.addDeck(newDeck)
-                            Analytics.deckCreated(
-                                name: trimmedName,
-                                totalDecksAfter: deckStore.decks.count
-                            )
-                            dismiss()
-                        }
+                SGButton(title: "Create", enabled: isValidName) {
+                    let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
+                    if isDuplicateName {
+                        showDuplicateAlert = true
+                    } else {
+                        let newDeck = Deck(
+                            name: trimmedName,
+                            cards: []
+                        )
+                        deckStore.addDeck(newDeck)
+                        Analytics.deckCreated(
+                            name: trimmedName,
+                            totalDecksAfter: deckStore.decks.count
+                        )
+                        dismiss()
                     }
-                    .fontWeight(.semibold)
-                    .tint(SGTheme.mint)
-                    .disabled(!isValidName)
                 }
+                .padding(.top, 4)
             }
-            .alert("Duplicate Deck Name", isPresented: $showDuplicateAlert) {
-                Button("OK") {
-                    showDuplicateAlert = false
-                }
-            } message: {
-                Text("A deck with the name '\(deckName.trimmingCharacters(in: .whitespaces))' already exists. Please choose a different name.")
+            .padding(.horizontal, SGTheme.screenPadding)
+            .padding(.top, 24)
+            .padding(.bottom, 8)
+        }
+        .alert("Duplicate Deck Name", isPresented: $showDuplicateAlert) {
+            Button("OK") {
+                showDuplicateAlert = false
             }
+        } message: {
+            Text("A deck with the name '\(deckName.trimmingCharacters(in: .whitespaces))' already exists. Please choose a different name.")
         }
     }
 }
@@ -586,67 +578,58 @@ struct EditDeckView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: SGMicroLabel(text: "Deck information")) {
-                    TextField("Deck Name", text: $deckName)
-                        .foregroundColor(SGTheme.paper)
+        // Same anatomy as NewDeckView: fitted detent, round-close header,
+        // one input well, mint primary at the bottom.
+        SGFittedSheet(estimatedHeight: 320) {
+            VStack(alignment: .leading, spacing: 20) {
+                SGSheetHeader(title: "Edit Deck", onClose: { dismiss() })
+
+                VStack(alignment: .leading, spacing: 10) {
+                    SGMicroLabel(text: "Deck information")
+
+                    SGField(placeholder: "Deck Name", text: $deckName)
                         .accessibilityLabel("Deck name entry field")
 
                     if isDuplicateName && !deckName.trimmingCharacters(in: .whitespaces).isEmpty {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(SGTheme.ember)
+                                .font(SGTheme.caption) // matches the warning text beside it
                             Text("A deck with this name already exists")
                                 .font(SGTheme.caption)
-                                .foregroundColor(SGTheme.ember)
                         }
+                        .foregroundColor(SGTheme.ember)
                     }
-                }
-                .listRowBackground(SGTheme.inkRaised)
-            }
-            .scrollContentBackground(.hidden)
-            .background(SGTheme.ink.ignoresSafeArea())
-            .navigationTitle("Edit Deck")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .accessibilityLabel("Cancel deck editing")
                 }
 
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
-                        if isDuplicateName {
-                            showDuplicateAlert = true
-                        } else {
-                            var updatedDeck = deck
-                            updatedDeck.name = trimmedName
-                            if trimmedName != deck.name {
-                                Analytics.deckRenamed(
-                                    oldName: deck.name,
-                                    newName: trimmedName
-                                )
-                            }
-                            onSave(updatedDeck)
-                            dismiss()
+                SGButton(title: "Save", enabled: isValidName) {
+                    let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
+                    if isDuplicateName {
+                        showDuplicateAlert = true
+                    } else {
+                        var updatedDeck = deck
+                        updatedDeck.name = trimmedName
+                        if trimmedName != deck.name {
+                            Analytics.deckRenamed(
+                                oldName: deck.name,
+                                newName: trimmedName
+                            )
                         }
+                        onSave(updatedDeck)
+                        dismiss()
                     }
-                    .fontWeight(.semibold)
-                    .tint(SGTheme.mint)
-                    .disabled(!isValidName)
                 }
+                .padding(.top, 4)
             }
-            .alert("Duplicate Deck Name", isPresented: $showDuplicateAlert) {
-                Button("OK") {
-                    showDuplicateAlert = false
-                }
-            } message: {
-                Text("A deck with the name '\(deckName.trimmingCharacters(in: .whitespaces))' already exists. Please choose a different name.")
+            .padding(.horizontal, SGTheme.screenPadding)
+            .padding(.top, 24)
+            .padding(.bottom, 8)
+        }
+        .alert("Duplicate Deck Name", isPresented: $showDuplicateAlert) {
+            Button("OK") {
+                showDuplicateAlert = false
             }
+        } message: {
+            Text("A deck with the name '\(deckName.trimmingCharacters(in: .whitespaces))' already exists. Please choose a different name.")
         }
     }
 }

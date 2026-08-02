@@ -59,14 +59,22 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
 
         if event.rawValue == SGContract.limitEventName {
             guard d.string(forKey: SGContract.Keys.state) != SGContract.StateValue.locked else { return }
-            // Grant-epsilon guard: a stale sg_limit from the pre-grant monitoring
-            // generation can be delivered late. A legitimate lock always arrives
-            // ≥ N minutes after the grant, so ignore deliveries in the first
-            // seconds of a fresh, unused budget.
+            // Stale-generation guard: a queued sg_limit from the PRE-grant
+            // monitoring generation can be delivered late (minutes late, so a
+            // fixed epsilon can't catch it). Physics decides instead: the
+            // current generation's sg_limit needs the full armed threshold of
+            // foreground usage, which needs at least that much wall time
+            // since the grant. Anything earlier is stale — re-locking on it
+            // would replay the whole time's-up cycle (shields + notification)
+            // on a budget the user just earned.
             let grantedAt = d.double(forKey: SGContract.Keys.budgetGrantedAt)
-            let used = d.double(forKey: SGContract.Keys.budgetUsedSeconds)
-            if Date().timeIntervalSince1970 - grantedAt < 90, used < 60 {
-                sgLog(d, "sg_limit ignored (grant-epsilon guard)")
+            let elapsed = Date().timeIntervalSince1970 - grantedAt
+            let armedMinutes = d.integer(forKey: SGContract.Keys.armedThresholdMinutes)
+            let legitFloor = armedMinutes > 0
+                ? Double(armedMinutes * 60)
+                : d.double(forKey: SGContract.Keys.budgetTotalSeconds)
+            if grantedAt > 0, legitFloor > 0, elapsed + 5 < legitFloor {
+                sgLog(d, "sg_limit ignored (stale: \(Int(elapsed))s since grant < \(Int(legitFloor))s floor)")
                 return
             }
             lock(d, detectedBy: "extension")
@@ -75,6 +83,18 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
             // Progress telemetry only makes sense while metering (shield-overlay
             // foreground time can still tick events after a lock).
             guard d.string(forKey: SGContract.Keys.state) == SGContract.StateValue.metering else { return }
+            // Same stale-generation physics as sg_limit: a legitimate
+            // sg_used_p<m> needs m minutes of wall time since the grant.
+            // Without this, a stale progress event lands on a fresh budget,
+            // collapses the countdown (e.g. 10m left → 1m), re-fires the
+            // "Almost out of time" warning, and can even re-lock via the
+            // missed-lock fallback below.
+            let grantedAt = d.double(forKey: SGContract.Keys.budgetGrantedAt)
+            let elapsed = Date().timeIntervalSince1970 - grantedAt
+            if grantedAt > 0, elapsed + 5 < Double(m * 60) {
+                sgLog(d, "sg_used_p\(m) ignored (stale: \(Int(elapsed))s since grant)")
+                return
+            }
             let used = max(d.double(forKey: SGContract.Keys.budgetUsedSeconds), Double(m * 60))
             d.set(used, forKey: SGContract.Keys.budgetUsedSeconds)
 

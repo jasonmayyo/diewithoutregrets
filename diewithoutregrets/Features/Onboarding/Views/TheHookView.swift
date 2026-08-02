@@ -2,8 +2,10 @@
 //  TheHookView.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 screen 1 (daylight): the first impression. Mockup video up
-//  top, promise headline, mint CTA, plus the housekeeping App Store needs:
+//  Onboarding v3 screen 1 (daylight): the first impression. A clock-hand
+//  carousel of framed app screenshots swings up top (each slide arcs in
+//  from the right, settles centre over a mint glow, then arcs out left),
+//  promise headline, mint CTA, plus the housekeeping App Store needs:
 //  a restore path for existing subscribers and the Terms/Privacy links.
 //
 
@@ -15,6 +17,10 @@ struct HookView: View {
 
     @State private var entered = false
     @State private var showCTA = false
+    @State private var slide = 0
+
+    private let slides = ["welcome1", "welcome2", "welcome3"]
+    private let slideTimer = Timer.publish(every: 3.4, on: .main, in: .common).autoconnect()
 
     // Restore flow (existing subscribers skip the funnel).
     @State private var isRestoring = false
@@ -27,35 +33,29 @@ struct HookView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                // Video hero, framed on an ink card (same treatment as the
-                // retired PayWallView).
-                LoopingVideoPlayer(videoName: "mockupvideo", videoExtension: "mp4")
-                    .frame(height: geometry.size.height * 0.52)
-                    .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                            .fill(SGTheme.inkRaised)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                                    .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                            )
-                    )
-                    .padding(.horizontal, SGTheme.screenPadding)
+                // Screenshot hero: the rotating clock-hand carousel.
+                HookScreenshotCarousel(images: slides, slide: slide,
+                                       height: geometry.size.height * 0.52)
                     .padding(.top, 8)
                     .fadeRise(entered, delay: 0.1)
-                    .accessibilityLabel("Video demonstration of Study Guard")
+                    .accessibilityLabel("Screenshots of Study Guard")
+                    .onReceive(slideTimer) { _ in
+                        guard !reduceMotion else { return }
+                        withAnimation(.spring(response: 0.85, dampingFraction: 0.86)) {
+                            slide = (slide + 1) % slides.count
+                        }
+                    }
 
                 Spacer(minLength: 16)
 
                 VStack(spacing: 10) {
-                    Text("Scroll less. Study more.")
-                        .font(SGTheme.display(34))
+                    Text("You know you should be studying.")
+                        .font(SGTheme.stepTitle)
                         .foregroundColor(SGTheme.paper)
                         .multilineTextAlignment(.center)
                         .fadeRise(entered, delay: reduceMotion ? 0 : 0.3)
 
-                    Text("Study Guard locks your distracting apps until you've studied.")
+                    Text("Study Guard locks your distracting apps until you do. No willpower required.")
                         .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                         .multilineTextAlignment(.center)
@@ -66,38 +66,28 @@ struct HookView: View {
                 Spacer(minLength: 16)
 
                 VStack(spacing: 14) {
-                    OnbCTA(title: "Get started", visible: showCTA) {
+                    OnbCTA(title: "I'm ready", visible: showCTA) {
                         viewModel.nextStep()
                     }
 
-                    Button {
+                    SGButton(title: isRestoring ? "Restoring..." : "I already have an account",
+                             variant: .text,
+                             enabled: !isRestoring,
+                             loading: isRestoring) {
                         Task { await restorePurchases() }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if isRestoring {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.paperSecondary))
-                                    .scaleEffect(0.7)
-                            }
-                            Text(isRestoring ? "Restoring..." : "I already have an account")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(SGTheme.paperSecondary)
-                        }
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
                     }
-                    .disabled(isRestoring)
+                    .frame(minHeight: 44)
                     .fadeRise(showCTA)
                     .accessibilityLabel("Restore purchases")
 
                     // App Store requirement: legal links on the first screen.
                     HStack(spacing: 20) {
                         Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                            .font(.footnote)
+                            .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
 
                         Link("Privacy Policy", destination: URL(string: "https://studyguard.framer.website/legal/privacy-policy")!)
-                            .font(.footnote)
+                            .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
                     }
                     .fadeRise(showCTA)
@@ -171,6 +161,61 @@ struct HookView: View {
                 restoreErrorMessage = error.localizedDescription
             }
         }
+    }
+}
+
+/// Clock-hand screenshot carousel (the Secure welcome pattern): each slide
+/// rotates about a point far below the frame, so it swings in from the
+/// right along an arc, settles upright centre stage over a soft mint glow,
+/// then swings out to the left as the next arrives.
+private struct HookScreenshotCarousel: View {
+    let images: [String]
+    let slide: Int
+    var height: CGFloat = 420
+
+    /// Signed wheel position for a slide: 0 = centre stage, +1 = waiting
+    /// off to the right, -1 = departed to the left. Wrap-aware so the
+    /// sequence always reads right, centre, left.
+    private func wheelDelta(_ index: Int) -> Double {
+        Double(((index - slide + 1 + images.count) % images.count) - 1)
+    }
+
+    var body: some View {
+        ZStack {
+            // Mint halo behind centre stage so the screenshot lifts off
+            // the dark ink backdrop.
+            RadialGradient(
+                colors: [
+                    SGTheme.mint.opacity(0.30),
+                    SGTheme.mint.opacity(0.10),
+                    Color.clear,
+                ],
+                center: .center,
+                startRadius: 20,
+                endRadius: 230
+            )
+            .blur(radius: 30)
+            .allowsHitTesting(false)
+
+            ForEach(images.indices, id: \.self) { i in
+                let delta = wheelDelta(i)
+                Image(images[i])
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: height)
+                    .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+                    .sgShadow(SGTheme.shadowFloat)
+                    // Rotating about a point far below the frame swings the
+                    // screenshot along a clock-like arc: +28° parks it off
+                    // the right edge, -28° off the left.
+                    .rotationEffect(.degrees(delta * 28), anchor: UnitPoint(x: 0.5, y: 2.7))
+                    .opacity(delta == 0 ? 1 : 0)
+                    .animation(.easeOut(duration: 0.45), value: slide)
+            }
+        }
+        .frame(height: height + 20)
+        .frame(maxWidth: .infinity)
+        .clipped()
     }
 }
 

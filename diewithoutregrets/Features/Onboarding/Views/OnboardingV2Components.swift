@@ -16,11 +16,14 @@ import Lottie
 
 // MARK: - Night palette
 
-/// Text colors for the night-sky screens (villain arc + reality check).
+/// Surfaces and text for the night-sky screens (villain arc + reality
+/// check). Text reads the SGTheme night ramp; the card fills stay local
+/// because the navy sky wants slightly stronger washes than the ember
+/// night scene.
 enum OnbNight {
-    static let textPrimary = Color.white
-    static let textSecondary = Color.white.opacity(0.7)
-    static let textMuted = Color.white.opacity(0.45)
+    static let textPrimary = SGTheme.nightText
+    static let textSecondary = SGTheme.nightTextSecondary
+    static let textMuted = SGTheme.nightTextTertiary
     static let cardFill = Color.white.opacity(0.08)
     static let cardBorder = Color.white.opacity(0.15)
     static let cardBorderSelected = Color.white.opacity(0.7)
@@ -36,9 +39,9 @@ struct NightSkyBackdrop: View {
         ZStack {
             LinearGradient(
                 stops: [
-                    .init(color: Color(hex: 0x0B1C33), location: 0),
-                    .init(color: Color(hex: 0x123A66), location: 0.55),
-                    .init(color: Color(hex: 0x0B2444), location: 1),
+                    .init(color: SGTheme.skyTop, location: 0),
+                    .init(color: SGTheme.skyMid, location: 0.55),
+                    .init(color: SGTheme.skyDeep, location: 1),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -56,7 +59,7 @@ struct NightSkyBackdrop: View {
             LinearGradient(
                 stops: [
                     .init(color: .clear, location: 0.5),
-                    .init(color: Color(hex: 0x081527).opacity(0.85), location: 1),
+                    .init(color: SGTheme.skyVignette.opacity(0.85), location: 1),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -93,9 +96,10 @@ extension View {
 
 // MARK: - CTA
 
-/// Full-width onboarding CTA pill. On night screens it's white with ink
-/// text; on daylight screens mint with white text. Reveal it with `visible`
-/// once the screen's choreography lands — the delay IS the pacing.
+/// Full-width onboarding CTA: a thin skin over the ONE app button
+/// (SGButton, the chunky ledge capsule). Night screens get the white
+/// variant, daylight the mint. Reveal it with `visible` once the screen's
+/// choreography lands — the delay IS the pacing.
 struct OnbCTA: View {
     let title: String
     var night = false
@@ -103,28 +107,21 @@ struct OnbCTA: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(night ? Color(hex: 0x0B1C33) : .white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(night ? Color.white : SGTheme.mint, in: Capsule(style: .continuous))
-                .shadow(color: (night ? Color.white : SGTheme.mint).opacity(0.25), radius: 14, y: 4)
-        }
-        .buttonStyle(SGPressStyle())
-        .padding(.horizontal, SGTheme.screenPadding)
-        .fadeRise(visible)
-        .allowsHitTesting(visible)
+        SGButton(title: title, variant: night ? .white : .mint, action: action)
+            .padding(.horizontal, SGTheme.screenPadding)
+            .fadeRise(visible)
+            .allowsHitTesting(visible)
     }
 }
 
 // MARK: - Quiz scaffold
 
-/// Question-screen scaffold: back button + progress capsule up top, space
-/// reserved for the floating clipboard mascot (rendered ONCE by the
-/// container so it persists across question crossfades), numbered question,
-/// then the option list.
+/// Question-screen scaffold: space reserved for the floating clipboard
+/// mascot (rendered ONCE by the container so it persists across question
+/// crossfades), numbered question, then the option list. The back button
+/// and progress bar moved into the flow-wide chrome in OnboardingView;
+/// `progress` is kept only so quiz call sites stay source-stable until the
+/// Phase 5 sweep.
 struct QuizScreenContainer<Content: View>: View {
     let number: Int
     let question: String
@@ -136,49 +133,13 @@ struct QuizScreenContainer<Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 14) {
-                if viewModel.canGoBack {
-                    // 34pt visual chip inside a 44pt tap target.
-                    Button {
-                        viewModel.backStep()
-                    } label: {
-                        Image(systemName: "arrow.backward")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(OnbNight.textPrimary)
-                            .frame(width: 34, height: 34)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(OnbNight.chipFill)
-                            )
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(SGPressStyle())
-                    .accessibilityLabel("Back")
-                }
-
-                Capsule()
-                    .fill(Color.white.opacity(0.2))
-                    .frame(height: 5)
-                    .overlay(alignment: .leading) {
-                        GeometryReader { proxy in
-                            Capsule()
-                                .fill(Color.white)
-                                .frame(width: proxy.size.width * progress)
-                                .animation(.easeInOut(duration: 0.8), value: progress)
-                        }
-                    }
-            }
-            .padding(.horizontal, SGTheme.screenPadding)
-            .padding(.top, 8)
-
             // Space for the container-level floating clipboard mascot.
             Color.clear.frame(height: 128)
 
             VStack(spacing: 8) {
                 (Text("\(number).  ").foregroundColor(OnbNight.textMuted)
                     + Text(question).foregroundColor(OnbNight.textPrimary))
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .font(SGTheme.display(22, weight: .semibold))
                     .multilineTextAlignment(.center)
 
                 Text(subtitle)
@@ -215,16 +176,16 @@ struct QuizOptionRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 if let emoji {
-                    Text(emoji).font(.system(size: 20))
+                    Text(emoji).font(SGTheme.display(20))
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(SGTheme.cardTitle)
                         .foregroundColor(OnbNight.textPrimary)
                     if let subtext {
                         Text(subtext)
-                            .font(.system(size: 13))
+                            .font(SGTheme.caption)
                             .foregroundColor(OnbNight.textSecondary)
                     }
                 }
@@ -238,8 +199,8 @@ struct QuizOptionRow: View {
                     if selected {
                         Circle().fill(Color.white).frame(width: 24, height: 24)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(Color(hex: 0x0B1C33))
+                            .font(SGTheme.micro.weight(.bold))
+                            .foregroundColor(SGTheme.skyTop)
                     }
                 }
             }
@@ -309,21 +270,21 @@ struct NotificationBannerOverlay: View {
         VStack(spacing: 8) {
             ForEach(visible) { note in
                 HStack(spacing: 10) {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(note.tint)
                         .frame(width: 32, height: 32)
                         .overlay(
                             Image(systemName: note.icon)
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(SGTheme.buttonSmall)
                                 .foregroundColor(.white)
                         )
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text(note.title)
-                            .font(.system(size: 13, weight: .bold))
+                            .font(SGTheme.caption.weight(.bold))
                             .foregroundColor(.primary)
                         Text(note.body)
-                            .font(.system(size: 13))
+                            .font(SGTheme.caption)
                             .foregroundColor(.primary.opacity(0.8))
                             .lineLimit(1)
                     }
@@ -331,12 +292,12 @@ struct NotificationBannerOverlay: View {
                     Spacer(minLength: 8)
 
                     Text("now")
-                        .font(.system(size: 12))
+                        .font(SGTheme.micro.weight(.regular))
                         .foregroundColor(.secondary)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
             Spacer()
@@ -393,6 +354,11 @@ struct MarqueeRow<Content: View>: View {
                 marqueeContent
             }
             .offset(x: (reverse ? offset : -offset) - contentWidth)
+            // The tripled strip is thousands of points wide; without this
+            // the row reports that width and blows the whole screen layout
+            // out sideways. Take the proposed width, let the strip overflow
+            // underneath, and clip.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .mask(
             LinearGradient(
@@ -422,25 +388,32 @@ struct MarqueeRow<Content: View>: View {
 
 // MARK: - Life dots grid
 
-/// The 80-square "your life in years" grid. Drive it by mutating `colors`
-/// (80 entries) — each change animates individually, so screens choreograph
-/// drains/heals dot by dot.
+/// The choreographed dot grid. Drive it by mutating `colors` — each change
+/// animates individually, so screens choreograph drains/heals dot by dot.
+/// v3 uses 105 entries at 7 columns (the semester: each row one week).
 struct LifeDotsGrid: View {
     var colors: [Color]
     var glowing: Set<Int> = []
+    /// 7 for the semester grid (one row = one week); 8 was the v2 life grid.
+    var columnCount: Int = 7
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 7), count: 8)
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 7), count: columnCount)
+    }
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 7) {
             ForEach(0..<colors.count, id: \.self) { index in
+                // Squircle day-dots: art, near-circular at grid cell size.
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(colors[index])
                     .aspectRatio(1, contentMode: .fit)
                     .scaleEffect(glowing.contains(index) ? 1.18 : 1)
                     .shadow(color: glowing.contains(index) ? colors[index].opacity(0.8) : .clear,
                             radius: 6)
-                    .animation(SGTheme.springFast, value: colors[index])
+                    // Fills and drains read as a soft crossfade, not a snap;
+                    // only the glow keeps its springy pop.
+                    .animation(.easeInOut(duration: 0.6), value: colors[index])
                     .animation(SGTheme.springFast, value: glowing.contains(index))
             }
         }
@@ -541,12 +514,12 @@ struct TrustBadges: View {
                 HStack(spacing: 2) {
                     ForEach(0..<5, id: \.self) { _ in
                         Image(systemName: "star.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(hex: 0xFFC83D))
+                            .font(SGTheme.micro.weight(.regular))
+                            .foregroundColor(SGTheme.sun)
                     }
                 }
                 Text("4.8 rating")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(SGTheme.micro)
                     .foregroundColor(night ? OnbNight.textSecondary : SGTheme.paperSecondary)
             }
 
@@ -562,11 +535,11 @@ struct TrustBadges: View {
                             .scaledToFill()
                             .frame(width: 24, height: 24)
                             .clipShape(Circle())
-                            .overlay(Circle().strokeBorder(night ? Color(hex: 0x0B1C33) : .white, lineWidth: 1.5))
+                            .overlay(Circle().strokeBorder(night ? SGTheme.skyTop : .white, lineWidth: 1.5))
                     }
                 }
                 Text("45,000+ students")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(SGTheme.micro)
                     .foregroundColor(night ? OnbNight.textSecondary : SGTheme.paperSecondary)
             }
         }

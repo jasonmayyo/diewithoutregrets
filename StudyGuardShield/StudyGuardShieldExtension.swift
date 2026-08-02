@@ -32,10 +32,10 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
     }
 
     private func studyGuardShield() -> ShieldConfiguration {
-        // Teal Ink tokens (extensions can't share SwiftUI theme code).
-        let ink = UIColor(red: 0x0C / 255.0, green: 0x1E / 255.0, blue: 0x22 / 255.0, alpha: 1)
-        let mint = UIColor(red: 0x2B / 255.0, green: 0xC3 / 255.0, blue: 0x91 / 255.0, alpha: 1)
-        let paper = UIColor(red: 0xEA / 255.0, green: 0xF4 / 255.0, blue: 0xF1 / 255.0, alpha: 1)
+        // Night scene tokens (see SGTheme.night; extensions can't share SwiftUI theme code).
+        let night = UIColor(red: 0x1B / 255.0, green: 0x0E / 255.0, blue: 0x0A / 255.0, alpha: 1) // SGTheme.night
+        let ember = UIColor(red: 0xFF / 255.0, green: 0x7A / 255.0, blue: 0x59 / 255.0, alpha: 1) // SGTheme.ember
+        let nightText = UIColor.white // SGTheme.nightText
 
         let armedMinutes = SGContract.sharedDefaults?.integer(forKey: SGContract.Keys.armedThresholdMinutes) ?? 0
         let subtitle = armedMinutes > 0
@@ -44,15 +44,15 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
 
         return ShieldConfiguration(
             backgroundBlurStyle: .systemThinMaterialDark,
-            backgroundColor: ink,
+            backgroundColor: night,
             icon: scaledIcon(),
-            title: ShieldConfiguration.Label(text: "Caught you scrolling.", color: paper),
+            title: ShieldConfiguration.Label(text: "Caught you scrolling.", color: nightText),
             subtitle: ShieldConfiguration.Label(
                 text: subtitle,
-                color: paper.withAlphaComponent(0.75)
+                color: nightText.withAlphaComponent(0.65) // SGTheme.nightTextSecondary
             ),
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Close", color: ink),
-            primaryButtonBackgroundColor: mint
+            primaryButtonLabel: ShieldConfiguration.Label(text: "Close", color: nightText),
+            primaryButtonBackgroundColor: ember
         )
     }
 

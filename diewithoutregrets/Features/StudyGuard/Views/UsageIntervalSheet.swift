@@ -34,7 +34,7 @@ struct UsageIntervalSheet: View {
                 }
 
                 if isSetupMode {
-                    SGPrimaryButton(title: "Start guarding") {
+                    SGButton(title: "Start guarding") {
                         // Persist the highlighted selection explicitly, so the
                         // guard always starts with exactly what's on screen.
                         manager.updateInterval(manager.intervalMinutes)
@@ -71,7 +71,7 @@ struct UsageIntervalSheet: View {
                         .frame(width: 30, height: 30)
                     if isSelected {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(SGTheme.micro.weight(.bold))
                             .foregroundColor(SGTheme.mintDeep)
                     }
                 }

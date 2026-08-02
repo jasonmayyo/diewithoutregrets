@@ -21,77 +21,56 @@ struct OnboardingChecklistCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            HStack(spacing: 10) {
-                Image(systemName: "flag.fill")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(SGTheme.mint)
+        SGCard(shadowed: false, dashed: SGTheme.mint) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                HStack(spacing: 10) {
+                    Image(systemName: "flag.fill")
+                        .font(SGTheme.display(16, weight: .medium))
+                        .foregroundColor(SGTheme.mint)
 
-                Text("Get Started")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(SGTheme.paper)
+                    Text("Get Started")
+                        .font(SGTheme.display(18))
+                        .foregroundColor(SGTheme.paper)
 
-                Spacer()
+                    Spacer()
 
-                Text("\(completedCount) of 3")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(SGTheme.paperSecondary)
-            }
-
-            // Steps
-            VStack(spacing: 12) {
-                ChecklistStepRow(
-                    stepNumber: 1,
-                    title: "Choose apps to guard",
-                    subtitle: "Pick the apps Study Guard locks when your scroll time runs out",
-                    isCompleted: guardSetUp,
-                    action: guardSetUp ? nil : onSetupGuard
-                )
-
-                ChecklistStepRow(
-                    stepNumber: 2,
-                    title: "Create a deck",
-                    subtitle: "Organize your flash cards by topic",
-                    isCompleted: deckCreated,
-                    action: deckCreated ? nil : onCreateDeck
-                )
-
-                ChecklistStepRow(
-                    stepNumber: 3,
-                    title: "Generate flash cards",
-                    subtitle: "Add cards from text, YouTube, or Quizlet",
-                    isCompleted: cardsGenerated,
-                    action: cardsGenerated ? nil : onGenerateCards
-                )
-            }
-
-            // Progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(SGTheme.glaze(0.1))
-                        .frame(height: 5)
-
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(SGTheme.mint)
-                        .frame(width: geo.size.width * CGFloat(completedCount) / 3.0, height: 5)
-                        .animation(.easeInOut(duration: 0.4), value: completedCount)
+                    Text("\(completedCount) of 3")
+                        .font(SGTheme.caption.weight(.semibold))
+                        .foregroundColor(SGTheme.paperSecondary)
                 }
+
+                // Steps
+                VStack(spacing: 12) {
+                    ChecklistStepRow(
+                        stepNumber: 1,
+                        title: "Choose apps to guard",
+                        subtitle: "Pick the apps Study Guard locks when your scroll time runs out",
+                        isCompleted: guardSetUp,
+                        action: guardSetUp ? nil : onSetupGuard
+                    )
+
+                    ChecklistStepRow(
+                        stepNumber: 2,
+                        title: "Create a deck",
+                        subtitle: "Organize your flash cards by topic",
+                        isCompleted: deckCreated,
+                        action: deckCreated ? nil : onCreateDeck
+                    )
+
+                    ChecklistStepRow(
+                        stepNumber: 3,
+                        title: "Generate flash cards",
+                        subtitle: "Add cards from text, YouTube, or Quizlet",
+                        isCompleted: cardsGenerated,
+                        action: cardsGenerated ? nil : onGenerateCards
+                    )
+                }
+
+                // Progress bar
+                SGProgressBar(progress: Double(completedCount) / 3.0, thin: true)
             }
-            .frame(height: 5)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .fill(SGTheme.inkRaised)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [8, 5]))
-                .foregroundColor(SGTheme.mint.opacity(0.25))
-        )
-        
     }
 }
 
@@ -115,7 +94,7 @@ struct ChecklistStepRow: View {
                             .frame(width: 28, height: 28)
 
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(SGTheme.micro.weight(.bold))
                             .foregroundColor(SGTheme.ink)
                     } else {
                         Circle()
@@ -123,19 +102,19 @@ struct ChecklistStepRow: View {
                             .frame(width: 28, height: 28)
 
                         Text("\(stepNumber)")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(SGTheme.caption.weight(.semibold))
                             .foregroundColor(SGTheme.paperTertiary)
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(SGTheme.body.weight(.semibold))
                         .foregroundColor(isCompleted ? SGTheme.paperTertiary : SGTheme.paper)
                         .strikethrough(isCompleted, color: SGTheme.paperTertiary)
 
                     Text(subtitle)
-                        .font(.system(size: 12))
+                        .font(SGTheme.micro.weight(.regular))
                         .foregroundColor(SGTheme.paperSecondary)
                 }
 
@@ -143,7 +122,7 @@ struct ChecklistStepRow: View {
 
                 if !isCompleted && action != nil {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperTertiary)
                 }
             }

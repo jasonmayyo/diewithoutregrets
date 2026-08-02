@@ -39,6 +39,26 @@ struct RegretGuard: View {
     @State private var showEmergencySheet = false
     @State private var showDeckPicker = false
 
+    // Lock reveal sequence — when the user comes home to find their time
+    // spent, the story plays in order: (1) the countdown replays down to 0,
+    // (2) the monster stamps the screen locked, (3) the locked home state
+    // settles in. `lockRevealed` gates the locked UI so nothing leaks
+    // before the stamp; it's persisted per budget grant so the show plays
+    // exactly once per lock.
+    @State private var showLockWipe = false
+    @State private var showLockStamp = false
+    @State private var lockStampScheduled = false
+    @State private var lockRevealed = false
+    /// Shared with RegretView: the quiz replays the stamp only when this
+    /// grant's reveal was never seen.
+    static let lockRevealStampKey = "sg_lockRevealShownForGrant"
+
+    /// The apps are locked and the reveal has played — the home is the dark
+    /// lock-out scene instead of the daylight meadow.
+    private var isLockedHome: Bool {
+        guardManager.state == .locked && lockRevealed
+    }
+
     // Ripple tuner (Debug → Meadow dot ripple). Defaults match MeadowDotRipple.
     @AppStorage("sgRippleSagitta") private var rippleSagitta: Double = 32
     @AppStorage("sgRippleApexInset") private var rippleApexInset: Double = 94
@@ -52,6 +72,110 @@ struct RegretGuard: View {
     @State private var meadowTopY: CGFloat = 0
 
     var body: some View {
+        attachModals(mainContent)
+    }
+
+    private var mainContent: some View {
+        ZStack {
+            if isLockedHome {
+                // The lock-out home — a completely different scene from the
+                // daylight meadow.
+                LockedHomeView(
+                    emergencyUnlocksRemaining: guardManager.emergencyUnlocksRemaining,
+                    deck: deckStore.selectedDeck ?? deckStore.decks.first,
+                    onStudy: {
+                        // Leave the night scene through the unlock wipe: the
+                        // root swaps to the quiz while the screen is covered.
+                        NavigationModel.shared.wipeTo(.unlock) {
+                            NavigationModel.shared.navigate(to: .regretView)
+                        }
+                    },
+                    onEmergency: { showEmergencySheet = true },
+                    onDeckTap: { showDeckPicker = true }
+                )
+                .transition(.opacity)
+            } else {
+                meadowHome
+            }
+
+            // Stage 2 of the lock reveal: the monster stamps the screen
+            // locked. When it finishes, the dark locked home is already set
+            // underneath and the overlay fades away.
+            if showLockStamp {
+                MascotLockOverlay(
+                    subtitle: "Study to win your apps back.",
+                    background: LockedHomeView.night,
+                    onDark: true,
+                    startDelay: 0.45,
+                    usesExitMask: false
+                ) {
+                    NavigationModel.shared.isLockStampPlaying = false
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        showLockStamp = false
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(2)
+            }
+
+            // Stage 1½: the corner wipe — white leads, ember covers — that
+            // carries the screen from the dead 0m readout into the stamp.
+            if showLockWipe {
+                SGCornerWipe(
+                    preset: .lock,
+                    onCovered: {
+                        // Screen is fully covered: swap the locked scene in
+                        // and mount the stamp so the retract reveals it.
+                        lockRevealed = true
+                        showLockStamp = true
+                    },
+                    onFinished: {
+                        showLockWipe = false
+                    }
+                )
+                .zIndex(3)
+            }
+        }
+        .onAppear {
+            // If this lock's reveal already played, land directly on the
+            // locked home — the show runs once per budget grant.
+            if guardManager.state == .locked, lockRevealShownForCurrentGrant {
+                lockRevealed = true
+            }
+            NavigationModel.shared.isLockedHomeShowing = isLockedHome
+            countdown.onSettled = { minutes in
+                scheduleLockRevealIfNeeded(settledMinutes: minutes)
+            }
+            // Visible first: replays only play while Home is on screen.
+            countdown.setVisible(true)
+            guardManager.refresh()
+            syncCountdown()
+        }
+        // The tab bar reads this to flip between its daylight and night
+        // (smoked-glass) looks in step with the scene swap.
+        .onChange(of: isLockedHome) { _, showing in
+            NavigationModel.shared.isLockedHomeShowing = showing
+        }
+        .onDisappear {
+            countdown.setVisible(false)
+        }
+        .onChange(of: guardManager.usedMinutes) { _, _ in syncCountdown() }
+        .onChange(of: guardManager.totalMinutes) { _, _ in syncCountdown() }
+        .onChange(of: guardManager.state) { _, newState in
+            if newState != .locked {
+                // Unlocked (or paused): arm the show for the next lock.
+                showLockWipe = false
+                showLockStamp = false
+                lockStampScheduled = false
+                lockRevealed = false
+                NavigationModel.shared.isLockStampPlaying = false
+            }
+            syncCountdown()
+        }
+    }
+
+    /// The daylight meadow home (all states except the revealed lock-out).
+    private var meadowHome: some View {
         ZStack {
             SGTheme.ink.ignoresSafeArea()
 
@@ -73,8 +197,8 @@ struct RegretGuard: View {
                     LinearGradient(
                         stops: [
                             .init(color: .clear, location: 0),
-                            .init(color: Color(hex: 0x123A66).opacity(0.35), location: 0.55),
-                            .init(color: Color(hex: 0x0B2444).opacity(0.8), location: 1),
+                            .init(color: SGTheme.skyMid.opacity(0.35), location: 0.55),
+                            .init(color: SGTheme.skyDeep.opacity(0.8), location: 1),
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -151,18 +275,12 @@ struct RegretGuard: View {
             }
             .animation(.easeInOut(duration: 0.4), value: checklistAllCompleted)
         }
-        .onAppear {
-            // Visible first: replays only play while Home is on screen.
-            countdown.setVisible(true)
-            guardManager.refresh()
-            syncCountdown()
-        }
-        .onDisappear {
-            countdown.setVisible(false)
-        }
-        .onChange(of: guardManager.usedMinutes) { _, _ in syncCountdown() }
-        .onChange(of: guardManager.totalMinutes) { _, _ in syncCountdown() }
-        .onChange(of: guardManager.state) { _, _ in syncCountdown() }
+    }
+
+    /// Modal stack — attached to the body so both the meadow and lock-out
+    /// homes can present from it.
+    private func attachModals<Content: View>(_ content: Content) -> some View {
+        content
         .sheet(isPresented: $showGuardedAppsPicker, onDismiss: {
             if pendingSetupInterval {
                 pendingSetupInterval = false
@@ -236,10 +354,23 @@ struct RegretGuard: View {
 
     // MARK: - Hero
 
+    /// One pose per story beat: content while there's still time on the
+    /// clock, head-down disappointment at the "caught you" reveal, clipboard
+    /// out once the way forward is answering flashcards, teaching during
+    /// setup, and idle napping when he's off duty.
     private var mascotPose: MascotPose {
         switch guardManager.state {
-        case .metering, .locked: return .lookingDown
-        case .notSetUp, .disabled: return .idle
+        case .metering:
+            return .idle
+        case .locked:
+            // Only rendered pre-reveal: he's still staring at the phone
+            // while the checkpoint replay rolls the minutes to 0. The
+            // revealed lock-out (LockedHomeView) has its own angry mascot.
+            return .lookingDown
+        case .notSetUp:
+            return .teaching
+        case .disabled:
+            return .idle
         }
     }
 
@@ -262,37 +393,12 @@ struct RegretGuard: View {
                 SGMicroLabel(text: "Screen time left", color: heroSecondary)
 
             case .locked:
-                if countdown.isRolling || countdown.displayMinutes > 0 {
-                    // The story beat: the minutes they were spending run dry
-                    // ON SCREEN (checkpoint replay rolls to 0), and only then
-                    // does the lock reveal land.
-                    heroNumeral(dimmed: false)
-                    SGMicroLabel(text: "Screen time left", color: heroSecondary)
-                } else {
-                    SGMicroLabel(text: "Time's up",
-                                 color: homeBackdrop == "clouds" ? SGTheme.ember : SGTheme.emberDeep)
-                    Text("He caught you scrolling")
-                        .font(SGTheme.display(30))
-                        .foregroundColor(heroPrimary)
-                        .multilineTextAlignment(.center)
-                    Text("Study to win your apps back.")
-                        .font(SGTheme.body)
-                        .foregroundColor(heroSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 300)
-                }
-
-                if guardManager.emergencyUnlocksRemaining > 0 {
-                    Button {
-                        showEmergencySheet = true
-                    } label: {
-                        Text("Emergency unlock (\(guardManager.emergencyUnlocksRemaining) left)")
-                            .font(SGTheme.caption)
-                            .foregroundColor(heroSecondary)
-                            .underline()
-                    }
-                }
+                // Only the pre-reveal beat renders here: the minutes they
+                // were spending run dry ON SCREEN (checkpoint replay rolls
+                // to 0). Once the wipe + stamp play, the whole home swaps to
+                // LockedHomeView.
+                heroNumeral(dimmed: false)
+                SGMicroLabel(text: "Screen time left", color: heroSecondary)
 
             case .notSetUp:
                 SGMicroLabel(text: "Meet your guard", color: heroSecondary)
@@ -317,8 +423,8 @@ struct RegretGuard: View {
         .padding(.horizontal, SGTheme.screenPadding)
         .animation(SGTheme.spring, value: guardManager.state)
         // Locked reveal: swap from the settled 0m numeral to "He caught you
-        // scrolling" the moment the roll finishes.
-        .animation(SGTheme.spring, value: countdown.isRolling)
+        // scrolling" as the stamp overlay fades out.
+        .animation(SGTheme.spring, value: lockRevealed)
     }
 
     /// "2h 14m" — giant black digits (plain SF, not rounded), smaller
@@ -332,13 +438,13 @@ struct RegretGuard: View {
         var readout = Text(verbatim: "")
         if hours > 0 {
             readout = readout
-                + Text("\(hours)").font(.system(size: 96, weight: .semibold))
-                + Text("\u{2009}h").font(.system(size: 42, weight: .medium)).foregroundColor(heroSecondary)
+                + Text("\(hours)").font(SGTheme.heroDigit)
+                + Text("\u{2009}h").font(SGTheme.heroUnit).foregroundColor(heroSecondary)
                 + Text(verbatim: " ")
         }
         readout = readout
-            + Text("\(minutes)").font(.system(size: 96, weight: .semibold))
-            + Text("\u{2009}m").font(.system(size: 42, weight: .medium)).foregroundColor(heroSecondary)
+            + Text("\(minutes)").font(SGTheme.heroDigit)
+            + Text("\u{2009}m").font(SGTheme.heroUnit).foregroundColor(heroSecondary)
 
         return ZStack(alignment: .topTrailing) {
             readout
@@ -400,40 +506,48 @@ struct RegretGuard: View {
     private var meadowControls: some View {
         switch guardManager.state {
         case .metering:
-            HStack(spacing: 10) {
-                GlassPill(
-                    text: SGContract.isSelectionEmpty(guardManager.selection)
-                        ? "Pick apps"
-                        : "\(SGContract.tokenCount(guardManager.selection)) apps",
-                    icon: "apps.iphone"
-                ) {
-                    openGuardedAppsEditor()
-                }
-                GlassPill(text: "\(guardManager.intervalMinutes)m", icon: "timer") {
-                    showIntervalSheet = true
-                }
-                // No "Earn time" here: while metering the quiz can't grant
-                // anything (it dead-ends on "already unlocked"). The locked
-                // state owns the earn CTA.
-            }
-            activeDeckCard
+            meteringControls
 
         case .locked:
-            MeadowCTA(title: "Study to unlock", icon: "rectangle.stack.fill") {
-                NavigationModel.shared.navigate(to: .regretView)
-            }
-            activeDeckCard
+            // Only reachable pre-reveal (the roll to 0 is still playing, or
+            // the wipe is about to land) — keep the metering layout so the
+            // lock doesn't leak early. The revealed lock-out lives in
+            // LockedHomeView.
+            meteringControls
 
         case .notSetUp:
-            MeadowCTA(title: "Turn on Study Guard", icon: "shield.fill") {
+            SGButton(title: "Turn on Study Guard", icon: "shield.fill", variant: .white) {
                 openGuardedAppsEditor()
             }
 
         case .disabled:
-            MeadowCTA(title: "Resume guarding", icon: "play.fill") {
+            SGButton(title: "Resume guarding", icon: "play.fill", variant: .white) {
                 _ = guardManager.setGuardEnabled(true)
             }
         }
+    }
+
+    /// Pills + active deck shown while metering (and while the lock reveal
+    /// is still playing).
+    @ViewBuilder
+    private var meteringControls: some View {
+        HStack(spacing: 10) {
+            GlassPill(
+                text: SGContract.isSelectionEmpty(guardManager.selection)
+                    ? "Pick apps"
+                    : "\(SGContract.tokenCount(guardManager.selection)) apps",
+                icon: "apps.iphone"
+            ) {
+                openGuardedAppsEditor()
+            }
+            GlassPill(text: "\(guardManager.intervalMinutes)m", icon: "timer") {
+                showIntervalSheet = true
+            }
+            // No "Earn time" here: while metering the quiz can't grant
+            // anything (it dead-ends on "already unlocked"). The locked
+            // state owns the earn CTA.
+        }
+        activeDeckCard
     }
 
     /// The big white card showing the active deck. Tapping opens the deck
@@ -463,7 +577,7 @@ struct RegretGuard: View {
                     }
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(SGTheme.rowLabel)
                         .foregroundColor(SGTheme.paperTertiary)
                 }
                 .padding(SGTheme.cardPadding)
@@ -477,7 +591,7 @@ struct RegretGuard: View {
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(SGTheme.display(20, weight: .semibold))
                         .foregroundColor(SGTheme.mintDeep)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Create your first deck")
@@ -514,7 +628,7 @@ struct RegretGuard: View {
                 Button("Re-enable") {
                     reenableAfterRevocation()
                 }
-                .font(.system(size: 14, weight: .semibold))
+                .font(SGTheme.rowLabel)
                 .foregroundColor(SGTheme.ink)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
@@ -537,9 +651,43 @@ struct RegretGuard: View {
     }
 
     private func syncCountdown() {
-        let grantStamp = SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt) ?? 0
         let remaining = max(0, guardManager.totalMinutes - guardManager.usedMinutes)
-        countdown.sync(remainingMinutes: remaining, grantStamp: grantStamp)
+        countdown.sync(remainingMinutes: remaining, grantStamp: currentGrantStamp)
+    }
+
+    // MARK: - Lock reveal sequence
+
+    private var currentGrantStamp: Double {
+        SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt) ?? 0
+    }
+
+    private var lockRevealShownForCurrentGrant: Bool {
+        UserDefaults.standard.double(forKey: Self.lockRevealStampKey) == currentGrantStamp
+    }
+
+    /// Countdown settle hook: when the readout lands on 0 while locked (the
+    /// roll only plays while Home is on screen), hold the zero for a beat,
+    /// then stamp. Persisted per grant so re-visits skip straight to the
+    /// locked home.
+    private func scheduleLockRevealIfNeeded(settledMinutes: Int) {
+        guard settledMinutes == 0,
+              guardManager.state == .locked,
+              !lockRevealed, !showLockWipe, !showLockStamp, !lockStampScheduled
+        else { return }
+
+        if lockRevealShownForCurrentGrant {
+            lockRevealed = true
+            return
+        }
+
+        lockStampScheduled = true
+        UserDefaults.standard.set(currentGrantStamp, forKey: Self.lockRevealStampKey)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            lockStampScheduled = false
+            guard guardManager.state == .locked, !lockRevealed else { return }
+            NavigationModel.shared.isLockStampPlaying = true
+            showLockWipe = true
+        }
     }
 
     private var checklistAllCompleted: Bool {
@@ -608,7 +756,7 @@ struct DeckPickerSheet: View {
                                         .fill(SGTheme.mint.opacity(0.12))
                                         .frame(width: 30, height: 30)
                                     Image(systemName: "plus")
-                                        .font(.system(size: 13, weight: .bold))
+                                        .font(SGTheme.caption.weight(.bold))
                                         .foregroundColor(SGTheme.mintDeep)
                                 }
                                 Text("Create new deck")
@@ -664,7 +812,7 @@ struct DeckPickerSheet: View {
                             .frame(width: 30, height: 30)
                         if isActive {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 12, weight: .bold))
+                                .font(SGTheme.micro.weight(.bold))
                                 .foregroundColor(SGTheme.mintDeep)
                         }
                     }
@@ -695,7 +843,7 @@ struct DeckPickerSheet: View {
                     DeckView(deck: $deckStore.decks[index])
                 } label: {
                     Image(systemName: "square.and.pencil")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(SGTheme.buttonSmall)
                         .foregroundColor(SGTheme.mintDeep)
                         .frame(width: 34, height: 34)
                         .background(Circle().fill(SGTheme.glaze(0.05)))
@@ -879,12 +1027,13 @@ private extension View {
     func meadowCard(in shape: some InsettableShape) -> some View {
         background(
             shape.fill(.white.opacity(0.94))
-                .shadow(color: Color.black.opacity(0.12), radius: 12, y: 5)
+                .sgShadow(SGTheme.shadowCard)
         )
     }
 }
 
 /// White pill on the meadow: dark label, deep-green icon.
+/// (MeadowCTA was replaced by SGButton .white in the Phase 2 migration.)
 private struct GlassPill: View {
     let text: String
     var icon: String? = nil
@@ -895,11 +1044,11 @@ private struct GlassPill: View {
             HStack(spacing: 6) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(SGTheme.caption.weight(.semibold))
                         .foregroundColor(SGTheme.mintDeep)
                 }
                 Text(text)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(SGTheme.rowLabel)
                     .foregroundColor(SGTheme.paper)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -913,33 +1062,156 @@ private struct GlassPill: View {
     }
 }
 
-/// The big white call-to-action pill on the meadow.
-private struct MeadowCTA: View {
-    let title: String
-    var icon: String? = nil
-    let action: () -> Void
+// MARK: - Lock-out home
+
+/// The home while the apps are locked — One Thing's home language turned
+/// into a red alert: the night canvas, the alarm dot ripple radiating from
+/// the monster at the centre of the screen, and one path forward stacked at
+/// the bottom (active deck first, the unlock CTA beneath it). Revealed by
+/// the corner wipe + lock stamp the moment screen time runs out.
+struct LockedHomeView: View {
+    let emergencyUnlocksRemaining: Int
+    let deck: Deck?
+    var onStudy: () -> Void = {}
+    var onEmergency: () -> Void = {}
+    var onDeckTap: () -> Void = {}
+
+    /// The night scene token (SGTheme) — shared with the lock wipe's final
+    /// band and the stamp overlay's background so the whole reveal reads as
+    /// one continuous scene.
+    static let night = SGTheme.night
+
+    /// Measured centre of the mascot (global coords). The ripple locks to
+    /// it so every crest radiates from him, wherever the layout puts him.
+    @State private var mascotCenter: CGPoint? = nil
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
+        ZStack {
+            Self.night.ignoresSafeArea()
+
+            // The red dot storm — One Thing's home-screen ripple, radiating
+            // from the monster. Full-bleed so crests run out past the safe
+            // areas and under the floating glass dock.
+            SGDotGridRipple(centerPoint: mascotCenter)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            // Alarm bloom behind the monster — the scene's light source.
+            // Values come from SGLockScene, shared with the lock stamp, so
+            // the overlay crossfades into this scene pixel-for-pixel.
+            RadialGradient(colors: [SGLockScene.accent.opacity(SGLockScene.bloomOpacity), .clear],
+                           center: SGLockScene.bloomCenter,
+                           startRadius: SGLockScene.bloomStartRadius,
+                           endRadius: SGLockScene.bloomEndRadius)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
+            VStack(spacing: 0) {
+                Spacer(minLength: 24)
+
+                VStack(spacing: 12) {
+                    SGMicroLabel(text: "Time's up", color: SGLockScene.accent)
+                    Text("He caught you scrolling")
+                        .font(SGTheme.stepTitle)
+                        .foregroundColor(SGTheme.nightText)
+                        .multilineTextAlignment(.center)
+                    Text("Your screen time is spent. Answer your flashcards to win your apps back.")
+                        .font(SGTheme.body)
+                        .foregroundColor(SGTheme.nightTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: 300)
                 }
-                Text(title)
-                    .font(.system(size: 17, weight: .bold))
+                .padding(.horizontal, SGTheme.screenPadding)
+
+                Spacer(minLength: 20)
+
+                // The monster in the eye of the storm. His measured centre
+                // feeds the ripple above.
+                AngryMascotImage()
+                    .frame(width: 200, height: 200)
+                    .shadow(color: SGLockScene.accent.opacity(0.45), radius: 36, y: 12)
+                    .background(
+                        GeometryReader { proxy in
+                            let frame = proxy.frame(in: .global)
+                            Color.clear
+                                .onAppear {
+                                    mascotCenter = CGPoint(x: frame.midX, y: frame.midY)
+                                }
+                                .onChange(of: frame) { _, newFrame in
+                                    mascotCenter = CGPoint(x: newFrame.midX, y: newFrame.midY)
+                                }
+                        }
+                    )
+
+                Spacer(minLength: 20)
+
+                VStack(spacing: 12) {
+                    if let deck {
+                        deckCard(deck)
+                    }
+
+                    SGButton(title: "Study to unlock",
+                             icon: "rectangle.stack.fill",
+                             variant: .alarm,
+                             action: onStudy)
+
+                    if emergencyUnlocksRemaining > 0 {
+                        Button(action: onEmergency) {
+                            Text("Emergency unlock (\(emergencyUnlocksRemaining) left)")
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.nightTextTertiary)
+                                .underline()
+                        }
+                        .padding(.top, 2)
+                    }
+                }
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.bottom, SGTheme.tabBarClearance)
             }
-            .foregroundColor(SGTheme.paper)
-            .padding(.vertical, 16)
-            .frame(maxWidth: .infinity)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(.white)
-                    .shadow(color: Color.black.opacity(0.14), radius: 12, y: 5)
-            )
+        }
+    }
+
+    /// The active deck on smoked glass, so the storm stays visible through
+    /// every surface on this screen.
+    private func deckCard(_ deck: Deck) -> some View {
+        Button(action: onDeckTap) {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    SGMicroLabel(text: "Active deck", color: SGLockScene.accent)
+                    Text(deck.name)
+                        .font(SGTheme.display(20))
+                        .foregroundColor(SGTheme.nightText)
+                        .lineLimit(1)
+                    Text(deck.cards.count == 1
+                         ? "1 card. Answering it unlocks your apps"
+                         : "\(deck.cards.count) cards. Answering them unlocks your apps")
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.nightTextSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(SGTheme.rowLabel)
+                    .foregroundColor(SGTheme.nightTextTertiary)
+            }
+            .padding(SGTheme.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .sgGlassBackground(in: RoundedRectangle(cornerRadius: SGTheme.cardRadius,
+                                                    style: .continuous),
+                               onDark: true)
         }
         .buttonStyle(SGPressStyle())
     }
+}
+
+#Preview("Locked home") {
+    LockedHomeView(
+        emergencyUnlocksRemaining: 3,
+        deck: Deck(name: "Biology 101")
+    )
 }
 
 #Preview("Empty / not set up") {

@@ -47,8 +47,8 @@ struct ReviewsView: View {
                 .padding(.top, 24)
                 .fadeRise(shown, delay: 0.2)
 
-            Text("Students are taking back their time")
-                .font(SGTheme.display(26))
+            Text("45,000 students stopped fighting themselves")
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 36)
@@ -97,27 +97,36 @@ struct ReviewsView: View {
 
     /// One marquee strip; under Reduce Motion it renders a static row
     /// instead of drifting forever.
-    @ViewBuilder
+    ///
+    /// The strip content is thousands of points wide, so it lives in an
+    /// `overlay` on a fixed-height spacer: overlays contribute NOTHING to
+    /// layout, which guarantees the row can never push the screen's width
+    /// past the device edges no matter what the marquee reports.
     private func reviewStrip(_ items: [OnbReview], speed: Double, reverse: Bool) -> some View {
-        if reduceMotion {
-            HStack(spacing: 12) {
-                ForEach(items) { review in
-                    OnbReviewCard(review: review)
-                }
-            }
-            .padding(.horizontal, 6)
-            .frame(maxWidth: .infinity, alignment: reverse ? .trailing : .leading)
-            .clipped()
-        } else {
-            MarqueeRow(speed: speed, reverse: reverse) {
-                HStack(spacing: 12) {
-                    ForEach(items) { review in
-                        OnbReviewCard(review: review)
+        Color.clear
+            .frame(height: OnbReviewCard.height)
+            .frame(maxWidth: .infinity)
+            .overlay {
+                if reduceMotion {
+                    HStack(spacing: 12) {
+                        ForEach(items) { review in
+                            OnbReviewCard(review: review)
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                    .frame(maxWidth: .infinity, alignment: reverse ? .trailing : .leading)
+                } else {
+                    MarqueeRow(speed: speed, reverse: reverse) {
+                        HStack(spacing: 12) {
+                            ForEach(items) { review in
+                                OnbReviewCard(review: review)
+                            }
+                        }
+                        .padding(.horizontal, 6)
                     }
                 }
-                .padding(.horizontal, 6)
             }
-        }
+            .clipped()
     }
 }
 
@@ -133,11 +142,16 @@ private struct OnbReview: Identifiable {
 private struct OnbReviewCard: View {
     let review: OnbReview
 
+    /// Fixed card height (14pt padding × 2 + name/title/2-line-text rows)
+    /// so the strips can reserve exact layout space and render the moving
+    /// row purely as an overlay.
+    static let height: CGFloat = 118
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(review.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(SGTheme.rowLabel)
                     .foregroundColor(SGTheme.paperSecondary)
 
                 Spacer()
@@ -145,25 +159,25 @@ private struct OnbReviewCard: View {
                 HStack(spacing: 2) {
                     ForEach(0..<5, id: \.self) { _ in
                         Image(systemName: "star.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(Color(hex: 0xFFC83D))
+                            .font(SGTheme.micro)
+                            .foregroundColor(SGTheme.sun)
                     }
                 }
             }
 
             Text(review.title)
-                .font(.system(size: 15, weight: .bold))
+                .font(SGTheme.cardTitle)
                 .foregroundColor(SGTheme.paper)
                 .lineLimit(1)
 
             Text(review.text)
-                .font(.system(size: 13))
+                .font(SGTheme.caption)
                 .foregroundColor(SGTheme.paperSecondary)
                 .lineSpacing(2)
                 .lineLimit(2, reservesSpace: true)
         }
         .padding(14)
-        .frame(width: 268, alignment: .leading)
+        .frame(width: 268, height: Self.height, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                 .fill(SGTheme.inkRaised)

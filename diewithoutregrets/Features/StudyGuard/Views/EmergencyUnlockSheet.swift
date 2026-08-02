@@ -26,12 +26,12 @@ struct EmergencyUnlockSheet: View {
         SGFittedSheet(estimatedHeight: 460) {
             VStack(spacing: 20) {
                 Image(systemName: exhausted ? "hourglass" : "exclamationmark.shield.fill")
-                    .font(.system(size: 44))
+                    .font(SGTheme.display(44, weight: .regular))
                     .foregroundColor(exhausted ? SGTheme.paperTertiary : SGTheme.ember)
                     .padding(.top, 12)
 
                 Text(exhausted ? "No emergency unlocks left" : "Use an emergency unlock?")
-                    .font(SGTheme.display(24))
+                    .font(SGTheme.sheetTitle)
                     .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
 
@@ -58,7 +58,7 @@ struct EmergencyUnlockSheet: View {
 
                 VStack(spacing: 12) {
                     if !exhausted {
-                        SGPrimaryButton(title: "Unlock my apps", tint: SGTheme.ember) {
+                        SGButton(title: "Unlock my apps", variant: .ember) {
                             if manager.useEmergencyUnlock() {
                                 dismiss()
                                 onUnlocked()
@@ -66,7 +66,7 @@ struct EmergencyUnlockSheet: View {
                         }
                     }
 
-                    SGGhostButton(title: exhausted ? "Close" : "Never mind, I'll study") {
+                    SGButton(title: exhausted ? "Close" : "Never mind, I'll study", variant: .ghost) {
                         dismiss()
                     }
                 }

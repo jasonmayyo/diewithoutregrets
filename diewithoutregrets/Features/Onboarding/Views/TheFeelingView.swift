@@ -20,12 +20,11 @@ struct NotYourFaultView: View {
 
     private let headlineWords = ["It's", "not", "your", "fault."]
 
-    private let cards: [(eyebrow: String, text: String)] = [
-        ("THE ATTENTION ECONOMY", "Apps are engineered to be un-putdownable"),
-        ("THE ATTENTION ECONOMY", "Infinite feeds exploit the same loops as slot machines"),
-        ("THE ATTENTION ECONOMY", "Your attention is the product being sold"),
-    ]
+    /// Real headline screenshots (shared with OneThing): each tap stacks
+    /// another piece of published evidence.
+    private let cardImages = ["law1", "law2", "law3"]
     private let cardRotations: [Double] = [-3, 2, -0.5]
+    private let cardRestOffsets: [CGFloat] = [10, -2, -12]
 
     private let stats: [(number: String, label: String)] = [
         ("10,000+", "ENGINEERS"),
@@ -62,7 +61,7 @@ struct NotYourFaultView: View {
 
             VStack {
                 Spacer()
-                OnbCTA(title: "Continue", night: true, visible: showCTA) {
+                OnbCTA(title: "So what do I do?", night: true, visible: showCTA) {
                     viewModel.nextStep()
                 }
                 .padding(.bottom, 12)
@@ -81,7 +80,7 @@ struct NotYourFaultView: View {
             HStack(spacing: 9) {
                 ForEach(headlineWords.indices, id: \.self) { index in
                     Text(headlineWords[index])
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(SGTheme.stepTitle)
                         .foregroundColor(OnbNight.textPrimary)
                         .opacity(index < wordCount ? 1 : 0)
                         .offset(y: index < wordCount ? 0 : 14)
@@ -90,25 +89,26 @@ struct NotYourFaultView: View {
             }
             .padding(.horizontal, 24)
 
-            // The evidence pile, one card per tap.
+            // The evidence pile, one headline screenshot per tap.
             ZStack {
                 ForEach(0..<cardsShown, id: \.self) { index in
                     evidenceCard(index)
                         .rotationEffect(.degrees(cardRotations[index]))
-                        .offset(y: CGFloat(index) * 14)
+                        .offset(y: cardRestOffsets[index])
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.75), value: cardsShown)
-            .padding(.horizontal, 32)
-            .padding(.top, 36)
-            .frame(height: 220, alignment: .top)
+            .padding(.horizontal, 28)
+            .padding(.top, 28)
+            .frame(height: cardsShown > 0 ? 400 : 40, alignment: .center)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: cardsShown > 0)
 
             Spacer()
 
             if readyForTaps && cardsShown < 3 {
                 Text("Tap to continue")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(SGTheme.caption)
                     .foregroundColor(OnbNight.textMuted)
                     .opacity(hintPulse ? 1 : 0.35)
                     .padding(.bottom, 90)
@@ -131,28 +131,16 @@ struct NotYourFaultView: View {
     }
 
     private func evidenceCard(_ index: Int) -> some View {
-        VStack(spacing: 10) {
-            Text(cards[index].eyebrow)
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(2)
-                .foregroundColor(OnbNight.textMuted)
-
-            Text(cards[index].text)
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundColor(OnbNight.textPrimary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .fill(OnbNight.cardFill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                        .strokeBorder(OnbNight.cardBorder, lineWidth: 1)
-                )
-        )
+        Image(cardImages[index])
+            .resizable()
+            .scaledToFit()
+            .frame(height: 380)
+            .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
     }
 
     // MARK: - Phase B: stats cascade
@@ -164,10 +152,10 @@ struct NotYourFaultView: View {
             ForEach(stats.indices, id: \.self) { index in
                 VStack(spacing: 6) {
                     Text(stats[index].number)
-                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .font(SGTheme.display(28, weight: .heavy))
                         .foregroundColor(OnbNight.textPrimary)
                     Text(stats[index].label)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(SGTheme.micro)
                         .tracking(2.5)
                         .foregroundColor(OnbNight.textSecondary)
                 }
@@ -177,7 +165,7 @@ struct NotYourFaultView: View {
             }
 
             Text("All working to make sure")
-                .font(.system(size: 17, weight: .medium))
+                .font(SGTheme.body)
                 .foregroundColor(OnbNight.textSecondary)
                 .opacity(showLeadIn ? 1 : 0)
                 .offset(y: showLeadIn ? 0 : 12)
@@ -187,7 +175,7 @@ struct NotYourFaultView: View {
             HStack(spacing: 10) {
                 ForEach(kickerWords.indices, id: \.self) { index in
                     Text(kickerWords[index])
-                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                        .font(SGTheme.display(26, weight: .heavy))
                         .foregroundColor(SGTheme.ember)
                         .opacity(kickerCount > index ? 1 : 0)
                         .scaleEffect(kickerCount > index ? 1 : 1.6)
@@ -227,7 +215,7 @@ struct NotYourFaultView: View {
         for index in headlineWords.indices {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4 + Double(index) * 0.35) {
                 wordCount = index + 1
-                UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+                SGTheme.gain()
             }
         }
 
@@ -243,7 +231,7 @@ struct NotYourFaultView: View {
     private func handleTap() {
         guard readyForTaps, cardsShown < 3 else { return }
         cardsShown += 1
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        SGTheme.beat()
         viewModel.screenAction("card_tapped", properties: ["card_number": cardsShown])
 
         if cardsShown == 3 {
@@ -260,21 +248,21 @@ struct NotYourFaultView: View {
         for index in stats.indices {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + Double(index) * 0.8) {
                 statCount = index + 1
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                SGTheme.beat()
             }
         }
 
         let statsDone = 0.5 + Double(stats.count) * 0.8
         DispatchQueue.main.asyncAfter(deadline: .now() + statsDone + 0.3) {
             showLeadIn = true
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            SGTheme.gain()
         }
 
         for index in kickerWords.indices {
             let isLast = index == kickerWords.count - 1
             DispatchQueue.main.asyncAfter(deadline: .now() + statsDone + 0.9 + Double(index) * 0.5) {
                 kickerCount = index + 1
-                UIImpactFeedbackGenerator(style: isLast ? .heavy : .medium).impactOccurred()
+                if isLast { SGTheme.climax() } else { SGTheme.beat() }
             }
         }
 

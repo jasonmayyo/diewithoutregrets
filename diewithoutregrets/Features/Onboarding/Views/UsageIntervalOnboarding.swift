@@ -26,7 +26,7 @@ struct UsageIntervalOnboarding: View {
             mascot: .clipboard,
             mascotReplayKey: selectedMinutes,
             headline: "How long until your apps lock?",
-            subtitle: "Scroll for this long, and your flashcards stand between you and more scrolling. Answer them correctly to earn the same amount again. You also start fresh every morning.",
+            subtitle: "Scroll this long and he steps in. Answer your flashcards to earn the same amount again. Fresh start every morning.",
             ctaTitle: "Start guarding",
             ctaAction: {
                 startGuarding()
@@ -43,7 +43,7 @@ struct UsageIntervalOnboarding: View {
                     ) {
                         selectedMinutes = minutes
                         StudyGuardManager.shared.updateInterval(minutes)
-                        onboardingViewModel.triggerHapticFeedback()
+                        SGTheme.beat()
                     }
                 }
             }
@@ -96,23 +96,23 @@ private struct IntervalPill: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text("\(minutes) min")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
 
                 if isRecommended {
                     Text("Recommended")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.mint)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 64)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isSelected ? SGTheme.mint.opacity(0.12) : SGTheme.inkRaised)
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                    .fill(isSelected ? SGTheme.mintTint : SGTheme.inkRaised)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                     .strokeBorder(
                         isSelected ? SGTheme.mint : (isRecommended ? SGTheme.mint.opacity(0.4) : SGTheme.hairline),
                         lineWidth: 1

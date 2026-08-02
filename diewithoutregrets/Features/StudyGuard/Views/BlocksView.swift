@@ -97,38 +97,38 @@ struct BlocksView: View {
     }
 
     private var statusCard: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(statusColor.opacity(0.14))
-                    .frame(width: 44, height: 44)
-                Image(systemName: guardManager.state == .locked ? "lock.fill" : "shield.lefthalf.filled")
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundColor(statusColor)
-            }
+        SGCard(shadowed: false) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(statusColor.opacity(0.14))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: guardManager.state == .locked ? "lock.fill" : "shield.lefthalf.filled")
+                        .font(SGTheme.display(19, weight: .semibold))
+                        .foregroundColor(statusColor)
+                }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(statusText.title)
-                    .font(SGTheme.cardTitle)
-                    .foregroundColor(SGTheme.paper)
-                Text(statusText.detail)
-                    .font(SGTheme.caption)
-                    .foregroundColor(SGTheme.paperSecondary)
-            }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(statusText.title)
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
+                    Text(statusText.detail)
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperSecondary)
+                }
 
-            Spacer()
+                Spacer()
 
-            if guardManager.state == .metering || guardManager.state == .disabled {
-                Toggle("", isOn: Binding(
-                    get: { guardManager.state != .disabled },
-                    set: { _ = guardManager.setGuardEnabled($0) }
-                ))
-                .labelsHidden()
-                .tint(SGTheme.mint)
+                if guardManager.state == .metering || guardManager.state == .disabled {
+                    Toggle("", isOn: Binding(
+                        get: { guardManager.state != .disabled },
+                        set: { _ = guardManager.setGuardEnabled($0) }
+                    ))
+                    .labelsHidden()
+                    .tint(SGTheme.mint)
+                }
             }
         }
-        .padding(SGTheme.cardPadding)
-        .blocksCard()
     }
 
     // MARK: - Guard settings
@@ -137,40 +137,39 @@ struct BlocksView: View {
         VStack(alignment: .leading, spacing: 10) {
             SGMicroLabel(text: "Blocking")
 
-            // Guarded apps
+            // Guarded apps — a list row plus the chip cloud underneath, so it
+            // composes SGCard + the row label instead of a plain SGListRow.
             Button(action: editGuardedApps) {
-                VStack(alignment: .leading, spacing: 12) {
-                    settingRowLabel(
-                        title: "Guarded apps",
-                        detail: SGContract.isSelectionEmpty(guardManager.selection)
-                            ? "No apps guarded yet. Tap to choose"
-                            : "\(SGContract.tokenCount(guardManager.selection)) of \(SGContract.maxSelectionTokens) guarded"
-                    )
+                SGCard(shadowed: false) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        settingRowLabel(
+                            title: "Guarded apps",
+                            detail: SGContract.isSelectionEmpty(guardManager.selection)
+                                ? "No apps guarded yet. Tap to choose"
+                                : "\(SGContract.tokenCount(guardManager.selection)) of \(SGContract.maxSelectionTokens) guarded"
+                        )
 
-                    if !SGContract.isSelectionEmpty(guardManager.selection) {
-                        selectionChips
+                        if !SGContract.isSelectionEmpty(guardManager.selection) {
+                            selectionChips
+                        }
                     }
                 }
-                .padding(SGTheme.cardPadding)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .blocksCard()
             }
             .buttonStyle(SGPressStyle())
 
             // Usage interval
-            Button(action: { showIntervalSheet = true }) {
-                settingRowLabel(
-                    title: "Usage interval",
-                    detail: "\(guardManager.intervalMinutes) minutes of app use before they lock"
-                )
-                .padding(SGTheme.cardPadding)
-                .blocksCard()
+            SGListRow(
+                title: "Usage interval",
+                subtitle: "\(guardManager.intervalMinutes) minutes of app use before they lock"
+            ) {
+                showIntervalSheet = true
             }
-            .buttonStyle(SGPressStyle())
         }
     }
 
-    /// Title + caption + mint chevron, the standard tappable settings row.
+    /// Title + caption + mint chevron for the guarded-apps composite card.
+    /// Plain rows use SGListRow; this only exists because the chips render
+    /// inside the same tappable surface.
     private func settingRowLabel(title: String, detail: String) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -183,7 +182,7 @@ struct BlocksView: View {
             }
             Spacer()
             Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
+                .font(SGTheme.rowLabel)
                 .foregroundColor(SGTheme.mint)
         }
     }
@@ -242,12 +241,11 @@ struct BlocksView: View {
             SGMicroLabel(text: "Active deck")
 
             if deckStore.decks.isEmpty {
-                Text("No decks yet. Create one in the Study tab.")
-                    .font(SGTheme.body)
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .padding(SGTheme.cardPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .blocksCard()
+                SGCard(shadowed: false) {
+                    Text("No decks yet. Create one in the Study tab.")
+                        .font(SGTheme.body)
+                        .foregroundColor(SGTheme.paperSecondary)
+                }
             } else {
                 VStack(spacing: 8) {
                     ForEach(deckStore.decks) { deck in
@@ -271,46 +269,36 @@ struct BlocksView: View {
                 SGTheme.tapHaptic()
             }
         } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(isActive ? SGTheme.mint.opacity(0.15) : SGTheme.glaze(0.06))
-                        .frame(width: 30, height: 30)
+            SGCard(shadowed: false) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(isActive ? SGTheme.mint.opacity(0.15) : SGTheme.glaze(0.06))
+                            .frame(width: 30, height: 30)
+                        if isActive {
+                            Image(systemName: "checkmark")
+                                .font(SGTheme.micro.weight(.bold))
+                                .foregroundColor(SGTheme.mintDeep)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(deck.name)
+                            .font(SGTheme.cardTitle)
+                            .foregroundColor(SGTheme.paper)
+                            .lineLimit(1)
+                        Text("\(deck.cards.count) card\(deck.cards.count == 1 ? "" : "s")")
+                            .font(SGTheme.caption)
+                            .foregroundColor(SGTheme.paperSecondary)
+                    }
+
+                    Spacer()
+
                     if isActive {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(SGTheme.mintDeep)
+                        SGMicroLabel(text: "Active", color: SGTheme.mintDeep)
                     }
                 }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(deck.name)
-                        .font(SGTheme.cardTitle)
-                        .foregroundColor(SGTheme.paper)
-                        .lineLimit(1)
-                    Text("\(deck.cards.count) card\(deck.cards.count == 1 ? "" : "s")")
-                        .font(SGTheme.caption)
-                        .foregroundColor(SGTheme.paperSecondary)
-                }
-
-                Spacer()
-
-                if isActive {
-                    SGMicroLabel(text: "Active", color: SGTheme.mintDeep)
-                }
             }
-            .padding(.horizontal, SGTheme.cardPadding)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
-                    .fill(SGTheme.inkRaised)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
-                            .strokeBorder(isActive ? SGTheme.mint.opacity(0.5) : SGTheme.hairline,
-                                          lineWidth: isActive ? 1.5 : 1)
-                    )
-            )
         }
         .buttonStyle(.plain)
         .animation(SGTheme.springFast, value: isActive)
@@ -340,25 +328,19 @@ struct BlocksView: View {
             }
 
             if unlockMethod == "flashcards" {
-                Button(action: { showFlashcardSettings = true }) {
-                    settingRowLabel(
-                        title: "Flashcards before unlocking",
-                        detail: useAllCards ? "All cards" : "\(flashcardCount) cards"
-                    )
-                    .padding(SGTheme.cardPadding)
-                    .blocksCard()
+                SGListRow(
+                    title: "Flashcards before unlocking",
+                    subtitle: useAllCards ? "All cards" : "\(flashcardCount) cards"
+                ) {
+                    showFlashcardSettings = true
                 }
-                .buttonStyle(SGPressStyle())
             } else {
-                Button(action: { showFocusDurationSettings = true }) {
-                    settingRowLabel(
-                        title: "Focus session length",
-                        detail: "\(focusDuration) minutes"
-                    )
-                    .padding(SGTheme.cardPadding)
-                    .blocksCard()
+                SGListRow(
+                    title: "Focus session length",
+                    subtitle: "\(focusDuration) minutes"
+                ) {
+                    showFocusDurationSettings = true
                 }
-                .buttonStyle(SGPressStyle())
             }
         }
     }
@@ -377,36 +359,35 @@ struct BlocksView: View {
         VStack(alignment: .leading, spacing: 10) {
             SGMicroLabel(text: "Emergency")
 
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(SGTheme.ember.opacity(0.14))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "key.fill")
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundColor(SGTheme.ember)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(guardManager.emergencyUnlocksRemaining) emergency unlock\(guardManager.emergencyUnlocksRemaining == 1 ? "" : "s") left this week")
-                        .font(SGTheme.cardTitle)
-                        .foregroundColor(SGTheme.paper)
-                    if guardManager.emergencyUnlocksRemaining == 0,
-                       let next = guardManager.nextEmergencyUnlockDate {
-                        Text("Next one available \(next.formatted(date: .abbreviated, time: .omitted))")
-                            .font(SGTheme.caption)
-                            .foregroundColor(SGTheme.paperSecondary)
-                    } else {
-                        Text("Use them from the home screen when locked.")
-                            .font(SGTheme.caption)
-                            .foregroundColor(SGTheme.paperSecondary)
+            SGCard(shadowed: false) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(SGTheme.ember.opacity(0.14))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "key.fill")
+                            .font(SGTheme.display(19, weight: .semibold))
+                            .foregroundColor(SGTheme.ember)
                     }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(guardManager.emergencyUnlocksRemaining) emergency unlock\(guardManager.emergencyUnlocksRemaining == 1 ? "" : "s") left this week")
+                            .font(SGTheme.cardTitle)
+                            .foregroundColor(SGTheme.paper)
+                        if guardManager.emergencyUnlocksRemaining == 0,
+                           let next = guardManager.nextEmergencyUnlockDate {
+                            Text("Next one available \(next.formatted(date: .abbreviated, time: .omitted))")
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.paperSecondary)
+                        } else {
+                            Text("Use them from the home screen when locked.")
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.paperSecondary)
+                        }
+                    }
+                    Spacer()
                 }
-                Spacer()
             }
-            .padding(SGTheme.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .blocksCard()
         }
     }
 
@@ -418,22 +399,6 @@ struct BlocksView: View {
         } else {
             showGuardedAppsPicker = true
         }
-    }
-}
-
-// MARK: - Styling
-
-private extension View {
-    /// Settings-row surface: inkRaised fill + hairline stroke.
-    func blocksCard() -> some View {
-        background(
-            RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                .fill(SGTheme.inkRaised)
-                .overlay(
-                    RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                )
-        )
     }
 }
 

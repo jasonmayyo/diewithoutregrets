@@ -2,7 +2,7 @@
 //  AgeSelectView.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 quiz question 1 (night): age range. Auto-advances on
+//  Onboarding v3 quiz question 1 (night): age range. Auto-advances on
 //  selection while the container's clipboard monster takes a note.
 //
 
@@ -11,16 +11,14 @@ import SwiftUI
 struct QuizAgeView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
 
-    // Same ranges as the retired AvgScreenTimeViewModel age options.
+    // Consultant rule: never more than 5 options, and none a real student
+    // wouldn't pick (nobody 65 is downloading a student app).
     private let options = [
         "Under 14",
-        "14 - 18",
-        "19 - 25",
-        "26 - 34",
-        "35 - 44",
-        "45 - 55",
-        "56 - 65",
-        "Over 65",
+        "14–17",
+        "18–22",
+        "23–29",
+        "30 or over",
     ]
 
     @State private var answered = false
@@ -29,7 +27,7 @@ struct QuizAgeView: View {
         QuizScreenContainer(
             number: 1,
             question: "How old are you?",
-            subtitle: "This helps us tailor your plan to your life stage.",
+            subtitle: "We'll tune the plan to where you are in life.",
             progress: OnboardingStep.quizAge.quizProgress
         ) {
             ForEach(options, id: \.self) { option in

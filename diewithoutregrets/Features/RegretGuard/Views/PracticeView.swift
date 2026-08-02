@@ -68,50 +68,31 @@ struct PracticeView: View {
         let dismissAction: () -> Void
         let questionResults: [Bool?]
 
+        private var progress: Double {
+            let total = questionResults.count
+            guard total > 0 else { return 0 }
+            return Double(questionResults.compactMap { $0 }.count) / Double(total)
+        }
+
         var body: some View {
             HStack(spacing: 12) {
+                // Same 32pt circle in a 44pt target as SGSheetHeader's close.
                 Button(action: dismissAction) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(SGTheme.paper)
-                        .padding(10)
-                        .background(SGTheme.glaze(0.08))
-                        .clipShape(Circle())
+                        .font(SGTheme.caption.weight(.bold))
+                        .foregroundColor(SGTheme.paperSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(SGTheme.glaze(0.08)))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(SGPressStyle())
 
-                // Use the enhanced ProgressBar
-                EnhancedProgressBar(questionResults: questionResults)
+                SGProgressBar(progress: progress)
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
             .padding(.bottom, 5)
-        }
-    }
-
-    private struct EnhancedProgressBar: View {
-        let questionResults: [Bool?]
-        private let barHeight: CGFloat = 8
-
-        var body: some View {
-            let totalQuestions = questionResults.count
-            let answeredQuestions = questionResults.compactMap { $0 }.count
-            let progress = totalQuestions > 0 ? Double(answeredQuestions) / Double(totalQuestions) : 0.0
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // Background Track
-                    Capsule()
-                        .fill(SGTheme.glaze(0.1))
-                        .frame(height: barHeight)
-
-                    // Progress Fill
-                    Capsule()
-                        .fill(SGTheme.mint)
-                        .frame(width: geometry.size.width * progress, height: barHeight)
-                        .animation(.easeInOut(duration: 0.3), value: progress)
-                }
-            }
-            .frame(height: barHeight)
         }
     }
 
@@ -126,7 +107,7 @@ struct PracticeView: View {
                 if let currentRegret = currentRegret {
                     VStack(spacing: 0) {
                         Text(currentRegret.regretPrompt)
-                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .font(SGTheme.display(22))
                             .foregroundColor(SGTheme.paper)
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
@@ -135,7 +116,7 @@ struct PracticeView: View {
                         if showAnswer {
                             ScrollView {
                                 Text(explanation)
-                                    .font(.subheadline)
+                                    .font(SGTheme.body)
                                     .foregroundColor(SGTheme.paperSecondary)
                                     .padding()
                             }
@@ -170,30 +151,22 @@ struct PracticeView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     ForEach(Array(choices.enumerated()), id: \.offset) { index, choice in
-                        Button(action: {
-                            if !showAnswer {
+                        if showAnswer {
+                            // The correct tile sweeps mint, the miss shakes,
+                            // the rest dim.
+                            QuizAnswerTile(
+                                text: choice,
+                                state: revealState(for: index)
+                            )
+                        } else {
+                            QuizAnswerTile(
+                                text: choice,
+                                state: selectedAnswer == index ? .selected : .idle
+                            ) {
+                                QuizHaptics.selectTick()
                                 selectedAnswer = index
                             }
-                        }) {
-                            HStack {
-                                Text(choice)
-                                    .foregroundColor(textColor(for: index))
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.vertical, 16)
-                                    .padding(.horizontal, 20)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(background(for: index))
-                                    .cornerRadius(SGTheme.tileRadius)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: SGTheme.tileRadius)
-                                            .stroke(borderColor(for: index), lineWidth: borderWidth(for: index))
-                                    )
-                            }
                         }
-                        .disabled(showAnswer)
-                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)
@@ -202,33 +175,10 @@ struct PracticeView: View {
             .frame(maxHeight: 300) // Limit height to prevent overflow
         }
 
-        private func textColor(for index: Int) -> Color {
-            showAnswer ? (index == correctAnswer ? SGTheme.ink : SGTheme.paper) : SGTheme.paper
-        }
-
-        private func background(for index: Int) -> Color {
-            if showAnswer {
-                return index == correctAnswer
-                    ? SGTheme.mint
-                    : (index == selectedAnswer ? SGTheme.ember.opacity(0.22) : SGTheme.inkRaised)
-            }
-            return selectedAnswer == index ? SGTheme.mint.opacity(0.12) : SGTheme.inkRaised
-        }
-
-        private func borderColor(for index: Int) -> Color {
-            if showAnswer {
-                return index == correctAnswer
-                    ? SGTheme.mint
-                    : (index == selectedAnswer ? SGTheme.ember.opacity(0.6) : SGTheme.hairline)
-            }
-            return selectedAnswer == index ? SGTheme.mint : SGTheme.hairline
-        }
-
-        private func borderWidth(for index: Int) -> CGFloat {
-            if showAnswer {
-                return index == correctAnswer ? 2 : 1
-            }
-            return selectedAnswer == index ? 2 : 1
+        private func revealState(for index: Int) -> QuizTileState {
+            if index == correctAnswer { return .revealedCorrect }
+            if index == selectedAnswer { return .revealedWrong }
+            return .dimmed
         }
     }
 
@@ -243,61 +193,11 @@ struct PracticeView: View {
                     .fill(SGTheme.hairline)
                     .frame(height: 1)
 
-                Button(action: action) {
-                    Text(text)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(disabled ? SGTheme.paperTertiary : SGTheme.mint)
-                        .padding(.vertical, 32)
-                        .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
-                }
-                .disabled(disabled)
+                SGButton(title: text, enabled: !disabled, action: action)
+                    .padding(.horizontal, SGTheme.screenPadding)
+                    .padding(.vertical, 16)
             }
             .background(SGTheme.inkRaised)
-        }
-    }
-
-    private struct ExplanationView: View {
-        let currentRegret: Regret
-        let selectedAnswer: Int?
-
-        var body: some View {
-            VStack(spacing: 12) {
-                ForEach(Array(currentRegret.choices.enumerated()), id: \.offset) { index, choice in
-                    HStack {
-                        Text(choice)
-                            .foregroundColor(index == currentRegret.correctAnswerIndex ? SGTheme.ink : SGTheme.paper)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                index == currentRegret.correctAnswerIndex ?
-                                SGTheme.mint :
-                                    (index == selectedAnswer ? SGTheme.ember.opacity(0.22) : SGTheme.inkRaised)
-                            )
-                            .cornerRadius(SGTheme.tileRadius)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: SGTheme.tileRadius)
-                                    .stroke(
-                                        index == currentRegret.correctAnswerIndex ?
-                                        SGTheme.mint : SGTheme.hairline,
-                                        lineWidth: index == currentRegret.correctAnswerIndex ? 2 : 1
-                                    )
-                            )
-                    }
-                }
-            }
-            .padding(.horizontal)
-
-            ScrollView {
-                Text(currentRegret.backgroundExplanation)
-                    .font(.subheadline)
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .padding()
-            }
-            .frame(maxHeight: 150)
         }
     }
 
@@ -316,7 +216,7 @@ struct PracticeView: View {
                 Text(hasIncorrectAnswers ?
                      "Looks like you need more practice!" :
                         "Well done! You've completed the deck!")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(SGTheme.display(22))
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .padding()
@@ -324,25 +224,12 @@ struct PracticeView: View {
                 Spacer()
 
                 VStack(spacing: 15) {
-                    Button(action: hasIncorrectAnswers ? retryAction : dismissAction) {
-                        Text(hasIncorrectAnswers ? "Retry Questions" : "Finish Practice")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(SGTheme.ink)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(SGTheme.mint)
-                            .cornerRadius(50)
-                    }
+                    SGButton(
+                        title: hasIncorrectAnswers ? "Retry Questions" : "Finish Practice",
+                        action: hasIncorrectAnswers ? retryAction : dismissAction
+                    )
 
-                    Button(action: dismissAction) {
-                        Text("Close")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(SGTheme.paper)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(SGTheme.glaze(0.08))
-                            .cornerRadius(50)
-                    }
+                    SGButton(title: "Close", variant: .ghost, action: dismissAction)
                 }
                 .padding()
             }

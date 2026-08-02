@@ -29,13 +29,13 @@ struct ScienceView: View {
                 .padding(.bottom, 20)
 
             Text("The Study Guard Method")
-                .font(SGTheme.display(30))
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .fadeRise(shown, delay: 0.5)
 
-            Text("Built on proven learning science: spaced repetition and friction design, grounded in peer-reviewed research.")
-                .font(.system(size: 16, weight: .medium))
+            Text("Friction when you reach for your phone. Spaced repetition when you study. Both backed by peer-reviewed research. Neither needs your willpower.")
+                .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
@@ -50,35 +50,22 @@ struct ScienceView: View {
                 .fadeRise(shown, delay: 1.1)
 
             VStack(spacing: 14) {
-                HStack(spacing: 28) {
-                    // Equal-height logo slots; each logo keeps its established
-                    // treatment (steel raw, common sense on a paper chip).
-                    HStack {
-                        Image("steel-logo")
+                // University logo row (Harvard, UCL, ScienceDirect): same
+                // slot size, no chrome, matching OneThing's treatment.
+                HStack(spacing: 0) {
+                    ForEach(["Harvard", "ucl", "sciencedirect"], id: \.self) { name in
+                        Image(name)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 22)
-                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .renderingMode(.original)
+                            .scaledToFit()
+                            .frame(width: 72, height: 72)
+                            .frame(maxWidth: .infinity)
                     }
-                    .frame(height: 30)
-
-                    HStack {
-                        Image("common-sense-media-logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 18)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(SGTheme.paper)
-                            )
-                    }
-                    .frame(height: 30)
                 }
+                .padding(.horizontal, 44)
 
                 Text("Based on Cepeda et al. 2006 (spaced repetition) and Steel 2007 (procrastination research)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(SGTheme.caption)
                     .foregroundColor(SGTheme.paperTertiary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
@@ -88,7 +75,7 @@ struct ScienceView: View {
 
             Spacer()
 
-            OnbCTA(title: "Continue", visible: ctaShown) {
+            OnbCTA(title: "How it works", visible: ctaShown) {
                 viewModel.screenAction("science_continue")
                 viewModel.nextStep()
             }

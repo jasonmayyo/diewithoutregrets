@@ -2,13 +2,14 @@
 //  OnboardingViewModel.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 ("sg_v2") — mirrors the OneThing V4 emotional arc:
-//  Discovery (hook, villain, hope, mascot, 4-question quiz) → Reality check
-//  (auto-choreographed, personalized from quiz answers) → Convert (science,
-//  mechanics, social proof, hard paywall) → Post-purchase setup.
+//  Onboarding v3 ("sg_v3") — the Semester Comeback flow:
+//  Pain (hook, 11pm feeling, villain, willpower lie, mascot, 5-question
+//  quiz) → Semester receipt (auto-choreographed, every number scaled to the
+//  student's 15-week semester) → Offer (Hormozi-framed: mechanism, effort
+//  killer, proof, named-offer paywall) → Post-purchase setup.
 //
 //  Every screen advances through nextStep(); quiz questions auto-advance on
-//  selection. All funnel analytics carry flow_version "sg_v2".
+//  selection. All funnel analytics carry flow_version "sg_v3".
 //
 
 import SwiftUI
@@ -16,27 +17,27 @@ import CoreHaptics
 import PostHog
 
 enum OnboardingStep: CaseIterable {
-    // Phase 1 — Discovery
+    // Phase 1 — The pain
     case hook
+    case theFeeling
     case notYourFault
-    case fightingBack
+    case willpowerLie
     case meetYourGuard
     case quizAge
     case quizStudentType
     case quizScreenTime
     case quizScrollTimes
-    // Phase 2 — Reality check
+    case quizExamDate
+    // Phase 2 — The semester receipt
     case calculating
-    case lifeDrain
-    case studyVsScroll
-    case hoursLost
-    case reclaim
-    case afterChart
-    // Phase 3 — Convert
+    case semesterDrain
+    case daysLost
+    case theImagine
+    // Phase 3 — The offer
     case science
     case coreMechanic
+    case noWillpower
     case moreFeatures
-    case founderStory
     case reviews
     case paywall
     // Phase 4 — Post-purchase setup
@@ -52,20 +53,23 @@ enum OnboardingStep: CaseIterable {
     /// Quiz steps share the floating clipboard mascot + progress capsule.
     var isQuizStep: Bool {
         switch self {
-        case .quizAge, .quizStudentType, .quizScreenTime, .quizScrollTimes:
+        case .quizAge, .quizStudentType, .quizScreenTime, .quizScrollTimes,
+             .quizExamDate:
             return true
         default:
             return false
         }
     }
 
-    /// Night-sky steps: the villain arc through the reality check. The dawn
-    /// breaks on .reclaim (the turn) and stays daylight after.
+    /// Night-sky steps: night falls during .theFeeling (11pm) and holds
+    /// through the semester receipt. The dawn breaks on .theImagine (the
+    /// turn) and stays daylight after.
     var isNight: Bool {
         switch self {
-        case .notYourFault, .fightingBack, .meetYourGuard,
+        case .theFeeling, .notYourFault, .willpowerLie, .meetYourGuard,
              .quizAge, .quizStudentType, .quizScreenTime, .quizScrollTimes,
-             .calculating, .lifeDrain, .studyVsScroll, .hoursLost:
+             .quizExamDate,
+             .calculating, .semesterDrain, .daysLost:
             return true
         default:
             return false
@@ -73,14 +77,29 @@ enum OnboardingStep: CaseIterable {
     }
 
     /// Hardcoded quiz progress, OneThing-style (the bar only exists inside
-    /// the quiz, so it doesn't map to the full 28-step index).
+    /// the quiz, so it doesn't map to the full step index).
+    /// Superseded by the flow-wide chrome bar; kept so quiz call sites
+    /// stay source-stable until the Phase 5 sweep.
     var quizProgress: Double {
         switch self {
-        case .quizAge: return 0.10
-        case .quizStudentType: return 0.16
-        case .quizScreenTime: return 0.24
-        case .quizScrollTimes: return 0.30
+        case .quizAge: return 0.08
+        case .quizStudentType: return 0.14
+        case .quizScreenTime: return 0.20
+        case .quizScrollTimes: return 0.26
+        case .quizExamDate: return 0.32
         default: return 0
+        }
+    }
+
+    /// Whether the flow-wide progress chrome shows on this step. Hidden on
+    /// the marketing entry (hook), the paywall (its own header), and the
+    /// celebration (chrome-free, like every completion screen).
+    var showsFlowChrome: Bool {
+        switch self {
+        case .hook, .paywall, .completion:
+            return false
+        default:
+            return true
         }
     }
 }
@@ -99,12 +118,9 @@ class OnboardingViewModel: ObservableObject {
     @Published var studentType: String = ""
     @Published var screenTime: String = ""
     @Published var peakScrollTime: String = ""
+    @Published var examTiming: String = ""
 
     @Published var newDeckName: String = "My First Deck"
-
-    /// Bumped on every quiz answer so the floating clipboard mascot replays
-    /// its "taking a note" animation.
-    @Published var quizNoteKey: Int = 0
 
     /// Tracks when each step was first shown so we can compute time-on-step
     /// when the user advances. Keyed by step name.
@@ -118,14 +134,20 @@ class OnboardingViewModel: ObservableObject {
         trackStepViewed()
     }
 
-    // MARK: - Personalized math (OneThing formula)
+    // MARK: - Personalized math (semester scale)
 
-    /// Life expectancy for the dots grid: 80 squares, one per year.
-    static let lifeYears = 80
-    /// Years of "actual free time" after sleep/work/commute/eating/chores.
-    static let freeYears = 20
-    /// Fraction of phone time assumed to eat pure free time.
-    static let freeTimeFraction = 0.6
+    // The unit of pain a student actually lives in is the semester, not the
+    // lifetime: 15 weeks, 105 days, one square per day on the grid.
+    static let semesterWeeks = 15
+    static let semesterDays = 105
+    /// Days of the semester spent asleep (7.5h/day).
+    static let sleepDays = 33
+    /// Days in class + homework (~4h/day).
+    static let classDays = 18
+    /// Days eating, commuting, on chores.
+    static let choresDays = 17
+    /// What's left: days that are actually theirs.
+    static let freeDays = semesterDays - sleepDays - classDays - choresDays  // 37
 
     /// Midpoint hours/day from the self-reported range ("6-8 hours" → 7).
     var dailyHours: Double {
@@ -138,20 +160,54 @@ class OnboardingViewModel: ObservableObject {
 
     var phoneMinutesPerDay: Int { Int(dailyHours * 60) }
 
-    /// Years of free time the phone will eat over a lifetime.
-    var phoneYears: Int {
-        let raw = dailyHours / 24.0 * Double(Self.lifeYears) * Self.freeTimeFraction
-        return min(Int(raw.rounded()), Self.freeYears)
+    /// Full 24-hour days of this semester spent on the phone.
+    /// 3h→13 · 5h→22 · 7h→31 · 9h→37 (capped at free days).
+    var phoneDays: Int {
+        let raw = dailyHours * Double(Self.semesterDays) / 24.0
+        return min(Int(raw.rounded()), Self.freeDays)
     }
 
-    var phonePercentOfFree: Int {
-        guard Self.freeYears > 0 else { return 0 }
-        return Int((Double(phoneYears) / Double(Self.freeYears) * 100).rounded())
+    var phonePctOfFree: Int {
+        guard Self.freeDays > 0 else { return 0 }
+        return Int((Double(phoneDays) / Double(Self.freeDays) * 100).rounded())
     }
 
-    /// The product promise: win back 80% of what the phone takes.
-    var reclaimYears: Int {
-        max(1, Int((Double(phoneYears) * 0.8).rounded()))
+    /// The user's own frame: "imagine if just HALF went to studying."
+    /// The theImagine grid heals exactly this many squares.
+    var reclaimDays: Int {
+        max(1, Int((Double(phoneDays) / 2).rounded()))
+    }
+
+    /// Hours of studying gained if half the phone time flips (7h → 368).
+    var halfStudyHours: Int {
+        Int((dailyHours / 2 * Double(Self.semesterDays)).rounded())
+    }
+
+    /// halfStudyHours expressed as finals' worth of prep (~40h per final).
+    var finalsPrepEquiv: Int {
+        max(1, Int((Double(halfStudyHours) / 40).rounded()))
+    }
+
+    /// Weeks until the next big exam, from the quizExamDate answer.
+    /// Nil = "No exams — just deadlines" (or unanswered): use the
+    /// per-week fallback copy instead of a countdown.
+    var weeksToExam: Int? {
+        switch examTiming {
+        case "Within a month": return 4
+        case "1–2 months away": return 6
+        case "3+ months away": return 12
+        default: return nil
+        }
+    }
+
+    /// Scrolling hours between now and the exam (7h/day, 6 weeks → 294).
+    var scrollHoursToExam: Int? {
+        weeksToExam.map { Int((dailyHours * 7 * Double($0)).rounded()) }
+    }
+
+    /// Scrolling hours per week (7h/day → 49) — the urgency fallback.
+    var scrollHoursPerWeek: Int {
+        Int((dailyHours * 7).rounded())
     }
 
     // MARK: - Funnel analytics
@@ -179,6 +235,12 @@ class OnboardingViewModel: ObservableObject {
         OnboardingStep.allCases.firstIndex(of: currentStep) ?? 0
     }
 
+    /// The flow-wide chrome bar's fill: a pure function of step index, so
+    /// the bar glides forward as one continuous thread through the funnel.
+    var overallProgress: Double {
+        Double(currentStepIndex) / Double(max(totalSteps - 1, 1))
+    }
+
     /// Beat-level analytics for choreographed screens (locks revealed,
     /// cascade finished, rating requested...) — OneThing's
     /// onboarding_screen_action pattern.
@@ -186,7 +248,7 @@ class OnboardingViewModel: ObservableObject {
         var props: [String: Any] = [
             "action": action,
             "step_name": "\(currentStep)",
-            "flow_version": "sg_v2",
+            "flow_version": "sg_v3",
         ]
         props.merge(properties) { current, _ in current }
         Analytics.capture("onboarding_screen_action", properties: props)
@@ -219,13 +281,11 @@ class OnboardingViewModel: ObservableObject {
         currentStep = all[index + 1]
     }
 
-    /// Quiz answers auto-advance shortly after the tap (no continue button),
-    /// with the clipboard mascot visibly taking a note. The delayed advance
-    /// only fires if the user is still on the step they answered (a back
-    /// tap in the window must not get bounced forward).
+    /// Quiz answers auto-advance shortly after the tap (no continue button).
+    /// The delayed advance only fires if the user is still on the step they
+    /// answered (a back tap in the window must not get bounced forward).
     func selectQuizAnswer(_ assign: @escaping () -> Void) {
         assign()
-        quizNoteKey += 1
         SGTheme.tapHaptic()
         let stepAtSelection = currentStep
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
@@ -277,6 +337,13 @@ class OnboardingViewModel: ObservableObject {
                     "peak_scroll_time": peakScrollTime
                 ])
             }
+        case .quizExamDate:
+            if !examTiming.isEmpty {
+                Analytics.capture("onboarding_exam_timing_selected", properties: [
+                    "exam_timing": examTiming,
+                    "weeks_to_exam": weeksToExam as Any,
+                ])
+            }
         case .unlockMethod:
             let method = UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards"
             Analytics.onboardingUnlockMethodSelected(method)
@@ -292,7 +359,7 @@ class OnboardingViewModel: ObservableObject {
         var props: [String: Any] = [
             "step_name": stepName,
             "step_index": currentStepIndex,
-            "flow_version": "sg_v2",
+            "flow_version": "sg_v3",
         ]
         if let durationSec = durationSec {
             props["duration_sec"] = durationSec
@@ -304,7 +371,7 @@ class OnboardingViewModel: ObservableObject {
     /// lands straight in setup (Screen Time has to be configured per device).
     func skipToSetupAfterRestore() {
         Analytics.capture("onboarding_restored_subscriber", properties: [
-            "flow_version": "sg_v2"
+            "flow_version": "sg_v3"
         ])
         currentStep = .screenTimeExplainer
     }
@@ -312,8 +379,7 @@ class OnboardingViewModel: ObservableObject {
     // MARK: - Haptics
 
     func triggerHapticFeedback() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        SGTheme.beat()
         playHapticFeedback()
     }
 
@@ -359,18 +425,20 @@ class OnboardingViewModel: ObservableObject {
         UserDefaults.standard.set(screenTime, forKey: "screenTime")
         UserDefaults.standard.set(studentType, forKey: "studentType")
         UserDefaults.standard.set(peakScrollTime, forKey: "peakScrollTime")
+        UserDefaults.standard.set(examTiming, forKey: "examTiming")
         UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
 
         // Push the quiz answers as person properties so every future event
         // auto-segments by them in PostHog (no joins needed).
         var personProps: [String: Any] = [
             "unlock_method": UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards",
-            "onboarding_flow_version": "sg_v2",
+            "onboarding_flow_version": "sg_v3",
         ]
         if !selectedAge.isEmpty { personProps["age_range"] = selectedAge }
         if !screenTime.isEmpty { personProps["screen_time"] = screenTime }
         if !studentType.isEmpty { personProps["student_type"] = studentType }
         if !peakScrollTime.isEmpty { personProps["peak_scroll_time"] = peakScrollTime }
+        if !examTiming.isEmpty { personProps["exam_timing"] = examTiming }
         Analytics.setPersonProperties(personProps)
     }
 }

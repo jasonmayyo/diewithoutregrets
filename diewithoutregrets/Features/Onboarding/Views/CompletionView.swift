@@ -40,15 +40,15 @@ struct CompletionView: View {
                     .scaleEffect(shown ? 1 : 0.6)
                     .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.2), value: shown)
 
-                Text("You're all set.")
-                    .font(SGTheme.headline)
+                Text("He's on duty.")
+                    .font(SGTheme.stepTitle)
                     .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
                     .padding(.top, 24)
                     .fadeRise(shown, delay: 0.4)
 
-                Text("Your monster is on duty.\nTime to make your hours count.")
-                    .font(.system(size: 17, weight: .medium))
+                Text("From now on, scrolling costs studying.\nGo make the semester count.")
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -58,26 +58,12 @@ struct CompletionView: View {
 
                 Spacer()
 
-                Button(action: completeIfPro) {
-                    HStack(spacing: 8) {
-                        if isVerifying {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        }
-                        Text("Let's go")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(SGTheme.mint, in: Capsule(style: .continuous))
-                    .shadow(color: SGTheme.mint.opacity(0.25), radius: 14, y: 4)
+                SGButton(title: "Let's go", enabled: !isVerifying, loading: isVerifying) {
+                    completeIfPro()
                 }
-                .buttonStyle(SGPressStyle())
-                .disabled(isVerifying)
+                .sgShadow(SGTheme.glow(SGTheme.mint))
                 .padding(.horizontal, SGTheme.screenPadding)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
                 .fadeRise(shown, delay: 0.7)
             }
             .frame(maxWidth: 600)
@@ -123,7 +109,7 @@ struct CompletionView: View {
                 // Only bounce when we positively see zero active entitlements.
                 guard !customerInfo.entitlements.active.isEmpty else {
                     Analytics.capture("onboarding_completion_pro_recheck_failed", properties: [
-                        "flow_version": "sg_v2"
+                        "flow_version": "sg_v3"
                     ])
                     viewModel.currentStep = .paywall
                     return
@@ -141,7 +127,7 @@ struct CompletionView: View {
             "peak_scroll_time": viewModel.peakScrollTime,
             "deck_name": viewModel.newDeckName,
             "guarded_token_count": SGContract.sharedDefaults.flatMap { SGContract.decodeSelection($0) }.map { SGContract.tokenCount($0) } ?? 0,
-            "flow_version": "sg_v2"
+            "flow_version": "sg_v3"
         ])
 
         AdsTracker.trackCompleteRegistration()
@@ -156,11 +142,12 @@ struct CompletionView: View {
 struct ConfettiView: View {
     @State private var particles: [ConfettiParticle] = []
     @State private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
-    /// Celebration palette — every piece reads on the ink canvas.
+    /// Celebration palette — bright brand hues only (near-black paper
+    /// pieces were a dark-era leftover that read as debris on white).
     var colors: [Color] = [
         SGTheme.mint,
         SGTheme.teal,
-        SGTheme.paper,
+        SGTheme.sun,
         SGTheme.ember
     ]
 

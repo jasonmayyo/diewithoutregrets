@@ -37,6 +37,62 @@ struct ContentView: View {
 
     var body: some View {
         Group {
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-sg-gallery") {
+                // Screenshot harness: boot straight into the design gallery.
+                NavigationStack { SGGalleryView() }
+            } else {
+                mainContent
+            }
+            #else
+            mainContent
+            #endif
+        }
+    }
+
+    /// Scene-crossing fade progress — lives HERE (not in the overlay view)
+    /// so the root swap underneath can never reset it. The old corner wipe
+    /// kept its choreography in its own @State and DispatchQueue timers,
+    /// which the swap it orchestrated could destroy mid-flight: the cover
+    /// vanished in a flash and a second wipe replayed over the new scene.
+    @State private var sceneFadeCovering = false
+
+    private var mainContent: some View {
+        rootSwitch
+            // The scene-crossing fade rides ABOVE the root switch: a scrim
+            // in the DESTINATION's canvas color fades up, the root swaps
+            // while covered, and the scrim fades off the new scene — so the
+            // transition always lands color-matched, by construction.
+            .overlay {
+                if let style = navigationModel.activeWipe {
+                    (style == .lock ? SGTheme.night : SGTheme.ink)
+                        .ignoresSafeArea()
+                        .opacity(sceneFadeCovering ? 1 : 0)
+                        .contentShape(Rectangle()) // absorb taps mid-transition
+                }
+            }
+            .onChange(of: navigationModel.activeWipe != nil) { _, active in
+                if active { runSceneFade() }
+            }
+    }
+
+    private func runSceneFade() {
+        withAnimation(.easeIn(duration: 0.20)) { sceneFadeCovering = true }
+        Task { @MainActor in
+            // Fully covered: swap the root, hold one beat, reveal.
+            try? await Task.sleep(nanoseconds: 240_000_000)
+            navigationModel.wipeMidAction?()
+            navigationModel.wipeMidAction = nil
+            try? await Task.sleep(nanoseconds: 60_000_000)
+            withAnimation(.easeOut(duration: 0.32)) { sceneFadeCovering = false }
+            try? await Task.sleep(nanoseconds: 340_000_000)
+            navigationModel.activeWipe = nil
+            sceneFadeCovering = false
+        }
+    }
+
+    private var rootSwitch: some View {
+        Group {
             if navigationModel.currentDestination == .regretView {
                 if (navigationModel.unlockMethodOverride ?? unlockMethod) == "trueFocus" {
                     FocusSessionView(
@@ -87,13 +143,17 @@ struct ContentView: View {
                 }
                 .tint(SGTheme.mint)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    SGTabBar(selection: $selectedTab, items: tabItems)
+                    // Hidden while the Guard home's lock stamp plays so the
+                    // overlay owns the whole screen. Night styling while the
+                    // locked home is on screen (Guard tab only).
+                    SGTabBar(selection: $selectedTab, items: tabItems,
+                             onDark: navigationModel.isLockedHomeShowing && selectedTab == 0)
+                        .opacity(navigationModel.isLockStampPlaying ? 0 : 1)
+                        .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockStampPlaying)
                 }
                 .background(SGTheme.ink.ignoresSafeArea())
                 .onChange(of: selectedTab) { _, newTab in
-                    let generator = UIImpactFeedbackGenerator(style: .soft)
-                    generator.prepare()
-                    generator.impactOccurred()
+                    SGTheme.tick()
 
                     let tabName: String
                     switch newTab {
@@ -127,6 +187,14 @@ struct DebugView: View {
 
     var body: some View {
         List {
+            Section("Design System") {
+                NavigationLink {
+                    SGGalleryView()
+                } label: {
+                    Label("Component Gallery", systemImage: "paintpalette")
+                }
+            }
+
             StudyGuardDebugSection()
 
             Section {

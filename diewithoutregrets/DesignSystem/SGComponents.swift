@@ -8,6 +8,56 @@
 
 import SwiftUI
 
+// MARK: - Elevation & entrance
+
+extension View {
+    /// The only way views apply shadows: one of the four SGTheme recipes.
+    func sgShadow(_ shadow: SGTheme.Shadow) -> some View {
+        self.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+    }
+
+    /// House mount beat: fade + 16pt rise, staggered by `delay`. Reduce
+    /// Motion collapses it to a plain fade.
+    func sgRiseIn(_ shown: Bool, delay: Double = 0) -> some View {
+        modifier(SGRiseIn(shown: shown, delay: delay))
+    }
+
+    /// Apple Liquid Glass (clear, interactive) on iOS 26+; frosted-material
+    /// fallback below. `onDark` renders the fallback in its dark appearance
+    /// so the surface reads as smoked glass on the night scene.
+    @ViewBuilder
+    func sgGlassBackground<S: Shape>(in shape: S, onDark: Bool = false) -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .glassEffect(.regular.interactive(), in: shape)
+                .environment(\.colorScheme, onDark ? .dark : .light)
+        } else {
+            self
+                .background(shape.fill(.ultraThinMaterial))
+                .overlay(shape.stroke(onDark ? SGTheme.nightHairline : SGTheme.hairline,
+                                      lineWidth: 1))
+                .environment(\.colorScheme, onDark ? .dark : .light)
+        }
+    }
+}
+
+private struct SGRiseIn: ViewModifier {
+    let shown: Bool
+    let delay: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : 16)
+            // The stagger delay applies to the entrance only; hiding (a
+            // replay reset) snaps out quickly instead of lagging.
+            .animation(shown ? .easeOut(duration: 0.45).delay(delay)
+                             : .easeOut(duration: 0.2),
+                       value: shown)
+    }
+}
+
 // MARK: - Button styles
 
 /// Press-scale + haptic, shared by all SG buttons.
@@ -22,71 +72,22 @@ struct SGPressStyle: ButtonStyle {
     }
 }
 
-/// Primary action: mint capsule, white label.
-struct SGPrimaryButton: View {
-    let title: String
-    var icon: String? = nil
-    var tint: Color = SGTheme.mint
-    var labelColor: Color = .white
-    var fullWidth: Bool = true
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-            }
-            .foregroundColor(labelColor)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 24)
-            .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(tint, in: Capsule(style: .continuous))
-        }
-        .buttonStyle(SGPressStyle())
-    }
-}
-
-/// Secondary action: transparent, hairline capsule, paper label.
-struct SGGhostButton: View {
-    let title: String
-    var icon: String? = nil
-    var fullWidth: Bool = true
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 15, weight: .semibold))
-                }
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-            }
-            .foregroundColor(SGTheme.paper)
-            .padding(.vertical, 15)
-            .padding(.horizontal, 22)
-            .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(SGTheme.glaze(0.06))
-                    .overlay(Capsule(style: .continuous).strokeBorder(SGTheme.hairline, lineWidth: 1))
-            )
-        }
-        .buttonStyle(SGPressStyle())
-    }
-}
+// SGPrimaryButton and SGGhostButton were removed in the Phase 4 design
+// migration: SGButton (SGButton.swift) is the one button, with .mint/.ember/
+// .white/.ghost/.text variants.
 
 // MARK: - Surfaces
 
-/// The standard card: raised surface + hairline + soft ambient shadow.
+/// The standard card: raised surface + hairline, with an optional lift
+/// shadow and an optional dashed accent border (checklist/migration cards).
+/// This is the ONLY card surface; screens never re-implement it.
 struct SGCard<Content: View>: View {
     var padding: CGFloat = SGTheme.cardPadding
+    /// false for rows stacked in lists (flat, hairline only).
+    var shadowed: Bool = true
+    /// Set to an accent to render the dashed "task" border instead of the
+    /// hairline (e.g. mint for the onboarding checklist).
+    var dashed: Color? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -96,12 +97,91 @@ struct SGCard<Content: View>: View {
             .background(
                 RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
                     .fill(SGTheme.inkRaised)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                            .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                    )
-                    .shadow(color: SGTheme.cardShadow, radius: 12, y: 4)
+                    .overlay(border)
+                    .sgShadow(shadowed
+                              ? SGTheme.shadowCard
+                              : SGTheme.Shadow(color: .clear, radius: 0, y: 0))
             )
+    }
+
+    @ViewBuilder private var border: some View {
+        let shape = RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+        if let dashed {
+            shape.strokeBorder(dashed.opacity(0.3),
+                               style: StrokeStyle(lineWidth: 1.5, dash: [8, 5]))
+        } else {
+            shape.strokeBorder(SGTheme.hairline, lineWidth: 1)
+        }
+    }
+}
+
+/// The one input well: ink fill, tile radius, hairline that turns mint when
+/// the field has content or focus.
+struct SGField: View {
+    let placeholder: String
+    @Binding var text: String
+    var multiline: Bool = false
+    var minHeight: CGFloat = 44
+
+    @FocusState private var focused: Bool
+
+    private var active: Bool { focused || !text.isEmpty }
+
+    var body: some View {
+        Group {
+            if multiline {
+                TextField(placeholder, text: $text, axis: .vertical)
+                    .lineLimit(4...10)
+            } else {
+                TextField(placeholder, text: $text)
+            }
+        }
+        .font(SGTheme.body)
+        .foregroundColor(SGTheme.paper)
+        .focused($focused)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(minHeight: minHeight, alignment: multiline ? .top : .center)
+        .background(
+            RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                .fill(SGTheme.ink)
+                .overlay(
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                        .strokeBorder(active ? SGTheme.mint : SGTheme.hairline,
+                                      lineWidth: active ? 1.5 : 1)
+                )
+        )
+        // The whole well is tappable, not just the text glyphs.
+        .contentShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+        .onTapGesture { focused = true }
+        .animation(SGTheme.springFast, value: active)
+    }
+}
+
+/// The one progress bar: capsule track in glaze, mint fill, 0.35s ease.
+/// `thin` is the 5pt card variant (checklist).
+struct SGProgressBar: View {
+    let progress: Double
+    var tint: Color = SGTheme.mint
+    var thin: Bool = false
+
+    private var height: CGFloat { thin ? 5 : 8 }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(SGTheme.glaze(0.08))
+                if progress > 0 {
+                    Capsule()
+                        .fill(tint)
+                        .frame(width: max(height, geo.size.width * min(progress, 1)))
+                }
+            }
+        }
+        .frame(height: height)
+        .animation(.easeInOut(duration: 0.35), value: progress)
+        .accessibilityElement()
+        .accessibilityValue("\(Int(min(max(progress, 0), 1) * 100)) percent")
     }
 }
 
@@ -125,6 +205,8 @@ struct SGListRow: View {
     var icon: String? = nil
     var iconTint: Color = SGTheme.mint
     var showChevron: Bool = true
+    /// External-link rows pass "arrow.up.right" instead of the chevron.
+    var trailingIcon: String = "chevron.right"
     let action: () -> Void
 
     var body: some View {
@@ -149,7 +231,7 @@ struct SGListRow: View {
                 }
                 Spacer()
                 if showChevron {
-                    Image(systemName: "chevron.right")
+                    Image(systemName: trailingIcon)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(SGTheme.mint)
                 }

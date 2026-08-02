@@ -32,8 +32,8 @@ struct GuardedAppsOnboarding: View {
     var body: some View {
         GeometryReader { geometry in
             OnboardingScaffold(
-                headline: "Which apps distract you most?",
-                subtitle: "Pick the apps Study Guard should lock when your scroll time runs out.",
+                headline: "Which apps steal your time?",
+                subtitle: "Pick the ones he locks when your scroll time runs out.",
                 ctaTitle: "Lock them in",
                 ctaEnabled: !selectionIsEmpty,
                 ctaAction: {
@@ -63,7 +63,7 @@ struct GuardedAppsOnboarding: View {
                                 )
 
                             Text("\(selectionCount) of \(SGContract.maxSelectionTokens) selected")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(SGTheme.caption.weight(.medium))
                                 .foregroundColor(SGTheme.paperTertiary)
                                 .frame(maxWidth: .infinity)
                         }
@@ -100,35 +100,27 @@ struct GuardedAppsOnboarding: View {
     private var authorizationPrompt: some View {
         VStack(spacing: 16) {
             Image(systemName: "lock.shield")
-                .font(.system(size: 44, weight: .light))
+                .font(SGTheme.display(44, weight: .light))
                 .foregroundColor(SGTheme.mint)
 
             Text("Study Guard needs Screen Time access to show your apps here.")
-                .font(.system(size: 15))
+                .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
                 .padding(.horizontal, 24)
 
-            Button(action: {
+            // While the system auth dialog is up the button dims (disabled)
+            // and shows SGButton's loading spinner as the in-flight look.
+            SGButton(
+                title: "Allow Screen Time access",
+                fullWidth: true,
+                enabled: !isRequestingAuth,
+                loading: isRequestingAuth
+            ) {
                 requestAuthorization()
-            }) {
-                HStack {
-                    if isRequestingAuth {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.ink))
-                            .scaleEffect(0.8)
-                    }
-                    Text("Allow Screen Time access")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(SGTheme.ink)
-                }
-                .padding(.horizontal, 24)
-                .frame(height: 44)
-                .background(SGTheme.mint, in: Capsule(style: .continuous))
             }
-            .buttonStyle(SGPressStyle())
-            .disabled(isRequestingAuth)
+            .padding(.horizontal, 24)
         }
         .frame(maxWidth: .infinity)
         .frame(height: max(380, min(450, UIScreen.main.bounds.height * 0.45)))

@@ -29,6 +29,10 @@ struct HardPaywallView: View {
     @State private var loadFailed = false
     @State private var didAutoRetry = false
     @State private var hasAutoPresented = false
+    /// The offer backdrop only appears after the user dismisses the
+    /// RevenueCat cover; before that the screen is a quiet loading state so
+    /// nothing paywall-shaped flashes behind the real paywall.
+    @State private var backdropRevealed = false
 
     // RevenueCat cover
     @State private var showingRevenueCatPaywall = false
@@ -55,16 +59,24 @@ struct HardPaywallView: View {
 
             Spacer()
 
-            hero
-                .padding(.horizontal, SGTheme.screenPadding)
+            Group {
+                if backdropRevealed {
+                    hero
+                } else {
+                    loadingHero
+                }
+            }
+            .padding(.horizontal, SGTheme.screenPadding)
 
             Spacer()
 
             footer
-                .padding(.bottom, 20)
+                .padding(.bottom, 12)
         }
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
+        // The RevenueCat template inside this cover is styled from the RC
+        // dashboard, not SGTheme — a known spec gap.
         .fullScreenCover(isPresented: $showingRevenueCatPaywall, onDismiss: handleCoverDismissed) {
             paywallCover
         }
@@ -73,7 +85,7 @@ struct HardPaywallView: View {
                 viewModel.screenAction("decline_survey_reason", properties: ["reason": reason])
             }
             .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sgSheetChrome()
         }
         .alert("Restore Error", isPresented: .constant(restoreErrorMessage != nil)) {
             Button("OK") { restoreErrorMessage = nil }
@@ -111,13 +123,14 @@ struct HardPaywallView: View {
             appeared = true
             shown = true
 
-            Analytics.paywallViewed(surface: "onboarding_v2", properties: [
+            Analytics.paywallViewed(surface: "onboarding_v3", properties: [
                 "student_type": viewModel.studentType,
                 "screen_time": viewModel.screenTime,
-                "reclaim_years": viewModel.reclaimYears
+                "phone_days": viewModel.phoneDays,
+                "weeks_to_exam": viewModel.weeksToExam as Any
             ])
             Telemetry.breadcrumb("Paywall viewed", category: "paywall",
-                                 data: ["surface": "onboarding_v2"])
+                                 data: ["surface": "onboarding_v3"])
             AdsTracker.trackViewContent(name: "onboarding_paywall")
 
             loadCurrentOffering()
@@ -130,28 +143,48 @@ struct HardPaywallView: View {
         HStack {
             Spacer()
 
-            Button {
+            SGButton(title: isRestoringPurchases ? "Restoring..." : "Restore",
+                     variant: .text,
+                     fullWidth: false,
+                     enabled: !isRestoringPurchases,
+                     loading: isRestoringPurchases) {
                 Task { await restorePurchases() }
-            } label: {
-                HStack(spacing: 4) {
-                    if isRestoringPurchases {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.paper))
-                            .scaleEffect(0.7)
-                    }
-                    Text(isRestoringPurchases ? "Restoring..." : "Restore")
-                        .font(.system(size: 16, weight: .regular))
-                        .foregroundColor(SGTheme.paperSecondary)
-                }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
             }
-            .disabled(isRestoringPurchases)
             .accessibilityLabel("Restore purchases")
         }
         .padding(.horizontal, SGTheme.screenPadding)
         .padding(.top, 10)
         .fadeRise(shown)
+    }
+
+    /// The named offer (Hormozi MAGIC): "Your College Comeback Plan" for
+    /// the student types that read naturally in the slot; generic otherwise.
+    private var offerName: String {
+        switch viewModel.studentType {
+        case "High school", "College", "Grad school":
+            return "Your \(viewModel.studentType) Comeback Plan"
+        default:
+            return "Your Comeback Plan"
+        }
+    }
+
+    /// Honest urgency: the exam date is real — no fake countdowns.
+    private var urgencyLine: String {
+        if let weeks = viewModel.weeksToExam, let hours = viewModel.scrollHoursToExam {
+            return "Your exam is about \(weeks) weeks out. That's \(hours) hours of scrolling between now and then, or your prep time. Your call."
+        }
+        return "\(viewModel.scrollHoursPerWeek) hours of scrolling every week from here to finals, or your study time. Your call."
+    }
+
+    /// What shows while the RevenueCat paywall is being fetched and
+    /// auto-presented: just the mascot and a quiet loader, nothing that
+    /// reads as a second paywall.
+    private var loadingHero: some View {
+        VStack(spacing: 18) {
+            MascotView(pose: .idle)
+                .frame(width: 90, height: 90)
+                .fadeRise(shown)
+        }
     }
 
     private var hero: some View {
@@ -160,47 +193,68 @@ struct HardPaywallView: View {
                 .frame(width: 90, height: 90)
                 .fadeRise(shown)
 
-            Text(viewModel.reclaimYears > 1
-                 ? "Win back your \(viewModel.reclaimYears) years"
-                 : "Win back your time")
-                .font(SGTheme.display(28))
+            SGMicroLabel(text: offerName.uppercased(), color: SGTheme.mintDeep)
+                .padding(.top, 16)
+                .fadeRise(shown, delay: 0.05)
+
+            (Text("Win back ")
+                + Text("\(viewModel.phoneDays) days")
+                .foregroundColor(SGTheme.mintDeep)
+                + Text(" of this semester"))
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
-                .padding(.top, 16)
+                .padding(.top, 8)
                 .fadeRise(shown, delay: 0.1)
 
-            if !viewModel.studentType.isEmpty {
-                Text("Your \(viewModel.studentType.lowercased()) study plan is ready.")
-                    .font(SGTheme.body)
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 6)
-                    .fadeRise(shown, delay: 0.15)
-            }
+            Text(urgencyLine)
+                .font(SGTheme.body)
+                .foregroundColor(SGTheme.paperSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+                .padding(.horizontal, 12)
+                .fadeRise(shown, delay: 0.15)
 
+            // The value stack: outcome-first, one line each.
             VStack(alignment: .leading, spacing: 14) {
                 PaywallFeatureRow(icon: "lock.fill",
-                                  text: "Apps lock when your time runs out")
+                                  text: "Your apps lock themselves. No willpower required")
                 PaywallFeatureRow(icon: "rectangle.stack.fill",
-                                  text: "Flashcards and focus sessions earn it back")
+                                  text: "Every unlock is a real study session")
                 PaywallFeatureRow(icon: "sparkles",
-                                  text: "AI generates cards from your notes")
+                                  text: "AI turns your notes into flashcards in seconds")
+                PaywallFeatureRow(icon: "eye.fill",
+                                  text: "True Focus: camera-verified deep work")
                 PaywallFeatureRow(icon: "cross.circle.fill",
-                                  text: "Emergency unlocks for real emergencies")
+                                  text: "Emergency unlocks, because life happens")
             }
-            .padding(.top, 28)
+            .padding(.top, 24)
             .fadeRise(shown, delay: 0.25)
 
-            HStack(spacing: 8) {
-                Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(SGTheme.mintDeep)
-                Text("Cancel anytime in the App Store")
+            // Risk reversal.
+            VStack(spacing: 6) {
+                HStack(spacing: 16) {
+                    riskReversalItem("Try it free")
+                    riskReversalItem("Cancel in two taps")
+                }
+                Text("The lock goes on your apps, never your wallet.")
                     .font(SGTheme.caption)
                     .foregroundColor(SGTheme.paperSecondary)
             }
-            .padding(.top, 24)
+            .padding(.top, 20)
             .fadeRise(shown, delay: 0.3)
+        }
+    }
+
+    private func riskReversalItem(_ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(SGTheme.display(13, weight: .semibold))
+                .foregroundColor(SGTheme.mintDeep)
+            Text(text)
+                .font(SGTheme.caption)
+                .foregroundColor(SGTheme.paperSecondary)
         }
     }
 
@@ -223,24 +277,16 @@ struct HardPaywallView: View {
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
 
-                Button {
+                SGButton(title: "Retry") {
                     viewModel.screenAction("offering_retry_tapped")
                     didAutoRetry = false
                     loadCurrentOffering()
-                } label: {
-                    Text("Retry")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(SGTheme.mint, in: Capsule(style: .continuous))
                 }
-                .buttonStyle(SGPressStyle())
                 .accessibilityLabel("Retry loading plans")
             }
             .padding(.horizontal, SGTheme.screenPadding)
-        } else {
-            OnbCTA(title: "See plans", visible: shown) {
+        } else if backdropRevealed {
+            OnbCTA(title: "Start my comeback", visible: shown) {
                 viewModel.screenAction("see_plans_tapped", properties: [
                     "decline_count": declineCount
                 ])
@@ -257,7 +303,7 @@ struct HardPaywallView: View {
             PaywallView(offering: offering)
                 .onAppear {
                     print("🎯 Showing paywall with offering: \(offering.identifier)")
-                    Analytics.paywallViewed(surface: "onboarding_v2_rc", properties: [
+                    Analytics.paywallViewed(surface: "onboarding_v3_rc", properties: [
                         "offering_id": offering.identifier,
                         "has_offering": true
                     ])
@@ -311,7 +357,7 @@ struct HardPaywallView: View {
                     // `onboarding_purchase_completed` event — kept below
                     // for dashboards that haven't migrated yet).
                     Analytics.subscriptionStarted(
-                        surface: "onboarding_v2",
+                        surface: "onboarding_v3",
                         productId: productId,
                         price: price,
                         currency: currency,
@@ -334,7 +380,7 @@ struct HardPaywallView: View {
                 .onRestoreCompleted { customerInfo in
                     let hasActive = !customerInfo.entitlements.active.isEmpty
                     Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v2",
+                        surface: "onboarding_v3",
                         hasActiveEntitlements: hasActive
                     )
                     if hasActive {
@@ -346,7 +392,7 @@ struct HardPaywallView: View {
                 }
                 .onDisappear {
                     Analytics.paywallDismissed(
-                        surface: "onboarding_v2_rc",
+                        surface: "onboarding_v3_rc",
                         didPurchase: didCompletePurchase
                     )
                 }
@@ -354,7 +400,7 @@ struct HardPaywallView: View {
             PaywallView()
                 .onAppear {
                     print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
-                    Analytics.paywallViewed(surface: "onboarding_v2_rc", properties: [
+                    Analytics.paywallViewed(surface: "onboarding_v3_rc", properties: [
                         "has_offering": false
                     ])
                     viewModel.screenAction("rc_paywall_presented", properties: [
@@ -392,7 +438,7 @@ struct HardPaywallView: View {
                                     )
                                 }
                                 Analytics.subscriptionStarted(
-                                    surface: "onboarding_v2",
+                                    surface: "onboarding_v3",
                                     productId: product.productIdentifier,
                                     price: price,
                                     currency: currency,
@@ -416,7 +462,7 @@ struct HardPaywallView: View {
                 .onRestoreCompleted { customerInfo in
                     let hasActive = !customerInfo.entitlements.active.isEmpty
                     Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v2",
+                        surface: "onboarding_v3",
                         hasActiveEntitlements: hasActive
                     )
                     if hasActive {
@@ -428,7 +474,7 @@ struct HardPaywallView: View {
                 }
                 .onDisappear {
                     Analytics.paywallDismissed(
-                        surface: "onboarding_v2_rc",
+                        surface: "onboarding_v3_rc",
                         didPurchase: didCompletePurchase
                     )
                 }
@@ -439,6 +485,9 @@ struct HardPaywallView: View {
 
     private func handleCoverDismissed() {
         if didCompletePurchase { return }
+        // Whatever the dismissal path, the user is now looking at this
+        // screen: show the full offer backdrop from here on.
+        withAnimation(.easeInOut(duration: 0.3)) { backdropRevealed = true }
         if externallyDismissed {
             externallyDismissed = false
             return
@@ -529,7 +578,7 @@ struct HardPaywallView: View {
         guard !hasAutoPresented, !didCompletePurchase, !isRestoringPurchases else { return }
         hasAutoPresented = true
 
-        let delay = UIAccessibility.isReduceMotionEnabled ? 0.1 : 0.6
+        let delay = UIAccessibility.isReduceMotionEnabled ? 0.1 : 0.2
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             guard !didCompletePurchase, !isRestoringPurchases else { return }
             showingRevenueCatPaywall = true
@@ -543,7 +592,7 @@ struct HardPaywallView: View {
         isRestoringPurchases = true
         defer { isRestoringPurchases = false }
 
-        Analytics.restorePurchasesAttempted(surface: "onboarding_v2")
+        Analytics.restorePurchasesAttempted(surface: "onboarding_v3")
 
         do {
             print("🔄 Starting restore purchases...")
@@ -559,7 +608,7 @@ struct HardPaywallView: View {
             // Check if user has active entitlements after restore
             if !customerInfo.entitlements.active.isEmpty {
                 print("✅ Restore successful - user has active entitlements: \(customerInfo.entitlements.active.keys)")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v2", hasActiveEntitlements: true)
+                Analytics.restorePurchasesSucceeded(surface: "onboarding_v3", hasActiveEntitlements: true)
 
                 // Guard the decline ladder and auto-present: they have Pro now.
                 didCompletePurchase = true
@@ -575,16 +624,16 @@ struct HardPaywallView: View {
                 }
             } else {
                 print("ℹ️ Restore completed but no active entitlements found")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v2", hasActiveEntitlements: false)
+                Analytics.restorePurchasesSucceeded(surface: "onboarding_v3", hasActiveEntitlements: false)
                 DispatchQueue.main.async {
                     self.restoreErrorMessage = "No previous purchases found to restore."
                 }
             }
         } catch {
             print("❌ Restore purchases error: \(error)")
-            Analytics.restorePurchasesFailed(surface: "onboarding_v2", error: error.localizedDescription)
+            Analytics.restorePurchasesFailed(surface: "onboarding_v3", error: error.localizedDescription)
             Telemetry.capture(error,
-                              tags: ["feature": "paywall", "surface": "onboarding_v2", "operation": "restore_purchases"])
+                              tags: ["feature": "paywall", "surface": "onboarding_v3", "operation": "restore_purchases"])
             DispatchQueue.main.async {
                 self.restoreErrorMessage = error.localizedDescription
             }
@@ -601,7 +650,7 @@ private struct PaywallFeatureRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
+                .font(SGTheme.buttonSmall)
                 .foregroundColor(SGTheme.mintDeep)
                 .frame(width: 34, height: 34)
                 .background(
@@ -615,7 +664,7 @@ private struct PaywallFeatureRow: View {
                 .accessibilityHidden(true)
 
             Text(text)
-                .font(.system(size: 15, weight: .medium))
+                .font(SGTheme.body)
                 .foregroundColor(SGTheme.paper)
 
             Spacer(minLength: 0)
@@ -647,7 +696,7 @@ private struct DeclineSurveySheet: View {
 
             VStack(spacing: 0) {
                 Text("What's holding you back?")
-                    .font(SGTheme.display(22))
+                    .font(SGTheme.sheetTitle)
                     .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
                     .padding(.top, 28)
@@ -679,7 +728,7 @@ private struct DeclineSurveySheet: View {
         } label: {
             HStack(spacing: 12) {
                 Text(reason)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
 
                 Spacer()
@@ -692,7 +741,7 @@ private struct DeclineSurveySheet: View {
                     if isSelected {
                         Circle().fill(SGTheme.mint).frame(width: 24, height: 24)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .bold))
+                            .font(SGTheme.display(11, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
@@ -717,7 +766,7 @@ private struct DeclineSurveySheet: View {
     private func pick(_ reason: String) {
         guard selected == nil else { return }
         selected = reason
-        SGTheme.tapHaptic()
+        SGTheme.tick()
         onReason(reason)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             dismiss()

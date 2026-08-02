@@ -83,9 +83,6 @@ struct AutoGenerateFlashcardsSheet: View {
 
     // Animation states
     @State private var showUploadAnimation = false
-    @State private var cardScale: CGFloat = 0.9
-    @State private var cardOpacity: Double = 0.8
-    @State private var meshOffset: CGFloat = 0
 
     // Input source selection
     @State private var selectedSource: InputSource = .pdf
@@ -102,9 +99,6 @@ struct AutoGenerateFlashcardsSheet: View {
     @State private var customDelimiter: String = ""
     @State private var parsedPairs: [TermDefinitionPair] = []
     @State private var useAIEnhanced: Bool = false
-    
-    // Gradient animation timer
-    let timer = Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()
     
     // Teal Ink fills — CTAs are solid mint with ink labels; disabled is dim white.
     private let mintFill = SGTheme.mint
@@ -157,11 +151,17 @@ struct AutoGenerateFlashcardsSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Ink canvas
-                SGTheme.ink
-                    .ignoresSafeArea()
+        ZStack {
+            // Ink canvas
+            SGTheme.ink
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Sheet chrome: the round close in the header replaces the
+                // old navigation-bar Cancel button.
+                SGSheetHeader(title: "AI Flashcard Generator", onClose: { dismiss() })
+                    .padding(.horizontal)
+                    .padding(.top, 16)
 
                 // Content
                 ScrollView {
@@ -210,36 +210,22 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
                 .scrollDismissesKeyboard(.immediately)
             }
-            .navigationTitle("AI Flashcard Generator")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(SGTheme.paperSecondary)
+        }
+        .fullScreenCover(isPresented: $showingGenerationView) {
+            GenerationView(
+                status: $generationStatus,
+                progress: $processingProgress,
+                onCancel: {
+                    showingGenerationView = false
+                    processingStep = .idle
                 }
-            }
-            .fullScreenCover(isPresented: $showingGenerationView) {
-                GenerationView(
-                    status: $generationStatus,
-                    progress: $processingProgress,
-                    onCancel: {
-                        showingGenerationView = false
-                        processingStep = .idle
-                    }
-                )
-            }
+            )
         }
         .onAppear {
             if let initial = initialSource {
                 selectedSource = initial
             }
             resetState()
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                cardScale = 1.0
-                cardOpacity = 1.0
-            }
         }
     }
     
@@ -248,21 +234,21 @@ struct AutoGenerateFlashcardsSheet: View {
     var premiumFeatureBadge: some View {
         HStack(spacing: 12) {
             Image(systemName: "sparkles")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.display(16, weight: .medium))
                         .foregroundColor(SGTheme.mint)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("AI Flashcard Generator")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(SGTheme.cardTitle)
                             .foregroundColor(SGTheme.paper)
 
                         Text("Auto-detects language • Supports 20+ languages")
-                            .font(.caption)
+                            .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
                     }
 
                     Image(systemName: "sparkles")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.display(16, weight: .medium))
                         .foregroundColor(SGTheme.mint)
         }
         .padding(.horizontal, 20)
@@ -275,8 +261,6 @@ struct AutoGenerateFlashcardsSheet: View {
             Capsule(style: .continuous)
                 .strokeBorder(SGTheme.hairline, lineWidth: 1)
         )
-        .scaleEffect(cardScale)
-        .opacity(cardOpacity)
     }
     
     // MARK: - Input Source Selector
@@ -295,13 +279,12 @@ struct AutoGenerateFlashcardsSheet: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: source.icon)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(SGTheme.display(14, weight: .medium))
                             Text(source.rawValue)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                                .font(SGTheme.rowLabel)
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 11)
                         .background(
                             selectedSource == source
                                 ? AnyShapeStyle(mintFill)
@@ -319,6 +302,7 @@ struct AutoGenerateFlashcardsSheet: View {
                                 )
                         )
                     }
+                    .buttonStyle(SGPressStyle())
                 }
             }
             .padding(.horizontal, 4)
@@ -349,7 +333,7 @@ struct AutoGenerateFlashcardsSheet: View {
                             .frame(width: 90, height: 90)
 
                         Image(systemName: "arrow.up.doc")
-                            .font(.system(size: 32, weight: .medium))
+                            .font(SGTheme.display(32, weight: .medium))
                             .foregroundColor(SGTheme.ink)
                     }
                     .scaleEffect(showUploadAnimation ? 1.1 : 1.0)
@@ -361,18 +345,18 @@ struct AutoGenerateFlashcardsSheet: View {
                     
                     VStack(spacing: 8) {
                         Text("Upload PDF")
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .font(SGTheme.display(20, weight: .semibold))
                             .foregroundColor(SGTheme.paper)
 
                         Text("Select a PDF file (up to 50 pages)")
-                            .font(.subheadline)
+                            .font(SGTheme.body)
                             .foregroundColor(SGTheme.paperSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 30)
             }
-            .buttonStyle(UploadButtonStyle())
+            .buttonStyle(SGPressStyle())
             .sheet(isPresented: $showingDocumentPicker) {
                 DocumentPicker { url in
                     if let url = url {
@@ -398,7 +382,7 @@ struct AutoGenerateFlashcardsSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Paste your text")
-                    .font(.headline)
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
                 
                 Spacer()
@@ -409,21 +393,21 @@ struct AutoGenerateFlashcardsSheet: View {
                     if !inputText.isEmpty {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("\(stats.characters) characters")
-                                .font(.caption2)
+                                .font(SGTheme.micro)
                                 .foregroundColor(stats.characters < 50 ? SGTheme.ember : stats.characters > 100000 ? SGTheme.ember : SGTheme.paperTertiary)
 
                             Text("\(stats.words) words")
-                                .font(.caption2)
+                                .font(SGTheme.micro)
                                 .foregroundColor(SGTheme.paperTertiary)
                         }
-                        
+
                         if let _ = validateTextInput(inputText) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.caption)
+                                .font(SGTheme.caption)
                                 .foregroundColor(SGTheme.ember)
                         } else if inputText.count >= 50 {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.caption)
+                                .font(SGTheme.caption)
                                 .foregroundColor(SGTheme.mint)
                         }
                     }
@@ -448,11 +432,11 @@ struct AutoGenerateFlashcardsSheet: View {
             if !inputText.isEmpty, let validationError = validateTextInput(inputText) {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.caption)
+                        .font(SGTheme.caption)
                         .foregroundColor(SGTheme.ember)
-                    
+
                     Text(validationError.userMessage)
-                        .font(.caption)
+                        .font(SGTheme.caption)
                         .foregroundColor(SGTheme.ember)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -462,20 +446,20 @@ struct AutoGenerateFlashcardsSheet: View {
             if inputText.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Tips for best results:")
-                        .font(.caption)
+                        .font(SGTheme.caption)
                         .fontWeight(.medium)
                         .foregroundColor(SGTheme.paper)
-                    
+
                     Text("• Paste educational content (textbook, notes, articles)")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("• Include at least 50 characters for meaningful flashcards")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("• Limit to 25,000 words for optimal processing")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
                 }
                 .padding(.top, 4)
@@ -502,47 +486,46 @@ struct AutoGenerateFlashcardsSheet: View {
                         .frame(width: 60, height: 60)
 
                     Image(systemName: "doc.fill")
-                        .font(.system(size: 24, weight: .medium))
+                        .font(SGTheme.display(24, weight: .medium))
                         .foregroundColor(SGTheme.ink)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 6) {
                     Text(fileName.isEmpty ? "Document" : fileName)
-                        .font(.headline)
+                        .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
                         .lineLimit(1)
-                    
+
                     Text("\(pdfExtractedText.count) characters extracted")
-                        .font(.subheadline)
+                        .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     resetState()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(SGTheme.display(24, weight: .regular))
                         .foregroundColor(SGTheme.paperTertiary)
                 }
             }
-            
+
             if !pdfExtractedText.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Preview")
-                        .font(.subheadline)
+                        .font(SGTheme.rowLabel)
                         .foregroundColor(SGTheme.paper)
-                        .fontWeight(.medium)
-                    
+
                     Text(pdfExtractedText)
-                        .font(.system(.body, design: .serif))
+                        .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                         .lineLimit(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
                         .background(SGTheme.ink)
-                        .cornerRadius(12)
+                        .cornerRadius(SGTheme.tileRadius)
                 }
             }
         }
@@ -564,27 +547,15 @@ struct AutoGenerateFlashcardsSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "play.rectangle.fill")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.display(16, weight: .medium))
                         .foregroundColor(SGTheme.paper)
                     Text("YouTube Video URL")
-                        .font(.headline)
+                        .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
                 }
-                
+
                 HStack(spacing: 12) {
-                    TextField("Paste YouTube link here...", text: $youtubeURL)
-                        .textFieldStyle(.plain)
-                        .foregroundColor(SGTheme.paper)
-                        .padding(12)
-                        .background(SGTheme.ink)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(
-                                    youtubeURL.isEmpty ? SGTheme.hairline : SGTheme.mint,
-                                    lineWidth: youtubeURL.isEmpty ? 1 : 2
-                                )
-                        )
+                    SGField(placeholder: "Paste YouTube link here...", text: $youtubeURL)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
 
@@ -598,7 +569,7 @@ struct AutoGenerateFlashcardsSheet: View {
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "arrow.down.circle.fill")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(SGTheme.display(16, weight: .medium))
                             }
                         }
                         .frame(width: 44, height: 44)
@@ -612,8 +583,9 @@ struct AutoGenerateFlashcardsSheet: View {
                                 ? SGTheme.ink
                                 : SGTheme.paperDisabled
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius))
                     }
+                    .buttonStyle(SGPressStyle())
                     .disabled(YouTubeTranscriptService.shared.extractVideoID(from: youtubeURL) == nil || isFetchingTranscript)
                 }
             }
@@ -622,67 +594,66 @@ struct AutoGenerateFlashcardsSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 14))
+                            .font(SGTheme.display(14, weight: .regular))
                             .foregroundColor(SGTheme.mint)
                         Text("Transcript loaded")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(SGTheme.rowLabel)
                             .foregroundColor(SGTheme.paper)
-                        
+
                         Spacer()
-                        
+
                         Text("\(getTextStats(youtubeTranscript).words) words")
-                            .font(.caption)
+                            .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
-                        
+
                         Button {
                             youtubeTranscript = ""
                             inputText = ""
                             youtubeURL = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 18))
+                                .font(SGTheme.display(18, weight: .regular))
                                 .foregroundColor(SGTheme.paperTertiary)
                         }
                     }
-                    
+
                     ScrollView {
                         Text(youtubeTranscript)
-                            .font(.system(.caption, design: .serif))
+                            .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(12)
                     }
                     .frame(height: 100)
                     .background(SGTheme.ink)
-                    .cornerRadius(12)
+                    .cornerRadius(SGTheme.tileRadius)
                 }
             }
             
             if youtubeTranscript.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("How it works:")
-                        .font(.caption)
+                        .font(SGTheme.caption)
                         .fontWeight(.medium)
                         .foregroundColor(SGTheme.paper)
-                    
+
                     Text("1. Paste a YouTube video URL above")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("2. Tap the download button to fetch the transcript")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("3. AI will generate flashcards from the video content")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     HStack(spacing: 4) {
                         Image(systemName: "info.circle")
-                            .font(.caption2)
+                            .font(SGTheme.micro)
                         Text("If auto-fetch fails, copy the transcript from YouTube (... > Show transcript) and use the Paste Text tab.")
-                            .font(.caption2)
+                            .font(SGTheme.micro)
                     }
                     .foregroundColor(SGTheme.paperSecondary)
                     .padding(.top, 4)
@@ -708,15 +679,15 @@ struct AutoGenerateFlashcardsSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.stack.fill")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.display(16, weight: .medium))
                         .foregroundColor(SGTheme.paper)
                     Text("Import from Quizlet")
-                        .font(.headline)
+                        .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
                 }
-                
+
                 Text("Paste your exported Quizlet flashcards below")
-                    .font(.subheadline)
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -742,10 +713,9 @@ struct AutoGenerateFlashcardsSheet: View {
             // Delimiter selector
             VStack(alignment: .leading, spacing: 8) {
                 Text("Delimiter")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(SGTheme.rowLabel)
                     .foregroundColor(SGTheme.paper)
-                
+
                 HStack(spacing: 8) {
                     ForEach(QuizletDelimiter.allCases.filter { $0 != .custom }, id: \.self) { delimiter in
                         Button {
@@ -753,10 +723,9 @@ struct AutoGenerateFlashcardsSheet: View {
                             parseQuizletInput()
                         } label: {
                             Text(delimiter.rawValue)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
+                                .font(SGTheme.rowLabel)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 11)
                                 .background(
                                     selectedDelimiter == delimiter
                                         ? AnyShapeStyle(mintFill)
@@ -774,16 +743,16 @@ struct AutoGenerateFlashcardsSheet: View {
                                         )
                                 )
                         }
+                        .buttonStyle(SGPressStyle())
                     }
-                    
+
                     Button {
                         selectedDelimiter = .custom
                     } label: {
                         Text("Custom")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
+                            .font(SGTheme.rowLabel)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
                             .background(
                                 selectedDelimiter == .custom
                                     ? AnyShapeStyle(mintFill)
@@ -801,19 +770,11 @@ struct AutoGenerateFlashcardsSheet: View {
                                     )
                             )
                     }
+                    .buttonStyle(SGPressStyle())
                 }
-                
+
                 if selectedDelimiter == .custom {
-                    TextField("Enter custom delimiter", text: $customDelimiter)
-                        .textFieldStyle(.plain)
-                        .foregroundColor(SGTheme.paper)
-                        .padding(10)
-                        .background(SGTheme.ink)
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(SGTheme.hairline, lineWidth: 1)
-                        )
+                    SGField(placeholder: "Enter custom delimiter", text: $customDelimiter)
                         .onChange(of: customDelimiter) { _ in
                             parseQuizletInput()
                         }
@@ -825,20 +786,19 @@ struct AutoGenerateFlashcardsSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 14))
+                            .font(SGTheme.display(14, weight: .regular))
                             .foregroundColor(SGTheme.mint)
                         Text("\(parsedPairs.count) cards detected")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(SGTheme.rowLabel)
                             .foregroundColor(SGTheme.paper)
                     }
-                    
+
                     ScrollView {
                         VStack(spacing: 8) {
                             ForEach(parsedPairs.prefix(5)) { pair in
                                 HStack(alignment: .top, spacing: 12) {
                                     Text(pair.term)
-                                        .font(.caption)
+                                        .font(SGTheme.caption)
                                         .fontWeight(.medium)
                                         .foregroundColor(SGTheme.paper)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -848,18 +808,18 @@ struct AutoGenerateFlashcardsSheet: View {
                                         .frame(width: 1)
 
                                     Text(pair.definition)
-                                        .font(.caption)
+                                        .font(SGTheme.caption)
                                         .foregroundColor(SGTheme.paperSecondary)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .padding(10)
-                                .background(SGTheme.glaze(0.04))
-                                .cornerRadius(8)
+                                .background(SGTheme.glaze(0.04),
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
-                            
+
                             if parsedPairs.count > 5 {
                                 Text("+ \(parsedPairs.count - 5) more cards")
-                                    .font(.caption)
+                                    .font(SGTheme.caption)
                                     .foregroundColor(SGTheme.paperSecondary)
                                     .padding(.top, 4)
                             }
@@ -873,17 +833,15 @@ struct AutoGenerateFlashcardsSheet: View {
             if !parsedPairs.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Import Mode")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(SGTheme.rowLabel)
                         .foregroundColor(SGTheme.paper)
-                    
+
                     HStack(spacing: 0) {
                         Button {
                             useAIEnhanced = false
                         } label: {
                             Text("Direct Import")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                                .font(SGTheme.rowLabel)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
                                 .background(
@@ -899,10 +857,9 @@ struct AutoGenerateFlashcardsSheet: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
-                                    .font(.system(size: 12))
+                                    .font(SGTheme.display(12, weight: .regular))
                                 Text("AI Enhanced")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                                    .font(SGTheme.rowLabel)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
@@ -914,25 +871,25 @@ struct AutoGenerateFlashcardsSheet: View {
                             .foregroundColor(useAIEnhanced ? SGTheme.ink : SGTheme.paper)
                         }
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: SGTheme.tileRadius)
                             .stroke(SGTheme.hairline, lineWidth: 1)
                     )
-                    
+
                     Text(useAIEnhanced
                          ? "AI will generate diverse multiple-choice questions from your terms"
                          : "Creates flashcards directly using other definitions as answer choices")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     if !useAIEnhanced && parsedPairs.count < 4 {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.caption)
+                                .font(SGTheme.caption)
                                 .foregroundColor(SGTheme.ember)
                             Text("Direct import requires at least 4 cards. Add more or use AI Enhanced mode.")
-                                .font(.caption)
+                                .font(SGTheme.caption)
                                 .foregroundColor(SGTheme.ember)
                         }
                     }
@@ -942,20 +899,20 @@ struct AutoGenerateFlashcardsSheet: View {
             if quizletText.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("How to export from Quizlet:")
-                        .font(.caption)
+                        .font(SGTheme.caption)
                         .fontWeight(.medium)
                         .foregroundColor(SGTheme.paper)
-                    
+
                     Text("1. Open your Quizlet set in a browser")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("2. Click '...' (More) > Export")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
-                    
+
                     Text("3. Copy the exported text and paste it above")
-                        .font(.caption2)
+                        .font(SGTheme.micro)
                         .foregroundColor(SGTheme.paperSecondary)
                 }
                 .padding(.top, 4)
@@ -976,47 +933,31 @@ struct AutoGenerateFlashcardsSheet: View {
     
     var quizletDirectImportButton: some View {
         let isDisabled = parsedPairs.count < 4 || processingStep != .idle
-        
-        return Button {
+
+        return SGButton(
+            title: "Import \(parsedPairs.count) Flashcards",
+            icon: "square.and.arrow.down",
+            enabled: !isDisabled
+        ) {
             performQuizletDirectImport()
-        } label: {
-            HStack {
-                Spacer()
-                HStack(spacing: 12) {
-                    Image(systemName: "square.and.arrow.down")
-                        .font(.system(size: 16, weight: .medium))
-                    Text("Import \(parsedPairs.count) Flashcards")
-                        .fontWeight(.semibold)
-                }
-                Spacer()
-            }
-            .padding(.vertical, 16)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isDisabled ? dimFill : mintFill)
-            )
-            .foregroundColor(isDisabled ? SGTheme.paperDisabled : SGTheme.ink)
-            .font(.headline)
         }
-        .disabled(isDisabled)
-        .opacity(isDisabled ? 0.6 : 1.0)
     }
 
     var contentPreviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "text.alignleft")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(SGTheme.display(18, weight: .medium))
                     .foregroundColor(SGTheme.paper)
-                
+
                 Text("Content Preview")
-                    .font(.headline)
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
             }
-            
+
             ScrollView {
                 Text(inputText.isEmpty ? pdfExtractedText : inputText)
-                    .font(.system(.body, design: .serif))
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
@@ -1042,11 +983,9 @@ struct AutoGenerateFlashcardsSheet: View {
     
     var processingStatusView: some View {
         VStack(spacing: 24) {
-            // Progress bar with enhanced styling
-            ProgressView(value: overallProgress)
-                .progressViewStyle(CustomProgressViewStyle())
-                .frame(height: 8)
-            
+            // Progress bar
+            SGProgressBar(progress: overallProgress)
+
             // Status steps with enhanced visuals
             ForEach(ProcessingStep.allCases, id: \.self) { step in
                 if step != .idle {
@@ -1059,12 +998,12 @@ struct AutoGenerateFlashcardsSheet: View {
 
                             if currentStepIndex > stepIndex(step) {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(SGTheme.display(14, weight: .bold))
                                     .foregroundColor(SGTheme.ink)
                             } else if currentStepIndex == stepIndex(step) {
                                 if processingStep == .finalizing {
                                     Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .bold))
+                                        .font(SGTheme.display(14, weight: .bold))
                                         .foregroundColor(SGTheme.ink)
                                 } else {
                                     ProgressView()
@@ -1073,13 +1012,13 @@ struct AutoGenerateFlashcardsSheet: View {
                                 }
                             } else {
                                 Image(systemName: step.icon)
-                                    .font(.system(size: 14))
+                                    .font(SGTheme.display(14, weight: .regular))
                                     .foregroundColor(SGTheme.paperTertiary)
                             }
                         }
 
                         Text(step.rawValue)
-                            .font(.subheadline)
+                            .font(SGTheme.body)
                             .foregroundColor(currentStepIndex >= stepIndex(step) ? SGTheme.paper : SGTheme.paperTertiary)
                             .fontWeight(currentStepIndex == stepIndex(step) ? .medium : .regular)
                         
@@ -1106,11 +1045,11 @@ struct AutoGenerateFlashcardsSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "globe")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(SGTheme.display(16, weight: .medium))
                     .foregroundColor(SGTheme.paper)
-                
+
                 Text("Flashcard Language")
-                    .font(.headline)
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
             }
             
@@ -1131,20 +1070,20 @@ struct AutoGenerateFlashcardsSheet: View {
                 HStack {
                     Text(selectedLanguage)
                         .foregroundColor(SGTheme.paper)
-                        .font(.body)
+                        .font(SGTheme.body)
 
                     Spacer()
 
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 14))
+                        .font(SGTheme.display(14, weight: .regular))
                         .foregroundColor(SGTheme.paperTertiary)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(SGTheme.ink)
-                .cornerRadius(12)
+                .cornerRadius(SGTheme.tileRadius)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius)
                         .stroke(SGTheme.hairline, lineWidth: 1)
                 )
             }
@@ -1167,49 +1106,34 @@ struct AutoGenerateFlashcardsSheet: View {
             ? QuizletImportService.shared.formatForAI(pairs: parsedPairs)
             : (inputText.isEmpty ? pdfExtractedText : inputText)
         let hasValidText = !currentText.isEmpty && validateTextInput(currentText) == nil
-        let isDisabled = processingStep != .idle || !hasValidText
-        
-        return Button {
-            checkAuthAndGenerate()
-        } label: {
-            HStack {
-                Spacer()
-                
-                HStack(spacing: 12) {
-                    if processingStep != .idle {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.paperSecondary))
-                            .scaleEffect(0.8)
-                        Text("Processing...")
-                    } else if !hasValidText && !currentText.isEmpty {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Fix Input Issues")
-                    } else if currentText.isEmpty {
-                        Image(systemName: "text.alignleft")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Add Text to Generate")
-                    } else {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Generate Flashcards")
-                            .fontWeight(.semibold)
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding(.vertical, 16)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isDisabled ? dimFill : mintFill)
-            )
-            .foregroundColor(isDisabled ? SGTheme.paperDisabled : SGTheme.ink)
-            .font(.headline)
+        let isProcessing = processingStep != .idle
+        let isDisabled = isProcessing || !hasValidText
+
+        // The label tells users what's blocking generation, not just "disabled".
+        let title: String
+        let icon: String?
+        if isProcessing {
+            title = "Processing..."
+            icon = nil // SGButton's loading spinner takes the icon slot
+        } else if !hasValidText && !currentText.isEmpty {
+            title = "Fix Input Issues"
+            icon = "exclamationmark.triangle.fill"
+        } else if currentText.isEmpty {
+            title = "Add Text to Generate"
+            icon = "text.alignleft"
+        } else {
+            title = "Generate Flashcards"
+            icon = "sparkles"
         }
-        .buttonStyle(GenerateButtonStyle())
-        .disabled(isDisabled)
-        .opacity(isDisabled ? 0.6 : 1.0)
+
+        return SGButton(
+            title: title,
+            icon: icon,
+            enabled: !isDisabled,
+            loading: isProcessing
+        ) {
+            checkAuthAndGenerate()
+        }
     }
     
     private func checkAuthAndGenerate() {
@@ -1403,7 +1327,7 @@ struct AutoGenerateFlashcardsSheet: View {
                         .frame(width: 36, height: 36)
 
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.display(16, weight: .medium))
                         .foregroundColor(SGTheme.ember)
                 }
 
@@ -1413,7 +1337,7 @@ struct AutoGenerateFlashcardsSheet: View {
                         .foregroundColor(SGTheme.paper)
 
                     Text("Issues found with your content")
-                        .font(.subheadline)
+                        .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                 }
 
@@ -1424,7 +1348,7 @@ struct AutoGenerateFlashcardsSheet: View {
                     currentError = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(SGTheme.display(24, weight: .regular))
                         .foregroundColor(SGTheme.paperTertiary)
                 }
             }
@@ -1432,7 +1356,7 @@ struct AutoGenerateFlashcardsSheet: View {
             // Scrollable detailed error message
             ScrollView {
                 Text(message)
-                    .font(.system(.body, design: .monospaced))
+                    .font(SGTheme.caption)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1445,45 +1369,21 @@ struct AutoGenerateFlashcardsSheet: View {
             // Action buttons
             HStack(spacing: 12) {
                 // Copy error details button
-                Button {
+                SGButton(title: "Copy Details", icon: "doc.on.clipboard", variant: .ghost, fullWidth: false) {
                     UIPasteboard.general.string = message
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "doc.on.clipboard")
-                            .font(.system(size: 14))
-                        Text("Copy Details")
-                            .font(.caption)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(SGTheme.glaze(0.06))
-                    .foregroundColor(SGTheme.paper)
-                    .clipShape(Capsule(style: .continuous))
                 }
 
                 Spacer()
 
                 // Try again button
-                Button {
+                SGButton(title: "Try Again", icon: "arrow.clockwise", variant: .mint, fullWidth: false) {
                     errorMessage = nil
                     currentError = nil
                     resetState()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 14))
-                        Text("Try Again")
-                            .font(.caption)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(SGTheme.mint)
-                    .foregroundColor(SGTheme.ink)
-                    .clipShape(Capsule(style: .continuous))
                 }
             }
         }
-        .padding(20)
+        .padding(SGTheme.cardPadding)
         .background(
             RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
                 .fill(SGTheme.inkRaised)
@@ -2220,37 +2120,6 @@ struct DocumentPicker: UIViewControllerRepresentable {
     }
 }
 
-struct CustomProgressViewStyle: ProgressViewStyle {
-    func makeBody(configuration: SwiftUI.ProgressViewStyleConfiguration) -> some View {
-        let progress = configuration.fractionCompleted ?? 0.0
-        
-        return GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                // Background track
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(SGTheme.glaze(0.1))
-                    .frame(height: 12)
-
-                // Progress bar
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(SGTheme.mint)
-                    .frame(width: max(0, CGFloat(progress) * geometry.size.width), height: 12)
-
-                // Progress percentage
-                Text("\(Int(progress * 100))%")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(SGTheme.ink)
-                    .padding(.horizontal, 8)
-                    .frame(width: 40)
-                    .opacity(progress > 0.1 ? 1 : 0)
-                    .offset(x: max(0, CGFloat(progress) * geometry.size.width - 40))
-            }
-        }
-        .frame(height: 12)
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: progress)
-    }
-}
-
 // Add at bottom of your file
 extension PDFPage {
     var smartString: String? {
@@ -2267,25 +2136,6 @@ extension PDFPage {
 #Preview {
     DeckListView()
         .environmentObject(DeckStore.shared)
-}
-
-// Custom button style for upload button
-struct UploadButtonStyle: SwiftUI.ButtonStyle {
-    func makeBody(configuration: SwiftUI.ButtonStyleConfiguration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
-
-// Custom button style for generate button
-struct GenerateButtonStyle: SwiftUI.ButtonStyle {
-    func makeBody(configuration: SwiftUI.ButtonStyleConfiguration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .opacity(configuration.isPressed ? 0.9 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
 }
 
 // Add new GenerationView
@@ -2321,14 +2171,14 @@ struct GenerationView: View {
                         .rotationEffect(.degrees(-90))
 
                     Text("\(Int(progress * 100))%")
-                        .font(SGTheme.display(24))
+                        .font(SGTheme.numeral(24))
                         .monospacedDigit()
                         .foregroundColor(SGTheme.paper)
                 }
 
                 // Status text
                 Text(status)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
@@ -2336,22 +2186,8 @@ struct GenerationView: View {
                 Spacer()
 
                 // Cancel button
-                Button(action: onCancel) {
-                    Text("Cancel")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(SGTheme.paper)
-                        .padding(.horizontal, 30)
-                        .padding(.vertical, 15)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(SGTheme.glaze(0.06))
-                                .overlay(
-                                    Capsule(style: .continuous)
-                                        .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                                )
-                        )
-                }
-                .padding(.bottom, 50)
+                SGButton(title: "Cancel", variant: .ghost, fullWidth: false, action: onCancel)
+                    .padding(.bottom, 50)
             }
         }
     }

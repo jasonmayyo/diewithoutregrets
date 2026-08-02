@@ -24,24 +24,24 @@ struct NotificationPrimerView: View {
 
             ZStack {
                 Circle()
-                    .fill(SGTheme.mint.opacity(0.12))
+                    .fill(SGTheme.mintTint)
                     .frame(width: 140, height: 140)
-                    .overlay(Circle().strokeBorder(SGTheme.mint.opacity(0.25), lineWidth: 1))
+                    .overlay(Circle().strokeBorder(SGTheme.mintSoft, lineWidth: 1))
 
                 Image(systemName: "bell.badge.fill")
-                    .font(.system(size: 56, weight: .medium))
+                    .font(SGTheme.display(56, weight: .medium))
                     .foregroundStyle(SGTheme.ember, SGTheme.mint)
             }
             .fadeRise(shown)
 
-            Text("Stay on track")
-                .font(SGTheme.headline)
+            Text("He'll give you a heads up")
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .padding(.top, 28)
                 .fadeRise(shown, delay: 0.15)
 
-            Text("Get a heads up when your apps lock and reminders to keep your streak alive.")
+            Text("A warning before your apps lock, and a nudge to keep your streak alive. No spam. He's a monster, not a marketer.")
                 .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
@@ -52,40 +52,22 @@ struct NotificationPrimerView: View {
 
             Spacer()
 
-            Button(action: requestNotificationPermission) {
-                HStack(spacing: 8) {
-                    if isRequestingPermission {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(0.8)
-                    }
-                    Text("Enable notifications")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(SGTheme.mint, in: Capsule(style: .continuous))
-                .shadow(color: SGTheme.mint.opacity(0.25), radius: 14, y: 4)
+            SGButton(title: "Enable notifications", enabled: !isRequestingPermission, loading: isRequestingPermission) {
+                requestNotificationPermission()
             }
-            .buttonStyle(SGPressStyle())
-            .disabled(isRequestingPermission)
+            .sgShadow(SGTheme.glow(SGTheme.mint))
             .padding(.horizontal, SGTheme.screenPadding)
             .fadeRise(shown, delay: 0.45)
 
-            Button {
+            SGButton(title: "Not now",
+                     variant: .text,
+                     enabled: !isRequestingPermission) {
                 guard !isRequestingPermission, !didFinish else { return }
                 didFinish = true
                 viewModel.screenAction("notifications_skipped")
                 viewModel.nextStep()
-            } label: {
-                Text("Not now")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
             }
-            .disabled(isRequestingPermission)
+            .frame(minHeight: 44)
             .padding(.top, 4)
             .padding(.bottom, 12)
             .fadeRise(shown, delay: 0.55)

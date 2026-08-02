@@ -40,7 +40,7 @@ struct BuyBackOfferView: View {
                         dismiss()
                     }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(SGTheme.cardTitle)
                             .foregroundColor(SGTheme.paper)
                             .frame(width: 32, height: 32)
                             .background(
@@ -49,7 +49,9 @@ struct BuyBackOfferView: View {
                                     .overlay(Circle().strokeBorder(SGTheme.hairline, lineWidth: 1))
                             )
                     }
-                    .padding(.trailing, 20)
+                    .padding(.trailing, SGTheme.screenPadding)
+                    // Fixed 50pt keeps the close glyph clear of the status
+                    // bar on this full-screen cover (safe-area placement).
                     .padding(.top, 50)
                 }
                 Spacer()
@@ -61,7 +63,7 @@ struct BuyBackOfferView: View {
                 VStack(spacing: 30) {
                     VStack(spacing: 8) {
                         Text("One Time Offer")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .font(SGTheme.display(32))
                             .foregroundColor(SGTheme.paper)
                             .multilineTextAlignment(.center)
                             .opacity(showTitle ? 1 : 0)
@@ -69,7 +71,7 @@ struct BuyBackOfferView: View {
                             .animation(.easeOut(duration: 1.0).delay(0.2), value: showTitle)
 
                         Text("You will never see this again")
-                            .font(.system(size: 16, weight: .regular))
+                            .font(SGTheme.body)
                             .foregroundColor(SGTheme.paperSecondary)
                             .multilineTextAlignment(.center)
                             .opacity(showTitle ? 1 : 0)
@@ -85,7 +87,7 @@ struct BuyBackOfferView: View {
                                 .overlay(Circle().strokeBorder(SGTheme.hairline, lineWidth: 1))
 
                             Image(systemName: "gift.fill")
-                                .font(.system(size: 40))
+                                .font(SGTheme.display(40, weight: .regular))
                                 .foregroundColor(SGTheme.mint)
                         }
                         .opacity(showOfferCard ? 1 : 0)
@@ -94,23 +96,25 @@ struct BuyBackOfferView: View {
 
                         HStack() {
                             Text("Here's an")
-                                .font(.system(size: 18, weight: .regular))
+                                .font(SGTheme.body)
                                 .foregroundColor(SGTheme.paper)
 
                             Text("70% off")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(SGTheme.ink)
+                                .font(SGTheme.buttonSmall)
+                                .foregroundColor(.white)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(SGTheme.mint)
-                                .cornerRadius(20)
+                                .background(
+                                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
+                                        .fill(SGTheme.mint)
+                                )
 
                             Text("discount")
-                                .font(.system(size: 18, weight: .regular))
+                                .font(SGTheme.body)
                                 .foregroundColor(SGTheme.paper)
 
                             Image(systemName: "hands.sparkles")
-                                .font(.system(size: 16))
+                                .font(SGTheme.body)
                                 .foregroundColor(SGTheme.mint)
                         }
                         .opacity(showOfferCard ? 1 : 0)
@@ -119,21 +123,21 @@ struct BuyBackOfferView: View {
 
                         VStack(spacing: 8) {
                             Text("Only $1.67 / month")
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(SGTheme.display(24))
                                 .foregroundColor(SGTheme.paper)
-                                .padding(.horizontal, 20)
+                                .padding(.horizontal, SGTheme.screenPadding)
                                 .padding(.vertical, 12)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                                         .fill(SGTheme.inkRaised)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                                                 .strokeBorder(SGTheme.hairline, lineWidth: 1)
                                         )
                                 )
 
                             Text("Lowest price ever")
-                                .font(.system(size: 14, weight: .regular))
+                                .font(SGTheme.caption)
                                 .foregroundColor(SGTheme.paperSecondary)
                         }
                         .opacity(showOfferCard ? 1 : 0)
@@ -141,32 +145,20 @@ struct BuyBackOfferView: View {
                         .animation(.easeOut(duration: 1.0).delay(1.0), value: showOfferCard)
                     }
                 }
-                .padding(.horizontal, 20)
-                
+                .padding(.horizontal, SGTheme.screenPadding)
+
                 Spacer()
-                
-                Button(action: {
+
+                SGButton(title: "Claim your limited offer now!", enabled: !isPurchasing, loading: isPurchasing) {
                     Task { await startWinBackPurchase() }
-                }) {
-                    Text("Claim your limited offer now!")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(SGTheme.ink)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(SGTheme.mint, in: Capsule(style: .continuous))
                 }
-                .buttonStyle(SGPressStyle())
-                .padding(.horizontal, 20)
-                .disabled(isPurchasing)
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.bottom, 12)
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 20)
                 .animation(.easeOut(duration: 1.0).delay(1.2), value: showButton)
                 .accessibilityLabel("Claim your limited offer now!")
                 .accessibilityHint("Tap to claim your special discount")
-                .accessibilityAddTraits(.isButton)
-                
-                Spacer()
-                    .frame(height: 30)
             }
             
             if isPurchasing {
@@ -176,7 +168,7 @@ struct BuyBackOfferView: View {
                     .animation(.easeInOut(duration: 0.2), value: isPurchasing)
                 
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                         .fill(.ultraThinMaterial)
                         .frame(width: 120, height: 120)
                     ProgressView()

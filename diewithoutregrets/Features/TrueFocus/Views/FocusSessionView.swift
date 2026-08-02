@@ -24,9 +24,11 @@ struct FocusSessionView: View {
     @State private var borderRotation: Double = 0
     @State private var sessionCompleted = false
 
-    /// Lock/unlock animation states (matching flashcard flow).
-    @State private var showLockAnimation = true
-    @State private var showUnlockAnimation = false
+    /// Lock animation state (matching flashcard flow): the stamp plays once
+    /// per lock. Decided at INIT so a user who already saw it (home reveal,
+    /// or a method switch mid-flow) never gets a second slam — and the
+    /// overlay never mounts-then-vanishes with orphaned haptics.
+    @State private var showLockAnimation: Bool
     /// Frosted glass intro overlay -- dismissed on tap.
     @State private var showIntroOverlay = true
 
@@ -40,7 +42,7 @@ struct FocusSessionView: View {
     /// so we don't double-send the permission event.
     @State private var didTrackCameraPermission = false
 
-    private let cameraCornerRadius: CGFloat = 28
+    private let cameraCornerRadius: CGFloat = SGTheme.sheetRadius
     private let cameraPadding: CGFloat = 16
 
     init(durationMinutes: Int, strictness: StrictnessLevel, onEndSession: @escaping () -> Void) {
@@ -49,6 +51,21 @@ struct FocusSessionView: View {
         self.onEndSession = onEndSession
         _focusManager = StateObject(wrappedValue: FocusDetectionManager(strictness: strictness))
         _pomodoroTimer = StateObject(wrappedValue: PomodoroTimer(durationMinutes: durationMinutes))
+        _showLockAnimation = State(initialValue: !Self.stampSeen())
+    }
+
+    /// Same once-per-lock bookkeeping as the flashcard quiz (keyed to the
+    /// current budget grant). Legacy flow (stamp == 0) stamps every time.
+    private static func stampSeen() -> Bool {
+        let stamp = SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt) ?? 0
+        return stamp != 0
+            && UserDefaults.standard.double(forKey: RegretGuard.lockRevealStampKey) == stamp
+    }
+
+    private func markStampSeen() {
+        let stamp = SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt) ?? 0
+        guard stamp != 0 else { return }
+        UserDefaults.standard.set(stamp, forKey: RegretGuard.lockRevealStampKey)
     }
 
     private var sharedAppName: String? {
@@ -58,13 +75,27 @@ struct FocusSessionView: View {
     /// v2 = Screen Time engine live; legacy = Shortcuts flow (pre-migration).
     private var isV2: Bool { StudyGuardManager.shared.isSetupComplete }
 
+    /// Minutes of app time this session earns — the v2 engine's budget
+    /// interval, or the legacy Shortcuts break duration.
+    private var grantedBreakMinutes: Int {
+        isV2 ? StudyGuardManager.shared.intervalMinutes : trueFocusBreakDuration
+    }
+
     var body: some View {
         ZStack {
             SGTheme.ink
                 .ignoresSafeArea()
 
             if sessionCompleted {
-                sessionCompleteView
+                // The one canonical celebration — the same circle-reveal,
+                // count-up, and confetti the flashcard flow lands on.
+                UnlockCelebrationView(
+                    minutes: grantedBreakMinutes,
+                    ctaTitle: "Start my \(grantedBreakMinutes) minutes",
+                    subtitle: "Focus held the whole way. He's impressed.",
+                    onStart: onEndSession
+                )
+                .transition(.opacity)
             } else {
                 VStack(spacing: 0) {
                     topBar
@@ -73,11 +104,23 @@ struct FocusSessionView: View {
                 }
             }
 
-            // Lock animation overlay (plays on entry, same as flashcards)
+            // Lock animation overlay (plays on entry, same as flashcards).
+            // The stamp runs on the night canvas and drives its own timing;
+            // when the full choreography lands, it hands off by crossfade.
             if showLockAnimation {
-                MascotLockOverlay()
-                    .transition(.opacity)
-                    .zIndex(10)
+                MascotLockOverlay(
+                    subtitle: nil,
+                    background: SGTheme.night,
+                    onDark: true,
+                    usesExitMask: false,
+                    onFinished: {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            showLockAnimation = false
+                        }
+                    }
+                )
+                .transition(.opacity)
+                .zIndex(10)
             }
 
             // Frosted glass intro overlay (shown after lock animation dismisses)
@@ -87,13 +130,6 @@ struct FocusSessionView: View {
                     .zIndex(9)
             }
 
-            // Unlock animation overlay (plays on session complete)
-            if showUnlockAnimation {
-                MascotUnlockOverlay()
-                    .transition(.opacity)
-                    .zIndex(10)
-            }
-
             // v2 invariant: a locked user must always have another unlock
             // path. Camera denied → flashcards, prominently; otherwise a
             // quiet always-available switch while the session hasn't started.
@@ -101,22 +137,17 @@ struct FocusSessionView: View {
                focusManager.permissionDenied || showIntroOverlay {
                 VStack {
                     Spacer()
-                    Button {
+                    // Denied → the mint primary (this is now the only way
+                    // out); otherwise a quiet ghost pill.
+                    SGButton(
+                        title: focusManager.permissionDenied
+                            ? "Camera unavailable. Answer flashcards instead"
+                            : "Answer flashcards instead",
+                        variant: focusManager.permissionDenied ? .mint : .ghost,
+                        fullWidth: false
+                    ) {
                         NavigationModel.shared.unlockMethodOverride = "flashcards"
-                    } label: {
-                        Text(focusManager.permissionDenied
-                             ? "Camera unavailable. Answer flashcards instead"
-                             : "Answer flashcards instead")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(focusManager.permissionDenied ? .white : .white.opacity(0.7))
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 20)
-                            .background(
-                                (focusManager.permissionDenied ? SGTheme.mint : Color.white.opacity(0.08)),
-                                in: Capsule()
-                            )
                     }
-                    .buttonStyle(.plain)
                     .padding(.bottom, 24)
                 }
                 .zIndex(11)
@@ -132,15 +163,11 @@ struct FocusSessionView: View {
                                  data: ["duration_minutes": durationMinutes,
                                         "strictness": "\(strictness)"])
 
-            // Show lock animation on entry
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showLockAnimation = true
-            }
-            // Dismiss lock animation after 1.5s, then show intro overlay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showLockAnimation = false
-                }
+            // The lock stamp shows on cold entry only (once per lock) and
+            // dismisses itself via onFinished — no kill timer, so the
+            // choreography never truncates.
+            if showLockAnimation {
+                markStampSeen()
             }
             startBorderAnimation()
         }
@@ -232,63 +259,10 @@ struct FocusSessionView: View {
             }
         }
 
-        // Show unlock animation, then transition to complete view
+        // Land directly on the canonical celebration — it drives its own
+        // circle reveal, count-up, and confetti.
         withAnimation(.easeInOut(duration: 0.3)) {
-            showUnlockAnimation = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showUnlockAnimation = false
-                sessionCompleted = true
-            }
-        }
-    }
-
-    // MARK: - Session complete view
-
-    private var sessionCompleteView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(workingGreen)
-
-            Text("Session Complete")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(.white)
-
-            Text(isV2
-                 ? "Your apps are unlocked for the next \(StudyGuardManager.shared.intervalMinutes) minutes of use!"
-                 : "You've earned a \(trueFocusBreakDuration)-minute break!")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.white.opacity(0.6))
-
-            if !isV2, let appName = sharedDefaults?.string(forKey: "LastGuardedApp") {
-                Text("\(appName) has been unlocked")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
-            }
-
-            Text("\(durationMinutes) minutes of focused work")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.4))
-
-            Spacer()
-
-            Button {
-                onEndSession()
-            } label: {
-                Text("Done")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 28))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
+            sessionCompleted = true
         }
     }
 
@@ -296,8 +270,8 @@ struct FocusSessionView: View {
 
     private var introOverlay: some View {
         ZStack {
-            // Frosted glass background
-            Color.black.opacity(0.4)
+            // Frosted glass over the light canvas — dark text, mint accent.
+            SGTheme.ink.opacity(0.55)
                 .ignoresSafeArea()
                 .background(.ultraThinMaterial)
 
@@ -307,30 +281,30 @@ struct FocusSessionView: View {
                 // Icon
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.1))
+                        .fill(SGTheme.mintTint)
                         .frame(width: 100, height: 100)
-                    
+
                     Image(systemName: "eye.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.white)
+                        .font(SGTheme.display(40, weight: .regular))
+                        .foregroundStyle(SGTheme.mint)
                 }
 
                 // Title
                 Text("True Focus")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(SGTheme.stepTitle)
+                    .foregroundStyle(SGTheme.paper)
 
                 // Message
                 VStack(spacing: 12) {
                     Text("\(durationMinutes) \(durationMinutes == 1 ? "minute" : "minutes") of real work to break\nthrough procrastination.")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .font(SGTheme.cardTitle)
+                        .foregroundStyle(SGTheme.paper.opacity(0.9))
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
 
                     Text("We'll use your camera to check you're at your workspace. Once verified, your \(durationMinutes)-minute timer starts.")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(SGTheme.body)
+                        .foregroundStyle(SGTheme.paperSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                         .padding(.horizontal, 8)
@@ -340,23 +314,23 @@ struct FocusSessionView: View {
                 // Privacy badge
                 HStack(spacing: 8) {
                     Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(SGTheme.body)
+                        .foregroundStyle(SGTheme.mintDeep)
 
                     Text("100% private. All video is processed on your device.\nWe never store or collect your data.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .font(SGTheme.caption)
+                        .foregroundStyle(SGTheme.paperSecondary)
                         .multilineTextAlignment(.leading)
                         .lineSpacing(2)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.white.opacity(0.08))
+                    RoundedRectangle(cornerRadius: SGTheme.tileRadius)
+                        .fill(SGTheme.glaze(0.05))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: SGTheme.tileRadius)
+                                .stroke(SGTheme.hairline, lineWidth: 1)
                         )
                 )
                 .padding(.horizontal, 24)
@@ -366,12 +340,12 @@ struct FocusSessionView: View {
                 // Tap to continue
                 VStack(spacing: 8) {
                     Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .font(SGTheme.display(20, weight: .regular))
+                        .foregroundStyle(SGTheme.paperTertiary)
 
                     Text("Tap anywhere to start")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .font(SGTheme.rowLabel)
+                        .foregroundStyle(SGTheme.paperTertiary)
                 }
                 .padding(.bottom, 50)
             }
@@ -402,10 +376,10 @@ struct FocusSessionView: View {
                 onEndSession()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(SGTheme.rowLabel)
+                    .foregroundStyle(SGTheme.paperSecondary)
                     .frame(width: 32, height: 32)
-                    .background(.white.opacity(0.1), in: Circle())
+                    .background(SGTheme.glaze(0.06), in: Circle())
             }
 
             Spacer()
@@ -413,14 +387,14 @@ struct FocusSessionView: View {
             // Strictness badge
             HStack(spacing: 4) {
                 Image(systemName: strictness.icon)
-                    .font(.system(size: 10))
+                    .font(SGTheme.caption)
                 Text(strictness.displayName)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(SGTheme.caption)
             }
-            .foregroundStyle(.white.opacity(0.6))
+            .foregroundStyle(SGTheme.paperSecondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(.white.opacity(0.08), in: Capsule())
+            .background(SGTheme.glaze(0.06), in: Capsule())
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
@@ -463,7 +437,7 @@ struct FocusSessionView: View {
             // Warning tint
             if case .grace = focusManager.focusState {
                 RoundedRectangle(cornerRadius: cameraCornerRadius)
-                    .fill(warningOrange.opacity(0.15))
+                    .fill(SGTheme.amber.opacity(0.15))
                     .padding(cameraPadding)
                     .allowsHitTesting(false)
             }
@@ -476,12 +450,12 @@ struct FocusSessionView: View {
             // Grace countdown
             if let sec = focusManager.graceRemaining, sec <= 10, sec > 0 {
                 Text("\(sec)")
-                    .font(.system(size: 96, weight: .bold))
+                    .font(SGTheme.heroDigit)
                     .monospacedDigit()
                     .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.6), radius: 20, x: 0, y: 4)
+                    .sgShadow(SGTheme.shadowFloat)
                     .contentTransition(.numericText())
-                    .animation(.snappy(duration: 0.3), value: sec)
+                    .animation(SGTheme.springFast, value: sec)
             }
         }
         .animation(.easeInOut(duration: 0.5), value: currentBorderState)
@@ -501,7 +475,7 @@ struct FocusSessionView: View {
     }
 
     /// Shows detected items as small pills at the bottom of the camera card.
-    /// Green dot = matched a work keyword. Red dot = not a work item.
+    /// Mint dot = matched a work keyword. Ember dot = not a work item.
     private var inFrameLabel: some View {
         VStack {
             Spacer()
@@ -510,10 +484,10 @@ struct FocusSessionView: View {
                     ForEach(Array(focusManager.detectedSceneLabels.prefix(3).enumerated()), id: \.offset) { _, item in
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(item.isWorkMatch ? .green : .red)
+                                .fill(item.isWorkMatch ? SGTheme.mint : SGTheme.ember)
                                 .frame(width: 6, height: 6)
                             Text(item.label.replacingOccurrences(of: "_", with: " ").capitalized)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(SGTheme.micro)
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
@@ -542,13 +516,13 @@ struct FocusSessionView: View {
     private var currentBorderColor: Color {
         if focusManager.isInSetup {
             let bothGood = focusManager.setupFaceDetected && focusManager.setupSceneDetected
-            return bothGood ? setupReadyColor : setupWaitingColor
+            return bothGood ? SGTheme.teal : SGTheme.paperTertiary
         }
         switch focusManager.focusState {
-        case .setup:      return setupWaitingColor
-        case .working:    return workingGreen
-        case .grace:      return warningOrange
-        case .notWorking: return notWorkingRed
+        case .setup:      return SGTheme.paperTertiary
+        case .working:    return SGTheme.mint
+        case .grace:      return SGTheme.amber
+        case .notWorking: return SGTheme.ember
         }
     }
 
@@ -581,12 +555,12 @@ struct FocusSessionView: View {
     private var setupContent: some View {
         VStack(spacing: 20) {
             Text("Position your phone")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(SGTheme.cardTitle)
+                .foregroundStyle(SGTheme.paper)
 
             Text("We need to see you and your workspace")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.5))
+                .font(SGTheme.rowLabel)
+                .foregroundStyle(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 10) {
@@ -599,26 +573,26 @@ struct FocusSessionView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .stroke(.white.opacity(0.15), lineWidth: 3)
+                            .stroke(SGTheme.glaze(0.12), lineWidth: 3)
                             .frame(width: 40, height: 40)
 
                         Circle()
                             .trim(from: 0, to: CGFloat(focusManager.setupHoldProgress) / CGFloat(focusManager.setupHoldRequired))
-                            .stroke(.white, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .stroke(SGTheme.mint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                             .frame(width: 40, height: 40)
                             .rotationEffect(.degrees(-90))
                             .animation(.easeInOut(duration: 0.3), value: focusManager.setupHoldProgress)
 
                         Text("\(focusManager.setupHoldRequired - focusManager.setupHoldProgress)")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(SGTheme.numeral(16))
+                            .foregroundStyle(SGTheme.paper)
                             .contentTransition(.numericText())
-                            .animation(.snappy(duration: 0.3), value: focusManager.setupHoldProgress)
+                            .animation(SGTheme.springFast, value: focusManager.setupHoldProgress)
                     }
 
                     Text("Hold steady...")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(SGTheme.rowLabel)
+                        .foregroundStyle(SGTheme.paperSecondary)
                 }
             }
         }
@@ -626,8 +600,12 @@ struct FocusSessionView: View {
         .padding(.vertical, 24)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.1))
+            RoundedRectangle(cornerRadius: SGTheme.cardRadius)
+                .fill(SGTheme.inkRaised)
+                .overlay(
+                    RoundedRectangle(cornerRadius: SGTheme.cardRadius)
+                        .stroke(SGTheme.hairline, lineWidth: 1)
+                )
         )
         .padding(.horizontal, 16)
         .padding(.top, 12)
@@ -637,18 +615,18 @@ struct FocusSessionView: View {
     private func setupCheckRow(icon: String, label: String, detected: Bool) -> some View {
         HStack(spacing: 12) {
             Image(systemName: detected ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 20))
-                .foregroundStyle(detected ? .green : .white.opacity(0.2))
+                .font(SGTheme.display(20, weight: .regular))
+                .foregroundStyle(detected ? SGTheme.mint : SGTheme.paper.opacity(0.2))
 
             Text(label)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(detected ? .white : .white.opacity(0.35))
+                .font(SGTheme.body)
+                .foregroundStyle(detected ? SGTheme.paper : SGTheme.paper.opacity(0.4))
 
             Spacer()
 
             Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(detected ? .white.opacity(0.5) : .white.opacity(0.1))
+                .font(SGTheme.body)
+                .foregroundStyle(detected ? SGTheme.paperSecondary : SGTheme.paper.opacity(0.15))
         }
     }
 
@@ -658,25 +636,25 @@ struct FocusSessionView: View {
         VStack(spacing: 10) {
             // Timer
             Text(timerFormatted)
-                .font(.system(size: 44, weight: .bold))
+                .font(SGTheme.numeral(44))
                 .monospacedDigit()
-                .foregroundStyle(.white)
+                .foregroundStyle(SGTheme.paper)
                 .contentTransition(.numericText())
-                .animation(.snappy(duration: 0.3), value: pomodoroTimer.remainingSeconds)
+                .animation(SGTheme.springFast, value: pomodoroTimer.remainingSeconds)
 
             // Status
             Text(statusTitle)
-                .font(.system(size: 15, weight: .semibold))
+                .font(SGTheme.buttonSmall)
                 .foregroundStyle(statusTitleColor)
 
             Text(statusSubtitle)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.4))
+                .font(SGTheme.caption)
+                .foregroundStyle(SGTheme.paperTertiary)
 
             // Debug
             Text(focusManager.displayDebugReason)
-                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.25))
+                .font(SGTheme.micro.monospaced())
+                .foregroundStyle(SGTheme.paper.opacity(0.25))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .padding(.top, 4)
@@ -704,10 +682,10 @@ struct FocusSessionView: View {
 
     private var statusTitleColor: Color {
         switch focusManager.focusState {
-        case .setup:      return .white.opacity(0.6)
-        case .working:    return workingGreen
-        case .grace:      return warningOrange
-        case .notWorking: return notWorkingRed
+        case .setup:      return SGTheme.paperSecondary
+        case .working:    return SGTheme.mint
+        case .grace:      return SGTheme.amber
+        case .notWorking: return SGTheme.ember
         }
     }
 
@@ -725,16 +703,16 @@ struct FocusSessionView: View {
     private var permissionDeniedView: some View {
         VStack(spacing: 16) {
             Image(systemName: "camera.fill")
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(.white.opacity(0.8))
+                .font(SGTheme.display(44, weight: .light))
+                .foregroundStyle(SGTheme.paper.opacity(0.8))
 
             Text("Camera access required")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(SGTheme.cardTitle)
+                .foregroundStyle(SGTheme.paper)
 
             Text("Enable camera in Settings to detect when you're working.")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.7))
+                .font(SGTheme.rowLabel)
+                .foregroundStyle(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
@@ -765,27 +743,6 @@ struct FocusSessionView: View {
         }
     }
 
-    // MARK: - Colors
-
-    private var workingGreen: Color {
-        Color(red: 0.22, green: 0.98, blue: 0.62)
-    }
-
-    private var notWorkingRed: Color {
-        Color(red: 1.0, green: 0.38, blue: 0.42)
-    }
-
-    private var warningOrange: Color {
-        Color(red: 1.0, green: 0.6, blue: 0.2)
-    }
-
-    private var setupWaitingColor: Color {
-        Color(red: 0.4, green: 0.4, blue: 0.5)
-    }
-
-    private var setupReadyColor: Color {
-        Color(red: 0.3, green: 0.7, blue: 1.0)
-    }
 }
 
 #Preview {

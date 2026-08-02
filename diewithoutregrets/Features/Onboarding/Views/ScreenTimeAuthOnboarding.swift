@@ -28,14 +28,14 @@ struct ScreenTimeExplainerView: View {
                 .frame(height: 130)
                 .fadeRise(shown)
 
-            Text("Screen Time access")
-                .font(SGTheme.headline)
+            Text("This is the lock.")
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .padding(.top, 24)
                 .fadeRise(shown, delay: 0.15)
 
-            Text("Study Guard uses Apple's Screen Time to lock your distracting apps. Your app activity stays on your device. We never see it.")
+            Text("Study Guard uses Apple's Screen Time to hold your apps shut. Your activity stays on your device. We never see it.")
                 .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
@@ -48,9 +48,9 @@ struct ScreenTimeExplainerView: View {
 
             HStack(spacing: 6) {
                 Image(systemName: "hand.raised.fill")
-                    .font(.system(size: 12))
+                    .font(SGTheme.caption)
                 Text("Private by design. Backed by Apple.")
-                    .font(.system(size: 12))
+                    .font(SGTheme.caption)
             }
             .foregroundColor(SGTheme.paperTertiary)
             .padding(.bottom, 14)
@@ -60,7 +60,7 @@ struct ScreenTimeExplainerView: View {
                 viewModel.screenAction("explainer_continue")
                 viewModel.nextStep()
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, 12)
         }
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
@@ -85,24 +85,24 @@ struct ScreenTimePermissionView: View {
 
             ZStack {
                 Circle()
-                    .fill(SGTheme.mint.opacity(0.12))
+                    .fill(SGTheme.mintTint)
                     .frame(width: 140, height: 140)
-                    .overlay(Circle().strokeBorder(SGTheme.mint.opacity(0.25), lineWidth: 1))
+                    .overlay(Circle().strokeBorder(SGTheme.mintSoft, lineWidth: 1))
 
                 Image(systemName: "lock.shield.fill")
-                    .font(.system(size: 56, weight: .medium))
+                    .font(SGTheme.display(56, weight: .medium))
                     .foregroundColor(SGTheme.mint)
             }
             .fadeRise(shown)
 
-            Text("Allow access")
-                .font(SGTheme.headline)
+            Text("Make it official")
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
                 .padding(.top, 28)
                 .fadeRise(shown, delay: 0.15)
 
-            Text("iOS will ask with a system dialog. Allow it and your monster does the rest.")
+            Text("iOS will ask with a system dialog. Allow it, and willpower stops being your problem.")
                 .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .multilineTextAlignment(.center)
@@ -113,40 +113,22 @@ struct ScreenTimePermissionView: View {
 
             Spacer()
 
-            Button(action: requestAccess) {
-                HStack(spacing: 8) {
-                    if isRequesting {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(0.8)
-                    }
-                    Text("Allow Screen Time access")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(SGTheme.mint, in: Capsule(style: .continuous))
-                .shadow(color: SGTheme.mint.opacity(0.25), radius: 14, y: 4)
+            SGButton(title: "Allow Screen Time access", enabled: !isRequesting, loading: isRequesting) {
+                requestAccess()
             }
-            .buttonStyle(SGPressStyle())
-            .disabled(isRequesting)
+            .sgShadow(SGTheme.glow(SGTheme.mint))
             .padding(.horizontal, SGTheme.screenPadding)
             .fadeRise(shown, delay: 0.45)
 
-            Button {
+            SGButton(title: "Set up later from the Guard tab",
+                     variant: .text,
+                     enabled: !isRequesting) {
                 guard !isRequesting, !didFinish else { return }
                 didFinish = true
                 viewModel.screenAction("screen_time_deferred")
                 viewModel.nextStep()
-            } label: {
-                Text("Set up later from the Guard tab")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
             }
-            .disabled(isRequesting)
+            .frame(minHeight: 44)
             .padding(.top, 4)
             .padding(.bottom, 12)
             .fadeRise(shown, delay: 0.55)

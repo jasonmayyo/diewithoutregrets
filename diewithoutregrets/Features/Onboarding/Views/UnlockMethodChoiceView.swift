@@ -68,11 +68,11 @@ private struct UnlockMethodCard: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(selected ? SGTheme.mint.opacity(0.15) : SGTheme.inkHigh)
+                        .fill(selected ? SGTheme.mintTint : SGTheme.inkHigh)
                         .frame(width: 52, height: 52)
 
                     Image(systemName: icon)
-                        .font(.system(size: 22, weight: .medium))
+                        .font(SGTheme.display(20, weight: .medium))
                         .foregroundColor(selected ? SGTheme.mint : SGTheme.paperTertiary)
                 }
 
@@ -92,13 +92,13 @@ private struct UnlockMethodCard: View {
                 ZStack {
                     Circle()
                         .strokeBorder(selected ? SGTheme.mint : SGTheme.hairline, lineWidth: 1.5)
-                        .frame(width: 26, height: 26)
+                        .frame(width: 24, height: 24)
                     if selected {
                         Circle()
                             .fill(SGTheme.mint)
-                            .frame(width: 26, height: 26)
+                            .frame(width: 24, height: 24)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(SGTheme.micro.weight(.bold))
                             .foregroundColor(.white)
                     }
                 }
@@ -106,7 +106,7 @@ private struct UnlockMethodCard: View {
             .padding(SGTheme.cardPadding)
             .background(
                 RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
-                    .fill(selected ? SGTheme.mint.opacity(0.12) : SGTheme.inkRaised)
+                    .fill(selected ? SGTheme.mintTint : SGTheme.inkRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                             .strokeBorder(selected ? SGTheme.mint : SGTheme.hairline,

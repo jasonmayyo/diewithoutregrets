@@ -56,10 +56,10 @@ struct MoreFeaturesView: View {
             case 1:
                 VStack(spacing: 12) {
                     Text("That's not all.")
-                        .font(SGTheme.display(32))
+                        .font(SGTheme.stepTitle)
                         .foregroundColor(SGTheme.paper)
                     Text("Study Guard verifies you're actually studying.")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                         .multilineTextAlignment(.center)
                 }
@@ -75,7 +75,7 @@ struct MoreFeaturesView: View {
 
             case 3:
                 featureSlide(title: "AI flashcards",
-                             sub: "Paste notes, a YouTube link, or a Quizlet set. He makes the cards.") {
+                             sub: "Paste your notes, a YouTube lecture, or a Quizlet set. He makes the cards. You just answer them.") {
                     aiCardsCard
                 }
                 .transition(.opacity)
@@ -94,10 +94,10 @@ struct MoreFeaturesView: View {
 
             VStack(spacing: 8) {
                 Text(title)
-                    .font(SGTheme.display(26))
+                    .font(SGTheme.stepTitle)
                     .foregroundColor(SGTheme.paper)
                 Text(sub)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -107,15 +107,14 @@ struct MoreFeaturesView: View {
         .padding(.horizontal, SGTheme.screenPadding)
     }
 
-    // The art has black typography baked in, so it gets a paper backing —
-    // inkRaised would swallow it.
+    // The art carries its own typography; no card or backing behind it so
+    // the text stays readable.
     private var trueFocusCard: some View {
-        OnboardingIllustrationCard(fill: SGTheme.paper) {
-            Image("verified-focus-image")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity)
-        }
+        Image("verified-focus-image")
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous))
     }
 
     private var aiCardsCard: some View {
@@ -139,7 +138,7 @@ struct MoreFeaturesView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 32, height: 32)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .padding(6)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -159,13 +158,13 @@ struct MoreFeaturesView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation(.easeInOut(duration: 0.5)) { phase = 2 }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            SGTheme.beat()
             viewModel.screenAction("true_focus_shown")
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 6.5) {
             withAnimation(.easeInOut(duration: 0.5)) { phase = 3 }
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            SGTheme.gain()
             viewModel.screenAction("ai_cards_shown")
         }
 
@@ -196,7 +195,7 @@ struct MoreFeaturesView: View {
             Spacer()
 
             Text("That's not all.")
-                .font(SGTheme.display(30))
+                .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
 
             trueFocusCard
@@ -215,7 +214,7 @@ struct MoreFeaturesView: View {
                 Text("AI flashcards")
                     .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
-                Text("Paste notes, a YouTube link, or a Quizlet set. He makes the cards.")
+                Text("Paste your notes, a YouTube lecture, or a Quizlet set. He makes the cards. You just answer them.")
                     .font(SGTheme.caption)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)

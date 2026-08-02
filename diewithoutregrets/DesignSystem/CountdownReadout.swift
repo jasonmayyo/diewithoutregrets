@@ -35,6 +35,12 @@ final class CountdownReplayModel: ObservableObject {
         let amount: Int
     }
 
+    /// Fired once per sync when the readout settles on its final value —
+    /// immediately when nothing rolls, or after the last tick of a roll.
+    /// The Guard home uses this to chain the lock stamp after a roll to 0.
+    /// Never fired for syncs that are skipped while the readout is hidden.
+    var onSettled: ((Int) -> Void)?
+
     private var pendingTicks: [DispatchWorkItem] = []
     private let lastShownKey = "sg_lastShownRemainingMin"
     private let lastStampKey = "sg_lastShownGrantStamp"
@@ -66,6 +72,7 @@ final class CountdownReplayModel: ObservableObject {
 
         guard !UIAccessibility.isReduceMotionEnabled else {
             displayMinutes = remainingMinutes
+            onSettled?(remainingMinutes)
             return
         }
 
@@ -76,6 +83,7 @@ final class CountdownReplayModel: ObservableObject {
                 playRoll(from: 0, to: remainingMinutes, gain: true)
             } else {
                 displayMinutes = remainingMinutes
+                onSettled?(remainingMinutes)
             }
         } else if remainingMinutes < lastShown {
             // Same budget, usage arrived: roll down (≤10 visual ticks).
@@ -86,6 +94,7 @@ final class CountdownReplayModel: ObservableObject {
             playRoll(from: lastShown, to: remainingMinutes, gain: true)
         } else {
             displayMinutes = remainingMinutes
+            onSettled?(remainingMinutes)
         }
     }
 
@@ -128,6 +137,7 @@ final class CountdownReplayModel: ObservableObject {
         let settle = DispatchWorkItem { [weak self] in
             guard let self else { return }
             withAnimation(SGTheme.spring) { self.isRolling = false }
+            self.onSettled?(end)
         }
         pendingTicks.append(settle)
         DispatchQueue.main.asyncAfter(deadline: .now() + accumulated + 0.4, execute: settle)

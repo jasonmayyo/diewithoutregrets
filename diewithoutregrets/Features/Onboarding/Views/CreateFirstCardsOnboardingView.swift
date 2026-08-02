@@ -127,7 +127,7 @@ struct SourceOptionCard: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(accentColor.opacity(0.12))
                         .frame(width: 52, height: 52)
 
@@ -138,18 +138,18 @@ struct SourceOptionCard: View {
                             .frame(width: 26, height: 26)
                     } else if let icon = icon {
                         Image(systemName: icon)
-                            .font(.system(size: 22, weight: .medium))
+                            .font(SGTheme.display(20, weight: .medium))
                             .foregroundColor(accentColor)
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
 
                     Text(subtitle)
-                        .font(.system(size: 14))
+                        .font(SGTheme.caption)
                         .foregroundColor(SGTheme.paperSecondary)
                         .lineLimit(2)
                 }
@@ -157,16 +157,16 @@ struct SourceOptionCard: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(SGTheme.rowLabel)
                     .foregroundColor(SGTheme.paperTertiary)
             }
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                     .fill(SGTheme.inkRaised)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous)
                     .strokeBorder(SGTheme.hairline, lineWidth: 1)
             )
         }

@@ -48,8 +48,8 @@ struct MeetYourGuardView: View {
                 .shadow(color: SGTheme.mint.opacity(0.4), radius: 28)
                 .animation(.spring(response: 0.35, dampingFraction: 0.55), value: angry)
 
-                Text("This is your study monster.")
-                    .font(SGTheme.display(26))
+                Text("Meet your Study Guard.")
+                    .font(SGTheme.stepTitle)
                     .foregroundColor(OnbNight.textPrimary)
                     .multilineTextAlignment(.center)
                     .fadeRise(showTitle)
@@ -60,7 +60,7 @@ struct MeetYourGuardView: View {
                 HStack(spacing: 10) {
                     ForEach(descriptors.indices, id: \.self) { index in
                         Text(descriptors[index])
-                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .font(SGTheme.display(20, weight: .heavy))
                             .foregroundColor(SGTheme.ember)
                             .opacity(descriptorCount > index ? 1 : 0)
                             .scaleEffect(descriptorCount > index ? 1 : 1.5)
@@ -69,16 +69,18 @@ struct MeetYourGuardView: View {
                 }
                 .padding(.top, 18)
 
-                Text("He's here to win your time back.")
-                    .font(.system(size: 17, weight: .semibold))
+                Text("He has the willpower you don't.\nHe locks your apps. Only studying opens them.")
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.mint)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .fadeRise(showPivot)
                     .padding(.top, 16)
                     .padding(.horizontal, 32)
 
                 Spacer()
 
-                OnbCTA(title: "I'm ready", night: true, visible: showCTA) {
+                OnbCTA(title: "Set him up", night: true, visible: showCTA) {
                     viewModel.screenAction("im_ready_tapped")
                     viewModel.nextStep()
                 }
@@ -122,21 +124,21 @@ struct MeetYourGuardView: View {
         // The flood peaks and he snaps.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
             angry = true
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            SGTheme.climax()
             viewModel.screenAction("monster_angry")
         }
 
         for index in descriptors.indices {
             DispatchQueue.main.asyncAfter(deadline: .now() + 4.0 + Double(index) * 0.35) {
                 descriptorCount = index + 1
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                SGTheme.beat()
             }
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.2) {
             bannersActive = false
             showPivot = true
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            SGTheme.gain()
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.6) {

@@ -573,17 +573,21 @@ enum Analytics {
     }
 
     /// User tapped "Retry Questions" after getting one or more wrong.
+    /// `source` distinguishes the early retry offered at the wrong reveal
+    /// from the one on the failure screen.
     static func unlockRetried(
         appName: String,
         correctCount: Int,
         totalQuestions: Int,
-        attemptNumber: Int
+        attemptNumber: Int,
+        source: String = "failure_screen"
     ) {
         capture("unlock_retried", properties: [
             "app_name": appName,
             "correct_count": correctCount,
             "total_questions": totalQuestions,
-            "attempt_number": attemptNumber
+            "attempt_number": attemptNumber,
+            "source": source
         ])
     }
 

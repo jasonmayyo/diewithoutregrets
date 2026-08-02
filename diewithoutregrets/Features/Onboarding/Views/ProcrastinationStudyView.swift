@@ -2,7 +2,7 @@
 //  ProcrastinationStudyView.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 quiz question 4 (night): peak scroll time. Three larger
+//  Onboarding v3 quiz question 4 (night): peak scroll time. Three larger
 //  image-card options with tinted SF symbol thumbs, so we know which hours
 //  to protect first.
 //
@@ -12,9 +12,13 @@ import SwiftUI
 struct QuizScrollTimesView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
 
+    /// Moon-glow blue for the "In bed" thumb. Illustration one-off, not
+    /// chrome — it exists only for this artwork and never leaves this view.
+    private static let moonBlue = Color(hex: 0x7BA3FF)
+
     private let options: [(title: String, icon: String, tint: Color)] = [
-        ("While studying", "sun.max.fill", Color(hex: 0xFFC83D)),
-        ("In bed", "moon.fill", Color(hex: 0x7BA3FF)),
+        ("While studying", "sun.max.fill", SGTheme.sun),
+        ("In bed", "moon.fill", moonBlue),
         ("Honestly, all day", "infinity", SGTheme.ember),
     ]
 
@@ -24,7 +28,7 @@ struct QuizScrollTimesView: View {
         QuizScreenContainer(
             number: 4,
             question: "When do you scroll when you should be studying?",
-            subtitle: "This helps us protect your most vulnerable hours.",
+            subtitle: "So he knows when to guard hardest.",
             progress: OnboardingStep.quizScrollTimes.quizProgress
         ) {
             ForEach(options, id: \.title) { option in
@@ -62,12 +66,12 @@ private struct ScrollTimeCard: View {
                         .fill(tint.opacity(0.18))
                         .frame(width: 56, height: 56)
                     Image(systemName: icon)
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(SGTheme.display(24, weight: .semibold))
                         .foregroundColor(tint)
                 }
 
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(SGTheme.cardTitle)
                     .foregroundColor(OnbNight.textPrimary)
 
                 Spacer()
@@ -79,8 +83,8 @@ private struct ScrollTimeCard: View {
                     if selected {
                         Circle().fill(Color.white).frame(width: 24, height: 24)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(Color(hex: 0x0B1C33))
+                            .font(SGTheme.micro.weight(.bold))
+                            .foregroundColor(SGTheme.skyTop)
                     }
                 }
             }
