@@ -13,7 +13,7 @@ struct RegretEditorSheet: View {
     @State private var selectedTab = 0
 
     private let tabs = ["Question", "Explanation", "Answers"]
-    private let tabIcons = ["questionmark.circle", "text.bubble", "checklist"]
+    private let tabIcons = ["sticker-question", "sticker-text", "sticker-checkmark"]
 
     // Custom initializer that creates state values from the binding's current value
     init(regret: Binding<Regret>) {
@@ -44,7 +44,10 @@ struct RegretEditorSheet: View {
                 ForEach(0..<tabs.count, id: \.self) { index in
                     Button(action: { selectedTab = index }) {
                         HStack(spacing: 4) {
-                            Image(systemName: tabIcons[index])
+                            Image(tabIcons[index])
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 18, height: 18)
                             Text(tabs[index])
                         }
                         .font(SGTheme.rowLabel)

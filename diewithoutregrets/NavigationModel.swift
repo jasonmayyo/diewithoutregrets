@@ -29,6 +29,10 @@ public final class NavigationModel: ObservableObject {
     /// ContentView flips the floating tab bar to its night (smoked-glass)
     /// look so it reads against the dark ripple instead of glowing white.
     @Published public var isLockedHomeShowing: Bool = false
+    /// One-shot tab-switch request (the Creator Toolkit uses it to land on
+    /// the Guard tab so a staged lock or refill plays on camera).
+    /// ContentView applies it to its tab selection and clears it.
+    @Published public var requestedTab: Int?
 
     /// A corner wipe crossing a root swap (locked home → quiz, give-up →
     /// locked home). ContentView renders it above the root switch; the

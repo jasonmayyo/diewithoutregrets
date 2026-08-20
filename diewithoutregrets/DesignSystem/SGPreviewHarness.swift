@@ -20,6 +20,16 @@ enum SGPreviewHarness {
         case locked
     }
 
+    /// Blocking-flow redesign review hook — the app root presents the new
+    /// quiz directly (with a seeded locked state + deck) when any
+    /// -sg-preview-quizv2* argument is present. The suffixed variants
+    /// auto-drive the machine so every state can be screenshot unattended
+    /// (see QuizV2View.driveForScreenshotsIfRequested).
+    static var wantsQuizV2Preview: Bool {
+        ProcessInfo.processInfo.arguments
+            .contains { $0.hasPrefix("-sg-preview-quizv2") }
+    }
+
     static func applyLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
         guard args.contains(where: { $0.hasPrefix("-sg-preview") }) else { return }
@@ -33,6 +43,9 @@ enum SGPreviewHarness {
         if args.contains("-sg-preview-quiz") {
             seed(.locked)
             NavigationModel.shared.navigate(to: .regretView)
+        }
+        if wantsQuizV2Preview {
+            seed(.locked)
         }
     }
 

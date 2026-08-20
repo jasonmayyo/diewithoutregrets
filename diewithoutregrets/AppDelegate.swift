@@ -260,7 +260,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             DispatchQueue.main.async {
                 StudyGuardManager.shared.reconcileOnForeground()
                 if StudyGuardManager.shared.state == .locked {
-                    NavigationModel.shared.navigate(to: .regretView)
+                    // Land on the Guard home — the lock reveal ("He caught
+                    // you scrolling") plays there and owns the way into the
+                    // flashcards.
+                    NavigationModel.shared.returnHome()
                 }
             }
         }

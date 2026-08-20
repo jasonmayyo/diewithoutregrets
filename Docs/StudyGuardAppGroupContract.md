@@ -4,9 +4,10 @@ The main app and the Screen Time extensions are separate processes that share
 no runtime code. They communicate exclusively through the app group
 `group.com.jasonmayo.diewithoutregrets` and the constants in
 `diewithoutregrets/Shared/SGContract.swift` — a single source file compiled
-into **all five targets** (app, StudyGuardMonitor, StudyGuardShield,
-RegretGuardIntent, OpenGuardIntent). Never introduce a raw key/name string
-literal outside SGContract; a single mismatch silently breaks blocking.
+into **all six targets** (app, StudyGuardMonitor, StudyGuardShield,
+StudyGuardShieldAction, RegretGuardIntent, OpenGuardIntent). Never introduce
+a raw key/name string literal outside SGContract; a single mismatch silently
+breaks blocking.
 
 ## The model
 
@@ -38,7 +39,8 @@ N-minute budget arrives each new day; a lock always survives midnight.
 | `sg_emergencyUnlockTimestamps` | Data (JSON [Double]) | app | app | Rolling 7-day ledger, ≤3 per window; pruned on read. |
 | `sg_needsReauth` | Bool | app | app | Authorization revoked; UI shows re-auth card; never quiz-blackmail. |
 | `sg_lastRolloverDay` | Double | both | both | Start-of-day marker; makes rollover idempotent across processes; pre-written before every `startMonitoring` so the immediate `intervalDidStart` no-ops. |
-| `sg_lockNotifThrottleAt` | Double | monitor | monitor | 30s lock-notification throttle. |
+| `sg_lockNotifThrottleAt` | Double | monitor, shield action | monitor | 30s lock-notification throttle. The shield action extension also stamps it when posting its instant unlock notification (same fixed id) so a monitor re-fire replaces rather than stacks. |
+| `sg_shieldTapAt` | Double | shield action | app (consumes) | Epoch of the last "Open Study Guard" shield-button tap. App consumes on foreground; if fresh (<120s) and locked, it navigates straight to the unlock flow. |
 | `sg_extLog` | [String] | monitor | app (Debug tab) | ≤200-entry ring buffer — the only extension observability on device. |
 | `sg_pendingEvents` | Data (JSON array) | both enqueue, app drains | app | Analytics queue (PostHog can't run in extensions). App swaps to `sg_pendingEventsDraining` before reading to avoid the append/drain race. |
 | `LegacyIntentFireCount` | Int | intents | app | Post-migration automation fires; flushed as `legacy_intent_noop`. |
@@ -52,7 +54,21 @@ N-minute budget arrives each new day; a lock always survives midnight.
 - Activity: `sg_daily` — daily repeating 00:01 → 23:59:59.
 - `sg_limit` — lock trigger at N minutes, concrete tokens, `includesPastActivity: false`.
 - `sg_used_p<m>` — progress events at m = step, 2·step, … < N with step = max(1, ⌈N/20⌉). The event with m ≥ ⌈0.8·N⌉ triggers the warning notification.
-- Notifications: `sg_lock_notification` (fixed id, replace + 30s throttle, deeplink `diewithoutregrets://unlock`), `sg_warning_notification`.
+- Notifications: `sg_lock_notification` (fixed id, replace + 30s throttle, deeplink `diewithoutregrets://unlock`), `sg_warning_notification`. The shield action extension reuses `sg_lock_notification` (unthrottled — explicit user intent) for its pre-iOS 26.5 fallback so the existing tap route applies.
+
+## Shield buttons
+The shield's primary button is handled by StudyGuardShieldAction
+(`com.apple.ManagedSettings.shield-action-service` — ManagedSettings prefix,
+NOT ManagedSettingsUI like the configuration service; the UI-prefixed string
+registers under a nonexistent extension point and the button silently does
+the system close). On every tap it posts the unlock notification (the
+reliable way in) and stamps `sg_shieldTapAt`; on iOS 26.5+ it additionally
+responds `ShieldActionResponse.openParentalControlsApp` (built via
+`rawValue: 3` until we compile with SDK ≥ 26.5) — best-effort: silently
+ignored in the only public individual-authorization test so far
+(FB18997699). If the direct open lands, the app clears the redundant
+notification while consuming `sg_shieldTapAt`. Queues `shield_button_tapped`
+analytics (`method: direct|notification`). The secondary button just closes.
 
 ## Rules
 1. Only the app starts/stops monitoring — with ONE exception: the monitor's

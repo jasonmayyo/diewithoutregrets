@@ -203,6 +203,9 @@ struct SGListRow: View {
     let title: String
     var subtitle: String? = nil
     var icon: String? = nil
+    /// Sticker-pack asset for the leading slot (takes precedence over
+    /// `icon`) — full-color, no tint plate.
+    var assetIcon: String? = nil
     var iconTint: Color = SGTheme.mint
     var showChevron: Bool = true
     /// External-link rows pass "arrow.up.right" instead of the chevron.
@@ -212,7 +215,13 @@ struct SGListRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                if let icon {
+                if let assetIcon {
+                    Image(assetIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .frame(width: 34, height: 34)
+                } else if let icon {
                     Image(systemName: icon)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(iconTint)
@@ -366,9 +375,14 @@ struct SGOptionTile: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(selected ? SGTheme.mint : SGTheme.paperSecondary)
+                // Sticker-pack asset: full color when selected, monochrome
+                // when idle (same selection language as the tab bar).
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .saturation(selected ? 1 : 0)
+                    .opacity(selected ? 1 : 0.6)
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(SGTheme.paper)

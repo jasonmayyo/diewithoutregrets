@@ -41,13 +41,12 @@ struct RegretGuard: View {
 
     // Lock reveal sequence — when the user comes home to find their time
     // spent, the story plays in order: (1) the countdown replays down to 0,
-    // (2) the monster stamps the screen locked, (3) the locked home state
-    // settles in. `lockRevealed` gates the locked UI so nothing leaks
-    // before the stamp; it's persisted per budget grant so the show plays
-    // exactly once per lock.
-    @State private var showLockWipe = false
-    @State private var showLockStamp = false
-    @State private var lockStampScheduled = false
+    // (2) Lock.lottie clicks shut and fires a one-shot dot-ripple burst
+    // (LockMomentOverlay), (3) the locked home fades up. `lockRevealed`
+    // gates the locked UI so nothing leaks before the click; it's persisted
+    // per budget grant so the show plays exactly once per lock.
+    @State private var showLockMoment = false
+    @State private var lockMomentScheduled = false
     @State private var lockRevealed = false
     /// Shared with RegretView: the quiz replays the stamp only when this
     /// grant's reveal was never seen.
@@ -98,42 +97,22 @@ struct RegretGuard: View {
                 meadowHome
             }
 
-            // Stage 2 of the lock reveal: the monster stamps the screen
-            // locked. When it finishes, the dark locked home is already set
-            // underneath and the overlay fades away.
-            if showLockStamp {
-                MascotLockOverlay(
-                    subtitle: "Study to win your apps back.",
-                    background: LockedHomeView.night,
-                    onDark: true,
-                    startDelay: 0.45,
-                    usesExitMask: false
-                ) {
-                    NavigationModel.shared.isLockStampPlaying = false
-                    withAnimation(.easeOut(duration: 0.5)) {
-                        showLockStamp = false
-                    }
-                }
-                .transition(.opacity)
-                .zIndex(2)
-            }
-
-            // Stage 1½: the corner wipe — white leads, ember covers — that
-            // carries the screen from the dead 0m readout into the stamp.
-            if showLockWipe {
-                SGCornerWipe(
-                    preset: .lock,
+            // Stage 2 of the lock reveal: the lock clicks shut in the
+            // centre, disperses one dot-ripple burst, and fades away over
+            // the locked home already set underneath.
+            if showLockMoment {
+                LockMomentOverlay(
                     onCovered: {
-                        // Screen is fully covered: swap the locked scene in
-                        // and mount the stamp so the retract reveals it.
+                        // Scrim is opaque: swap the locked scene in so the
+                        // fade-out reveals it.
                         lockRevealed = true
-                        showLockStamp = true
                     },
                     onFinished: {
-                        showLockWipe = false
+                        NavigationModel.shared.isLockStampPlaying = false
+                        showLockMoment = false
                     }
                 )
-                .zIndex(3)
+                .zIndex(2)
             }
         }
         .onAppear {
@@ -164,9 +143,8 @@ struct RegretGuard: View {
         .onChange(of: guardManager.state) { _, newState in
             if newState != .locked {
                 // Unlocked (or paused): arm the show for the next lock.
-                showLockWipe = false
-                showLockStamp = false
-                lockStampScheduled = false
+                showLockMoment = false
+                lockMomentScheduled = false
                 lockRevealed = false
                 NavigationModel.shared.isLockStampPlaying = false
             }
@@ -175,7 +153,25 @@ struct RegretGuard: View {
     }
 
     /// The daylight meadow home (all states except the revealed lock-out).
+    /// Redesigned as MeadowHomeV2 (reference-matched UI pass); the legacy
+    /// meadow below is kept until the new home is fully wired.
     private var meadowHome: some View {
+        // Shares RegretGuard's countdown model, so the readout rolls on
+        // checkpoint replays and the lock reveal still fires on settle.
+        // Taps route into the sheet/alert stack this view already owns.
+        MeadowHomeV2(
+            countdown: countdown,
+            onDeckTap: { showDeckPicker = true },
+            onCreateDeck: {
+                Analytics.capture("checklist_step_tapped", properties: ["step": "create_deck"])
+                showChecklistNewDeck = true
+            },
+            onAppsTap: { openGuardedAppsEditor() },
+            onIntervalTap: { showIntervalSheet = true }
+        )
+    }
+
+    private var meadowHomeLegacy: some View {
         ZStack {
             SGTheme.ink.ignoresSafeArea()
 
@@ -516,7 +512,7 @@ struct RegretGuard: View {
             meteringControls
 
         case .notSetUp:
-            SGButton(title: "Turn on Study Guard", icon: "shield.fill", variant: .white) {
+            SGButton(title: "Turn on Study Guard", assetIcon: "sticker-shield", variant: .white) {
                 openGuardedAppsEditor()
             }
 
@@ -590,9 +586,10 @@ struct RegretGuard: View {
                 showChecklistNewDeck = true
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(SGTheme.display(20, weight: .semibold))
-                        .foregroundColor(SGTheme.mintDeep)
+                    Image("sticker-books")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Create your first deck")
                             .font(SGTheme.cardTitle)
@@ -614,8 +611,10 @@ struct RegretGuard: View {
     private var reauthBanner: some View {
         SGCard {
             HStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(SGTheme.ember)
+                Image("sticker-error")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 26, height: 26)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Screen Time access was revoked")
                         .font(SGTheme.cardTitle)
@@ -667,12 +666,12 @@ struct RegretGuard: View {
 
     /// Countdown settle hook: when the readout lands on 0 while locked (the
     /// roll only plays while Home is on screen), hold the zero for a beat,
-    /// then stamp. Persisted per grant so re-visits skip straight to the
-    /// locked home.
+    /// then play the lock moment. Persisted per grant so re-visits skip
+    /// straight to the locked home.
     private func scheduleLockRevealIfNeeded(settledMinutes: Int) {
         guard settledMinutes == 0,
               guardManager.state == .locked,
-              !lockRevealed, !showLockWipe, !showLockStamp, !lockStampScheduled
+              !lockRevealed, !showLockMoment, !lockMomentScheduled
         else { return }
 
         if lockRevealShownForCurrentGrant {
@@ -680,13 +679,13 @@ struct RegretGuard: View {
             return
         }
 
-        lockStampScheduled = true
+        lockMomentScheduled = true
         UserDefaults.standard.set(currentGrantStamp, forKey: Self.lockRevealStampKey)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            lockStampScheduled = false
+            lockMomentScheduled = false
             guard guardManager.state == .locked, !lockRevealed else { return }
             NavigationModel.shared.isLockStampPlaying = true
-            showLockWipe = true
+            showLockMoment = true
         }
     }
 

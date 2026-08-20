@@ -289,4 +289,17 @@ enum SGTheme {
     static func tapHaptic() { tick() }
     static func tickDownHaptic() { lock() }
     static func tickUpHaptic() { gain() }
+
+    /// Countdown roll-down tick, escalating with the roll: featherlight at
+    /// the first spent minute, a hard rigid knock by the last. `progress`
+    /// is 0...1 through the roll.
+    static func tickDownHaptic(progress: Double) {
+        let p = max(0, min(1, progress))
+        let intensity = 0.35 + 0.65 * p
+        if p < 0.5 {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: intensity)
+        } else {
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: intensity)
+        }
+    }
 }

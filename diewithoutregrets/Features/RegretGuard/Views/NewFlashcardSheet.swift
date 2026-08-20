@@ -26,17 +26,17 @@ struct NewFlashcardSheet: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // Question Section
-                    InputCard(title: "Question", systemImage: "questionmark.circle") {
+                    InputCard(title: "Question", systemImage: "sticker-question") {
                         SGField(placeholder: "What's the main question?", text: $newQuestion)
                     }
 
                     // Correct Answer Section
-                    InputCard(title: "Correct Answer", systemImage: "checkmark.circle") {
+                    InputCard(title: "Correct Answer", systemImage: "sticker-checkmark") {
                         SGField(placeholder: "Enter the correct answer", text: $newAnswer)
                     }
 
                     // Incorrect Answers Section
-                    InputCard(title: "Incorrect Answers", systemImage: "xmark.circle") {
+                    InputCard(title: "Incorrect Answers", systemImage: "sticker-error") {
                         VStack(spacing: 12) {
                             ForEach(choices.indices, id: \.self) { index in
                                 HStack {
@@ -81,7 +81,7 @@ struct NewFlashcardSheet: View {
                     }
 
                     // Explanation Section
-                    InputCard(title: "Explanation", systemImage: "lightbulb") {
+                    InputCard(title: "Explanation", systemImage: "sticker-idea") {
                         VStack(alignment: .leading) {
                             SGField(placeholder: "Add context that explains the answer",
                                     text: $newExplanation,
@@ -156,8 +156,10 @@ struct InputCard<Content: View>: View {
         SGCard(shadowed: false) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Image(systemName: systemImage)
-                        .foregroundColor(SGTheme.mint)
+                    Image(systemImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
                     Text(title)
                         .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)

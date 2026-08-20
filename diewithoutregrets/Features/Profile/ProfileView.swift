@@ -26,6 +26,7 @@ struct ProfileView: View {
     @State private var showingUsageIntervalSettings = false
     @State private var showingGuardedAppsPicker = false
     @State private var showingLockedEditAlert = false
+    @State private var showingCreatorToolkit = false
     #if DEBUG
     @State private var showingDebug = false
     #endif
@@ -104,9 +105,9 @@ struct ProfileView: View {
                 // Stats Overview
                 SGCard(shadowed: false) {
                     HStack(spacing: 40) {
-                        StatItem(title: "Decks", value: "\(deckStore.decks.count)", icon: "rectangle.stack.fill")
-                        StatItem(title: "Cards", value: "\(totalAvailableCards)", icon: "doc.text.fill")
-                        StatItem(title: "To Unlock", value: useAllCards ? "All" : "\(flashcardCount)", icon: "lock.fill")
+                        StatItem(title: "Decks", value: "\(deckStore.decks.count)", icon: "sticker-books")
+                        StatItem(title: "Cards", value: "\(totalAvailableCards)", icon: "sticker-document")
+                        StatItem(title: "To Unlock", value: useAllCards ? "All" : "\(flashcardCount)", icon: "sticker-lock")
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -120,14 +121,14 @@ struct ProfileView: View {
                     HStack(spacing: 10) {
                             SGOptionTile(
                                 title: "Flashcards",
-                                icon: "rectangle.stack.fill",
+                                icon: "sticker-books",
                                 selected: unlockMethod == "flashcards"
                             ) {
                                 selectUnlockMethod("flashcards")
                             }
                             SGOptionTile(
                                 title: "True Focus",
-                                icon: "eye.fill",
+                                icon: "sticker-eye",
                                 selected: unlockMethod == "trueFocus"
                             ) {
                                 selectUnlockMethod("trueFocus")
@@ -196,7 +197,7 @@ struct ProfileView: View {
 
                     // Every user is either subscribed or in a trial, so the
                     // only account action is managing that subscription.
-                    SGListRow(title: "Manage Subscription", icon: "crown.fill") {
+                    SGListRow(title: "Manage Subscription", assetIcon: "sticker-crown") {
                         showingManageSubscriptions = true
                     }
                 }
@@ -207,26 +208,37 @@ struct ProfileView: View {
                     SectionHeader(title: "Help & Legal")
                     
                     VStack(spacing: 10) {
-                        LinkMenuItem(icon: "questionmark.circle", title: "FAQs", url: "https://studyguard.framer.website/")
-                        LinkMenuItem(icon: "exclamationmark.triangle", title: "Report an Error", url: "https://studyguard.framer.website/support")
-                        LinkMenuItem(icon: "doc.text", title: "Terms of Use", url: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
-                        LinkMenuItem(icon: "hand.raised", title: "Privacy Policy", url: "https://studyguard.framer.website/legal/privacy-policy")
+                        LinkMenuItem(icon: "sticker-question", title: "FAQs", url: "https://studyguard.framer.website/")
+                        LinkMenuItem(icon: "sticker-error", title: "Report an Error", url: "https://studyguard.framer.website/support")
+                        LinkMenuItem(icon: "sticker-document", title: "Terms of Use", url: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+                        LinkMenuItem(icon: "sticker-shield", title: "Privacy Policy", url: "https://studyguard.framer.website/legal/privacy-policy")
                     }
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
 
-                #if DEBUG
-                // Developer Section (debug builds only). The push happens via
-                // navigationDestination so the row can be a standard SGListRow.
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionHeader(title: "Developer")
+                // Creator Section. Runtime-gated (not compile-time): the
+                // toolkit ships in TestFlight builds so creators can stage
+                // locks and animations while filming, and stays invisible
+                // on App Store installs. The push happens via
+                // navigationDestination so the rows can be standard SGListRows.
+                if AppEnvironment.current != .production {
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionHeader(title: "Creator")
 
-                    SGListRow(title: "Debug", icon: "ant.fill") {
-                        showingDebug = true
+                        SGListRow(title: "Creator Toolkit",
+                                  subtitle: "Stage locks, timers and animations for filming",
+                                  assetIcon: "sticker-video") {
+                            showingCreatorToolkit = true
+                        }
+
+                        #if DEBUG
+                        SGListRow(title: "Debug", icon: "ant.fill") {
+                            showingDebug = true
+                        }
+                        #endif
                     }
+                    .padding(.horizontal, SGTheme.screenPadding)
                 }
-                .padding(.horizontal, SGTheme.screenPadding)
-                #endif
                     }
                     .padding(.top, 14)
                     .padding(.bottom, SGTheme.tabBarClearance)
@@ -234,6 +246,9 @@ struct ProfileView: View {
             }
         }
         .navigationBarHidden(true)
+        .navigationDestination(isPresented: $showingCreatorToolkit) {
+            CreatorToolkitView()
+        }
         #if DEBUG
         .navigationDestination(isPresented: $showingDebug) {
             DebugView()
@@ -301,7 +316,7 @@ struct LinkMenuItem: View {
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        SGListRow(title: title, icon: icon, trailingIcon: "arrow.up.right") {
+        SGListRow(title: title, assetIcon: icon, trailingIcon: "arrow.up.right") {
             Analytics.helpLinkClicked(link: title, url: url)
             if let destination = URL(string: url) {
                 openURL(destination)
@@ -317,15 +332,11 @@ struct StatItem: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(SGTheme.mint.opacity(0.12))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: icon)
-                    .font(SGTheme.display(20, weight: .medium))
-                    .foregroundColor(SGTheme.mint)
-            }
+            Image(icon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 34, height: 34)
+                .frame(height: 44)
 
             Text(value)
                 .font(SGTheme.display(22))

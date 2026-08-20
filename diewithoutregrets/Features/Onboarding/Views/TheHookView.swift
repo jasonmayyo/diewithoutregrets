@@ -33,9 +33,10 @@ struct HookView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                // Screenshot hero: the rotating clock-hand carousel.
+                // Screenshot hero: the rotating clock-hand carousel. Taller
+                // now that the footer housekeeping collapsed to one row.
                 HookScreenshotCarousel(images: slides, slide: slide,
-                                       height: geometry.size.height * 0.52)
+                                       height: geometry.size.height * 0.56)
                     .padding(.top, 8)
                     .fadeRise(entered, delay: 0.1)
                     .accessibilityLabel("Screenshots of Study Guard")
@@ -65,32 +66,38 @@ struct HookView: View {
 
                 Spacer(minLength: 16)
 
-                VStack(spacing: 14) {
+                VStack(spacing: 6) {
+                    // One compact housekeeping row: restore plus the legal
+                    // links App Store requires on the first screen, sitting
+                    // right above the CTA so the hero keeps the height.
+                    HStack(spacing: 8) {
+                        Button(isRestoring ? "Restoring..." : "Already have an account") {
+                            Task { await restorePurchases() }
+                        }
+                        .disabled(isRestoring)
+                        .accessibilityLabel("Restore purchases")
+
+                        Text("\u{00B7}")
+                            .foregroundColor(SGTheme.paperTertiary)
+
+                        Link("Privacy", destination: URL(string: "https://studyguard.framer.website/legal/privacy-policy")!)
+
+                        Text("\u{00B7}")
+                            .foregroundColor(SGTheme.paperTertiary)
+
+                        Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                    }
+                    .font(SGTheme.caption)
+                    .foregroundColor(SGTheme.paperSecondary)
+                    .tint(SGTheme.paperSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(minHeight: 40)
+                    .fadeRise(showCTA)
+
                     OnbCTA(title: "I'm ready", visible: showCTA) {
                         viewModel.nextStep()
                     }
-
-                    SGButton(title: isRestoring ? "Restoring..." : "I already have an account",
-                             variant: .text,
-                             enabled: !isRestoring,
-                             loading: isRestoring) {
-                        Task { await restorePurchases() }
-                    }
-                    .frame(minHeight: 44)
-                    .fadeRise(showCTA)
-                    .accessibilityLabel("Restore purchases")
-
-                    // App Store requirement: legal links on the first screen.
-                    HStack(spacing: 20) {
-                        Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                            .font(SGTheme.caption)
-                            .foregroundColor(SGTheme.paperSecondary)
-
-                        Link("Privacy Policy", destination: URL(string: "https://studyguard.framer.website/legal/privacy-policy")!)
-                            .font(SGTheme.caption)
-                            .foregroundColor(SGTheme.paperSecondary)
-                    }
-                    .fadeRise(showCTA)
                 }
                 .padding(.bottom, 12)
             }

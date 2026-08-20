@@ -95,6 +95,9 @@ final class SGTapDebouncer {
 struct SGButton: View {
     let title: String
     var icon: String? = nil
+    /// Sticker-pack asset rendered full-color in the icon slot (takes
+    /// precedence over `icon`) — the app-wide sticker language.
+    var assetIcon: String? = nil
     var variant: SGButtonVariant = .mint
     var fullWidth: Bool = true
     var enabled: Bool = true
@@ -167,6 +170,11 @@ struct SGButton: View {
                 ProgressView()
                     .controlSize(.small)
                     .tint(variant.label)
+            } else if let assetIcon {
+                Image(assetIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
             } else if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))

@@ -4,9 +4,10 @@
 //
 //  Single source of truth for every app-group key, activity/event name, and
 //  the event-building rule shared between the main app and the Screen Time
-//  extensions. This file is a member of ALL FIVE targets (app, StudyGuardMonitor,
-//  StudyGuardShield, RegretGuardIntent, OpenGuardIntent) so the cross-process
-//  contract can never drift. Full written spec: Docs/StudyGuardAppGroupContract.md
+//  extensions. This file is a member of ALL SIX targets (app, StudyGuardMonitor,
+//  StudyGuardShield, StudyGuardShieldAction, RegretGuardIntent, OpenGuardIntent)
+//  so the cross-process contract can never drift. Full written spec:
+//  Docs/StudyGuardAppGroupContract.md
 //
 
 import Foundation
@@ -39,6 +40,10 @@ enum SGContract {
     static let lockNotificationID = "sg_lock_notification"
     static let warningNotificationID = "sg_warning_notification"
     static let unlockDeepLink = "diewithoutregrets://unlock"
+
+    /// The host app's bundle identifier — used by the shield-action extension's
+    /// direct-open path to foreground the app.
+    static let hostBundleID = "com.jasonmayo.diewithoutregrets"
 
     /// Allowed usage intervals (minutes) and the default.
     static let allowedIntervals = [10, 15, 20, 30, 45, 60]
@@ -81,6 +86,10 @@ enum SGContract {
         /// Start-of-day (timeIntervalSince1970) of the last processed rollover.
         static let lastRolloverDay = "sg_lastRolloverDay"
         static let lockNotifThrottleAt = "sg_lockNotifThrottleAt"
+        /// Stamped by the shield action extension when the user taps
+        /// "Open Study Guard" on the shield; consumed by the app on
+        /// foreground to land directly on the unlock flow.
+        static let shieldTapAt = "sg_shieldTapAt"
         /// [String] ring buffer (≤200) — extension debug log, viewable in the app's Debug tab.
         static let extLog = "sg_extLog"
         /// JSON [[String: Any]] — analytics queued by the extension, drained by the app.

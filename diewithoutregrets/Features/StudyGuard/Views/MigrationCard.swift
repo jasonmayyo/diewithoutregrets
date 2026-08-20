@@ -24,8 +24,10 @@ struct MigrationCard: View {
             SGCard(padding: 16, shadowed: false, dashed: SGTheme.mint) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 8) {
-                        Image(systemName: "sparkles")
-                            .foregroundColor(SGTheme.mint)
+                        Image("sticker-sparkling")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 22, height: 22)
                         Text("One last thing")
                             .font(SGTheme.cardTitle)
                             .foregroundColor(SGTheme.paper)

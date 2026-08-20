@@ -164,9 +164,10 @@ struct DeckListView: View {
                             SGTheme.ink.ignoresSafeArea()
 
                             VStack(spacing: 20) {
-                                Image(systemName: "exclamationmark.triangle")
-                                    .font(SGTheme.display(48, weight: .regular))
-                                    .foregroundColor(SGTheme.ember)
+                                Image("sticker-error")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 64, height: 64)
 
                                 Text("Error Loading Deck")
                                     .font(SGTheme.display(22))
@@ -304,6 +305,8 @@ struct DeckView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Same dock clearance as the Decks-tab empty state.
+                .padding(.bottom, SGTheme.tabBarClearance)
             } else {
                 List {
                     ForEach($deck.cards) { $card in
@@ -353,7 +356,7 @@ struct DeckView: View {
 
                     VStack(spacing: 12) {
                         // Add Practice Button
-                        SGButton(title: "Practice Deck", icon: "play.fill", enabled: !deck.cards.isEmpty) {
+                        SGButton(title: "Practice Deck", assetIcon: "sticker-graduation-cap", enabled: !deck.cards.isEmpty) {
                             deckStore.selectDeck(deck) // Ensure this deck is selected
                             showingPractice = true
                         }
@@ -368,9 +371,14 @@ struct DeckView: View {
                         }
                     }
                     .padding(.horizontal, SGTheme.screenPadding)
-                    .padding(.vertical, 16)
+                    .padding(.top, 16)
+                    // Clearance instead of symmetric padding: the floating
+                    // dock hovers over the bottom of the screen, so the
+                    // buttons lift above it while the raised slab runs on
+                    // underneath.
+                    .padding(.bottom, SGTheme.tabBarClearance)
                 }
-                .background(SGTheme.inkRaised)
+                .background(SGTheme.inkRaised.ignoresSafeArea(edges: .bottom))
             }
         }
         .background(SGTheme.ink.ignoresSafeArea())
@@ -426,7 +434,10 @@ private struct AIGenerateButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: "sparkles")
+                Image("sticker-sparkling")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
                 Text(title)
             }
             .font(SGTheme.buttonSmall)

@@ -30,9 +30,10 @@ struct CoreMechanicView: View {
     @State private var showFlashcard = false
     @State private var cardFlipped = false
 
-    // Real app icons (shared with OneThing's asset set) so the demo shows
-    // the apps students actually lose their time to.
-    private let tiles = ["Instagram", "TikTok", "YouTube", "Snapchat"]
+    // 3D app icons (social-* imagesets) so the demo shows the apps students
+    // actually lose their time to. These render sharp at tile size, unlike
+    // the old flat set.
+    private let tiles = ["social-instagram", "social-tiktok", "social-youtube", "social-facebook"]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,12 +58,19 @@ struct CoreMechanicView: View {
 
             Spacer()
 
-            stage
-                .padding(.horizontal, SGTheme.screenPadding)
+            // The final beat drops the demo stage entirely: no readout, no
+            // app row — just the note-taking mascot holding the screen.
+            if beat == 4 {
+                studyStage
+                    .transition(.scale(scale: 0.92).combined(with: .opacity))
+            } else {
+                stage
+                    .padding(.horizontal, SGTheme.screenPadding)
 
-            companionRow
-                .padding(.horizontal, SGTheme.screenPadding)
-                .padding(.top, 18)
+                companionRow
+                    .padding(.horizontal, SGTheme.screenPadding)
+                    .padding(.top, 18)
+            }
 
             Spacer()
 
@@ -120,6 +128,35 @@ struct CoreMechanicView: View {
             .padding(.top, 30)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Beat 4's own scene: the note-taking mascot big and centered on a
+    /// soft mint disc, a couple of study stickers floating at its rim.
+    private var studyStage: some View {
+        ZStack {
+            Circle()
+                .fill(SGTheme.mintTint)
+                .frame(width: 270, height: 270)
+
+            Image("sticker-books")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 52, height: 52)
+                .rotationEffect(.degrees(-10))
+                .offset(x: -108, y: 84)
+
+            Image("sticker-idea")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 46, height: 46)
+                .rotationEffect(.degrees(12))
+                .offset(x: 108, y: -92)
+
+            MascotView(pose: .clipboard, loops: nil)
+                .frame(width: 208, height: 208)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityHidden(true)
     }
 
     /// Beside the stage: the mascot (or the angry still) plus the flashcard
@@ -295,20 +332,16 @@ struct CoreMechanicView: View {
         }
     }
 
-    /// Beat 4: everything settles — angry still gone, mascot idle, readout
-    /// back to ink.
+    /// Beat 4: the demo stage swaps out for the study scene (the body's
+    /// beat switch handles the crossfade); just land the moment and reveal
+    /// the CTA.
     private func startBeat4(reduced: Bool) {
-        withAnimation(SGTheme.spring) {
-            showAngry = false
-            mascotPose = .idle
-            readoutTint = SGTheme.paper
-        }
-
         if reduced {
             ctaVisible = true
             return
         }
 
+        SGTheme.beat()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             withAnimation { ctaVisible = true }
         }
@@ -354,7 +387,9 @@ struct CoreMechanicView: View {
 
 // MARK: - Pieces
 
-/// Real app icon tile that grays out under a lock when the balance hits zero.
+/// 3D app icon tile that grays out under a lock when the balance hits zero.
+/// The icons carry their own squircle shape and depth, so there is no clip
+/// or added shadow: the PNG alpha is the tile.
 private struct AppDemoTile: View {
     let imageName: String
     let locked: Bool
@@ -362,9 +397,8 @@ private struct AppDemoTile: View {
     var body: some View {
         Image(imageName)
             .resizable()
-            .scaledToFill()
-            .frame(width: 54, height: 54)
-            .clipShape(RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+            .scaledToFit()
+            .frame(width: 58, height: 58)
             .grayscale(locked ? 1 : 0)
             .opacity(locked ? 0.55 : 1)
             .overlay {
@@ -376,7 +410,6 @@ private struct AppDemoTile: View {
                         .transition(.scale(scale: 1.6).combined(with: .opacity))
                 }
             }
-            .sgShadow(SGTheme.shadowCard)
     }
 }
 

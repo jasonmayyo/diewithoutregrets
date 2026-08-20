@@ -2,10 +2,12 @@
 //  BlocksView.swift
 //  diewithoutregrets
 //
-//  The Blocks tab — one place to see and manage everything about blocking:
-//  guard on/off, guarded apps, usage interval, which deck unlocks the apps,
-//  the unlock method, and emergency unlocks. Mirrors the Decks page layout:
-//  hidden nav bar, big display header, token-styled cards.
+//  The Blocks tab — one place to see and manage everything about blocking.
+//  Redesigned to carry the home screen's language onto the white canvas:
+//  a green meadow-gradient hero card owns the guard status (state, time
+//  left, on/off), and everything else lives in two grouped cards —
+//  Blocking (guarded apps + interval) and Unlock (method, amount, active
+//  deck) — with a quiet emergency footer. Stickers lead every row.
 //
 
 import SwiftUI
@@ -25,6 +27,7 @@ struct BlocksView: View {
     @State private var showLockedEditAlert = false
     @State private var showFlashcardSettings = false
     @State private var showFocusDurationSettings = false
+    @State private var showDeckPicker = false
 
     var body: some View {
         ZStack {
@@ -33,17 +36,46 @@ struct BlocksView: View {
             VStack(spacing: 0) {
                 SGScreenHeader(eyebrow: "Study Guard", title: "Blocks")
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: SGTheme.sectionSpacing) {
-                        statusCard
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        heroCard
 
-                        guardSection
+                        groupedSection(label: "Blocking") {
+                            guardedAppsRow
+                            rowDivider
+                            settingsRow(icon: "sticker-stopwatch",
+                                        title: "Usage interval",
+                                        value: "\(guardManager.intervalMinutes) min") {
+                                showIntervalSheet = true
+                            }
+                        }
 
-                        deckSection
+                        groupedSection(label: "Unlock") {
+                            methodTiles
+                                .padding(14)
+                            rowDivider
+                            if unlockMethod == "flashcards" {
+                                settingsRow(icon: "sticker-checkmark",
+                                            title: "Cards to unlock",
+                                            value: useAllCards ? "All" : "\(flashcardCount)") {
+                                    showFlashcardSettings = true
+                                }
+                            } else {
+                                settingsRow(icon: "sticker-timer",
+                                            title: "Focus length",
+                                            value: "\(focusDuration) min") {
+                                    showFocusDurationSettings = true
+                                }
+                            }
+                            rowDivider
+                            settingsRow(icon: "sticker-folder",
+                                        title: "Active deck",
+                                        value: activeDeckLabel) {
+                                showDeckPicker = true
+                            }
+                        }
 
-                        unlockMethodSection
-
-                        emergencySection
+                        emergencyFooter
                     }
                     .padding(.horizontal, SGTheme.screenPadding)
                     .padding(.top, 14)
@@ -65,6 +97,10 @@ struct BlocksView: View {
         .sheet(isPresented: $showFocusDurationSettings) {
             FocusDurationSettingsSheet(focusDuration: $focusDuration)
         }
+        .sheet(isPresented: $showDeckPicker) {
+            DeckPickerSheet()
+                .environmentObject(deckStore)
+        }
         .alert("Apps are locked", isPresented: $showLockedEditAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -72,52 +108,85 @@ struct BlocksView: View {
         }
     }
 
-    // MARK: - Status
+    // MARK: - Hero
 
-    private var statusText: (title: String, detail: String) {
+    private var heroTitle: String {
         switch guardManager.state {
-        case .notSetUp:
-            return ("Not set up", "Turn on Study Guard from the home tab to start blocking.")
+        case .notSetUp: return "Not set up"
+        case .metering: return "\(max(0, guardManager.totalMinutes - guardManager.usedMinutes))m left"
+        case .locked: return "Locked"
+        case .disabled: return "Paused"
+        }
+    }
+
+    private var heroEyebrow: String {
+        switch guardManager.state {
+        case .notSetUp: return "Study Guard is off"
+        case .metering: return "Guarding"
+        case .locked: return "Time's up"
+        case .disabled: return "Guard paused"
+        }
+    }
+
+    private var heroCaption: String {
+        switch guardManager.state {
+        case .notSetUp: return "Turn on Study Guard from the home tab to start blocking."
+        case .metering: return "of app time before your apps lock."
+        case .locked: return "Your apps are locked. Study to win them back."
+        case .disabled: return "Your apps are free. Resume any time."
+        }
+    }
+
+    private var heroGradient: LinearGradient {
+        switch guardManager.state {
         case .metering:
-            let remaining = max(0, guardManager.totalMinutes - guardManager.usedMinutes)
-            return ("Guarding", "\(remaining) min of app time left before they lock.")
+            // The tab bar's meadow greens — the hero reads as a slab of
+            // the home hill carried onto the white canvas.
+            return LinearGradient(colors: [Color(hex: 0x3A9144), Color(hex: 0x2F7E37)],
+                                  startPoint: .top, endPoint: .bottom)
         case .locked:
-            return ("Locked", "Your apps are locked. Study to win them back.")
-        case .disabled:
-            return ("Paused", "Your apps are free. Resume any time.")
+            return LinearGradient(colors: [SGTheme.ember, SGTheme.emberDeep],
+                                  startPoint: .top, endPoint: .bottom)
+        case .notSetUp, .disabled:
+            return LinearGradient(colors: [Color(hex: 0x8A9490), Color(hex: 0x76817C)],
+                                  startPoint: .top, endPoint: .bottom)
         }
     }
 
-    private var statusColor: Color {
+    private var heroSticker: String {
         switch guardManager.state {
-        case .metering: return SGTheme.mint
-        case .locked: return SGTheme.ember
-        case .notSetUp, .disabled: return SGTheme.paperTertiary
+        case .locked: return "sticker-lock"
+        case .disabled, .notSetUp: return "sticker-moon"
+        case .metering: return "sticker-shield"
         }
     }
 
-    private var statusCard: some View {
-        SGCard(shadowed: false) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(statusColor.opacity(0.14))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: guardManager.state == .locked ? "lock.fill" : "shield.lefthalf.filled")
-                        .font(SGTheme.display(19, weight: .semibold))
-                        .foregroundColor(statusColor)
-                }
+    private var heroCard: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(heroEyebrow.uppercased())
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                    .kerning(1.2)
+                    .foregroundColor(.white.opacity(0.75))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(statusText.title)
-                        .font(SGTheme.cardTitle)
-                        .foregroundColor(SGTheme.paper)
-                    Text(statusText.detail)
-                        .font(SGTheme.caption)
-                        .foregroundColor(SGTheme.paperSecondary)
-                }
+                Text(heroTitle)
+                    .font(.system(size: 30, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .contentTransition(.numericText(countsDown: true))
 
-                Spacer()
+                Text(heroCaption)
+                    .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            VStack(spacing: 10) {
+                Image(heroSticker)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 46, height: 46)
 
                 if guardManager.state == .metering || guardManager.state == .disabled {
                     Toggle("", isOn: Binding(
@@ -125,224 +194,184 @@ struct BlocksView: View {
                         set: { _ = guardManager.setGuardEnabled($0) }
                     ))
                     .labelsHidden()
-                    .tint(SGTheme.mint)
+                    .tint(.white.opacity(0.35))
                 }
             }
         }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(heroGradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                )
+        )
+        .animation(SGTheme.spring, value: guardManager.state)
     }
 
-    // MARK: - Guard settings
+    // MARK: - Grouped cards
 
-    private var guardSection: some View {
+    @ViewBuilder
+    private func groupedSection<Content: View>(label: String,
+                                               @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            SGMicroLabel(text: "Blocking")
+            SGMicroLabel(text: label)
 
-            // Guarded apps — a list row plus the chip cloud underneath, so it
-            // composes SGCard + the row label instead of a plain SGListRow.
-            Button(action: editGuardedApps) {
-                SGCard(shadowed: false) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        settingRowLabel(
-                            title: "Guarded apps",
-                            detail: SGContract.isSelectionEmpty(guardManager.selection)
-                                ? "No apps guarded yet. Tap to choose"
-                                : "\(SGContract.tokenCount(guardManager.selection)) of \(SGContract.maxSelectionTokens) guarded"
-                        )
-
-                        if !SGContract.isSelectionEmpty(guardManager.selection) {
-                            selectionChips
-                        }
-                    }
-                }
+            VStack(spacing: 0) {
+                content()
             }
-            .buttonStyle(SGPressStyle())
-
-            // Usage interval
-            SGListRow(
-                title: "Usage interval",
-                subtitle: "\(guardManager.intervalMinutes) minutes of app use before they lock"
-            ) {
-                showIntervalSheet = true
-            }
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(SGTheme.inkRaised)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .strokeBorder(SGTheme.hairline, lineWidth: 1)
+                    )
+            )
         }
     }
 
-    /// Title + caption + mint chevron for the guarded-apps composite card.
-    /// Plain rows use SGListRow; this only exists because the chips render
-    /// inside the same tappable surface.
-    private func settingRowLabel(title: String, detail: String) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+    private var rowDivider: some View {
+        Divider()
+            .overlay(SGTheme.hairline)
+            .padding(.leading, 56)
+    }
+
+    /// One settings row: sticker, title, value, chevron.
+    private func settingsRow(icon: String, title: String, value: String,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+
                 Text(title)
                     .font(SGTheme.cardTitle)
                     .foregroundColor(SGTheme.paper)
-                Text(detail)
-                    .font(SGTheme.caption)
+
+                Spacer()
+
+                Text(value)
+                    .font(SGTheme.caption.weight(.semibold))
                     .foregroundColor(SGTheme.paperSecondary)
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(SGTheme.paperTertiary)
             }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(SGTheme.rowLabel)
-                .foregroundColor(SGTheme.mint)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(SGPressStyle())
     }
 
+    // MARK: - Guarded apps
+
+    private var guardedCount: Int { SGContract.tokenCount(guardManager.selection) }
+
+    private var guardedAppsRow: some View {
+        Button(action: editGuardedApps) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 14) {
+                    Image("sticker-iphone")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+
+                    Text("Guarded apps")
+                        .font(SGTheme.cardTitle)
+                        .foregroundColor(SGTheme.paper)
+
+                    Spacer()
+
+                    Text(guardedCount == 0 ? "Choose" : "\(guardedCount)")
+                        .font(SGTheme.caption.weight(.semibold))
+                        .foregroundColor(SGTheme.paperSecondary)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(SGTheme.paperTertiary)
+                }
+
+                if guardedCount > 0 {
+                    selectionChips
+                        .padding(.leading, 42)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SGPressStyle())
+    }
+
+    /// Real token chips (FamilyControls renders each app's own icon+name),
+    /// capped to one tidy cloud.
     private var selectionChips: some View {
-        let maxVisibleChips = 8
+        let maxVisibleChips = 4
         let apps = Array(guardManager.selection.applicationTokens)
         let categories = Array(guardManager.selection.categoryTokens)
         let visibleApps = Array(apps.prefix(maxVisibleChips))
         let visibleCategories = Array(categories.prefix(max(0, maxVisibleChips - visibleApps.count)))
-        let overflow = SGContract.tokenCount(guardManager.selection) - visibleApps.count - visibleCategories.count
+        let overflow = guardedCount - visibleApps.count - visibleCategories.count
 
-        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: 8, alignment: .leading)], alignment: .leading, spacing: 8) {
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 108), spacing: 8, alignment: .leading)],
+                         alignment: .leading, spacing: 8) {
             ForEach(visibleApps, id: \.self) { token in
-                Label(token)
-                    .font(SGTheme.caption)
-                    .foregroundColor(SGTheme.paper)
-                    .lineLimit(1)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(SGTheme.glaze(0.06))
-                            .overlay(Capsule().strokeBorder(SGTheme.hairline, lineWidth: 1))
-                    )
+                chip { Label(token) }
             }
             ForEach(visibleCategories, id: \.self) { token in
-                Label(token)
-                    .font(SGTheme.caption)
-                    .foregroundColor(SGTheme.paper)
-                    .lineLimit(1)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(SGTheme.glaze(0.06))
-                            .overlay(Capsule().strokeBorder(SGTheme.hairline, lineWidth: 1))
-                    )
+                chip { Label(token) }
             }
             if overflow > 0 {
-                Text("+\(overflow) more")
-                    .font(SGTheme.caption)
-                    .foregroundColor(SGTheme.paperSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(SGTheme.glaze(0.06))
-                            .overlay(Capsule().strokeBorder(SGTheme.hairline, lineWidth: 1))
-                    )
+                chip { Text("+\(overflow) more") }
             }
         }
     }
 
-    // MARK: - Active deck
-
-    private var deckSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SGMicroLabel(text: "Active deck")
-
-            if deckStore.decks.isEmpty {
-                SGCard(shadowed: false) {
-                    Text("No decks yet. Create one in the Study tab.")
-                        .font(SGTheme.body)
-                        .foregroundColor(SGTheme.paperSecondary)
-                }
-            } else {
-                VStack(spacing: 8) {
-                    ForEach(deckStore.decks) { deck in
-                        deckRow(deck)
-                    }
-                }
-                Text("Answering cards from the active deck unlocks your apps.")
-                    .font(SGTheme.caption)
-                    .foregroundColor(SGTheme.paperTertiary)
-                    .padding(.leading, 4)
-            }
-        }
-    }
-
-    private func deckRow(_ deck: Deck) -> some View {
-        let isActive = deckStore.selectedDeck?.id == deck.id
-        return Button {
-            if !isActive {
-                Analytics.deckSelected(name: deck.name, cardCount: deck.cards.count)
-                deckStore.selectDeck(deck)
-                SGTheme.tapHaptic()
-            }
-        } label: {
-            SGCard(shadowed: false) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(isActive ? SGTheme.mint.opacity(0.15) : SGTheme.glaze(0.06))
-                            .frame(width: 30, height: 30)
-                        if isActive {
-                            Image(systemName: "checkmark")
-                                .font(SGTheme.micro.weight(.bold))
-                                .foregroundColor(SGTheme.mintDeep)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(deck.name)
-                            .font(SGTheme.cardTitle)
-                            .foregroundColor(SGTheme.paper)
-                            .lineLimit(1)
-                        Text("\(deck.cards.count) card\(deck.cards.count == 1 ? "" : "s")")
-                            .font(SGTheme.caption)
-                            .foregroundColor(SGTheme.paperSecondary)
-                    }
-
-                    Spacer()
-
-                    if isActive {
-                        SGMicroLabel(text: "Active", color: SGTheme.mintDeep)
-                    }
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .animation(SGTheme.springFast, value: isActive)
+    private func chip<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .font(SGTheme.caption)
+            .foregroundColor(SGTheme.paper)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                Capsule().fill(SGTheme.glaze(0.06))
+                    .overlay(Capsule().strokeBorder(SGTheme.hairline, lineWidth: 1))
+            )
     }
 
     // MARK: - Unlock method
 
-    private var unlockMethodSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SGMicroLabel(text: "Unlock method")
-
-            HStack(spacing: 10) {
-                SGOptionTile(
-                    title: "Flashcards",
-                    icon: "rectangle.stack.fill",
-                    selected: unlockMethod == "flashcards"
-                ) {
-                    selectUnlockMethod("flashcards")
-                }
-                SGOptionTile(
-                    title: "True Focus",
-                    icon: "eye.fill",
-                    selected: unlockMethod == "trueFocus"
-                ) {
-                    selectUnlockMethod("trueFocus")
-                }
+    private var methodTiles: some View {
+        HStack(spacing: 10) {
+            SGOptionTile(
+                title: "Flashcards",
+                icon: "sticker-books",
+                selected: unlockMethod == "flashcards"
+            ) {
+                selectUnlockMethod("flashcards")
             }
-
-            if unlockMethod == "flashcards" {
-                SGListRow(
-                    title: "Flashcards before unlocking",
-                    subtitle: useAllCards ? "All cards" : "\(flashcardCount) cards"
-                ) {
-                    showFlashcardSettings = true
-                }
-            } else {
-                SGListRow(
-                    title: "Focus session length",
-                    subtitle: "\(focusDuration) minutes"
-                ) {
-                    showFocusDurationSettings = true
-                }
+            SGOptionTile(
+                title: "True Focus",
+                icon: "sticker-eye",
+                selected: unlockMethod == "trueFocus"
+            ) {
+                selectUnlockMethod("trueFocus")
             }
         }
+    }
+
+    private var activeDeckLabel: String {
+        guard let deck = deckStore.selectedDeck ?? deckStore.decks.first else { return "None yet" }
+        return deck.name
     }
 
     private func selectUnlockMethod(_ key: String) {
@@ -353,42 +382,28 @@ struct BlocksView: View {
         SGTheme.tapHaptic()
     }
 
-    // MARK: - Emergency unlocks
+    // MARK: - Emergency
 
-    private var emergencySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SGMicroLabel(text: "Emergency")
+    private var emergencyFooter: some View {
+        HStack(spacing: 10) {
+            Image("sticker-key")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 22, height: 22)
 
-            SGCard(shadowed: false) {
-                HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(SGTheme.ember.opacity(0.14))
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "key.fill")
-                            .font(SGTheme.display(19, weight: .semibold))
-                            .foregroundColor(SGTheme.ember)
-                    }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(guardManager.emergencyUnlocksRemaining) emergency unlock\(guardManager.emergencyUnlocksRemaining == 1 ? "" : "s") left this week")
-                            .font(SGTheme.cardTitle)
-                            .foregroundColor(SGTheme.paper)
-                        if guardManager.emergencyUnlocksRemaining == 0,
-                           let next = guardManager.nextEmergencyUnlockDate {
-                            Text("Next one available \(next.formatted(date: .abbreviated, time: .omitted))")
-                                .font(SGTheme.caption)
-                                .foregroundColor(SGTheme.paperSecondary)
-                        } else {
-                            Text("Use them from the home screen when locked.")
-                                .font(SGTheme.caption)
-                                .foregroundColor(SGTheme.paperSecondary)
-                        }
-                    }
-                    Spacer()
-                }
-            }
+            Text(emergencyText)
+                .font(SGTheme.caption)
+                .foregroundColor(SGTheme.paperSecondary)
         }
+        .padding(.horizontal, 4)
+    }
+
+    private var emergencyText: String {
+        let remaining = guardManager.emergencyUnlocksRemaining
+        if remaining == 0, let next = guardManager.nextEmergencyUnlockDate {
+            return "No emergency unlocks left. Next one \(next.formatted(date: .abbreviated, time: .omitted))."
+        }
+        return "\(remaining) emergency unlock\(remaining == 1 ? "" : "s") left this week."
     }
 
     // MARK: - Actions

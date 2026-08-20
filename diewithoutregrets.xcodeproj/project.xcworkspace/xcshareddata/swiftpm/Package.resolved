@@ -6,17 +6,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BranchMetrics/ios-branch-sdk-spm.git",
       "state" : {
-        "revision" : "e3b2b380f483ab16e072ad329c6e2c019a2e88c5",
-        "version" : "3.10.0"
+        "revision" : "ec34dd77d08cb8ae017def1e66b4bf59a62a5bce",
+        "version" : "3.14.2"
       }
     },
     {
       "identity" : "lottie-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/airbnb/lottie-ios",
+      "location" : "https://github.com/airbnb/lottie-ios.git",
       "state" : {
-        "revision" : "a004050748dc197c56256a14dca49a035d74726c",
-        "version" : "4.5.2"
+        "revision" : "f4db77d7feacba0c2360b84a40c38a6ce8ff399d",
+        "version" : "4.6.1"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PostHog/posthog-ios.git",
       "state" : {
-        "revision" : "1b011434301250ca75098c40fecad9ba3d209307",
-        "version" : "3.24.0"
+        "revision" : "c0218386c49115cce6b05a50b41f4f60bc995acb",
+        "version" : "3.69.6"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/RevenueCat/purchases-ios-spm.git",
       "state" : {
-        "revision" : "bd63241b2258ea519020eb32a349db44fb44b119",
-        "version" : "5.68.0"
+        "revision" : "48601a7f742b05abcd9d9c7d3d768b97e800aa2c",
+        "version" : "5.84.0"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa/",
       "state" : {
-        "revision" : "cf44aa8cb4147f39e698c1f28be0b6b2c89f79d2",
-        "version" : "8.58.2"
+        "revision" : "f196cbb98e0388381d57908f2f5a9bdc385cde68",
+        "version" : "8.58.4"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tiktok/tiktok-business-ios-sdk",
       "state" : {
-        "revision" : "4d330d4da158190d2c67b2142c2bd36c9eb5291e",
-        "version" : "1.6.1"
+        "revision" : "2f4d46081f573001d21a13d8afe70faae926c17b",
+        "version" : "1.7.1"
       }
     }
   ],

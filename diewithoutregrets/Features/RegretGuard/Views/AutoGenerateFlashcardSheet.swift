@@ -48,10 +48,10 @@ enum InputSource: String, CaseIterable {
     
     var icon: String {
         switch self {
-        case .pdf: return "doc.fill"
-        case .text: return "text.alignleft"
-        case .youtube: return "play.rectangle.fill"
-        case .quizlet: return "rectangle.stack.fill"
+        case .pdf: return "sticker-document"
+        case .text: return "sticker-text"
+        case .youtube: return "sticker-youtube"
+        case .quizlet: return "sticker-books"
         }
     }
 }
@@ -233,9 +233,10 @@ struct AutoGenerateFlashcardsSheet: View {
     
     var premiumFeatureBadge: some View {
         HStack(spacing: 12) {
-            Image(systemName: "sparkles")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.mint)
+            Image("sticker-sparkling")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("AI Flashcard Generator")
@@ -247,9 +248,10 @@ struct AutoGenerateFlashcardsSheet: View {
                             .foregroundColor(SGTheme.paperSecondary)
                     }
 
-                    Image(systemName: "sparkles")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.mint)
+                    Image("sticker-sparkling")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -278,8 +280,10 @@ struct AutoGenerateFlashcardsSheet: View {
                         Analytics.aiInputSourceSelected(source.rawValue)
                     } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: source.icon)
-                                .font(SGTheme.display(14, weight: .medium))
+                            Image(source.icon)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
                             Text(source.rawValue)
                                 .font(SGTheme.rowLabel)
                         }
@@ -332,9 +336,10 @@ struct AutoGenerateFlashcardsSheet: View {
                             .fill(mintFill)
                             .frame(width: 90, height: 90)
 
-                        Image(systemName: "arrow.up.doc")
-                            .font(SGTheme.display(32, weight: .medium))
-                            .foregroundColor(SGTheme.ink)
+                        Image("sticker-upload")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
                     }
                     .scaleEffect(showUploadAnimation ? 1.1 : 1.0)
                     .onAppear {
@@ -485,9 +490,10 @@ struct AutoGenerateFlashcardsSheet: View {
                         .fill(mintFill)
                         .frame(width: 60, height: 60)
 
-                    Image(systemName: "doc.fill")
-                        .font(SGTheme.display(24, weight: .medium))
-                        .foregroundColor(SGTheme.ink)
+                    Image("sticker-document")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -546,9 +552,10 @@ struct AutoGenerateFlashcardsSheet: View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.rectangle.fill")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.paper)
+                    Image("sticker-youtube")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
                     Text("YouTube Video URL")
                         .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
@@ -678,9 +685,10 @@ struct AutoGenerateFlashcardsSheet: View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "rectangle.stack.fill")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.paper)
+                    Image("sticker-books")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
                     Text("Import from Quizlet")
                         .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
@@ -856,8 +864,10 @@ struct AutoGenerateFlashcardsSheet: View {
                             useAIEnhanced = true
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "sparkles")
-                                    .font(SGTheme.display(12, weight: .regular))
+                                Image("sticker-sparkling")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
                                 Text("AI Enhanced")
                                     .font(SGTheme.rowLabel)
                             }
@@ -946,9 +956,10 @@ struct AutoGenerateFlashcardsSheet: View {
     var contentPreviewSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Image(systemName: "text.alignleft")
-                    .font(SGTheme.display(18, weight: .medium))
-                    .foregroundColor(SGTheme.paper)
+                Image("sticker-text")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
 
                 Text("Content Preview")
                     .font(SGTheme.cardTitle)
@@ -1044,9 +1055,10 @@ struct AutoGenerateFlashcardsSheet: View {
     var languagePickerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                Image(systemName: "globe")
-                    .font(SGTheme.display(16, weight: .medium))
-                    .foregroundColor(SGTheme.paper)
+                Image("sticker-globe")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
 
                 Text("Flashcard Language")
                     .font(SGTheme.cardTitle)
@@ -1326,9 +1338,10 @@ struct AutoGenerateFlashcardsSheet: View {
                         .fill(SGTheme.ember.opacity(0.12))
                         .frame(width: 36, height: 36)
 
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.ember)
+                    Image("sticker-error")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {

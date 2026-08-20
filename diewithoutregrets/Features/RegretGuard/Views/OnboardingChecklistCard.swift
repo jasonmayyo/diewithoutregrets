@@ -25,9 +25,10 @@ struct OnboardingChecklistCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Header
                 HStack(spacing: 10) {
-                    Image(systemName: "flag.fill")
-                        .font(SGTheme.display(16, weight: .medium))
-                        .foregroundColor(SGTheme.mint)
+                    Image("sticker-rocket")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
 
                     Text("Get Started")
                         .font(SGTheme.display(18))

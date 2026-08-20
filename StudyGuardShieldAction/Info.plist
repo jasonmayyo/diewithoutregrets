@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<!-- ManagedSettings, NOT ManagedSettingsUI: the action service lives in
+		     the ManagedSettings framework, unlike the configuration service.
+		     The UI-prefixed variant registers under a nonexistent extension
+		     point and the button silently falls back to the system close. -->
+		<string>com.apple.ManagedSettings.shield-action-service</string>
+		<key>NSExtensionPrincipalClass</key>
+		<string>$(PRODUCT_MODULE_NAME).StudyGuardShieldActionExtension</string>
+	</dict>
+</dict>
+</plist>

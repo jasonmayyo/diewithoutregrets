@@ -279,15 +279,10 @@ struct FocusSessionView: View {
                 Spacer()
 
                 // Icon
-                ZStack {
-                    Circle()
-                        .fill(SGTheme.mintTint)
-                        .frame(width: 100, height: 100)
-
-                    Image(systemName: "eye.fill")
-                        .font(SGTheme.display(40, weight: .regular))
-                        .foregroundStyle(SGTheme.mint)
-                }
+                Image("sticker-eye")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 84, height: 84)
 
                 // Title
                 Text("True Focus")
@@ -313,9 +308,10 @@ struct FocusSessionView: View {
 
                 // Privacy badge
                 HStack(spacing: 8) {
-                    Image(systemName: "lock.shield.fill")
-                        .font(SGTheme.body)
-                        .foregroundStyle(SGTheme.mintDeep)
+                    Image("sticker-shield")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
 
                     Text("100% private. All video is processed on your device.\nWe never store or collect your data.")
                         .font(SGTheme.caption)
@@ -702,9 +698,10 @@ struct FocusSessionView: View {
 
     private var permissionDeniedView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "camera.fill")
-                .font(SGTheme.display(44, weight: .light))
-                .foregroundStyle(SGTheme.paper.opacity(0.8))
+            Image("sticker-camera")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
 
             Text("Camera access required")
                 .font(SGTheme.cardTitle)

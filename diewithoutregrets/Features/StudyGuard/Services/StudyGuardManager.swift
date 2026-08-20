@@ -429,9 +429,29 @@ final class StudyGuardManager: ObservableObject {
         if !stored.webDomainTokens.isEmpty { store.shield.webDomains = stored.webDomainTokens }
     }
 
-    // MARK: - Debug support
+    // MARK: - Debug & creator support
+    //
+    // Compiled into Release too: the Creator Toolkit (Profile tab) ships to
+    // TestFlight so creators can force states while filming. App Store
+    // installs never reach these — the toolkit UI is gated by
+    // AppEnvironment, and nothing else calls them.
 
-    #if DEBUG
+    /// Creator toolkit: pin the remaining screen time to an exact value so
+    /// the countdown, progress bar and mascot pose can be staged without
+    /// waiting out real usage. Keeps the TOTAL untouched (the mascot's
+    /// doomscrolling pose keys off remaining/total), floors at one minute
+    /// (zero-while-metering is a state the real engine never shows), and
+    /// leaves monitoring alone: real usage keeps accruing on top.
+    func creatorSetRemaining(minutes: Int) {
+        guard let d = defaults, state == .metering else { return }
+        let total = d.double(forKey: SGContract.Keys.budgetTotalSeconds)
+        guard total > 0 else { return }
+        let remaining = min(max(60, Double(minutes) * 60), total)
+        d.set(total - remaining, forKey: SGContract.Keys.budgetUsedSeconds)
+        d.synchronize()
+        refresh()
+    }
+
     func debugForceLock() {
         guard let d = defaults else { return }
         applyShieldsFromStoredSelection()
@@ -488,5 +508,4 @@ final class StudyGuardManager: ObservableObject {
     func debugExtensionLog() -> [String] {
         defaults?.stringArray(forKey: SGContract.Keys.extLog)?.reversed() ?? []
     }
-    #endif
 }

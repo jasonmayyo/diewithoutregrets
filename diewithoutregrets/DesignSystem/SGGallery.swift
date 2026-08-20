@@ -75,9 +75,9 @@ struct SGGalleryView: View {
                         SGPickerRow(title: "15 minutes", selected: pickerSelection == 0) { pickerSelection = 0 }
                         SGPickerRow(title: "30 minutes", selected: pickerSelection == 1) { pickerSelection = 1 }
                         HStack(spacing: 10) {
-                            SGOptionTile(title: "Flashcards", icon: "rectangle.stack.fill",
+                            SGOptionTile(title: "Flashcards", icon: "sticker-books",
                                          selected: optionSelection == 0) { optionSelection = 0 }
-                            SGOptionTile(title: "True Focus", icon: "eye.fill",
+                            SGOptionTile(title: "True Focus", icon: "sticker-eye",
                                          selected: optionSelection == 1) { optionSelection = 1 }
                         }
                         HStack(spacing: 10) {

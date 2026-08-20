@@ -28,10 +28,10 @@ struct ContentView: View {
 
     private var tabItems: [SGTabItem] {
         [
-            SGTabItem(id: 0, title: "Guard", icon: "house.fill", asset: "home (2)"),
-            SGTabItem(id: 1, title: "Study", icon: "rectangle.stack.fill"),
-            SGTabItem(id: 2, title: "Blocks", icon: "lock.fill"),
-            SGTabItem(id: 3, title: "Profile", icon: "person.fill"),
+            SGTabItem(id: 0, title: "Guard", icon: "nav-home"),
+            SGTabItem(id: 1, title: "Study", icon: "nav-study"),
+            SGTabItem(id: 2, title: "Blocks", icon: "nav-blocks"),
+            SGTabItem(id: 3, title: "Profile", icon: "nav-profile"),
         ]
     }
 
@@ -103,7 +103,10 @@ struct ContentView: View {
                         }
                     )
                 } else {
-                    RegretView()
+                    // The redesigned quiz. It gates itself: legacy engine,
+                    // empty-deck rescue and already-unlocked entries fall
+                    // back to RegretView internally.
+                    QuizV2View()
                         .environmentObject(DeckStore.shared)
                         .environmentObject(RegretStore.shared)
                 }
@@ -147,11 +150,21 @@ struct ContentView: View {
                     // overlay owns the whole screen. Night styling while the
                     // locked home is on screen (Guard tab only).
                     SGTabBar(selection: $selectedTab, items: tabItems,
-                             onDark: navigationModel.isLockedHomeShowing && selectedTab == 0)
+                             style: selectedTab == 0
+                                ? (navigationModel.isLockedHomeShowing ? .night : .meadow)
+                                : .light)
                         .opacity(navigationModel.isLockStampPlaying ? 0 : 1)
                         .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockStampPlaying)
                 }
                 .background(SGTheme.ink.ignoresSafeArea())
+                // One-shot tab-switch requests (Creator Toolkit lands the
+                // user on the Guard tab so staged moments play on camera).
+                .onChange(of: navigationModel.requestedTab) { _, tab in
+                    if let tab {
+                        selectedTab = tab
+                        navigationModel.requestedTab = nil
+                    }
+                }
                 .onChange(of: selectedTab) { _, newTab in
                     SGTheme.tick()
 

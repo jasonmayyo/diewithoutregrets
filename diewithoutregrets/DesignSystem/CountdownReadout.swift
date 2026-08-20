@@ -42,8 +42,11 @@ final class CountdownReplayModel: ObservableObject {
     var onSettled: ((Int) -> Void)?
 
     private var pendingTicks: [DispatchWorkItem] = []
-    private let lastShownKey = "sg_lastShownRemainingMin"
-    private let lastStampKey = "sg_lastShownGrantStamp"
+    /// Persisted "last value we SHOWED" pair. Static so the Creator Toolkit
+    /// can pre-settle the story (an instant staged lock writes 0 + the
+    /// grant stamp here so no roll plays on the next home visit).
+    static let lastShownKey = "sg_lastShownRemainingMin"
+    static let lastStampKey = "sg_lastShownGrantStamp"
 
     /// The Guard home drives this: replays only play while the readout is
     /// actually on screen. While hidden, sync() is a no-op — the truth keys
@@ -63,12 +66,12 @@ final class CountdownReplayModel: ObservableObject {
         cancelTicks()
 
         let defaults = UserDefaults.standard
-        let lastShown = defaults.integer(forKey: lastShownKey)
-        let lastStamp = defaults.double(forKey: lastStampKey)
+        let lastShown = defaults.integer(forKey: Self.lastShownKey)
+        let lastStamp = defaults.double(forKey: Self.lastStampKey)
 
         // Truth first — the show is optional.
-        defaults.set(remainingMinutes, forKey: lastShownKey)
-        defaults.set(grantStamp, forKey: lastStampKey)
+        defaults.set(remainingMinutes, forKey: Self.lastShownKey)
+        defaults.set(grantStamp, forKey: Self.lastStampKey)
 
         guard !UIAccessibility.isReduceMotionEnabled else {
             displayMinutes = remainingMinutes
@@ -127,7 +130,7 @@ final class CountdownReplayModel: ObservableObject {
                 withAnimation(.easeInOut(duration: min(stepDelay, 0.45))) {
                     self.displayMinutes = value
                 }
-                if gain { SGTheme.tickUpHaptic() } else { SGTheme.tickDownHaptic() }
+                if gain { SGTheme.tickUpHaptic() } else { SGTheme.tickDownHaptic(progress: completed) }
             }
             pendingTicks.append(work)
             DispatchQueue.main.asyncAfter(deadline: .now() + accumulated, execute: work)
@@ -189,8 +192,15 @@ struct CountdownDeltaLabel: View {
         Text("\(isGain ? "+" : "−")\(abs(event.amount))")
             .font(.system(size: 34, weight: .heavy, design: .rounded))
             .monospacedDigit()
-            .foregroundColor(isGain ? SGTheme.mint : SGTheme.ember)
-            .shadow(color: (isGain ? SGTheme.mint : SGTheme.ember).opacity(0.6), radius: 14)
+            .foregroundColor(isGain ? SGTheme.mintDeep : SGTheme.emberDeep)
+            // Sticker-style white rim (stacked tight shadows) so the label
+            // reads over the meadow greens.
+            .shadow(color: .white, radius: 0.7)
+            .shadow(color: .white, radius: 0.7)
+            .shadow(color: .white, radius: 0.7)
+            .shadow(color: .white, radius: 0.7)
+            .shadow(color: .white, radius: 0.7)
+            .shadow(color: .white, radius: 0.7)
             .opacity(drifted ? 0 : 1)
             .scaleEffect(drifted ? 1.25 : 1)
             .offset(y: drifted ? -90 : 0)

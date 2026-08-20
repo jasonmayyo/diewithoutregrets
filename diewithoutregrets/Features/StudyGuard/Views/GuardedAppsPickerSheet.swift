@@ -94,9 +94,10 @@ struct GuardedAppsPickerSheet: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "lock.shield.fill")
-                .font(SGTheme.display(44, weight: .regular))
-                .foregroundColor(SGTheme.mint)
+            Image("sticker-shield")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
 
             Text("Allow Screen Time access")
                 .font(SGTheme.display(24))

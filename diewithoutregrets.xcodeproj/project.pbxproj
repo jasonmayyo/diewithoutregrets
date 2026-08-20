@@ -16,15 +16,19 @@
 		1471F72054BFFEEB9E06FD35 /* SGGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7A7BBBB44C6EEB5C416E98 /* SGGallery.swift */; };
 		1929484807E7DCAABFD7348E /* ScreenTimeAuthOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */; };
 		1C7C7564E40CE32E7EEE41D7 /* QuizletImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A44E4579757FFA9816BECB /* QuizletImportService.swift */; };
+		1E1D532D4103CEA0E2BAE68B /* 2_Looking down_shadow.json in Resources */ = {isa = PBXBuildFile; fileRef = 16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */; };
 		2003E5977EFC831618E3A7AB /* OnboardingScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D5949165897B100D1AC547 /* OnboardingScaffold.swift */; };
 		21B7A1AEAA11D5996BB2EABD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		2283B074EF76118C4E2220C6 /* GuardedAppsPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */; };
 		24943C499C1B8FB819A9CE6D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F8241C66EC48E6AE393BE1 /* ProfileView.swift */; };
+		C0FFEE01C4EA7012340000A1 /* CreatorToolkitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */; };
 		292F9A5AE5A67AB71C23AA2F /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B044EECE4F6DE81C3E96A69 /* MonsterLiveActivityAttributes.swift */; };
 		2A110DB0804D43159A59B406 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 021B87114F8544B1BA4FCA50 /* Sentry */; };
 		2C2D3FF5E22EEC66D52974BA /* MonsterWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */; };
+		2E33934486661FB8DE46DDE9 /* 2_Looking down_char.json in Resources */ = {isa = PBXBuildFile; fileRef = E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */; };
 		33D2B74538F9B0C3AD62B8EF /* StudyGuardMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 97FA13DC544E39E05528794C /* StudyGuardMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3B436635FCCF31AD6A1B78AE /* OnboardingV2Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */; };
+		3D97B770B1C937445525494A /* 1_idle_char.json in Resources */ = {isa = PBXBuildFile; fileRef = 48C2915E1E584CA06B2E5714 /* 1_idle_char.json */; };
 		40738F352F62B56A0085DF60 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = C0A200022F61000000000011 /* Lottie */; };
 		40738F372F62BB6A0085DF60 /* hourglass.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 40738F362F62BB6A0085DF60 /* hourglass.lottie */; };
 		407C18352F62D1B700A932E5 /* sademotion.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 407C18342F62D1B700A932E5 /* sademotion.lottie */; };
@@ -40,6 +44,8 @@
 		4091EDD62FFE4D6E0000B80F /* 3_clipboard.json in Resources */ = {isa = PBXBuildFile; fileRef = 4091EDCA2FFE4D6E0000B80F /* 3_clipboard.json */; };
 		40A430B72FFFF8350093C2DA /* Clouds 2.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 40A430B62FFFF8350093C2DA /* Clouds 2.lottie */; };
 		40A430C12FFFF8350093C2DA /* Clouds.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 40A430C22FFFF8350093C2DA /* Clouds.lottie */; };
+		40A430C42FFFF8350093C2DA /* Lock.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 40A430C32FFFF8350093C2DA /* Lock.lottie */; };
+		40A430C62FFFF8350093C2DA /* LockMomentOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A430C52FFFF8350093C2DA /* LockMomentOverlay.swift */; };
 		40B10C012FFFF0010093C2DA /* BlocksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40B10C022FFFF0010093C2DA /* BlocksView.swift */; };
 		40E9058A2F3B73A000F8F5C0 /* StrictnessLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905832F3B73A000F8F5C0 /* StrictnessLevel.swift */; };
 		40E9058B2F3B73A000F8F5C0 /* GazeSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E905822F3B73A000F8F5C0 /* GazeSignal.swift */; };
@@ -63,6 +69,8 @@
 		5E4710E700000000000000A2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4710E700000000000000A1 /* AppEnvironment.swift */; };
 		5E4710E700000000000000B2 /* SecretsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4710E700000000000000B1 /* SecretsLoader.swift */; };
 		5E4710E700000000000000C2 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4710E700000000000000C1 /* Telemetry.swift */; };
+		5FAC82EC7C71C6DB13751390 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
+		69C48098F2013235206FC7AB /* StudyGuardShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6B04F7252DA83BED00694451 /* LongTermResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7242DA83BED00694451 /* LongTermResults.swift */; };
 		6B04F7272DA8599B00694451 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F7262DA8599B00694451 /* RatingView.swift */; };
 		6B04F72B2DA863B700694451 /* StudyGuardReadyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04F72A2DA863B700694451 /* StudyGuardReadyView.swift */; };
@@ -127,6 +135,8 @@
 		8A2C9D2322A500EFFEF8401E /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C6511A34903E18E985B70 /* MonsterLiveActivityAttributes.swift */; };
 		8E450DB369B374DE26BC9079 /* CountdownReadout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */; };
 		8E9AF29971E1001F20D923FF /* MonsterWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		90170B5B6CBB15E3B292299F /* StudyGuardShieldActionExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 522EC8F7112FFAF62F3DC02F /* StudyGuardShieldActionExtension.swift */; };
+		96A30E277F629CFFF9C6DCC4 /* TopOffendersReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D656411657069E8D8F29D0 /* TopOffendersReport.swift */; };
 		9F252FAD43EC4CBBDA287374 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		A1B2C3D4E5F60718293A4B5D /* QuizKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* QuizKit.swift */; };
 		A3C0FFEE0000000000073001 /* OnboardingV3NewSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */; };
@@ -135,6 +145,8 @@
 		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
 		AF7ACEE45B2570316DBC954A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		B21F0755744881EE4A04479B /* SGTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */; };
+		B3EA81FB0B915028AA57994E /* MeadowHomeV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */; };
+		B52574801368481E26769917 /* QuizV2Kit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C992836E11460BAE0C22D50D /* QuizV2Kit.swift */; };
 		B64F0B5E2FA9B91AD295E779 /* StudyGuardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */; };
 		B9D9030B97C69157B57DAE35 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		BC58C05B1CCF4393B88D9E71 /* GuardedAppsOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFC70BA4412FD014A8116A4 /* GuardedAppsOnboarding.swift */; };
@@ -145,18 +157,28 @@
 		C0A100062F61000100000006 /* ProcrastinationStudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100062F61000000000006 /* ProcrastinationStudyView.swift */; };
 		C0A100072F61000100000007 /* HowItWorksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100072F61000000000007 /* HowItWorksView.swift */; };
 		C0A100092F61000100000009 /* LottieAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100092F61000000000009 /* LottieAnimationView.swift */; };
+		C1248A8B9ED0E7C07E282473 /* QuizV2View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022EF66829006A39DC358F1E /* QuizV2View.swift */; };
 		C5D977A09033274072F72D0A /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
+		C7883195937BF55E49DFFCB9 /* 1_idle_shadow.json in Resources */ = {isa = PBXBuildFile; fileRef = C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */; };
 		C969C4F71D1D0713AA96E4CB /* SGButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FD537ABAF4DD66948B15BA /* SGButton.swift */; };
 		CAA0DC2839144A3B4762DFF8 /* SGPreviewHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104430C26AE79C6F4714D55 /* SGPreviewHarness.swift */; };
 		CC1F9F6F371B44A8C9262149 /* angry-mascot.png in Resources */ = {isa = PBXBuildFile; fileRef = 3899733C30CE27AC1F76F852 /* angry-mascot.png */; };
 		D0F005F3ADF8BF1A0EB78B66 /* StudyGuardShieldExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */; };
 		D32399521730C4271EE502FD /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		D72EAFC35626EC02FB376DB5 /* MonsterActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */; };
+		D9237B0A1FD757FEF4EB3E35 /* PrivateAppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */; };
 		D9445B469A01523F8D95915D /* UsageIntervalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6206A7D437A5ECCF89A5A1B7 /* UsageIntervalSheet.swift */; };
 		DA3AF89DE98402B9B6EA937A /* SGTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */; };
 		E1661F51ED5BA2BEB862C113 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
+		EC1FD554C06F896982DED2AE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
+		EC4D87A0EB8C24ACF8F99F22 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */; };
+		EF8960C3CA4E55F57833C516 /* StudyGuardReportExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604F8471C8AD7073A02BBC17 /* StudyGuardReportExtension.swift */; };
 		F1D261D7C062930CE13713F6 /* MonsterLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3707957DE14B9D887DA08ABD /* MonsterLiveActivity.swift */; };
 		F1F04FF61C72BAEACB6C3B30 /* SGBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0632A3B5575B52ACF1A16423 /* SGBackground.swift */; };
+		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
+		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
+		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -195,6 +217,20 @@
 			remoteGlobalIDString = 666EE9BE25379DC987B443AA;
 			remoteInfo = StudyGuardShield;
 		};
+		BDA53ED058EF62A6A7E8B599 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B9D89B92D3552DF00DE8B2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 36AAE2E12C6620FC03A5DD12;
+			remoteInfo = StudyGuardReport;
+		};
+		CB72FA537645A23E81870250 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B9D89B92D3552DF00DE8B2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4888DACF32D5AC9EF5EFA074;
+			remoteInfo = StudyGuardShieldAction;
+		};
 		F2B4CF098A2C352984465DBC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6B9D89B92D3552DF00DE8B2E /* Project object */;
@@ -213,6 +249,7 @@
 			files = (
 				6B22E89B2D4C081C003A5685 /* OpenGuardIntent.appex in Embed ExtensionKit Extensions */,
 				6B22E8882D4A1D78003A5685 /* RegretGuardIntent.appex in Embed ExtensionKit Extensions */,
+				F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */,
 			);
 			name = "Embed ExtensionKit Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -226,6 +263,7 @@
 				33D2B74538F9B0C3AD62B8EF /* StudyGuardMonitor.appex in Embed Foundation Extensions */,
 				6B66F84ABF88E5E0CA85D2D7 /* StudyGuardShield.appex in Embed Foundation Extensions */,
 				8E9AF29971E1001F20D923FF /* MonsterWidgetExtension.appex in Embed Foundation Extensions */,
+				69C48098F2013235206FC7AB /* StudyGuardShieldAction.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -233,16 +271,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		022EF66829006A39DC358F1E /* QuizV2View.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2View.swift; sourceTree = "<group>"; };
 		02A44E4579757FFA9816BECB /* QuizletImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizletImportService.swift; sourceTree = "<group>"; };
+		0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0632A3B5575B52ACF1A16423 /* SGBackground.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGBackground.swift; sourceTree = "<group>"; };
 		06C414461884222A3462D172 /* StudyGuardMonitorExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardMonitorExtension.swift; sourceTree = "<group>"; };
 		153BFDD3C51B96C1A4291672 /* UsageIntervalOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsageIntervalOnboarding.swift; sourceTree = "<group>"; };
 		168A7A9CDF38BD1EB046B7FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; path = "2_Looking down_shadow.json"; sourceTree = "<group>"; };
 		16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A9C722A0BF6E3B21D6BF84F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2StreakView.swift; sourceTree = "<group>"; };
 		1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTabBar.swift; sourceTree = "<group>"; };
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
+		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CountdownReadout.swift; sourceTree = "<group>"; };
+		34213E2D25DEC71A93D9DC64 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		366D2488121B0EED51D427C3 /* MascotView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MascotView.swift; sourceTree = "<group>"; };
 		3707957DE14B9D887DA08ABD /* MonsterLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterLiveActivity.swift; sourceTree = "<group>"; };
 		3899733C30CE27AC1F76F852 /* angry-mascot.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; path = "angry-mascot.png"; sourceTree = "<group>"; };
@@ -261,6 +306,8 @@
 		4091EDCD2FFE4D6E0000B80F /* 4_teaching.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 4_teaching.png; sourceTree = "<group>"; };
 		40A430B62FFFF8350093C2DA /* Clouds 2.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Clouds 2.lottie"; sourceTree = "<group>"; };
 		40A430C22FFFF8350093C2DA /* Clouds.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = Clouds.lottie; sourceTree = "<group>"; };
+		40A430C32FFFF8350093C2DA /* Lock.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = Lock.lottie; sourceTree = "<group>"; };
+		40A430C52FFFF8350093C2DA /* LockMomentOverlay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LockMomentOverlay.swift; sourceTree = "<group>"; };
 		40B10C022FFFF0010093C2DA /* BlocksView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BlocksView.swift; sourceTree = "<group>"; };
 		40E9057D2F3B73A000F8F5C0 /* FocusCalibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCalibration.swift; sourceTree = "<group>"; };
 		40E9057E2F3B73A000F8F5C0 /* FocusDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusDetectionManager.swift; sourceTree = "<group>"; };
@@ -273,16 +320,21 @@
 		40E905862F3B73A000F8F5C0 /* FocusSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionView.swift; sourceTree = "<group>"; };
 		40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimer.swift; sourceTree = "<group>"; };
 		40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuyBackView.swift; sourceTree = "<group>"; };
+		46E3F99E85D41EC320BB8795 /* StudyGuardShieldAction.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardShieldAction.entitlements; sourceTree = "<group>"; };
+		48C2915E1E584CA06B2E5714 /* 1_idle_char.json */ = {isa = PBXFileReference; includeInIndex = 1; path = 1_idle_char.json; sourceTree = "<group>"; };
 		4A0BB7042FA0000000000004 /* AdsTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsTracker.swift; sourceTree = "<group>"; };
 		4B044EECE4F6DE81C3E96A69 /* MonsterLiveActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardEngineTests.swift; sourceTree = "<group>"; };
 		51BE717004B4EDEB4CA1B443 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		522EC8F7112FFAF62F3DC02F /* StudyGuardShieldActionExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldActionExtension.swift; sourceTree = "<group>"; };
 		53D5949165897B100D1AC547 /* OnboardingScaffold.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingScaffold.swift; sourceTree = "<group>"; };
 		565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmergencyUnlockSheet.swift; sourceTree = "<group>"; };
 		5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTheme.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000A1 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000B1 /* SecretsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretsLoader.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000C1 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
+		604F8471C8AD7073A02BBC17 /* StudyGuardReportExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardReportExtension.swift; sourceTree = "<group>"; };
+		60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PrivateAppLauncher.swift; sourceTree = "<group>"; };
 		6104430C26AE79C6F4714D55 /* SGPreviewHarness.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGPreviewHarness.swift; sourceTree = "<group>"; };
 		6206A7D437A5ECCF89A5A1B7 /* UsageIntervalSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsageIntervalSheet.swift; sourceTree = "<group>"; };
 		6B04F7242DA83BED00694451 /* LongTermResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongTermResults.swift; sourceTree = "<group>"; };
@@ -335,10 +387,14 @@
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
+		76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterWidgetBundle.swift; sourceTree = "<group>"; };
 		79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterActivityManager.swift; sourceTree = "<group>"; };
 		7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		82F8241C66EC48E6AE393BE1 /* ProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreatorToolkitView.swift; sourceTree = "<group>"; };
+		83D656411657069E8D8F29D0 /* TopOffendersReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TopOffendersReport.swift; sourceTree = "<group>"; };
+		882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeadowHomeV2.swift; sourceTree = "<group>"; };
 		8C4091CCCB419A7361C68A59 /* SGComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGComponents.swift; sourceTree = "<group>"; };
 		94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldExtension.swift; sourceTree = "<group>"; };
 		97FA13DC544E39E05528794C /* StudyGuardMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -362,15 +418,20 @@
 		C0A100072F61000000000007 /* HowItWorksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowItWorksView.swift; sourceTree = "<group>"; };
 		C0A100092F61000000000009 /* LottieAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieAnimationView.swift; sourceTree = "<group>"; };
 		C14C6511A34903E18E985B70 /* MonsterLiveActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; path = 1_idle_shadow.json; sourceTree = "<group>"; };
 		C5B684B8E0357F56C6BF8C00 /* SGContract.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGContract.swift; sourceTree = "<group>"; };
 		C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV2Components.swift; sourceTree = "<group>"; };
+		C992836E11460BAE0C22D50D /* QuizV2Kit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Kit.swift; sourceTree = "<group>"; };
 		CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonsterWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenTimeAuthOnboarding.swift; sourceTree = "<group>"; };
 		E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardManager.swift; sourceTree = "<group>"; };
 		E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsPickerSheet.swift; sourceTree = "<group>"; };
+		E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */ = {isa = PBXFileReference; includeInIndex = 1; path = "2_Looking down_char.json"; sourceTree = "<group>"; };
 		E5E5D5C36077513EB1D031B8 /* StudyGuardMonitor.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardMonitor.entitlements; sourceTree = "<group>"; };
 		E9FFFAAF633CE842B8784D7C /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEFC70BA4412FD014A8116A4 /* GuardedAppsOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsOnboarding.swift; sourceTree = "<group>"; };
+		F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardReport.entitlements; sourceTree = "<group>"; };
 		FE68487A12F7833146396BBE /* GuardRingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardRingView.swift; sourceTree = "<group>"; };
 		FE8DBA1E2CE011B7B61ED083 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -431,6 +492,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		751BE69BEE521D72550EFED4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EC1FD554C06F896982DED2AE /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87140EDCE23E0DC1B2E3D089 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -439,9 +508,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5E03E4542E8BF2CC020AFEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		050F6A4CF50E90AF5BA86108 /* StudyGuardShieldAction */ = {
+			isa = PBXGroup;
+			children = (
+				522EC8F7112FFAF62F3DC02F /* StudyGuardShieldActionExtension.swift */,
+				76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */,
+				2DE855658F4799BE7F1E120B /* Info.plist */,
+				46E3F99E85D41EC320BB8795 /* StudyGuardShieldAction.entitlements */,
+				60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */,
+			);
+			name = StudyGuardShieldAction;
+			path = StudyGuardShieldAction;
+			sourceTree = "<group>";
+		};
 		23F899D2033A6A2B75049EE5 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -478,6 +568,10 @@
 				4091EDCB2FFE4D6E0000B80F /* 3_clipboard.png */,
 				4091EDCC2FFE4D6E0000B80F /* 4_teaching.json */,
 				4091EDCD2FFE4D6E0000B80F /* 4_teaching.png */,
+				C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */,
+				48C2915E1E584CA06B2E5714 /* 1_idle_char.json */,
+				E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */,
+				16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */,
 			);
 			path = "mascot-animations";
 			sourceTree = "<group>";
@@ -587,6 +681,10 @@
 				6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */,
 				6BA42AE92DAC4A7F00BBB626 /* PracticeView.swift */,
 				AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */,
+				022EF66829006A39DC358F1E /* QuizV2View.swift */,
+				882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */,
+				C992836E11460BAE0C22D50D /* QuizV2Kit.swift */,
+				1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -734,6 +832,8 @@
 				8349B69430DA55D9BFA62152 /* StudyGuardShield */,
 				7FD5E5D101BE782BB770BA6B /* diewithoutregretsTests */,
 				D004945B6595EA1F399FE870 /* MonsterWidget */,
+				050F6A4CF50E90AF5BA86108 /* StudyGuardShieldAction */,
+				773D2290FD6A0E75573D504A /* StudyGuardReport */,
 			);
 			sourceTree = "<group>";
 		};
@@ -747,6 +847,8 @@
 				9C8529F31C9C3F564DE58279 /* StudyGuardShield.appex */,
 				9DC70B55611A6E75742F4DE4 /* diewithoutregretsTests.xctest */,
 				CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */,
+				0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */,
+				EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -759,6 +861,7 @@
 				407C18342F62D1B700A932E5 /* sademotion.lottie */,
 				40A430B62FFFF8350093C2DA /* Clouds 2.lottie */,
 				40A430C22FFFF8350093C2DA /* Clouds.lottie */,
+				40A430C32FFFF8350093C2DA /* Lock.lottie */,
 				40738F362F62BB6A0085DF60 /* hourglass.lottie */,
 				6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */,
 				5E4710E700000000000000A1 /* AppEnvironment.swift */,
@@ -801,6 +904,19 @@
 			path = Videos;
 			sourceTree = "<group>";
 		};
+		773D2290FD6A0E75573D504A /* StudyGuardReport */ = {
+			isa = PBXGroup;
+			children = (
+				604F8471C8AD7073A02BBC17 /* StudyGuardReportExtension.swift */,
+				83D656411657069E8D8F29D0 /* TopOffendersReport.swift */,
+				00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */,
+				34213E2D25DEC71A93D9DC64 /* Info.plist */,
+				F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */,
+			);
+			name = StudyGuardReport;
+			path = StudyGuardReport;
+			sourceTree = "<group>";
+		};
 		7FD5E5D101BE782BB770BA6B /* diewithoutregretsTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -837,6 +953,7 @@
 		9D3BBA6EDF51231EC7D48B7A /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */,
 				82F8241C66EC48E6AE393BE1 /* ProfileView.swift */,
 			);
 			path = Profile;
@@ -880,6 +997,7 @@
 				5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */,
 				8C4091CCCB419A7361C68A59 /* SGComponents.swift */,
 				0632A3B5575B52ACF1A16423 /* SGBackground.swift */,
+				40A430C52FFFF8350093C2DA /* LockMomentOverlay.swift */,
 				366D2488121B0EED51D427C3 /* MascotView.swift */,
 				FE68487A12F7833146396BBE /* GuardRingView.swift */,
 				301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */,
@@ -896,6 +1014,40 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		36AAE2E12C6620FC03A5DD12 /* StudyGuardReport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7BBF06662A855DD9497CF63E /* Build configuration list for PBXNativeTarget "StudyGuardReport" */;
+			buildPhases = (
+				FF1ED39A4D133CB57B5007DC /* Sources */,
+				751BE69BEE521D72550EFED4 /* Frameworks */,
+				2B9D02BF31EF2925AB5F0C72 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StudyGuardReport;
+			productName = StudyGuardReport;
+			productReference = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4888DACF32D5AC9EF5EFA074 /* StudyGuardShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA9A1D537E5BC335699584F2 /* Build configuration list for PBXNativeTarget "StudyGuardShieldAction" */;
+			buildPhases = (
+				06C3A46E324A1F153BC7B1E1 /* Sources */,
+				F5E03E4542E8BF2CC020AFEC /* Frameworks */,
+				7A663210EE58CFA8407B06AE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StudyGuardShieldAction;
+			productName = StudyGuardShieldAction;
+			productReference = 0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		51F68613FC13C4A485788777 /* diewithoutregretsTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 09AE40EC4832522A37714AB2 /* Build configuration list for PBXNativeTarget "diewithoutregretsTests" */;
@@ -984,6 +1136,8 @@
 				0E2AE5D1D824D73149DFDF10 /* PBXTargetDependency */,
 				851720934194B26EC88F71C5 /* PBXTargetDependency */,
 				8AE42EDF508424409C02C06E /* PBXTargetDependency */,
+				AA5A40048BA958BB4A0D837F /* PBXTargetDependency */,
+				5661AB712E10B11F65EC37F4 /* PBXTargetDependency */,
 			);
 			name = diewithoutregrets;
 			packageProductDependencies = (
@@ -1082,11 +1236,21 @@
 				666EE9BE25379DC987B443AA /* StudyGuardShield */,
 				51F68613FC13C4A485788777 /* diewithoutregretsTests */,
 				900706EB65BCD960B846921E /* MonsterWidgetExtension */,
+				4888DACF32D5AC9EF5EFA074 /* StudyGuardShieldAction */,
+				36AAE2E12C6620FC03A5DD12 /* StudyGuardReport */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2B9D02BF31EF2925AB5F0C72 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		34012CD176D63BF6DA88C119 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1141,6 +1305,7 @@
 				6BDD79232DAF7CC6007DA0BE /* PrivacyInfo.xcprivacy in Resources */,
 				40A430B72FFFF8350093C2DA /* Clouds 2.lottie in Resources */,
 				40A430C12FFFF8350093C2DA /* Clouds.lottie in Resources */,
+				40A430C42FFFF8350093C2DA /* Lock.lottie in Resources */,
 				4091EDCF2FFE4D6E0000B80F /* 1_idle.png in Resources */,
 				4091EDD02FFE4D6E0000B80F /* 3_clipboard.png in Resources */,
 				4091EDD12FFE4D6E0000B80F /* 4_teaching.json in Resources */,
@@ -1153,6 +1318,18 @@
 				6B9D89C92D3552E600DE8B2E /* Assets.xcassets in Resources */,
 				408E7B6E2FBC64CC0002A208 /* scan-document.lottie in Resources */,
 				6B706FBC2DFB2574004743C9 /* dog-side-eye.mp4 in Resources */,
+				C7883195937BF55E49DFFCB9 /* 1_idle_shadow.json in Resources */,
+				3D97B770B1C937445525494A /* 1_idle_char.json in Resources */,
+				2E33934486661FB8DE46DDE9 /* 2_Looking down_char.json in Resources */,
+				1E1D532D4103CEA0E2BAE68B /* 2_Looking down_shadow.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A663210EE58CFA8407B06AE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EC4D87A0EB8C24ACF8F99F22 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1186,6 +1363,16 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		06C3A46E324A1F153BC7B1E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90170B5B6CBB15E3B292299F /* StudyGuardShieldActionExtension.swift in Sources */,
+				5FAC82EC7C71C6DB13751390 /* SGContract.swift in Sources */,
+				D9237B0A1FD757FEF4EB3E35 /* PrivateAppLauncher.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		19202502ED3291D53A01B5C8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1302,6 +1489,7 @@
 				DA3AF89DE98402B9B6EA937A /* SGTheme.swift in Sources */,
 				481F6073E7A5A543F22EDD3C /* SGComponents.swift in Sources */,
 				F1F04FF61C72BAEACB6C3B30 /* SGBackground.swift in Sources */,
+				40A430C62FFFF8350093C2DA /* LockMomentOverlay.swift in Sources */,
 				090C58E9A9D20D7994496BC7 /* MascotView.swift in Sources */,
 				02C1B351C8894FE0D1ACCC53 /* GuardRingView.swift in Sources */,
 				8E450DB369B374DE26BC9079 /* CountdownReadout.swift in Sources */,
@@ -1309,6 +1497,7 @@
 				412287CDB3AE0C9E705023B0 /* MascotOverlays.swift in Sources */,
 				B21F0755744881EE4A04479B /* SGTabBar.swift in Sources */,
 				24943C499C1B8FB819A9CE6D /* ProfileView.swift in Sources */,
+				C0FFEE01C4EA7012340000A1 /* CreatorToolkitView.swift in Sources */,
 				CAA0DC2839144A3B4762DFF8 /* SGPreviewHarness.swift in Sources */,
 				2003E5977EFC831618E3A7AB /* OnboardingScaffold.swift in Sources */,
 				3B436635FCCF31AD6A1B78AE /* OnboardingV2Components.swift in Sources */,
@@ -1317,6 +1506,10 @@
 				292F9A5AE5A67AB71C23AA2F /* MonsterLiveActivityAttributes.swift in Sources */,
 				C969C4F71D1D0713AA96E4CB /* SGButton.swift in Sources */,
 				1471F72054BFFEEB9E06FD35 /* SGGallery.swift in Sources */,
+				C1248A8B9ED0E7C07E282473 /* QuizV2View.swift in Sources */,
+				B3EA81FB0B915028AA57994E /* MeadowHomeV2.swift in Sources */,
+				B52574801368481E26769917 /* QuizV2Kit.swift in Sources */,
+				FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1338,6 +1531,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FF1ED39A4D133CB57B5007DC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EF8960C3CA4E55F57833C516 /* StudyGuardReportExtension.swift in Sources */,
+				96A30E277F629CFFF9C6DCC4 /* TopOffendersReport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1352,6 +1554,12 @@
 			name = diewithoutregrets;
 			target = 6B9D89C02D3552DF00DE8B2E /* diewithoutregrets */;
 			targetProxy = 60E9267F37755EC0252ED5FD /* PBXContainerItemProxy */;
+		};
+		5661AB712E10B11F65EC37F4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = StudyGuardReport;
+			target = 36AAE2E12C6620FC03A5DD12 /* StudyGuardReport */;
+			targetProxy = BDA53ED058EF62A6A7E8B599 /* PBXContainerItemProxy */;
 		};
 		6B22E8872D4A1D78003A5685 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1375,9 +1583,45 @@
 			target = 900706EB65BCD960B846921E /* MonsterWidgetExtension */;
 			targetProxy = 5B6D8B7C00D7A4BFC9358E2D /* PBXContainerItemProxy */;
 		};
+		AA5A40048BA958BB4A0D837F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = StudyGuardShieldAction;
+			target = 4888DACF32D5AC9EF5EFA074 /* StudyGuardShieldAction */;
+			targetProxy = CB72FA537645A23E81870250 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		05C2784FCC1E7DADE1F2AB87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = StudyGuardReport/StudyGuardReport.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyGuardReport/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StudyGuardReport;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		24EAEF86FE90A514BA1B7038 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1746,6 +1990,36 @@
 			};
 			name = Release;
 		};
+		748FC13F3FCDF532CFC6DBD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = StudyGuardShieldAction/StudyGuardShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyGuardShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StudyGuardShieldAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		789B1090145678FDA723C56C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1763,6 +2037,37 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/diewithoutregrets.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/diewithoutregrets";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		840319703AD39D5B60DB5173 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = StudyGuardShieldAction/StudyGuardShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyGuardShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StudyGuardShieldAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1796,6 +2101,35 @@
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
+		};
+		B81E76C71B68EB972EDADFEA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = StudyGuardReport/StudyGuardReport.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5BFXSF2PS6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyGuardReport/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StudyGuardReport;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		BB1256A6E952960E4BA3C757 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1962,6 +2296,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		7BBF06662A855DD9497CF63E /* Build configuration list for PBXNativeTarget "StudyGuardReport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				05C2784FCC1E7DADE1F2AB87 /* Release */,
+				B81E76C71B68EB972EDADFEA /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		81C792082DFBF80E4F8CF212 /* Build configuration list for PBXNativeTarget "StudyGuardMonitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1976,6 +2319,15 @@
 			buildConfigurations = (
 				24EAEF86FE90A514BA1B7038 /* Release */,
 				6793BE1C979CB5C05A3E110E /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EA9A1D537E5BC335699584F2 /* Build configuration list for PBXNativeTarget "StudyGuardShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				840319703AD39D5B60DB5173 /* Release */,
+				748FC13F3FCDF532CFC6DBD7 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -4,9 +4,11 @@
 //
 //  Custom shield appearance for Study Guard locks. Static branded config for
 //  all four shield variants; the only dynamic read is the armed threshold for
-//  the title. The primary button performs the system default (close the
-//  shielded app) — shield buttons cannot open the host app, so re-entry is
-//  driven by the lock notification and the shield copy naming Study Guard.
+//  the title. ONE button only ("Unlock Apps") — taps are handled by the
+//  StudyGuardShieldAction extension: on iOS 26.5+ it returns
+//  ShieldActionResponse.openParentalControlsApp for a direct, zero-tap open of
+//  Study Guard; on older iOS it posts an instant time-sensitive unlock
+//  notification (the only public route back into the app).
 //
 
 import ManagedSettings
@@ -51,7 +53,12 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
                 text: subtitle,
                 color: nightText.withAlphaComponent(0.65) // SGTheme.nightTextSecondary
             ),
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Close", color: nightText),
+            // ONE button, no escape hatch: the tap always yields a way into
+            // Study Guard (direct open when iOS honors it, otherwise the
+            // instant notification), so the copy promises the outcome, not
+            // the mechanism. A second "Close" button only diluted the single
+            // path forward.
+            primaryButtonLabel: ShieldConfiguration.Label(text: "Unlock Apps", color: nightText),
             primaryButtonBackgroundColor: ember
         )
     }
