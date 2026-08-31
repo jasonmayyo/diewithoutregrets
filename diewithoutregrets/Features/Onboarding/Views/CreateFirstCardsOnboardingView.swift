@@ -27,8 +27,9 @@ struct CreateFirstCardsOnboardingView: View {
     var body: some View {
         OnboardingScaffold(
             mascot: .clipboard,
-            headline: "Create your first\nflash cards",
-            subtitle: "Choose how you'd like to add study material.",
+            eyebrow: "Day 1 of your plan",
+            headline: "Add your\nstudy notes",
+            subtitle: "They become the flashcards that unlock your apps.",
             secondaryTitle: "Skip for now",
             secondaryAction: {
                 Analytics.capture("onboarding_create_cards_skipped")

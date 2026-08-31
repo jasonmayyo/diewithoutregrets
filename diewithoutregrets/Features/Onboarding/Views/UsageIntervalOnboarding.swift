@@ -12,6 +12,9 @@ import SwiftUI
 
 struct UsageIntervalOnboarding: View {
     @EnvironmentObject var onboardingViewModel: OnboardingViewModel
+    /// The unlock rule the commitment screen wrote (restored subscribers
+    /// skip that screen and keep whatever they had).
+    @AppStorage("flashcardCount") private var flashcardCount: Int = 3
 
     @State private var selectedMinutes: Int = SGContract.defaultIntervalMinutes
 
@@ -26,7 +29,7 @@ struct UsageIntervalOnboarding: View {
             mascot: .clipboard,
             mascotReplayKey: selectedMinutes,
             headline: "How long until your apps lock?",
-            subtitle: "Scroll this long and he steps in. Answer your flashcards to earn the same amount again. Fresh start every morning.",
+            subtitle: "Scroll this long and he steps in. Then your rule kicks in: \(flashcardCount) flashcards buys \(StudyGuardManager.shared.earnedMinutes(forCardCount: flashcardCount)) minutes back. Fresh start every morning.",
             ctaTitle: "Start guarding",
             ctaAction: {
                 startGuarding()

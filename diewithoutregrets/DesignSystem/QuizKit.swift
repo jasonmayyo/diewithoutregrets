@@ -33,6 +33,7 @@ enum QuizHaptics {
     static func wrongBuzz() { SGTheme.wrongBuzz() }
     static func celebrationTick() { SGTheme.celebrationTick() }
     static func celebrationLanding() { SGTheme.celebrationLanding() }
+    static func coinLand(progress: Double) { SGTheme.collectTick(progress: progress) }
 }
 
 // MARK: - Shake

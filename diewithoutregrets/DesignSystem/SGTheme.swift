@@ -302,4 +302,16 @@ enum SGTheme {
             UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: intensity)
         }
     }
+
+    /// One collectible banking in its counter, escalating through the
+    /// flock: soft for the early coins, a rigid clink for the last.
+    /// `progress` is 0...1 through the flock.
+    static func collectTick(progress: Double) {
+        let p = max(0, min(1, progress))
+        if p < 1 {
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.55 + 0.35 * p)
+        } else {
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 1.0)
+        }
+    }
 }

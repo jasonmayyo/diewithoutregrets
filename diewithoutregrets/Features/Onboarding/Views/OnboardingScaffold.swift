@@ -136,6 +136,7 @@ struct OnboardingScaffold<Hero: View, Content: View>: View {
                     .foregroundColor(SGTheme.paper)
                     .lineSpacing(3)
                     .multilineTextAlignment(centerHeader ? .center : .leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let subtitle {
                 Text(subtitle)
@@ -143,6 +144,7 @@ struct OnboardingScaffold<Hero: View, Content: View>: View {
                     .foregroundColor(SGTheme.paperSecondary)
                     .lineSpacing(3)
                     .multilineTextAlignment(centerHeader ? .center : .leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: centerHeader ? .center : .leading)

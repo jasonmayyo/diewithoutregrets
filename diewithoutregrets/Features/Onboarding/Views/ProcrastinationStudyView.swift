@@ -26,7 +26,7 @@ struct QuizScrollTimesView: View {
 
     var body: some View {
         QuizScreenContainer(
-            number: 4,
+            number: 5,
             question: "When do you scroll when you should be studying?",
             subtitle: "So he knows when to guard hardest.",
             progress: OnboardingStep.quizScrollTimes.quizProgress

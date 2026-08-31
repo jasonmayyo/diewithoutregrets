@@ -70,6 +70,43 @@ struct QuizV2View: View {
 
     @ObservedObject private var studyGuard = StudyGuardManager.shared
 
+    // MARK: Earned-time coins
+    //
+    // The real economy: each correct card is worth perCardSeconds of screen
+    // time, visualized as a flock of coins that each bank a slice of it.
+    // The grant itself is the whole draw's worth (rounded up to minutes,
+    // floored at SGContract.minEarnedMinutes) and fires at the final commit;
+    // the chip tops up to that real number as the last flock banks, so the
+    // display always ends equal to what was granted.
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var earnedSeconds = 0
+    @State private var coinsBanked = 0
+    @State private var flyingCoins: [QV2CoinModel] = []
+    @State private var coinSerial = 0
+    /// Gates the progress-bar bump: a correct card fills the bar only once
+    /// its first coin banks, so the fill reads as part of the earn payoff.
+    @State private var coinsLandedThisCard = false
+    /// The real grant, written at earnUnlock; the final flock's last coin
+    /// rolls the chip up to it (the floor can exceed the per-card sum).
+    @State private var grantedMinutes = 0
+    @State private var chipFrame: CGRect = .zero
+    @State private var ctaFrame: CGRect = .zero
+
+    /// Coins per correct CHECK; together they bank the card's perCardSeconds.
+    private let coinsPerCorrect = 5
+
+    private var perCardSeconds: Int { studyGuard.perCardSeconds }
+
+    /// One coin's slice of the card's worth; the last coin takes the
+    /// remainder so the flock always sums exactly to perCardSeconds.
+    private func coinValue(_ coin: QV2CoinModel) -> Int {
+        let base = perCardSeconds / coin.flockSize
+        return coin.index == coin.flockSize - 1
+            ? perCardSeconds - base * (coin.flockSize - 1)
+            : base
+    }
+
     /// Bottom zone reserved under the options so they clear the tallest
     /// footer (the feedback panels) and sit still across phases.
     private let footerReserve: CGFloat = 222
@@ -111,6 +148,14 @@ struct QuizV2View: View {
             } else if let card = currentCard {
                 quizBody(card)
             }
+        }
+        .overlay {
+            QV2CoinFlightOverlay(
+                coins: flyingCoins,
+                spawnFrame: ctaFrame,
+                targetFrame: chipFrame,
+                onLand: bankCoin
+            )
         }
         .sheet(isPresented: $showEmergencySheet) {
             EmergencyUnlockSheet {
@@ -173,13 +218,18 @@ struct QuizV2View: View {
             .accessibilityLabel("Exit without unlocking")
 
             QV2ProgressBar(fraction: progressFraction, fill: progressColor)
+
+            QV2EarnedChip(seconds: earnedSeconds, bump: coinsBanked)
+                .background(QV2GlobalFrameReader { chipFrame = $0 })
         }
     }
 
     /// Wrong answers don't move the bar: the contract is every card right.
+    /// A correct one moves it only when its first coin banks in the chip,
+    /// so the fill lands as part of the earn payoff.
     private var progressFraction: CGFloat {
         guard !cards.isEmpty else { return 0 }
-        let landed = phase == .revealed(correct: true) ? index + 1 : index
+        let landed = phase == .revealed(correct: true) && coinsLandedThisCard ? index + 1 : index
         return CGFloat(landed) / CGFloat(cards.count)
     }
 
@@ -273,6 +323,7 @@ struct QuizV2View: View {
             // No tap haptic: the commit composes its own verdict burst,
             // one press must never buzz twice.
             QV2CTAButton(title: "CHECK", enabled: selected != nil, action: commit)
+                .background(QV2GlobalFrameReader { ctaFrame = $0 })
                 .padding(.horizontal, 20)
                 .padding(.bottom, 12)
 
@@ -371,6 +422,7 @@ struct QuizV2View: View {
 
         if correct {
             QuizHaptics.correctBurst()
+            spawnCoinFlock()
         } else {
             QuizHaptics.wrongBuzz()
         }
@@ -401,6 +453,9 @@ struct QuizV2View: View {
         guard isRevealed else { return }
 
         if index >= cards.count - 1 {
+            // The chip leaves with the quiz body; ground any airborne coins
+            // so they don't arc over the ending (banks become no-ops).
+            flyingCoins = []
             withAnimation(SGTheme.spring) { showEnding = true }
             return
         }
@@ -411,6 +466,55 @@ struct QuizV2View: View {
             phase = .answering
             selected = nil
             committed = nil
+            coinsLandedThisCard = false
+        }
+    }
+
+    // MARK: - Coin flock
+
+    private func spawnCoinFlock() {
+        if reduceMotion {
+            // No flight: bank the whole card's worth at once. No extra
+            // haptic — the commit's correctBurst already marks the moment,
+            // and one press must never buzz twice.
+            earnedSeconds += perCardSeconds
+            coinsBanked += 1
+            coinsLandedThisCard = true
+            return
+        }
+        coinSerial += 1
+        flyingCoins.append(contentsOf: QV2CoinModel.flock(
+            of: coinsPerCorrect,
+            serial: coinSerial,
+            cardIndex: index
+        ))
+    }
+
+    private func bankCoin(_ coin: QV2CoinModel) {
+        // A reset, exit or ending clears the flock but can't cancel the
+        // flight timers; a coin that's no longer ours banks nothing.
+        guard flyingCoins.contains(where: { $0.id == coin.id }) else { return }
+
+        QuizHaptics.coinLand(progress: Double(coin.index + 1) / Double(coin.flockSize))
+        let isLastOfFinalFlock = grantedMinutes > 0
+            && coin.cardIndex == cards.count - 1
+            && coin.index == coin.flockSize - 1
+        withAnimation(SGTheme.springPop) {
+            // The final coin of the run rolls the chip to the REAL grant
+            // (the 5-minute floor can exceed the per-card sum).
+            earnedSeconds = isLastOfFinalFlock
+                ? grantedMinutes * 60
+                : earnedSeconds + coinValue(coin)
+            coinsBanked += 1
+            // Stragglers from an already-advanced card keep banking time
+            // but must not pre-arm the next card's progress gate.
+            if coin.cardIndex == index {
+                coinsLandedThisCard = true
+            }
+        }
+        // Let the shrink-out finish before the coin leaves the tree.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            flyingCoins.removeAll { $0.id == coin.id }
         }
     }
 
@@ -480,7 +584,9 @@ struct QuizV2View: View {
                     guard let card = currentCard else { break }
                     selected = card.correctAnswerIndex
                     commit()
-                    try? await Task.sleep(nanoseconds: 1_100_000_000)
+                    // Long enough for the whole coin flock to bank (last
+                    // coin ~1.26s after commit) so captures are settled.
+                    try? await Task.sleep(nanoseconds: 1_700_000_000)
                     advance()
                 }
             }
@@ -508,6 +614,11 @@ struct QuizV2View: View {
         showEnding = false
         results = Array(repeating: nil, count: cards.count)
         answeredIndices = []
+        earnedSeconds = 0
+        coinsBanked = 0
+        flyingCoins = []
+        coinsLandedThisCard = false
+        grantedMinutes = 0
     }
 
     private func retryRun(source: String) {
@@ -535,7 +646,12 @@ struct QuizV2View: View {
     private func earnUnlock() {
         guard correctCount > 0 else { return }
 
-        StudyGuardManager.shared.grantFreshBudget(reason: .quiz)
+        grantedMinutes = StudyGuardManager.shared.grantEarnedBudget(cardCount: cards.count)
+        if reduceMotion {
+            // The instant-bank path already ran for this card; snap the chip
+            // straight to the real grant.
+            earnedSeconds = grantedMinutes * 60
+        }
         // current(), not count: a lapsed streak reads 0, so the roll-up
         // goes 0 -> 1 instead of counting backwards from the stale total.
         streakBefore = QV2Streak.current()
@@ -547,7 +663,7 @@ struct QuizV2View: View {
             totalQuestions: cards.count,
             hadRetries: attemptNumber > 1,
             durationSec: Date().timeIntervalSince(attemptStartTime),
-            breakDurationMinutes: studyGuard.intervalMinutes
+            breakDurationMinutes: grantedMinutes
         )
     }
 
@@ -576,6 +692,9 @@ struct QuizV2View: View {
 
     /// The top-corner exit: bail out with nothing earned. Apps stay locked.
     private func exitQuiz() {
+        // Ground airborne coins so their landing haptics can't tick after
+        // the user has left the quiz.
+        flyingCoins = []
         Analytics.unlockCloseAnyway(
             appName: "your apps",
             currentStep: index * 2 + (isRevealed ? 1 : 0),

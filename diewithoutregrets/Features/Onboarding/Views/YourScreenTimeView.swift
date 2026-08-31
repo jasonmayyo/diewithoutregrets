@@ -24,7 +24,7 @@ struct QuizScreenTimeView: View {
 
     var body: some View {
         QuizScreenContainer(
-            number: 3,
+            number: 4,
             question: "How much time do you spend on your phone each day?",
             subtitle: "Be honest, this stays between us.",
             progress: OnboardingStep.quizScreenTime.quizProgress

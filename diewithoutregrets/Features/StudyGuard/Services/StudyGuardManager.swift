@@ -121,7 +121,7 @@ final class StudyGuardManager: ObservableObject {
             d.set(seeded, forKey: SGContract.Keys.intervalMinutes)
         }
 
-        writeFreshBudgetKeys(d)
+        writeFreshBudgetKeys(d, minutes: effectiveInterval(d))
         guard restartMonitoring(thresholdMinutes: effectiveInterval(d)) else {
             return .failure(.monitoringFailed)
         }
@@ -136,20 +136,51 @@ final class StudyGuardManager: ObservableObject {
 
     // MARK: - Grants (the unlock primitive)
 
-    /// Clears the shield and starts a fresh N-minute budget. The ONLY exit
-    /// from `.locked`. Must be called synchronously the moment the unlock is
+    /// Clears the shield and starts a fresh budget. The ONLY exit from
+    /// `.locked`. Must be called synchronously the moment the unlock is
     /// earned — never inside an animation delay.
-    func grantFreshBudget(reason: GrantReason) {
+    ///
+    /// `minutes` nil means the user's interval setting — the duration for
+    /// every non-quiz grant (focus, emergency, re-enable, setup, debug).
+    /// Quiz unlocks go through `grantEarnedBudget`, which computes the
+    /// per-card earned amount and passes it here.
+    func grantFreshBudget(reason: GrantReason, minutes: Int? = nil, analyticsContext: [String: String] = [:]) {
         guard let d = defaults else { return }
+        let granted = minutes ?? effectiveInterval(d)
         store.clearAllSettings()
-        writeFreshBudgetKeys(d)
-        _ = restartMonitoring(thresholdMinutes: effectiveInterval(d))
-        SGContract.enqueueAnalyticsEvent(d, name: "budget_granted", properties: [
+        writeFreshBudgetKeys(d, minutes: granted)
+        _ = restartMonitoring(thresholdMinutes: granted)
+        var properties = [
             "source": reason.rawValue,
             "interval_minutes": String(effectiveInterval(d)),
-        ])
+            "granted_minutes": String(granted),
+        ]
+        analyticsContext.forEach { properties[$0.key] = $0.value }
+        SGContract.enqueueAnalyticsEvent(d, name: "budget_granted", properties: properties)
         d.synchronize()
         refresh()
+    }
+
+    /// The quiz grant: earned time scales with the draw (perCardSeconds per
+    /// card, rounded up to whole minutes, floored at minEarnedMinutes).
+    /// Returns the granted minutes so callers can show the real number.
+    @discardableResult
+    func grantEarnedBudget(cardCount: Int) -> Int {
+        let rate = SGContract.perCardSeconds(defaults)
+        let minutes = SGContract.earnedMinutes(cardCount: cardCount, perCardSeconds: rate)
+        grantFreshBudget(reason: .quiz, minutes: minutes, analyticsContext: [
+            "card_count": String(cardCount),
+            "per_card_seconds": String(rate),
+        ])
+        return minutes
+    }
+
+    /// Per-card earn rate for display (the quiz chip, settings copy).
+    var perCardSeconds: Int { SGContract.perCardSeconds(defaults) }
+
+    /// Minutes a quiz of `cardCount` cards would earn right now.
+    func earnedMinutes(forCardCount cardCount: Int) -> Int {
+        SGContract.earnedMinutes(cardCount: cardCount, perCardSeconds: perCardSeconds)
     }
 
     /// 3 per rolling week. Returns false (and refuses) when exhausted.
@@ -373,8 +404,7 @@ final class StudyGuardManager: ObservableObject {
         return n > 0 ? n : SGContract.defaultIntervalMinutes
     }
 
-    private func writeFreshBudgetKeys(_ d: UserDefaults) {
-        let n = effectiveInterval(d)
+    private func writeFreshBudgetKeys(_ d: UserDefaults, minutes n: Int) {
         d.set(SGContract.StateValue.metering, forKey: SGContract.Keys.state)
         d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.budgetGrantedAt)
         d.set(Double(n * 60), forKey: SGContract.Keys.budgetTotalSeconds)

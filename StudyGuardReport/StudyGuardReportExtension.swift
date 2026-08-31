@@ -17,5 +17,8 @@ struct StudyGuardReportExtension: DeviceActivityReportExtension {
         TopOffendersReport { offenders in
             TopOffendersView(offenders: offenders)
         }
+        OnboardingDiagnosisReport { verdict in
+            OnboardingDiagnosisView(verdict: verdict)
+        }
     }
 }

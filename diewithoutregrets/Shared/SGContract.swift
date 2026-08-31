@@ -49,6 +49,15 @@ enum SGContract {
     static let allowedIntervals = [10, 15, 20, 30, 45, 60]
     static let defaultIntervalMinutes = 15
 
+    /// Earned-time economy: each correct flashcard in the unlock quiz earns
+    /// this many seconds of screen time. The grant is the whole draw's worth,
+    /// rounded up to whole minutes (the engine meters in minutes; DeviceActivity
+    /// events are minute-granular and fire late, so sub-minute budgets would be
+    /// swallowed by the jitter) and clamped to [min, max].
+    static let defaultPerCardSeconds = 30
+    static let minEarnedMinutes = 5
+    static let maxEarnedMinutes = 60
+
     /// Emergency unlocks allowed per rolling 7-day window.
     static let emergencyUnlocksPerWeek = 3
     static let emergencyWindowSeconds: Double = 7 * 86_400
@@ -68,6 +77,15 @@ enum SGContract {
         static let selection = "sg_selection"
         /// Single source of truth for N (no @AppStorage mirror).
         static let intervalMinutes = "sg_intervalMinutes"
+        /// Seconds of screen time one correct flashcard earns. Unset means
+        /// defaultPerCardSeconds; the onboarding plan builder will write it.
+        static let perCardSeconds = "sg_perCardSeconds"
+        /// Exam date (timeIntervalSince1970) written by onboarding's
+        /// reality-check step so the report extension can render the
+        /// real-usage verdict ("your phone will eat X of your Y days").
+        /// Usage numbers can never leave the report sandbox — the exam date
+        /// crossing INTO it is the only data hand-off.
+        static let onboardingExamDate = "sg_onbExamDate"
         /// "metering" | "locked" (StateValue).
         static let state = "sg_state"
         static let lockedAt = "sg_lockedAt"
@@ -123,6 +141,20 @@ enum SGContract {
         allowedIntervals.min {
             (abs($0 - minutes), $0) < (abs($1 - minutes), $1)
         } ?? defaultIntervalMinutes
+    }
+
+    /// The per-card earn rate, falling back to the default when unset (or when
+    /// the app group is unavailable).
+    static func perCardSeconds(_ defaults: UserDefaults?) -> Int {
+        let n = defaults?.integer(forKey: Keys.perCardSeconds) ?? 0
+        return n > 0 ? n : defaultPerCardSeconds
+    }
+
+    /// Minutes a quiz of `cardCount` cards earns: rate × count, rounded up to
+    /// whole minutes, clamped to [minEarnedMinutes, maxEarnedMinutes].
+    static func earnedMinutes(cardCount: Int, perCardSeconds rate: Int) -> Int {
+        let raw = Int((Double(max(0, cardCount) * rate) / 60.0).rounded(.up))
+        return min(maxEarnedMinutes, max(minEarnedMinutes, raw))
     }
 
     /// Append a timestamped line to the extension debug ring buffer (≤200 entries).

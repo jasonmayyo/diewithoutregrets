@@ -123,14 +123,16 @@ struct HardPaywallView: View {
             appeared = true
             shown = true
 
-            Analytics.paywallViewed(surface: "onboarding_v3", properties: [
+            Analytics.paywallViewed(surface: "onboarding_v4", properties: [
                 "student_type": viewModel.studentType,
                 "screen_time": viewModel.screenTime,
-                "phone_days": viewModel.phoneDays,
-                "weeks_to_exam": viewModel.weeksToExam as Any
+                "phone_days": viewModel.phoneDaysToExam,
+                "days_to_exam": viewModel.daysToExam as Any,
+                "weeks_to_exam": viewModel.weeksToExam as Any,
+                "card_count": viewModel.commitCardCount
             ])
             Telemetry.breadcrumb("Paywall viewed", category: "paywall",
-                                 data: ["surface": "onboarding_v3"])
+                                 data: ["surface": "onboarding_v4"])
             AdsTracker.trackViewContent(name: "onboarding_paywall")
 
             loadCurrentOffering()
@@ -198,9 +200,9 @@ struct HardPaywallView: View {
                 .fadeRise(shown, delay: 0.05)
 
             (Text("Win back ")
-                + Text("\(viewModel.phoneDays) days")
+                + Text("\(viewModel.phoneDaysToExam) days")
                 .foregroundColor(SGTheme.mintDeep)
-                + Text(" of this semester"))
+                + Text(viewModel.examDateLabel.map { " before \($0)" } ?? " of this semester"))
                 .font(SGTheme.stepTitle)
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.center)
@@ -303,7 +305,7 @@ struct HardPaywallView: View {
             PaywallView(offering: offering)
                 .onAppear {
                     print("🎯 Showing paywall with offering: \(offering.identifier)")
-                    Analytics.paywallViewed(surface: "onboarding_v3_rc", properties: [
+                    Analytics.paywallViewed(surface: "onboarding_v4_rc", properties: [
                         "offering_id": offering.identifier,
                         "has_offering": true
                     ])
@@ -357,7 +359,7 @@ struct HardPaywallView: View {
                     // `onboarding_purchase_completed` event — kept below
                     // for dashboards that haven't migrated yet).
                     Analytics.subscriptionStarted(
-                        surface: "onboarding_v3",
+                        surface: "onboarding_v4",
                         productId: productId,
                         price: price,
                         currency: currency,
@@ -380,7 +382,7 @@ struct HardPaywallView: View {
                 .onRestoreCompleted { customerInfo in
                     let hasActive = !customerInfo.entitlements.active.isEmpty
                     Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v3",
+                        surface: "onboarding_v4",
                         hasActiveEntitlements: hasActive
                     )
                     if hasActive {
@@ -392,7 +394,7 @@ struct HardPaywallView: View {
                 }
                 .onDisappear {
                     Analytics.paywallDismissed(
-                        surface: "onboarding_v3_rc",
+                        surface: "onboarding_v4_rc",
                         didPurchase: didCompletePurchase
                     )
                 }
@@ -400,7 +402,7 @@ struct HardPaywallView: View {
             PaywallView()
                 .onAppear {
                     print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
-                    Analytics.paywallViewed(surface: "onboarding_v3_rc", properties: [
+                    Analytics.paywallViewed(surface: "onboarding_v4_rc", properties: [
                         "has_offering": false
                     ])
                     viewModel.screenAction("rc_paywall_presented", properties: [
@@ -438,7 +440,7 @@ struct HardPaywallView: View {
                                     )
                                 }
                                 Analytics.subscriptionStarted(
-                                    surface: "onboarding_v3",
+                                    surface: "onboarding_v4",
                                     productId: product.productIdentifier,
                                     price: price,
                                     currency: currency,
@@ -462,7 +464,7 @@ struct HardPaywallView: View {
                 .onRestoreCompleted { customerInfo in
                     let hasActive = !customerInfo.entitlements.active.isEmpty
                     Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v3",
+                        surface: "onboarding_v4",
                         hasActiveEntitlements: hasActive
                     )
                     if hasActive {
@@ -474,7 +476,7 @@ struct HardPaywallView: View {
                 }
                 .onDisappear {
                     Analytics.paywallDismissed(
-                        surface: "onboarding_v3_rc",
+                        surface: "onboarding_v4_rc",
                         didPurchase: didCompletePurchase
                     )
                 }
@@ -592,7 +594,7 @@ struct HardPaywallView: View {
         isRestoringPurchases = true
         defer { isRestoringPurchases = false }
 
-        Analytics.restorePurchasesAttempted(surface: "onboarding_v3")
+        Analytics.restorePurchasesAttempted(surface: "onboarding_v4")
 
         do {
             print("🔄 Starting restore purchases...")
@@ -608,7 +610,7 @@ struct HardPaywallView: View {
             // Check if user has active entitlements after restore
             if !customerInfo.entitlements.active.isEmpty {
                 print("✅ Restore successful - user has active entitlements: \(customerInfo.entitlements.active.keys)")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v3", hasActiveEntitlements: true)
+                Analytics.restorePurchasesSucceeded(surface: "onboarding_v4", hasActiveEntitlements: true)
 
                 // Guard the decline ladder and auto-present: they have Pro now.
                 didCompletePurchase = true
@@ -624,16 +626,16 @@ struct HardPaywallView: View {
                 }
             } else {
                 print("ℹ️ Restore completed but no active entitlements found")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v3", hasActiveEntitlements: false)
+                Analytics.restorePurchasesSucceeded(surface: "onboarding_v4", hasActiveEntitlements: false)
                 DispatchQueue.main.async {
                     self.restoreErrorMessage = "No previous purchases found to restore."
                 }
             }
         } catch {
             print("❌ Restore purchases error: \(error)")
-            Analytics.restorePurchasesFailed(surface: "onboarding_v3", error: error.localizedDescription)
+            Analytics.restorePurchasesFailed(surface: "onboarding_v4", error: error.localizedDescription)
             Telemetry.capture(error,
-                              tags: ["feature": "paywall", "surface": "onboarding_v3", "operation": "restore_purchases"])
+                              tags: ["feature": "paywall", "surface": "onboarding_v4", "operation": "restore_purchases"])
             DispatchQueue.main.async {
                 self.restoreErrorMessage = error.localizedDescription
             }

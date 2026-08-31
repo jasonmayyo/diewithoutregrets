@@ -598,8 +598,9 @@ struct RegretView: View {
         // the free-unlock invariant.
         guard correctCount > 0 else { return }
 
+        var grantedMinutes = flashcardBreakDuration
         if isV2 {
-            StudyGuardManager.shared.grantFreshBudget(reason: .quiz)
+            grantedMinutes = StudyGuardManager.shared.grantEarnedBudget(cardCount: selectedRegrets.count)
         } else {
             // Legacy Shortcuts flow: record the break the moment it's
             // earned; the CTA still opens the guarded app.
@@ -616,7 +617,7 @@ struct RegretView: View {
             totalQuestions: selectedRegrets.count,
             hadRetries: attemptNumber > 1,
             durationSec: Date().timeIntervalSince(attemptStartTime),
-            breakDurationMinutes: isV2 ? studyGuard.intervalMinutes : flashcardBreakDuration
+            breakDurationMinutes: grantedMinutes
         )
     }
 

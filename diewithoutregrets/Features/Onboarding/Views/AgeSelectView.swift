@@ -25,7 +25,7 @@ struct QuizAgeView: View {
 
     var body: some View {
         QuizScreenContainer(
-            number: 1,
+            number: 2,
             question: "How old are you?",
             subtitle: "We'll tune the plan to where you are in life.",
             progress: OnboardingStep.quizAge.quizProgress

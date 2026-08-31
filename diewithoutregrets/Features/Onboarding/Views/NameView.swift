@@ -26,7 +26,7 @@ struct QuizStudentTypeView: View {
 
     var body: some View {
         QuizScreenContainer(
-            number: 2,
+            number: 3,
             question: "What best describes you?",
             subtitle: "Different students need different plans.",
             progress: OnboardingStep.quizStudentType.quizProgress

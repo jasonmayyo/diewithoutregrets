@@ -30,12 +30,12 @@ struct OnboardingView: View {
                     HookView()
                 case .theFeeling:
                     TheFeelingIntroView()
-                case .notYourFault:
-                    NotYourFaultView()
                 case .willpowerLie:
                     WillpowerLieView()
                 case .meetYourGuard:
                     MeetYourGuardView()
+                case .quizName:
+                    QuizNameView()
                 case .quizAge:
                     QuizAgeView()
                 case .quizStudentType:
@@ -44,34 +44,42 @@ struct OnboardingView: View {
                     QuizScreenTimeView()
                 case .quizScrollTimes:
                     QuizScrollTimesView()
+                case .quizSymptoms:
+                    QuizSymptomsView()
+                case .quizTestimonial:
+                    QuizTestimonialView()
                 case .quizExamDate:
                     QuizExamDateView()
+                case .quizPreparedness:
+                    QuizPreparednessView()
+                case .realityCheck:
+                    RealityCheckView()
 
-                // Phase 2 — The semester receipt
+                // Phase 2 — The diagnosis
                 case .calculating:
                     CalculatingView()
-                case .semesterDrain:
-                    SemesterDrainView()
-                case .daysLost:
-                    DaysLostCycleView()
+                case .examVerdict:
+                    ExamVerdictView()
                 case .theImagine:
                     TheImagineView()
 
-                // Phase 3 — The offer
-                case .science:
-                    ScienceView()
-                case .coreMechanic:
-                    CoreMechanicView()
-                case .noWillpower:
-                    NoWillpowerView()
-                case .moreFeatures:
-                    MoreFeaturesView()
+                // Phase 3 — The solution, shown
+                case .tryIt:
+                    TryItDemoView()
                 case .reviews:
                     ReviewsView()
+
+                // Phase 4 — Commitment + plan
+                case .commitment:
+                    CommitmentView()
+                case .planBuilding:
+                    PlanBuildingView()
+                case .planReveal:
+                    PlanRevealView()
                 case .paywall:
                     HardPaywallView()
 
-                // Phase 4 — Post-purchase setup
+                // Phase 5 — Post-purchase setup
                 case .screenTimeExplainer:
                     ScreenTimeExplainerView()
                 case .screenTimePermission:
@@ -82,8 +90,6 @@ struct OnboardingView: View {
                     UsageIntervalOnboarding()
                 case .notificationPrimer:
                     NotificationPrimerView()
-                case .unlockMethod:
-                    UnlockMethodChoiceView()
                 case .createFirstCards:
                     CreateFirstCardsOnboardingView()
                 case .completion:

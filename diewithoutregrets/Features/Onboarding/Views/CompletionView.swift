@@ -109,7 +109,7 @@ struct CompletionView: View {
                 // Only bounce when we positively see zero active entitlements.
                 guard !customerInfo.entitlements.active.isEmpty else {
                     Analytics.capture("onboarding_completion_pro_recheck_failed", properties: [
-                        "flow_version": "sg_v3"
+                        "flow_version": "sg_v4"
                     ])
                     viewModel.currentStep = .paywall
                     return
@@ -125,9 +125,13 @@ struct CompletionView: View {
             "student_type": viewModel.studentType,
             "screen_time": viewModel.screenTime,
             "peak_scroll_time": viewModel.peakScrollTime,
+            "preparedness": viewModel.preparedness,
+            "days_to_exam": viewModel.daysToExam as Any,
+            "card_count": viewModel.commitCardCount,
+            "auth_in_onboarding": viewModel.authorizedInQuiz,
             "deck_name": viewModel.newDeckName,
             "guarded_token_count": SGContract.sharedDefaults.flatMap { SGContract.decodeSelection($0) }.map { SGContract.tokenCount($0) } ?? 0,
-            "flow_version": "sg_v3"
+            "flow_version": "sg_v4"
         ])
 
         AdsTracker.trackCompleteRegistration()

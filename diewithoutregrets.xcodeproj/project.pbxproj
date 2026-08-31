@@ -140,6 +140,8 @@
 		9F252FAD43EC4CBBDA287374 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		A1B2C3D4E5F60718293A4B5D /* QuizKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* QuizKit.swift */; };
 		A3C0FFEE0000000000073001 /* OnboardingV3NewSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */; };
+		B4A11C0DE5F60718293A4B5D /* OnboardingV4Steps.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */; };
+		D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */; };
 		A9A60040A3FFDF926B0EE179 /* MigrationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA21584A731ED7770616A869 /* MigrationCard.swift */; };
 		AA00010100000000CARD0002 /* CreateFirstCardsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */; };
 		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
@@ -178,6 +180,7 @@
 		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
 		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
+		94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */; };
 		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -283,6 +286,7 @@
 		16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A9C722A0BF6E3B21D6BF84F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2StreakView.swift; sourceTree = "<group>"; };
+		DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Coins.swift; sourceTree = "<group>"; };
 		1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTabBar.swift; sourceTree = "<group>"; };
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
 		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -403,6 +407,8 @@
 		9DC70B55611A6E75742F4DE4 /* diewithoutregretsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = diewithoutregretsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F60718293A4B5C /* QuizKit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizKit.swift; sourceTree = "<group>"; };
 		A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV3NewSteps.swift; sourceTree = "<group>"; };
+		B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV4Steps.swift; sourceTree = "<group>"; };
+		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
 		A5FD537ABAF4DD66948B15BA /* SGButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGButton.swift; sourceTree = "<group>"; };
 		AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFirstCardsOnboardingView.swift; sourceTree = "<group>"; };
 		AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingChecklistCard.swift; sourceTree = "<group>"; };
@@ -684,6 +690,7 @@
 				022EF66829006A39DC358F1E /* QuizV2View.swift */,
 				882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */,
 				C992836E11460BAE0C22D50D /* QuizV2Kit.swift */,
+				DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */,
 				1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */,
 			);
 			path = Views;
@@ -800,6 +807,7 @@
 				53D5949165897B100D1AC547 /* OnboardingScaffold.swift */,
 				C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */,
 				A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */,
+				B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -909,6 +917,7 @@
 			children = (
 				604F8471C8AD7073A02BBC17 /* StudyGuardReportExtension.swift */,
 				83D656411657069E8D8F29D0 /* TopOffendersReport.swift */,
+				D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */,
 				00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */,
 				34213E2D25DEC71A93D9DC64 /* Info.plist */,
 				F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */,
@@ -1502,6 +1511,7 @@
 				2003E5977EFC831618E3A7AB /* OnboardingScaffold.swift in Sources */,
 				3B436635FCCF31AD6A1B78AE /* OnboardingV2Components.swift in Sources */,
 				A3C0FFEE0000000000073001 /* OnboardingV3NewSteps.swift in Sources */,
+				B4A11C0DE5F60718293A4B5D /* OnboardingV4Steps.swift in Sources */,
 				D72EAFC35626EC02FB376DB5 /* MonsterActivityManager.swift in Sources */,
 				292F9A5AE5A67AB71C23AA2F /* MonsterLiveActivityAttributes.swift in Sources */,
 				C969C4F71D1D0713AA96E4CB /* SGButton.swift in Sources */,
@@ -1509,6 +1519,7 @@
 				C1248A8B9ED0E7C07E282473 /* QuizV2View.swift in Sources */,
 				B3EA81FB0B915028AA57994E /* MeadowHomeV2.swift in Sources */,
 				B52574801368481E26769917 /* QuizV2Kit.swift in Sources */,
+				94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */,
 				FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1537,6 +1548,7 @@
 			files = (
 				EF8960C3CA4E55F57833C516 /* StudyGuardReportExtension.swift in Sources */,
 				96A30E277F629CFFF9C6DCC4 /* TopOffendersReport.swift in Sources */,
+				D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

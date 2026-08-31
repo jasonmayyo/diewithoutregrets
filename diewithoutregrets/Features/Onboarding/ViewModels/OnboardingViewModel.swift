@@ -2,59 +2,66 @@
 //  OnboardingViewModel.swift
 //  diewithoutregrets
 //
-//  Onboarding v3 ("sg_v3") — the Semester Comeback flow:
-//  Pain (hook, 11pm feeling, villain, willpower lie, mascot, 5-question
-//  quiz) → Semester receipt (auto-choreographed, every number scaled to the
-//  student's 15-week semester) → Offer (Hormozi-framed: mechanism, effort
-//  killer, proof, named-offer paywall) → Post-purchase setup.
+//  Onboarding v4 ("sg_v4") — the Ace the Semester flow (Rocapine
+//  problem-first): Pain (hook, 11pm feeling, willpower lie, quiz with a
+//  mid-quiz testimonial and the reality-check Screen Time ask) → Diagnosis
+//  (exam verdict scaled to THEIR exam date, the imagine turn) → Solution
+//  shown, not told (live flashcard demo, social proof) → Commitment (the
+//  unlock rule) → Personalized plan reveal → paywall → post-purchase setup.
 //
 //  Every screen advances through nextStep(); quiz questions auto-advance on
-//  selection. All funnel analytics carry flow_version "sg_v3".
+//  selection. All funnel analytics carry flow_version "sg_v4".
 //
 
 import SwiftUI
 import CoreHaptics
+import FamilyControls
 import PostHog
 
 enum OnboardingStep: CaseIterable {
     // Phase 1 — The pain
     case hook
     case theFeeling
-    case notYourFault
     case willpowerLie
     case meetYourGuard
+    case quizName
     case quizAge
     case quizStudentType
     case quizScreenTime
     case quizScrollTimes
+    case quizSymptoms
+    case quizTestimonial
     case quizExamDate
-    // Phase 2 — The semester receipt
+    case quizPreparedness
+    case realityCheck
+    // Phase 2 — The diagnosis
     case calculating
-    case semesterDrain
-    case daysLost
+    case examVerdict
     case theImagine
-    // Phase 3 — The offer
-    case science
-    case coreMechanic
-    case noWillpower
-    case moreFeatures
+    // Phase 3 — The solution, shown
+    case tryIt
     case reviews
+    // Phase 4 — Commitment + plan
+    case commitment
+    case planBuilding
+    case planReveal
     case paywall
-    // Phase 4 — Post-purchase setup
+    // Phase 5 — Post-purchase setup
     case screenTimeExplainer
     case screenTimePermission
     case guardedApps
     case usageInterval
     case notificationPrimer
-    case unlockMethod
     case createFirstCards
     case completion
 
     /// Quiz steps share the floating clipboard mascot + progress capsule.
+    /// The testimonial and reality check are mid-quiz moments, not
+    /// questions — no interviewer, no back nav.
     var isQuizStep: Bool {
         switch self {
-        case .quizAge, .quizStudentType, .quizScreenTime, .quizScrollTimes,
-             .quizExamDate:
+        case .quizName, .quizAge, .quizStudentType, .quizScreenTime,
+             .quizScrollTimes, .quizSymptoms, .quizExamDate, .quizPreparedness:
             return true
         default:
             return false
@@ -62,14 +69,15 @@ enum OnboardingStep: CaseIterable {
     }
 
     /// Night-sky steps: night falls during .theFeeling (11pm) and holds
-    /// through the semester receipt. The dawn breaks on .theImagine (the
-    /// turn) and stays daylight after.
+    /// through the diagnosis. The dawn breaks on .theImagine (the turn)
+    /// and stays daylight after.
     var isNight: Bool {
         switch self {
-        case .theFeeling, .notYourFault, .willpowerLie, .meetYourGuard,
-             .quizAge, .quizStudentType, .quizScreenTime, .quizScrollTimes,
-             .quizExamDate,
-             .calculating, .semesterDrain, .daysLost:
+        case .theFeeling, .willpowerLie, .meetYourGuard,
+             .quizName, .quizAge, .quizStudentType, .quizScreenTime,
+             .quizScrollTimes, .quizSymptoms, .quizTestimonial,
+             .quizExamDate, .quizPreparedness, .realityCheck,
+             .calculating, .examVerdict:
             return true
         default:
             return false
@@ -82,11 +90,14 @@ enum OnboardingStep: CaseIterable {
     /// stay source-stable until the Phase 5 sweep.
     var quizProgress: Double {
         switch self {
-        case .quizAge: return 0.08
-        case .quizStudentType: return 0.14
-        case .quizScreenTime: return 0.20
-        case .quizScrollTimes: return 0.26
-        case .quizExamDate: return 0.32
+        case .quizName: return 0.06
+        case .quizAge: return 0.12
+        case .quizStudentType: return 0.18
+        case .quizScreenTime: return 0.24
+        case .quizScrollTimes: return 0.30
+        case .quizSymptoms: return 0.36
+        case .quizExamDate: return 0.42
+        case .quizPreparedness: return 0.48
         default: return 0
         }
     }
@@ -114,11 +125,22 @@ class OnboardingViewModel: ObservableObject {
     }
 
     // Quiz answers — every one is a personalization input.
+    @Published var firstName: String = ""
     @Published var selectedAge: String = ""
     @Published var studentType: String = ""
     @Published var screenTime: String = ""
     @Published var peakScrollTime: String = ""
-    @Published var examTiming: String = ""
+    @Published var symptoms: Set<String> = []
+    /// Exact exam date. Nil = "No exams, just deadlines" (or unanswered):
+    /// the diagnosis falls back to an 8-week "deadline season".
+    @Published var examDate: Date?
+    @Published var hasExams = true
+    @Published var preparedness: String = ""
+    /// The unlock rule chosen on the commitment screen (cards per unlock).
+    @Published var commitCardCount: Int = 10
+    /// Whether the reality-check screen got Screen Time authorization —
+    /// the verdict shows the real-usage report row only when true.
+    @Published var authorizedInQuiz = false
 
     @Published var newDeckName: String = "My First Deck"
 
@@ -132,7 +154,36 @@ class OnboardingViewModel: ObservableObject {
         prepareHaptics()
         // Fire for the initial step (didSet doesn't run during init).
         trackStepViewed()
+        #if DEBUG
+        applyPreviewStepArgIfRequested()
+        #endif
     }
+
+    #if DEBUG
+    /// Screenshot harness: `-sg-onb-<step>` (e.g. -sg-onb-examVerdict,
+    /// -sg-onb-planReveal) jumps straight to that step with the quiz
+    /// answers seeded, so every personalized screen renders with real
+    /// numbers. Same idiom as the -sg-preview-quizv2 drivers.
+    private func applyPreviewStepArgIfRequested() {
+        let args = ProcessInfo.processInfo.arguments
+        guard let arg = args.first(where: { $0.hasPrefix("-sg-onb-") }) else { return }
+
+        firstName = "Jason"
+        selectedAge = "18–22"
+        studentType = "College"
+        screenTime = "6–8 hours"
+        peakScrollTime = "Late at night"
+        symptoms = ["I cram at 2am the night before", "I can't focus for 10 minutes"]
+        examDate = Calendar.current.date(byAdding: .day, value: 47, to: Date())
+        hasExams = true
+        preparedness = "A bit behind"
+
+        let name = String(arg.dropFirst("-sg-onb-".count))
+        if let step = OnboardingStep.allCases.first(where: { "\($0)" == name }) {
+            currentStep = step
+        }
+    }
+    #endif
 
     // MARK: - Personalized math (semester scale)
 
@@ -188,16 +239,57 @@ class OnboardingViewModel: ObservableObject {
         max(1, Int((Double(halfStudyHours) / 40).rounded()))
     }
 
-    /// Weeks until the next big exam, from the quizExamDate answer.
-    /// Nil = "No exams — just deadlines" (or unanswered): use the
-    /// per-week fallback copy instead of a countdown.
+    /// Calendar days until the picked exam date (min 1). Nil when the user
+    /// has no exam date ("just deadlines" or unanswered).
+    var daysToExam: Int? {
+        guard hasExams, let examDate else { return nil }
+        let days = Calendar.current.dateComponents(
+            [.day],
+            from: Calendar.current.startOfDay(for: Date()),
+            to: Calendar.current.startOfDay(for: examDate)
+        ).day ?? 0
+        return max(1, days)
+    }
+
+    /// The diagnosis window: their real countdown, or an 8-week "deadline
+    /// season" for the no-exams path.
+    var effectiveDaysToExam: Int { daysToExam ?? 56 }
+
+    /// Weeks until the next big exam — powers the paywall's honest-urgency
+    /// countdown. Nil = no exam date: use the per-week fallback copy.
     var weeksToExam: Int? {
-        switch examTiming {
-        case "Within a month": return 4
-        case "1–2 months away": return 6
-        case "3+ months away": return 12
-        default: return nil
-        }
+        daysToExam.map { max(1, Int((Double($0) / 7).rounded())) }
+    }
+
+    // Exam-scale receipt (the verdict + imagine screens): same math as the
+    // semester numbers, but over THEIR countdown window.
+
+    /// Full 24-hour days of the countdown spent on the phone.
+    var phoneDaysToExam: Int {
+        let raw = dailyHours * Double(effectiveDaysToExam) / 24.0
+        return min(max(1, Int(raw.rounded())), effectiveDaysToExam)
+    }
+
+    var phonePctOfCountdown: Int {
+        Int((Double(phoneDaysToExam) / Double(effectiveDaysToExam) * 100).rounded())
+    }
+
+    /// "Imagine if just half went to studying" — over the countdown.
+    var reclaimDaysToExam: Int {
+        max(1, Int((Double(phoneDaysToExam) / 2).rounded()))
+    }
+
+    /// Study hours gained before the exam if half the phone time flips.
+    var studyHoursToExam: Int {
+        Int((dailyHours / 2 * Double(effectiveDaysToExam)).rounded())
+    }
+
+    /// The exam date the way screens speak it ("Nov 4").
+    var examDateLabel: String? {
+        guard hasExams, let examDate else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter.string(from: examDate)
     }
 
     /// Scrolling hours between now and the exam (7h/day, 6 weeks → 294).
@@ -248,7 +340,7 @@ class OnboardingViewModel: ObservableObject {
         var props: [String: Any] = [
             "action": action,
             "step_name": "\(currentStep)",
-            "flow_version": "sg_v3",
+            "flow_version": "sg_v4",
         ]
         props.merge(properties) { current, _ in current }
         Analytics.capture("onboarding_screen_action", properties: props)
@@ -270,15 +362,23 @@ class OnboardingViewModel: ObservableObject {
         // captured, then the generic duration event.
         trackStepCompleted()
 
-        // Persist quiz answers + person properties the moment the unlock
-        // method is chosen (last configuration step before first cards).
-        if currentStep == .unlockMethod {
+        // Persist quiz answers + person properties at the plan reveal —
+        // the last screen before the paywall, when every answer is final.
+        if currentStep == .planReveal {
             saveUserData()
         }
 
         let all = OnboardingStep.allCases
         guard let index = all.firstIndex(of: currentStep), index + 1 < all.count else { return }
-        currentStep = all[index + 1]
+        var next = all[index + 1]
+
+        // Screen Time was usually authorized at the reality check; when it
+        // was, the post-purchase explainer + permission pair is redundant.
+        if next == .screenTimeExplainer,
+           AuthorizationCenter.shared.authorizationStatus == .approved {
+            next = .guardedApps
+        }
+        currentStep = next
     }
 
     /// Quiz answers auto-advance shortly after the tap (no continue button).
@@ -317,6 +417,10 @@ class OnboardingViewModel: ObservableObject {
         let durationSec = timeOnStep(currentStep)
 
         switch currentStep {
+        case .quizName:
+            Analytics.capture("onboarding_name_entered", properties: [
+                "provided": !firstName.isEmpty
+            ])
         case .quizAge:
             if !selectedAge.isEmpty {
                 Analytics.onboardingAgeSelected(selectedAge)
@@ -337,16 +441,30 @@ class OnboardingViewModel: ObservableObject {
                     "peak_scroll_time": peakScrollTime
                 ])
             }
-        case .quizExamDate:
-            if !examTiming.isEmpty {
-                Analytics.capture("onboarding_exam_timing_selected", properties: [
-                    "exam_timing": examTiming,
-                    "weeks_to_exam": weeksToExam as Any,
+        case .quizSymptoms:
+            if !symptoms.isEmpty {
+                Analytics.capture("onboarding_symptoms_selected", properties: [
+                    "symptoms": symptoms.sorted().joined(separator: ", "),
+                    "symptom_count": symptoms.count,
                 ])
             }
-        case .unlockMethod:
-            let method = UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards"
-            Analytics.onboardingUnlockMethodSelected(method)
+        case .quizExamDate:
+            Analytics.capture("onboarding_exam_date_selected", properties: [
+                "has_exams": hasExams,
+                "days_to_exam": daysToExam as Any,
+                "weeks_to_exam": weeksToExam as Any,
+            ])
+        case .quizPreparedness:
+            if !preparedness.isEmpty {
+                Analytics.capture("onboarding_preparedness_selected", properties: [
+                    "preparedness": preparedness
+                ])
+            }
+        case .commitment:
+            Analytics.capture("onboarding_commitment_selected", properties: [
+                "card_count": commitCardCount,
+            ])
+        // .realityCheck fires screen_time_auth_result itself;
         // .screenTimePermission, .guardedApps and .usageInterval fire their
         // own richer events from their views (screen_time_auth_result,
         // guarded_apps_selected, screen_time_setup_completed), and
@@ -359,7 +477,7 @@ class OnboardingViewModel: ObservableObject {
         var props: [String: Any] = [
             "step_name": stepName,
             "step_index": currentStepIndex,
-            "flow_version": "sg_v3",
+            "flow_version": "sg_v4",
         ]
         if let durationSec = durationSec {
             props["duration_sec"] = durationSec
@@ -371,9 +489,11 @@ class OnboardingViewModel: ObservableObject {
     /// lands straight in setup (Screen Time has to be configured per device).
     func skipToSetupAfterRestore() {
         Analytics.capture("onboarding_restored_subscriber", properties: [
-            "flow_version": "sg_v3"
+            "flow_version": "sg_v4"
         ])
-        currentStep = .screenTimeExplainer
+        currentStep = AuthorizationCenter.shared.authorizationStatus == .approved
+            ? .guardedApps
+            : .screenTimeExplainer
     }
 
     // MARK: - Haptics
@@ -421,24 +541,31 @@ class OnboardingViewModel: ObservableObject {
     // MARK: - Persistence
 
     private func saveUserData() {
+        UserDefaults.standard.set(firstName, forKey: "firstName")
         UserDefaults.standard.set(selectedAge, forKey: "selectedAge")
         UserDefaults.standard.set(screenTime, forKey: "screenTime")
         UserDefaults.standard.set(studentType, forKey: "studentType")
         UserDefaults.standard.set(peakScrollTime, forKey: "peakScrollTime")
-        UserDefaults.standard.set(examTiming, forKey: "examTiming")
+        UserDefaults.standard.set(Array(symptoms), forKey: "symptoms")
+        UserDefaults.standard.set(preparedness, forKey: "preparedness")
+        if let examDate {
+            UserDefaults.standard.set(examDate.timeIntervalSince1970, forKey: "examDate")
+        }
         UserDefaults.standard.set(true, forKey: "hasSeenPaywall")
 
         // Push the quiz answers as person properties so every future event
         // auto-segments by them in PostHog (no joins needed).
         var personProps: [String: Any] = [
-            "unlock_method": UserDefaults.standard.string(forKey: "unlockMethod") ?? "flashcards",
-            "onboarding_flow_version": "sg_v3",
+            "onboarding_flow_version": "sg_v4",
+            "flashcard_count": commitCardCount,
         ]
+        if !firstName.isEmpty { personProps["first_name"] = firstName }
         if !selectedAge.isEmpty { personProps["age_range"] = selectedAge }
         if !screenTime.isEmpty { personProps["screen_time"] = screenTime }
         if !studentType.isEmpty { personProps["student_type"] = studentType }
         if !peakScrollTime.isEmpty { personProps["peak_scroll_time"] = peakScrollTime }
-        if !examTiming.isEmpty { personProps["exam_timing"] = examTiming }
+        if !preparedness.isEmpty { personProps["preparedness"] = preparedness }
+        if let daysToExam { personProps["days_to_exam"] = daysToExam }
         Analytics.setPersonProperties(personProps)
     }
 }

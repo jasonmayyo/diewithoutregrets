@@ -2,14 +2,16 @@
 //  BreakdownView.swift
 //  diewithoutregrets
 //
-//  Onboarding v3, Phase 2 — the semester receipt: auto-choreographed
-//  screens personalized from the quiz answers, every number scaled to the
-//  student's 15-week semester. Calculating theater, the 105-day semester
-//  drain, the typographic hammer, then the turn: half the drained days heal
-//  to study days as dawn breaks into the Meadow.
+//  Onboarding v4, Phase 2 — the diagnosis: auto-choreographed screens
+//  personalized from the quiz answers, every number scaled to THEIR exam
+//  countdown. Calculating theater, the exam verdict (the dependency-score
+//  peak, with the real-usage report row when Screen Time was authorized at
+//  the reality check), then the turn: half the drained days heal to study
+//  days as dawn breaks into the Meadow.
 //
 
 import SwiftUI
+import DeviceActivity
 
 // MARK: - Shared choreography helpers
 
@@ -37,53 +39,44 @@ private extension AnyTransition {
     }
 }
 
-// MARK: - Semester grid data (shared by SemesterDrainView and TheImagineView)
+// MARK: - Countdown grid data (shared by ExamVerdictView and TheImagineView)
 
-private enum SemesterGrid {
-    struct ObligationGroup {
-        let count: Int
-        let color: Color
-        let caption: String
+/// One square per day until the exam. Long countdowns cap the grid at 105
+/// squares (15 rows) and scale the drained share proportionally so the
+/// visual ratio stays honest.
+enum CountdownGrid {
+    static let maxDots = 105
+
+    static func dayCount(_ vm: OnboardingViewModel) -> Int {
+        min(vm.effectiveDaysToExam, maxDots)
     }
 
-    static let groups: [ObligationGroup] = [
-        .init(count: OnboardingViewModel.sleepDays,
-              color: LifeDotsGrid.Palette.sleep,
-              caption: "\(OnboardingViewModel.sleepDays) days asleep"),
-        .init(count: OnboardingViewModel.classDays,
-              color: LifeDotsGrid.Palette.school,
-              caption: "\(OnboardingViewModel.classDays) days in class"),
-        .init(count: OnboardingViewModel.choresDays,
-              color: LifeDotsGrid.Palette.eating,
-              caption: "\(OnboardingViewModel.choresDays) days eating, commuting, chores"),
-    ]
-
-    /// 68 obligation dots; the remaining 37 are actually theirs.
-    static let obligationCount = groups.reduce(0) { $0 + $1.count }
-
-    /// The grid exactly as SemesterDrainView leaves it: obligations filled,
-    /// free days mint, the last `phoneDays` free dots drained ember.
-    static func drainedColors(phoneDays: Int) -> [Color] {
-        var colors: [Color] = []
-        for group in groups {
-            colors.append(contentsOf: Array(repeating: group.color, count: group.count))
-        }
-        let free = OnboardingViewModel.freeDays
-        let drained = min(phoneDays, free)
-        colors.append(contentsOf: Array(repeating: LifeDotsGrid.Palette.free, count: free - drained))
-        colors.append(contentsOf: Array(repeating: LifeDotsGrid.Palette.phone, count: drained))
-        return colors
+    /// The phone's share of the (possibly capped) grid, at least 1 dot.
+    static func drainedCount(_ vm: OnboardingViewModel) -> Int {
+        let dots = dayCount(vm)
+        let scaled = Double(vm.phoneDaysToExam) * Double(dots) / Double(vm.effectiveDaysToExam)
+        return min(max(1, Int(scaled.rounded())), dots)
     }
 
-    /// Grid width that fits the vertical budget (15 week-rows at 7pt
-    /// spacing are ~2.2× taller than wide) without blowing past the screen.
-    static func width(in size: CGSize, reservedHeight: CGFloat) -> CGFloat {
+    /// The grid exactly as ExamVerdictView leaves it: countdown mint, the
+    /// last `drained` dots ember.
+    static func drainedColors(_ vm: OnboardingViewModel) -> [Color] {
+        let dots = dayCount(vm)
+        let drained = drainedCount(vm)
+        return Array(repeating: LifeDotsGrid.Palette.free, count: dots - drained)
+            + Array(repeating: LifeDotsGrid.Palette.phone, count: drained)
+    }
+
+    /// Grid width that fits the vertical budget for however many week-rows
+    /// this countdown needs, without blowing past the screen.
+    static func width(_ vm: OnboardingViewModel, in size: CGSize, reservedHeight: CGFloat) -> CGFloat {
+        let rows = max(1, Int((Double(dayCount(vm)) / 7.0).rounded(.up)))
         let budget = max(170, size.height - reservedHeight)
-        return min(size.width - 56, 330, budget / 2.2)
+        return min(size.width - 56, 330, budget * 7 / CGFloat(rows))
     }
 }
 
-// MARK: - 11. Calculating (night, fully automatic, no CTA)
+// MARK: - Calculating (night, fully automatic, no CTA)
 
 struct CalculatingView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
@@ -95,12 +88,18 @@ struct CalculatingView: View {
     @State private var pulsing = false
     @State private var statusIndex = 0
 
-    private let statuses = [
-        "Reading your answers...",
-        "Mapping your semester...",
-        "Counting the days your phone takes...",
-        "Preparing your reality check...",
-    ]
+    /// Rocapine rule: the loader must visibly use the answers given.
+    private var statuses: [String] {
+        [
+            "Reading your answers...",
+            viewModel.examDateLabel.map { "Counting the days to \($0)..." }
+                ?? "Mapping your deadline season...",
+            viewModel.authorizedInQuiz
+                ? "Reading your real screen time..."
+                : "Measuring what your phone takes...",
+            "Preparing your verdict...",
+        ]
+    }
 
     var body: some View {
         ZStack {
@@ -175,65 +174,83 @@ struct CalculatingView: View {
     }
 }
 
-// MARK: - 12. Semester drain (night, auto ~28s, unhurried)
+// MARK: - Exam verdict (night, the dependency-score peak)
 
-private enum DrainPhase: Int, Comparable {
-    case filling, free, drainIntro, drainCount, drainPercent
+private enum VerdictPhase: Int, Comparable {
+    case filling, counted, drainIntro, drainCount, drainKicker
 
-    static func < (lhs: DrainPhase, rhs: DrainPhase) -> Bool {
+    static func < (lhs: VerdictPhase, rhs: VerdictPhase) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
 }
 
-/// "Your semester in days" — 105 squares, one per day, a week per row.
-/// Obligations fill, the free 37 pop mint, then the phone drains its share
-/// ember from the bottom-right. Deliberately unhurried: every caption gets
-/// long enough on screen to actually be read, and each dot crossfades in
-/// softly instead of snapping.
-struct SemesterDrainView: View {
+/// The diagnosis: one square per day until THEIR exam, then the phone eats
+/// its share, ember, from the bottom. When Screen Time was authorized at
+/// the reality check, a report row renders their REAL average underneath —
+/// computed inside the report sandbox, never readable by the app.
+struct ExamVerdictView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
 
     @State private var started = false
     @State private var shown = false
-    @State private var colors = Array(repeating: LifeDotsGrid.Palette.empty,
-                                      count: OnboardingViewModel.semesterDays)
-    @State private var phase: DrainPhase = .filling
-    @State private var obligationCaption = ""
+    @State private var colors: [Color] = []
+    @State private var phase: VerdictPhase = .filling
     @State private var showCTA = false
 
-    // Pacing knobs. The whole show reads at these speeds; slow them
-    // together, not individually.
-    private let fillPerDot = 0.06       // obligation fill
-    private let groupHold = 1.5         // pause after each caption's group
-    private let freePerDot = 0.06       // mint pop
-    private let freeHold = 3.4          // let "actually yours" land
-    private let drainPerDot = 0.16      // ember drain
-    private let captionFade = 0.55      // caption crossfade duration
+    private var headerLine: String {
+        viewModel.hasExams ? "days until your exam" : "days of deadline season"
+    }
+
+    private var kickerLine: String {
+        switch viewModel.preparedness {
+        case "Way behind", "A bit behind":
+            return "Whole days, staring at a screen. And you said you're already behind."
+        default:
+            return "Whole days, staring at a screen. \(viewModel.phonePctOfCountdown)% of your countdown. Gone."
+        }
+    }
 
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 VStack(spacing: 6) {
-                    Text("Your semester in days")
+                    Text("\(viewModel.effectiveDaysToExam) \(headerLine)")
                         .font(SGTheme.stepTitle)
                         .foregroundColor(OnbNight.textPrimary)
-                    Text("15 weeks. 105 days. Each square is one.")
+                    Text("Each square is one of them.")
                         .font(SGTheme.caption)
                         .foregroundColor(OnbNight.textMuted)
                 }
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
                 .fadeRise(shown)
                 .padding(.top, 16)
 
                 Spacer(minLength: 14)
 
-                LifeDotsGrid(colors: colors)
-                    .frame(width: SemesterGrid.width(in: geo.size, reservedHeight: 340))
+                LifeDotsGrid(colors: displayColors)
+                    .frame(width: CountdownGrid.width(viewModel, in: geo.size,
+                                                     reservedHeight: viewModel.authorizedInQuiz ? 400 : 340))
                     .fadeRise(shown, delay: 0.15)
 
                 Spacer(minLength: 14)
 
                 captionArea
-                    .frame(height: 118)
+                    .frame(height: 124)
+
+                if viewModel.authorizedInQuiz {
+                    // The real number, rendered by the report extension.
+                    // Renders nothing until iOS hands the data over (and
+                    // never in the Simulator) — the row just stays blank.
+                    DeviceActivityReport(
+                        DeviceActivityReport.Context("onboardingDiagnosis"),
+                        filter: realUsageFilter
+                    )
+                    .frame(height: 56)
+                    .padding(.horizontal, SGTheme.screenPadding)
+                    .opacity(phase >= .drainCount ? 1 : 0)
+                    .animation(.easeIn(duration: 0.6), value: phase >= .drainCount)
+                }
 
                 Spacer(minLength: 8)
 
@@ -250,44 +267,60 @@ struct SemesterDrainView: View {
         }
     }
 
+    /// The grid renders on the very first frame, before onAppear seeds it.
+    private var displayColors: [Color] {
+        colors.isEmpty
+            ? Array(repeating: LifeDotsGrid.Palette.empty, count: CountdownGrid.dayCount(viewModel))
+            : colors
+    }
+
+    /// Last 7 full days of usage, all apps: enough for a trustworthy daily
+    /// average without waiting on a long query.
+    private var realUsageFilter: DeviceActivityFilter {
+        let now = Date()
+        let start = Calendar.current.startOfDay(
+            for: Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
+        )
+        return DeviceActivityFilter(
+            segment: .daily(during: DateInterval(start: start, end: now)),
+            users: .all,
+            devices: .init([.iPhone])
+        )
+    }
+
     private var captionArea: some View {
         ZStack {
             switch phase {
-            case .filling:
-                Text(obligationCaption)
-                    .font(SGTheme.display(26))
-                    .foregroundColor(OnbNight.textPrimary)
-                    .id(obligationCaption)
-                    .transition(.onbBlurFade)
-
-            case .free:
+            case .filling, .counted:
                 VStack(spacing: 4) {
-                    Text("\(OnboardingViewModel.freeDays) days")
+                    Text("\(viewModel.effectiveDaysToExam) days")
                         .font(SGTheme.display(44, weight: .heavy))
                         .foregroundColor(SGTheme.mint)
-                    Text("left. Actually yours.")
+                    Text("That's all you've got.")
                         .font(SGTheme.cardTitle)
                         .foregroundColor(OnbNight.textSecondary)
                 }
+                .opacity(phase >= .counted ? 1 : 0)
                 .transition(.onbBlurFade)
 
-            case .drainIntro, .drainCount, .drainPercent:
+            case .drainIntro, .drainCount, .drainKicker:
                 VStack(spacing: 4) {
-                    Text("This semester, your phone will take")
+                    Text("Your phone is set to eat")
                         .font(SGTheme.cardTitle)
                         .foregroundColor(OnbNight.textPrimary)
 
                     if phase >= .drainCount {
-                        Text("\(viewModel.phoneDays) of them.")
+                        Text("\(viewModel.phoneDaysToExam) of them.")
                             .font(SGTheme.display(44, weight: .heavy))
                             .foregroundColor(SGTheme.ember)
                             .transition(.onbBlurFade)
                     }
 
-                    if phase >= .drainPercent {
-                        Text("Whole days, staring at a screen. \(viewModel.phonePctOfFree)% of your free time. Gone.")
+                    if phase >= .drainKicker {
+                        Text(kickerLine)
                             .font(SGTheme.body)
                             .foregroundColor(OnbNight.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                             .transition(.opacity)
                     }
                 }
@@ -296,188 +329,78 @@ struct SemesterDrainView: View {
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, 28)
-        .animation(.easeInOut(duration: captionFade), value: phase)
-        .animation(.easeInOut(duration: captionFade), value: obligationCaption)
+        .animation(.easeInOut(duration: 0.55), value: phase)
     }
 
     private func start() {
         guard !started else { return }
         started = true
 
-        let phoneDays = viewModel.phoneDays
-        let phonePercent = viewModel.phonePctOfFree
+        let dots = CountdownGrid.dayCount(viewModel)
+        let drained = CountdownGrid.drainedCount(viewModel)
+        colors = Array(repeating: LifeDotsGrid.Palette.empty, count: dots)
 
         if UIAccessibility.isReduceMotionEnabled {
-            viewModel.screenAction("obligations_phase_started")
-            viewModel.screenAction("free_time_revealed", properties: [
-                "free_days": OnboardingViewModel.freeDays,
-            ])
-            viewModel.screenAction("phone_drain_revealed", properties: [
-                "phone_days": phoneDays,
-                "phone_percent_of_free": phonePercent,
-            ])
-            colors = SemesterGrid.drainedColors(phoneDays: phoneDays)
-            phase = .drainPercent
+            colors = CountdownGrid.drainedColors(viewModel)
+            phase = .drainKicker
+            emitVerdictAnalytics()
             showCTA = true
             return
         }
 
-        // Phase 1: obligations fill in groups, caption swapping per group.
-        // Each caption holds long enough to read before the next arrives.
-        var t = 0.7
-        var startIndex = 0
-        after(t) { viewModel.screenAction("obligations_phase_started") }
-        for group in SemesterGrid.groups {
-            let firstDot = startIndex
-            let groupStart = t
-            after(groupStart) {
-                obligationCaption = group.caption
-                SGTheme.tick()
+        // Phase 1: the countdown fills mint, fast — these days are theirs.
+        for i in 0..<dots {
+            after(0.7 + Double(i) * 0.03) {
+                colors[i] = LifeDotsGrid.Palette.free
             }
-            for i in 0..<group.count {
-                after(groupStart + 0.35 + Double(i) * fillPerDot) {
-                    colors[firstDot + i] = group.color
-                }
-            }
-            t = groupStart + 0.35 + Double(group.count) * fillPerDot + groupHold
-            startIndex += group.count
         }
-
-        // Phase 2: the free 37 pop mint, then breathe.
-        let freeStart = t + 0.3
-        after(freeStart) {
-            viewModel.screenAction("free_time_revealed", properties: [
-                "free_days": OnboardingViewModel.freeDays,
-            ])
+        let filled = 0.7 + Double(dots) * 0.03
+        after(filled + 0.2) {
             SGTheme.gain()
-            phase = .free
-        }
-        for i in 0..<OnboardingViewModel.freeDays {
-            after(freeStart + 0.3 + Double(i) * freePerDot) {
-                colors[SemesterGrid.obligationCount + i] = LifeDotsGrid.Palette.free
-            }
+            phase = .counted
         }
 
-        // Phase 3: the phone drains their days, one dot at a time.
-        let drainStart = freeStart + 0.3 + Double(OnboardingViewModel.freeDays) * freePerDot + freeHold
+        // Phase 2: the phone eats its share, one day at a time.
+        let drainStart = filled + 2.6
         after(drainStart) {
             SGTheme.climax()
-            viewModel.screenAction("phone_drain_revealed", properties: [
-                "phone_days": phoneDays,
-                "phone_percent_of_free": phonePercent,
-            ])
             phase = .drainIntro
         }
-        for i in 0..<phoneDays {
-            after(drainStart + 0.6 + Double(i) * drainPerDot) {
-                colors[OnboardingViewModel.semesterDays - 1 - i] = LifeDotsGrid.Palette.phone
+        for i in 0..<drained {
+            after(drainStart + 0.6 + Double(i) * 0.14) {
+                colors[dots - 1 - i] = LifeDotsGrid.Palette.phone
                 if i % 4 == 0 {
                     SGTheme.tick()
                 }
             }
         }
 
-        let drainEnd = drainStart + 0.6 + Double(phoneDays) * drainPerDot
+        let drainEnd = drainStart + 0.6 + Double(drained) * 0.14
         after(drainEnd + 0.3) { phase = .drainCount }
         after(drainEnd + 1.6) {
             SGTheme.climax()
-            phase = .drainPercent
+            phase = .drainKicker
+            emitVerdictAnalytics()
         }
         after(drainEnd + 3.0) { showCTA = true }
     }
-}
 
-// MARK: - 13. Days lost (night, auto ~12s, pure typography)
-
-struct DaysLostCycleView: View {
-    @EnvironmentObject var viewModel: OnboardingViewModel
-
-    @State private var started = false
-    @State private var shown = false
-    @State private var endingIndex: Int?
-    @State private var showCTA = false
-
-    private let endings = [
-        "while the exam gets closer either way.",
-        "while your grades sit below what you're capable of.",
-        "watching other people live their lives.",
-        "and next semester, it happens again.",
-    ]
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 22) {
-                (Text("\(viewModel.phoneDays) days")
-                    .foregroundColor(SGTheme.ember)
-                    + Text(" of this semester,\nspent scrolling")
-                    .foregroundColor(OnbNight.textPrimary))
-                    .font(SGTheme.stepTitle)
-                    .fadeRise(shown)
-
-                ZStack {
-                    if let index = endingIndex {
-                        Text(endings[index])
-                            .font(SGTheme.display(22, weight: .semibold))
-                            .foregroundColor(OnbNight.textMuted)
-                            .id(index)
-                            .transition(.onbBlurFade)
-                    }
-                }
-                .frame(height: 84)
-                .animation(.easeInOut(duration: 0.9), value: endingIndex)
-            }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 32)
-
-            Spacer()
-
-            OnbCTA(title: "I want those days back", night: true, visible: showCTA) {
-                viewModel.screenAction("continue_tapped", properties: [
-                    "ending_index": endingIndex ?? 0,
-                    "phone_days_shown": viewModel.phoneDays,
-                ])
-                viewModel.nextStep()
-            }
-            .padding(.bottom, 12)
-        }
-        .onAppear {
-            shown = true
-            start()
-        }
-    }
-
-    private func start() {
-        guard !started else { return }
-        started = true
-
-        if UIAccessibility.isReduceMotionEnabled {
-            endingIndex = endings.count - 1
-            showCTA = true
-            return
-        }
-
-        for i in 0..<endings.count {
-            after(0.8 + 2.8 * Double(i)) {
-                endingIndex = i
-                if i == endings.count - 1 {
-                    SGTheme.climax()
-                } else {
-                    SGTheme.tick()
-                }
-            }
-        }
-
-        after(0.8 + 2.8 * Double(endings.count - 1) + 1.4) { showCTA = true }
+    private func emitVerdictAnalytics() {
+        viewModel.screenAction("exam_verdict_revealed", properties: [
+            "days_to_exam": viewModel.effectiveDaysToExam,
+            "phone_days": viewModel.phoneDaysToExam,
+            "phone_percent": viewModel.phonePctOfCountdown,
+            "real_usage_row": viewModel.authorizedInQuiz,
+        ])
     }
 }
 
-// MARK: - 14. The imagine (the turn: dawn breaks, half the days heal)
+// MARK: - The imagine (the turn: dawn breaks, half the days heal)
 
 /// The user's frame, verbatim: "imagine if just half of those were spent
-/// studying." The drained grid carries over and half the ember days flip
-/// mint one by one as dawn breaks; the study-hours stats land as it heals.
+/// studying." The verdict's drained grid carries over and half the ember
+/// days flip mint one by one as dawn breaks; the study-hours stats land as
+/// it heals.
 struct TheImagineView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
 
@@ -491,7 +414,11 @@ struct TheImagineView: View {
     /// The grid renders its drained state on the very first frame, before
     /// onAppear has seeded the state array.
     private var displayColors: [Color] {
-        colors.isEmpty ? SemesterGrid.drainedColors(phoneDays: viewModel.phoneDays) : colors
+        colors.isEmpty ? CountdownGrid.drainedColors(viewModel) : colors
+    }
+
+    private var finalsPrepEquiv: Int {
+        max(1, Int((Double(viewModel.studyHoursToExam) / 40).rounded()))
     }
 
     var body: some View {
@@ -515,7 +442,7 @@ struct TheImagineView: View {
                 Spacer(minLength: 16)
 
                 LifeDotsGrid(colors: displayColors, glowing: glowing)
-                    .frame(width: SemesterGrid.width(in: geo.size, reservedHeight: 420))
+                    .frame(width: CountdownGrid.width(viewModel, in: geo.size, reservedHeight: 420))
                     .fadeRise(shown, delay: 0.15)
 
                 Spacer(minLength: 16)
@@ -540,12 +467,13 @@ struct TheImagineView: View {
 
     private var statsArea: some View {
         VStack(spacing: 8) {
-            Text("+\(viewModel.halfStudyHours) hours of studying this semester.")
+            Text(viewModel.examDateLabel.map { "+\(viewModel.studyHoursToExam) hours of studying before \($0)." }
+                ?? "+\(viewModel.studyHoursToExam) hours of studying reclaimed.")
                 .font(SGTheme.display(22, weight: .heavy))
                 .foregroundColor(SGTheme.mintDeep)
                 .fadeRise(statBeats >= 1)
 
-            Text("That's more prep than \(viewModel.finalsPrepEquiv) finals need. Without giving up your phone.")
+            Text("That's more prep than \(finalsPrepEquiv) finals need. Without giving up your phone.")
                 .font(SGTheme.body)
                 .foregroundColor(SGTheme.paperSecondary)
                 .fadeRise(statBeats >= 2)
@@ -564,33 +492,34 @@ struct TheImagineView: View {
         guard !started else { return }
         started = true
 
-        let phoneDays = viewModel.phoneDays
-        let reclaimDays = min(viewModel.reclaimDays, phoneDays)
-        let firstDrained = OnboardingViewModel.semesterDays - phoneDays
-        colors = SemesterGrid.drainedColors(phoneDays: phoneDays)
+        let dots = CountdownGrid.dayCount(viewModel)
+        let drained = CountdownGrid.drainedCount(viewModel)
+        let reclaim = max(1, drained / 2)
+        let firstDrained = dots - drained
+        colors = CountdownGrid.drainedColors(viewModel)
 
         if UIAccessibility.isReduceMotionEnabled {
-            for i in 0..<reclaimDays {
+            for i in 0..<reclaim {
                 colors[firstDrained + i] = LifeDotsGrid.Palette.free
                 glowing.insert(firstDrained + i)
             }
             statBeats = 3
             viewModel.screenAction("imagine_animation_complete", properties: [
-                "days_reclaimed": reclaimDays,
-                "half_study_hours": viewModel.halfStudyHours,
+                "days_reclaimed": viewModel.reclaimDaysToExam,
+                "study_hours_to_exam": viewModel.studyHoursToExam,
             ])
             showCTA = true
             return
         }
 
         // Half the ember days flip back one by one, glowing mint.
-        for i in 0..<reclaimDays {
+        for i in 0..<reclaim {
             after(1.4 + Double(i) * 0.14) {
                 let index = firstDrained + i
                 colors[index] = LifeDotsGrid.Palette.free
                 glowing.insert(index)
 
-                if i == 0 || i == reclaimDays - 1 {
+                if i == 0 || i == reclaim - 1 {
                     SGTheme.climax()
                 } else if i % 3 == 0 {
                     SGTheme.beat()
@@ -599,13 +528,13 @@ struct TheImagineView: View {
         }
 
         // The stats land as the heal settles.
-        let healEnd = 1.4 + Double(reclaimDays) * 0.14
+        let healEnd = 1.4 + Double(reclaim) * 0.14
         after(healEnd + 0.3) {
             SGTheme.successHaptic()
             statBeats = 1
             viewModel.screenAction("imagine_animation_complete", properties: [
-                "days_reclaimed": reclaimDays,
-                "half_study_hours": viewModel.halfStudyHours,
+                "days_reclaimed": viewModel.reclaimDaysToExam,
+                "study_hours_to_exam": viewModel.studyHoursToExam,
             ])
         }
         after(healEnd + 1.2) { statBeats = 2 }
@@ -624,18 +553,10 @@ struct TheImagineView: View {
     .environmentObject(OnboardingViewModel())
 }
 
-#Preview("Semester drain") {
+#Preview("Exam verdict") {
     ZStack {
         NightSkyBackdrop()
-        SemesterDrainView()
-    }
-    .environmentObject(OnboardingViewModel())
-}
-
-#Preview("Days lost") {
-    ZStack {
-        NightSkyBackdrop()
-        DaysLostCycleView()
+        ExamVerdictView()
     }
     .environmentObject(OnboardingViewModel())
 }

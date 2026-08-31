@@ -188,40 +188,95 @@ struct WillpowerLieView: View {
 
 // MARK: - quizExamDate
 
-/// Quiz question 5 (night): when's the next big exam? Feeds weeksToExam,
-/// which powers the paywall's honest-urgency countdown.
+/// Quiz question 7 (night): the exact exam date. The whole diagnosis and
+/// plan scale to this countdown; quick-pick chips pre-fill the calendar,
+/// and the no-exams path falls back to an 8-week deadline season.
 struct QuizExamDateView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
 
-    // Titles must match OnboardingViewModel.weeksToExam's switch exactly.
-    private let options = [
-        "Within a month",
-        "1–2 months away",
-        "3+ months away",
-        "No exams, just deadlines",
+    private let quickPicks: [(label: String, days: Int)] = [
+        ("2 weeks", 14),
+        ("1 month", 30),
+        ("2 months", 60),
     ]
 
-    @State private var answered = false
+    @State private var pickedDate = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
 
     var body: some View {
-        QuizScreenContainer(
-            number: 5,
-            question: "When's your next big exam?",
-            subtitle: "We'll build your comeback around it.",
-            progress: OnboardingStep.quizExamDate.quizProgress
-        ) {
-            ForEach(options, id: \.self) { option in
-                QuizOptionRow(
-                    title: option,
-                    selected: viewModel.examTiming == option
-                ) {
-                    guard !answered else { return }
-                    answered = true
-                    viewModel.selectQuizAnswer {
-                        viewModel.examTiming = option
+        VStack(spacing: 0) {
+            // Space for the container-level floating clipboard mascot.
+            Color.clear.frame(height: 120)
+
+            VStack(spacing: 8) {
+                (Text("7.  ").foregroundColor(OnbNight.textMuted)
+                    + Text("When's your next big exam?").foregroundColor(OnbNight.textPrimary))
+                    .font(SGTheme.display(22, weight: .semibold))
+                    .multilineTextAlignment(.center)
+
+                Text("Your whole plan counts down to this day.")
+                    .font(SGTheme.body)
+                    .foregroundColor(OnbNight.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 10)
+
+            HStack(spacing: 8) {
+                ForEach(quickPicks, id: \.days) { pick in
+                    Button {
+                        SGTheme.tapHaptic()
+                        withAnimation(SGTheme.springFast) {
+                            pickedDate = Calendar.current.date(byAdding: .day, value: pick.days, to: Date()) ?? Date()
+                        }
+                    } label: {
+                        Text(pick.label)
+                            .font(SGTheme.caption.weight(.bold))
+                            .foregroundColor(OnbNight.textPrimary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(OnbNight.chipFill))
+                            .overlay(Capsule().strokeBorder(OnbNight.cardBorder, lineWidth: 1))
                     }
+                    .buttonStyle(SGPressStyle())
                 }
             }
+            .padding(.bottom, 6)
+
+            DatePicker(
+                "Exam date",
+                selection: $pickedDate,
+                in: Date()...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .colorScheme(.dark)
+            .tint(.white)
+            .padding(.horizontal, SGTheme.screenPadding)
+            .frame(maxHeight: 340)
+
+            Spacer(minLength: 0)
+
+            OnbCTA(title: "That's the date", night: true) {
+                viewModel.hasExams = true
+                viewModel.examDate = pickedDate
+                viewModel.nextStep()
+            }
+
+            // Night text button: SGButton's .text variant is dark-on-light
+            // and vanishes against the night sky.
+            Button {
+                viewModel.hasExams = false
+                viewModel.examDate = nil
+                viewModel.nextStep()
+            } label: {
+                Text("No exams, just deadlines")
+                    .font(SGTheme.rowLabel)
+                    .foregroundColor(.white.opacity(0.75))
+                    .frame(maxWidth: .infinity, minHeight: 34)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(SGPressStyle())
+            .padding(.bottom, 4)
         }
     }
 }

@@ -23,7 +23,7 @@ struct UsageIntervalSheet: View {
             VStack(alignment: .leading, spacing: 20) {
                 SGSheetHeader(
                     title: "Usage interval",
-                    subtitle: "How long you can use your apps before they lock. Studying always earns exactly this much time.",
+                    subtitle: "Your daily starter budget, and what True Focus and emergency unlocks grant. Flashcards earn time per card answered.",
                     onClose: isSetupMode ? nil : { dismiss() }
                 )
 
