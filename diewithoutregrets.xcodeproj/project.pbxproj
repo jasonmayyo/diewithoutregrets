@@ -21,7 +21,6 @@
 		21B7A1AEAA11D5996BB2EABD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		2283B074EF76118C4E2220C6 /* GuardedAppsPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */; };
 		24943C499C1B8FB819A9CE6D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F8241C66EC48E6AE393BE1 /* ProfileView.swift */; };
-		C0FFEE01C4EA7012340000A1 /* CreatorToolkitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */; };
 		292F9A5AE5A67AB71C23AA2F /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B044EECE4F6DE81C3E96A69 /* MonsterLiveActivityAttributes.swift */; };
 		2A110DB0804D43159A59B406 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 021B87114F8544B1BA4FCA50 /* Sentry */; };
 		2C2D3FF5E22EEC66D52974BA /* MonsterWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */; };
@@ -136,18 +135,18 @@
 		8E450DB369B374DE26BC9079 /* CountdownReadout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */; };
 		8E9AF29971E1001F20D923FF /* MonsterWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		90170B5B6CBB15E3B292299F /* StudyGuardShieldActionExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 522EC8F7112FFAF62F3DC02F /* StudyGuardShieldActionExtension.swift */; };
+		94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */; };
 		96A30E277F629CFFF9C6DCC4 /* TopOffendersReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D656411657069E8D8F29D0 /* TopOffendersReport.swift */; };
 		9F252FAD43EC4CBBDA287374 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		A1B2C3D4E5F60718293A4B5D /* QuizKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* QuizKit.swift */; };
 		A3C0FFEE0000000000073001 /* OnboardingV3NewSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */; };
-		B4A11C0DE5F60718293A4B5D /* OnboardingV4Steps.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */; };
-		D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */; };
 		A9A60040A3FFDF926B0EE179 /* MigrationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA21584A731ED7770616A869 /* MigrationCard.swift */; };
 		AA00010100000000CARD0002 /* CreateFirstCardsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */; };
 		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
 		AF7ACEE45B2570316DBC954A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		B21F0755744881EE4A04479B /* SGTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */; };
 		B3EA81FB0B915028AA57994E /* MeadowHomeV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */; };
+		B4A11C0DE5F60718293A4B5D /* OnboardingV4Steps.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */; };
 		B52574801368481E26769917 /* QuizV2Kit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C992836E11460BAE0C22D50D /* QuizV2Kit.swift */; };
 		B64F0B5E2FA9B91AD295E779 /* StudyGuardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */; };
 		B9D9030B97C69157B57DAE35 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
@@ -159,6 +158,7 @@
 		C0A100062F61000100000006 /* ProcrastinationStudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100062F61000000000006 /* ProcrastinationStudyView.swift */; };
 		C0A100072F61000100000007 /* HowItWorksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100072F61000000000007 /* HowItWorksView.swift */; };
 		C0A100092F61000100000009 /* LottieAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A100092F61000000000009 /* LottieAnimationView.swift */; };
+		C0FFEE01C4EA7012340000A1 /* CreatorToolkitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */; };
 		C1248A8B9ED0E7C07E282473 /* QuizV2View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022EF66829006A39DC358F1E /* QuizV2View.swift */; };
 		C5D977A09033274072F72D0A /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		C7883195937BF55E49DFFCB9 /* 1_idle_shadow.json in Resources */ = {isa = PBXBuildFile; fileRef = C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */; };
@@ -166,6 +166,7 @@
 		CAA0DC2839144A3B4762DFF8 /* SGPreviewHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104430C26AE79C6F4714D55 /* SGPreviewHarness.swift */; };
 		CC1F9F6F371B44A8C9262149 /* angry-mascot.png in Resources */ = {isa = PBXBuildFile; fileRef = 3899733C30CE27AC1F76F852 /* angry-mascot.png */; };
 		D0F005F3ADF8BF1A0EB78B66 /* StudyGuardShieldExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */; };
+		D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */; };
 		D32399521730C4271EE502FD /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		D72EAFC35626EC02FB376DB5 /* MonsterActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */; };
 		D9237B0A1FD757FEF4EB3E35 /* PrivateAppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */; };
@@ -180,7 +181,6 @@
 		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
 		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
-		94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */; };
 		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -274,7 +274,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		022EF66829006A39DC358F1E /* QuizV2View.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2View.swift; sourceTree = "<group>"; };
 		02A44E4579757FFA9816BECB /* QuizletImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizletImportService.swift; sourceTree = "<group>"; };
 		0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -282,11 +282,10 @@
 		06C414461884222A3462D172 /* StudyGuardMonitorExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardMonitorExtension.swift; sourceTree = "<group>"; };
 		153BFDD3C51B96C1A4291672 /* UsageIntervalOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsageIntervalOnboarding.swift; sourceTree = "<group>"; };
 		168A7A9CDF38BD1EB046B7FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; path = "2_Looking down_shadow.json"; sourceTree = "<group>"; };
+		16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "2_Looking down_shadow.json"; sourceTree = "<group>"; };
 		16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A9C722A0BF6E3B21D6BF84F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2StreakView.swift; sourceTree = "<group>"; };
-		DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Coins.swift; sourceTree = "<group>"; };
 		1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTabBar.swift; sourceTree = "<group>"; };
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
 		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -325,7 +324,7 @@
 		40E905872F3B73A000F8F5C0 /* PomodoroTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimer.swift; sourceTree = "<group>"; };
 		40EA4E8C2E6EEC85007E13C7 /* BuyBackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuyBackView.swift; sourceTree = "<group>"; };
 		46E3F99E85D41EC320BB8795 /* StudyGuardShieldAction.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardShieldAction.entitlements; sourceTree = "<group>"; };
-		48C2915E1E584CA06B2E5714 /* 1_idle_char.json */ = {isa = PBXFileReference; includeInIndex = 1; path = 1_idle_char.json; sourceTree = "<group>"; };
+		48C2915E1E584CA06B2E5714 /* 1_idle_char.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = 1_idle_char.json; sourceTree = "<group>"; };
 		4A0BB7042FA0000000000004 /* AdsTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsTracker.swift; sourceTree = "<group>"; };
 		4B044EECE4F6DE81C3E96A69 /* MonsterLiveActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardEngineTests.swift; sourceTree = "<group>"; };
@@ -391,12 +390,11 @@
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
-		76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterWidgetBundle.swift; sourceTree = "<group>"; };
 		79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterActivityManager.swift; sourceTree = "<group>"; };
 		7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		82F8241C66EC48E6AE393BE1 /* ProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreatorToolkitView.swift; sourceTree = "<group>"; };
 		83D656411657069E8D8F29D0 /* TopOffendersReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TopOffendersReport.swift; sourceTree = "<group>"; };
 		882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeadowHomeV2.swift; sourceTree = "<group>"; };
 		8C4091CCCB419A7361C68A59 /* SGComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGComponents.swift; sourceTree = "<group>"; };
@@ -407,13 +405,12 @@
 		9DC70B55611A6E75742F4DE4 /* diewithoutregretsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = diewithoutregretsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F60718293A4B5C /* QuizKit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizKit.swift; sourceTree = "<group>"; };
 		A3C0FFEE0000000000073002 /* OnboardingV3NewSteps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV3NewSteps.swift; sourceTree = "<group>"; };
-		B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV4Steps.swift; sourceTree = "<group>"; };
-		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
 		A5FD537ABAF4DD66948B15BA /* SGButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGButton.swift; sourceTree = "<group>"; };
 		AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFirstCardsOnboardingView.swift; sourceTree = "<group>"; };
 		AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingChecklistCard.swift; sourceTree = "<group>"; };
 		ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTranscriptService.swift; sourceTree = "<group>"; };
 		AF83E3CD1A228EE63512F641 /* StudyGuardShield.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardShield.entitlements; sourceTree = "<group>"; };
+		B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV4Steps.swift; sourceTree = "<group>"; };
 		B7A12A97411B4CC9AEE9D904 /* MascotOverlays.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MascotOverlays.swift; sourceTree = "<group>"; };
 		BA21584A731ED7770616A869 /* MigrationCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MigrationCard.swift; sourceTree = "<group>"; };
 		C0A100012F61000000000001 /* TheHookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheHookView.swift; sourceTree = "<group>"; };
@@ -423,16 +420,19 @@
 		C0A100062F61000000000006 /* ProcrastinationStudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcrastinationStudyView.swift; sourceTree = "<group>"; };
 		C0A100072F61000000000007 /* HowItWorksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowItWorksView.swift; sourceTree = "<group>"; };
 		C0A100092F61000000000009 /* LottieAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieAnimationView.swift; sourceTree = "<group>"; };
+		C0FFEE01C4EA7012340000A2 /* CreatorToolkitView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreatorToolkitView.swift; sourceTree = "<group>"; };
 		C14C6511A34903E18E985B70 /* MonsterLiveActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterLiveActivityAttributes.swift; sourceTree = "<group>"; };
-		C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; path = 1_idle_shadow.json; sourceTree = "<group>"; };
+		C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = 1_idle_shadow.json; sourceTree = "<group>"; };
 		C5B684B8E0357F56C6BF8C00 /* SGContract.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGContract.swift; sourceTree = "<group>"; };
 		C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV2Components.swift; sourceTree = "<group>"; };
 		C992836E11460BAE0C22D50D /* QuizV2Kit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Kit.swift; sourceTree = "<group>"; };
 		CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonsterWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
 		D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenTimeAuthOnboarding.swift; sourceTree = "<group>"; };
+		DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Coins.swift; sourceTree = "<group>"; };
 		E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardManager.swift; sourceTree = "<group>"; };
 		E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsPickerSheet.swift; sourceTree = "<group>"; };
-		E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */ = {isa = PBXFileReference; includeInIndex = 1; path = "2_Looking down_char.json"; sourceTree = "<group>"; };
+		E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "2_Looking down_char.json"; sourceTree = "<group>"; };
 		E5E5D5C36077513EB1D031B8 /* StudyGuardMonitor.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardMonitor.entitlements; sourceTree = "<group>"; };
 		E9FFFAAF633CE842B8784D7C /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -534,7 +534,6 @@
 				46E3F99E85D41EC320BB8795 /* StudyGuardShieldAction.entitlements */,
 				60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */,
 			);
-			name = StudyGuardShieldAction;
 			path = StudyGuardShieldAction;
 			sourceTree = "<group>";
 		};
@@ -922,7 +921,6 @@
 				34213E2D25DEC71A93D9DC64 /* Info.plist */,
 				F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */,
 			);
-			name = StudyGuardReport;
 			path = StudyGuardReport;
 			sourceTree = "<group>";
 		};
@@ -996,7 +994,6 @@
 				16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */,
 				E9FFFAAF633CE842B8784D7C /* Info.plist */,
 			);
-			name = MonsterWidget;
 			path = MonsterWidget;
 			sourceTree = "<group>";
 		};
@@ -1622,7 +1619,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1651,7 +1648,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1680,7 +1677,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1708,7 +1705,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1735,7 +1732,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1762,7 +1759,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1789,7 +1786,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1948,7 +1945,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1989,7 +1986,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2020,7 +2017,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2071,7 +2068,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2102,7 +2099,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2132,7 +2129,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2161,7 +2158,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2191,7 +2188,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2240,7 +2237,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
