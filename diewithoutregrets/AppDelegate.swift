@@ -8,9 +8,15 @@ import UserNotifications
 import AppTrackingTransparency
 import TikTokBusinessSDK
 import FamilyControls
+import AppstackSDK
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    
+
+    /// Appstack write-only client key (same trust class as the RevenueCat /
+    /// PostHog keys).
+    static let appstackAPIKey = "pk_vfspqfmmi8b27zz7bubirhjz"
+
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -90,6 +96,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         // Initialize TikTok Business SDK for Spark Ads attribution.
         AdsTracker.initializeSDK()
+
+        // Appstack attribution SDK. Reuses the RevenueCat anonymous appUserID
+        // as customerUserId so Appstack installs join to the same user as
+        // PostHog / Sentry. Apple Ads attribution is enabled after the ATT
+        // prompt resolves in applicationDidBecomeActive.
+        AppstackAttributionSdk.shared.configure(
+            apiKey: Self.appstackAPIKey,
+            customerUserId: Purchases.shared.appUserID
+        )
         
         // Set up notification center delegate
         UNUserNotificationCenter.current().delegate = self
@@ -201,16 +216,38 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
     @objc private func applicationWillEnterForegroundRefreshSentryScope() {
         attachPostHogIdentifiersToSentry()
+        requestTrackingAuthorizationIfNeeded()
     }
 
-    // MARK: - Lifecycle
+    // MARK: - App Tracking Transparency
 
-    // Request ATT in applicationDidBecomeActive per TikTok's recommended pattern.
-    // TikTokBusiness.requestTrackingAuthorization wraps ATTrackingManager and notifies
-    // the SDK directly when the user responds, so events flush immediately after.
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        TikTokBusiness.requestTrackingAuthorization { status in
-            print("[AppDelegate] ATT status: \(status)")
+    /// Request ATT from the didBecomeActive *notification*, not the
+    /// `applicationDidBecomeActive(_:)` delegate method: this app uses the
+    /// SwiftUI scene lifecycle, and UIKit skips the app delegate's
+    /// activation callbacks in scene-based apps — the delegate method never
+    /// ran, so the prompt never appeared (App Review rejection, iOS 26.6,
+    /// submission de514dc3). The notification is always posted.
+    ///
+    /// The short delay dodges the race where a request issued during the
+    /// activation transition is silently dropped by the system.
+    private func requestTrackingAuthorizationIfNeeded() {
+        guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else {
+            // Prompt already answered on a previous launch — still (re)enable
+            // Appstack's Apple Ads attribution; the call is idempotent.
+            AppstackASAAttribution.shared.enableAppleAdsAttribution()
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            // TikTokBusiness.requestTrackingAuthorization wraps
+            // ATTrackingManager so the TikTok SDK sees the response and can
+            // flush its ATT-buffered events immediately.
+            TikTokBusiness.requestTrackingAuthorization { status in
+                print("[AppDelegate] ATT status: \(status)")
+                // Appstack: enable Apple Search Ads attribution once the ATT
+                // prompt has resolved (any status — the SDK handles limited
+                // attribution when tracking is denied).
+                AppstackASAAttribution.shared.enableAppleAdsAttribution()
+            }
         }
     }
     
@@ -499,6 +536,16 @@ enum Analytics {
         if let currency = currency { props["currency"] = currency }
         if let offeringId = offeringId { props["offering_id"] = offeringId }
         capture("subscription_started", properties: props)
+
+        // Mirror the conversion into Appstack for ad attribution. Revenue +
+        // currency are what enhanced app campaigns (Meta/ASA) match on.
+        var appstackParams: [String: Any] = ["product_id": productId]
+        if let price = price { appstackParams["revenue"] = price }
+        if let currency = currency { appstackParams["currency"] = currency }
+        AppstackAttributionSdk.shared.sendEvent(
+            event: isTrial ? .START_TRIAL : .SUBSCRIBE,
+            parameters: appstackParams
+        )
     }
 
     // MARK: Restore purchases

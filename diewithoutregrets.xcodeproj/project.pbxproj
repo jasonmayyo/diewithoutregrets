@@ -61,6 +61,7 @@
 		45B688D2E356D325CC81E59B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */; };
 		481F6073E7A5A543F22EDD3C /* SGComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4091CCCB419A7361C68A59 /* SGComponents.swift */; };
 		4A0BB7032FA0000000000003 /* TikTokBusinessSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 4A0BB7022FA0000000000002 /* TikTokBusinessSDK */; };
+		AB57ACC32FA0000000000003 /* AppstackSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AB57ACC22FA0000000000002 /* AppstackSDK */; };
 		4A0BB7052FA0000000000005 /* AdsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BB7042FA0000000000004 /* AdsTracker.swift */; };
 		4D9C7ABE3611F485F9F9AD89 /* EmergencyUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */; };
 		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
@@ -486,6 +487,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A0BB7032FA0000000000003 /* TikTokBusinessSDK in Frameworks */,
+				AB57ACC32FA0000000000003 /* AppstackSDK in Frameworks */,
 				40738F352F62B56A0085DF60 /* Lottie in Frameworks */,
 				6B45F2EA2F6400010053351D /* AdServices.framework in Frameworks */,
 				6B45F2EC2F6400020053351D /* AdSupport.framework in Frameworks */,
@@ -1153,6 +1155,7 @@
 				6BE29CFA2DB82D0800505D57 /* BranchSDK */,
 				C0A200022F61000000000011 /* Lottie */,
 				4A0BB7022FA0000000000002 /* TikTokBusinessSDK */,
+				AB57ACC22FA0000000000002 /* AppstackSDK */,
 				021B87114F8544B1BA4FCA50 /* Sentry */,
 			);
 			productName = diewithoutregrets;
@@ -1229,6 +1232,7 @@
 				6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */,
 				C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 				4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */,
+				AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */,
 				DD904B62617F4A2F8E29E7A8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = 6B9D89C22D3552DF00DE8B2E /* Products */;
@@ -2344,6 +2348,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appstack-tech/ios-appstack-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 		4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tiktok/tiktok-business-ios-sdk";
@@ -2404,6 +2416,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */;
 			productName = TikTokBusinessSDK;
+		};
+		AB57ACC22FA0000000000002 /* AppstackSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */;
+			productName = AppstackSDK;
 		};
 		6B45F2E52DADB48E0053351D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;

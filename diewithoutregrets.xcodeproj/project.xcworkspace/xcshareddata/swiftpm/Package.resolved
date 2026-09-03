@@ -1,6 +1,15 @@
 {
-  "originHash" : "3a7d8f8ad4fe829fe813953a19725cdae0975157bbfc00645467aa8b0a49d008",
+  "originHash" : "08cbe3a9240e65e68fbb3c4a2f83caaea5e4bb10aed319f78548e7197af17ed0",
   "pins" : [
+    {
+      "identity" : "ios-appstack-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/appstack-tech/ios-appstack-sdk.git",
+      "state" : {
+        "revision" : "2f065113a9e35ee7e6d82b83417b23160aa92708",
+        "version" : "4.6.0"
+      }
+    },
     {
       "identity" : "ios-branch-sdk-spm",
       "kind" : "remoteSourceControl",
