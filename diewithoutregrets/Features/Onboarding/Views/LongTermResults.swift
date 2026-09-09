@@ -69,6 +69,9 @@ struct ReviewsView: View {
                 guard !requested else { return }
                 requested = true
                 viewModel.screenAction("rating_request_triggered")
+                // Stamp the ledger so the post-quiz rating funnel keeps its
+                // distance from this prompt (see SGReviewAsk).
+                SGReviewAsk.recordSystemPromptRequested()
                 requestReview()
                 // Give the system rating sheet time to land before the step
                 // changes underneath it.

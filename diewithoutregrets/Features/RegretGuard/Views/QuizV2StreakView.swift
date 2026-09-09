@@ -12,6 +12,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 // MARK: - Streak ledger
 
@@ -106,6 +107,11 @@ struct QuizV2StreakView: View {
     @State private var shownStreak = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // The rating funnel rides the win high: once the entrance choreography
+    // settles, the enjoying-the-app ask slides up (policy in SGReviewAsk).
+    @State private var showReviewAsk = false
+    @Environment(\.requestReview) private var requestReview
+
     /// The count the numeral starts on. Never equal to `streak` unless the
     /// unlock didn't move the ledger (second unlock the same day).
     private var rollStart: Int {
@@ -168,6 +174,35 @@ struct QuizV2StreakView: View {
             }
         }
         .onAppear(perform: runEntrance)
+        .onAppear(perform: scheduleReviewAsk)
+        .sheet(isPresented: $showReviewAsk) {
+            ReviewAskSheet {
+                // Raised from here, not inside the sheet: the system rating
+                // prompt needs a stable context after the dismissal settles.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    Analytics.capture("review_ask_rating_requested", properties: [
+                        "source": "quiz_win"
+                    ])
+                    SGReviewAsk.recordSystemPromptRequested()
+                    requestReview()
+                }
+            }
+        }
+    }
+
+    /// Presents the rating funnel after the entrance choreography lands
+    /// (mascot pop 0s, numeral roll 0.45s, card slide 0.7s), so the ask
+    /// reads as a postscript to the win rather than an interruption.
+    private func scheduleReviewAsk() {
+        guard SGReviewAsk.shouldAsk() else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (reduceMotion ? 0.8 : 2.0)) {
+            SGReviewAsk.recordShown()
+            Analytics.capture("review_ask_shown", properties: [
+                "source": "quiz_win",
+                "streak": streak
+            ])
+            showReviewAsk = true
+        }
     }
 
     private func runEntrance() {

@@ -284,7 +284,7 @@ struct MeadowHomeV2: View {
     private var percentBlock: some View {
         VStack(spacing: 2) {
             ZStack(alignment: .topTrailing) {
-                OutlinedText(text: timeLeftText, size: 72)
+                OutlinedText(text: timeLeftText, size: 72, fill: .white, outline: .clear)
                     .scaleEffect(countdown.isRolling ? 1.06 : 1)
                     .animation(SGTheme.springFast, value: countdown.isRolling)
 
