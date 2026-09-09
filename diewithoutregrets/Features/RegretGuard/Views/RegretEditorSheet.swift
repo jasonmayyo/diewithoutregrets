@@ -10,6 +10,8 @@ struct RegretEditorSheet: View {
     @State private var editedExplanation: String
     @State private var editedChoices: [String]
     @State private var editedCorrectIndex: Int
+    @State private var editedMode: AnswerMode
+    @State private var editedTypedAnswer: String
     @State private var selectedTab = 0
 
     private let tabs = ["Question", "Explanation", "Answers"]
@@ -21,15 +23,29 @@ struct RegretEditorSheet: View {
         _editedPrompt = State(initialValue: regret.wrappedValue.regretPrompt)
         _editedRegret = State(initialValue: regret.wrappedValue.regret)
         _editedExplanation = State(initialValue: regret.wrappedValue.backgroundExplanation)
-        _editedChoices = State(initialValue: regret.wrappedValue.choices)
-        _editedCorrectIndex = State(initialValue: regret.wrappedValue.correctAnswerIndex)
+        // A typed card keeps its answer in choices[correctAnswerIndex]; give
+        // the choices editor a fresh scaffold in case the user switches modes.
+        let value = regret.wrappedValue
+        _editedMode = State(initialValue: value.answerMode)
+        _editedTypedAnswer = State(initialValue: value.correctAnswer)
+        if value.answerMode == .typed {
+            _editedChoices = State(initialValue: [value.correctAnswer, ""])
+            _editedCorrectIndex = State(initialValue: 0)
+        } else {
+            _editedChoices = State(initialValue: value.choices)
+            _editedCorrectIndex = State(initialValue: value.correctAnswerIndex)
+        }
     }
 
-    // Saveable once the question and the marked correct answer have content.
+    // Saveable once the question and the correct answer have content.
     private var isValidInput: Bool {
-        !editedPrompt.trimmingCharacters(in: .whitespaces).isEmpty &&
-        editedChoices.indices.contains(editedCorrectIndex) &&
-        !editedChoices[editedCorrectIndex].trimmingCharacters(in: .whitespaces).isEmpty
+        guard !editedPrompt.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        if editedMode == .typed {
+            return !editedTypedAnswer.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        return editedChoices.indices.contains(editedCorrectIndex) &&
+        !editedChoices[editedCorrectIndex].trimmingCharacters(in: .whitespaces).isEmpty &&
+        editedChoices.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count >= 2
     }
 
     var body: some View {
@@ -182,11 +198,28 @@ struct RegretEditorSheet: View {
                         .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
 
-                    Text("Select the correct answer and add options")
+                    Text(editedMode == .typed
+                         ? "In the quiz you'll type this answer from memory"
+                         : "Select the correct answer and add options")
                         .font(SGTheme.caption)
                         .foregroundColor(SGTheme.paperTertiary)
                 }
 
+                AnswerModePicker(mode: $editedMode)
+
+                if editedMode == .typed {
+                    SGField(placeholder: "Enter the correct answer", text: $editedTypedAnswer)
+                        .transition(.opacity)
+                } else {
+                    choicesEditor
+                        .transition(.opacity)
+                }
+            }
+            .animation(SGTheme.springFast, value: editedMode)
+        }
+    }
+
+    private var choicesEditor: some View {
                 VStack(spacing: 12) {
                     ForEach(0..<editedChoices.count, id: \.self) { index in
                         HStack {
@@ -237,8 +270,6 @@ struct RegretEditorSheet: View {
                     .buttonStyle(SGPressStyle())
                     .disabled(editedChoices.count >= 6)
                 }
-            }
-        }
     }
 
     private func addNewOption() {
@@ -261,8 +292,19 @@ struct RegretEditorSheet: View {
         regret.regretPrompt = editedPrompt
         regret.regret = editedRegret
         regret.backgroundExplanation = editedExplanation
-        regret.choices = editedChoices
-        regret.correctAnswerIndex = editedCorrectIndex
+        regret.answerMode = editedMode
+        if editedMode == .typed {
+            // The single stored choice IS the answer (see AnswerMode).
+            let answer = editedTypedAnswer.trimmingCharacters(in: .whitespaces)
+            regret.regret = answer
+            regret.choices = [answer]
+            regret.correctAnswerIndex = 0
+        } else {
+            let kept = editedChoices.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let correctText = editedChoices[editedCorrectIndex]
+            regret.choices = kept
+            regret.correctAnswerIndex = kept.firstIndex(of: correctText) ?? 0
+        }
         // We don't have the deck context here so we just track the edit.
         Analytics.flashcardEdited(deckId: nil, deckName: nil)
         dismiss()

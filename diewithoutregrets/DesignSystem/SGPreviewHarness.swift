@@ -100,6 +100,12 @@ enum SGPreviewHarness {
                    choices: ["RNA", "Protein", "DNA", "Lipid"],
                    correctAnswerIndex: 2,
                    backgroundExplanation: "DNA stores the genetic instructions for development and function."),
+            Regret(regretPrompt: "What is the basic structural unit of all living organisms?",
+                   regret: "The cell",
+                   choices: ["The cell"],
+                   correctAnswerIndex: 0,
+                   backgroundExplanation: "Cell theory holds that all living things are composed of cells, the smallest unit of life.",
+                   answerMode: .typed),
         ])
         DeckStore.shared.addDeck(deck)
         DeckStore.shared.selectDeck(deck)

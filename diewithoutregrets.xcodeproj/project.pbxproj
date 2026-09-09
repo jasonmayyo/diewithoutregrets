@@ -182,6 +182,7 @@
 		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
 		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
+		AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020300000000REVW0001 /* ReviewAskSheet.swift */; };
 		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -287,6 +288,7 @@
 		16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A9C722A0BF6E3B21D6BF84F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2StreakView.swift; sourceTree = "<group>"; };
+		AA00020300000000REVW0001 /* ReviewAskSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewAskSheet.swift; sourceTree = "<group>"; };
 		1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTabBar.swift; sourceTree = "<group>"; };
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
 		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -693,6 +695,7 @@
 				C992836E11460BAE0C22D50D /* QuizV2Kit.swift */,
 				DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */,
 				1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */,
+				AA00020300000000REVW0001 /* ReviewAskSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1522,6 +1525,7 @@
 				B52574801368481E26769917 /* QuizV2Kit.swift in Sources */,
 				94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */,
 				FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */,
+				AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1623,7 +1627,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1652,7 +1656,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1681,7 +1685,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1709,7 +1713,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1736,7 +1740,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1763,7 +1767,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1790,7 +1794,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1949,7 +1953,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1990,7 +1994,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2021,7 +2025,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2072,7 +2076,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2103,7 +2107,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2133,7 +2137,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2162,7 +2166,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2192,7 +2196,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2241,7 +2245,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

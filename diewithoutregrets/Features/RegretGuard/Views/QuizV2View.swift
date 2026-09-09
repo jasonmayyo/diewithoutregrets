@@ -54,6 +54,11 @@ struct QuizV2View: View {
     @State private var selected: Int?
     /// The committed answer, frozen for the reveal.
     @State private var committed: Int?
+    /// Draft text for a typed-answer card; CHECK commits it.
+    @State private var typedAnswer = ""
+    /// The committed typed answer, frozen for the reveal.
+    @State private var committedTyped: String?
+    @FocusState private var typedFocused: Bool
     @State private var hasIncorrect = false
     @State private var showEnding = false
     @State private var showEmergencySheet = false
@@ -162,7 +167,10 @@ struct QuizV2View: View {
                 NavigationModel.shared.returnHome()
             }
         }
-        .onAppear(perform: setup)
+        .onAppear {
+            setup()
+            focusTypedIfNeeded()
+        }
     }
 
     // MARK: - Quiz body
@@ -193,7 +201,12 @@ struct QuizV2View: View {
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
 
-                Color.clear.frame(height: footerReserve)
+                // While the keyboard is up on a typed card the feedback
+                // panels can't show, so the reserve shrinks to just the
+                // CHECK bar and gives the sentence its room back.
+                Color.clear.frame(
+                    height: card.answerMode == .typed && typedFocused ? 84 : footerReserve
+                )
             }
             .padding(.horizontal, 20)
 
@@ -201,6 +214,7 @@ struct QuizV2View: View {
         }
         .animation(SGTheme.springFast, value: phase)
         .animation(SGTheme.springFast, value: index)
+        .animation(SGTheme.springFast, value: typedFocused)
     }
 
     // MARK: Header
@@ -248,14 +262,18 @@ struct QuizV2View: View {
         case .answering:
             t.append(.blank)
         case .revealed(let correct):
-            // Correct: the right word lands in green. Wrong: the committed
+            // Correct: the right words land in green. Wrong: the committed
             // answer lands in red; the panel below teaches the right one.
-            let filledIndex = correct ? card.correctAnswerIndex : (committed ?? card.correctAnswerIndex)
-            if card.choices.indices.contains(filledIndex) {
-                t += card.choices[filledIndex]
-                    .split(separator: " ")
-                    .map { QV2Token.fill(String($0), correct: correct) }
+            let fillText: String
+            if card.answerMode == .typed {
+                fillText = correct ? card.correctAnswer : (committedTyped ?? "")
+            } else {
+                let filledIndex = correct ? card.correctAnswerIndex : (committed ?? card.correctAnswerIndex)
+                fillText = card.choices.indices.contains(filledIndex) ? card.choices[filledIndex] : ""
             }
+            t += fillText
+                .split(separator: " ")
+                .map { QV2Token.fill(String($0), correct: correct) }
         }
         return t
     }
@@ -270,7 +288,16 @@ struct QuizV2View: View {
 
     // MARK: Options
 
+    @ViewBuilder
     private func options(_ card: Regret) -> some View {
+        if card.answerMode == .typed {
+            typedWell(card)
+        } else {
+            choiceTiles(card)
+        }
+    }
+
+    private func choiceTiles(_ card: Regret) -> some View {
         VStack(spacing: 12) {
             ForEach(Array(card.choices.enumerated()), id: \.offset) { idx, choice in
                 Button {
@@ -314,6 +341,69 @@ struct QuizV2View: View {
         }
     }
 
+    // MARK: Typed answer
+
+    private var typedReady: Bool {
+        !typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// The typed-answer input: a chunky well matching the tile language.
+    /// It grows with the text (no truncation, ever) and freezes into the
+    /// verdict color at reveal.
+    private func typedWell(_ card: Regret) -> some View {
+        let style = typedStyle
+        let shape = RoundedRectangle(cornerRadius: 13, style: .continuous)
+
+        return TextField("Type your answer", text: $typedAnswer, axis: .vertical)
+            .font(QV2.font(19, .medium))
+            .foregroundColor(style.label)
+            .tint(QV2.blue)
+            .lineLimit(1...6)
+            .focused($typedFocused)
+            .submitLabel(.done)
+            .onSubmit { if typedReady { commit() } }
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .disabled(isRevealed)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 17)
+            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+            .background(shape.fill(style.fill))
+            .overlay(shape.strokeBorder(style.border, lineWidth: 2))
+            .background(shape.fill(style.border).offset(y: 2.5))
+            .contentShape(shape)
+            .onTapGesture {
+                guard !isRevealed else { return }
+                typedFocused = true
+            }
+            .animation(SGTheme.springFast, value: typedFocused)
+            .animation(SGTheme.springFast, value: typedReady)
+    }
+
+    private var typedStyle: (fill: Color, border: Color, label: Color) {
+        switch phase {
+        case .answering:
+            return typedFocused || typedReady
+                ? (.white, QV2.blueBorder, QV2.text)
+                : (.white, QV2.tileBorder, QV2.text)
+        case .revealed(let correct):
+            return correct
+                ? (QV2.greenPanel, QV2.greenTileBorder, QV2.greenDeep)
+                : (QV2.redPanel, QV2.redTileBorder, QV2.redDeep)
+        }
+    }
+
+    /// Typed cards focus their well on arrival so the answer is one thought
+    /// away; a settle delay lets the card transition land first.
+    private func focusTypedIfNeeded() {
+        guard currentCard?.answerMode == .typed else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if case .answering = phase, currentCard?.answerMode == .typed, !showEnding {
+                typedFocused = true
+            }
+        }
+    }
+
     // MARK: Footer
 
     @ViewBuilder
@@ -322,7 +412,11 @@ struct QuizV2View: View {
         case .answering:
             // No tap haptic: the commit composes its own verdict burst,
             // one press must never buzz twice.
-            QV2CTAButton(title: "CHECK", enabled: selected != nil, action: commit)
+            QV2CTAButton(
+                title: "CHECK",
+                enabled: card.answerMode == .typed ? typedReady : selected != nil,
+                action: commit
+            )
                 .background(QV2GlobalFrameReader { ctaFrame = $0 })
                 .padding(.horizontal, 20)
                 .padding(.bottom, 12)
@@ -409,11 +503,20 @@ struct QuizV2View: View {
     /// celebration choreography can put it at risk.
     private func commit() {
         guard case .answering = phase,
-              let answer = selected,
               let card = currentCard else { return }
 
-        let correct = answer == card.correctAnswerIndex
-        committed = answer
+        let correct: Bool
+        if card.answerMode == .typed {
+            guard typedReady else { return }
+            correct = AnswerGrading.matches(typedAnswer, card.correctAnswer)
+            committedTyped = typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Drop the keyboard so the verdict panel owns the bottom zone.
+            typedFocused = false
+        } else {
+            guard let answer = selected else { return }
+            correct = answer == card.correctAnswerIndex
+            committed = answer
+        }
 
         if index < results.count {
             results[index] = correct
@@ -466,8 +569,11 @@ struct QuizV2View: View {
             phase = .answering
             selected = nil
             committed = nil
+            typedAnswer = ""
+            committedTyped = nil
             coinsLandedThisCard = false
         }
+        focusTypedIfNeeded()
     }
 
     // MARK: - Coin flock
@@ -567,14 +673,15 @@ struct QuizV2View: View {
         if args.contains("-sg-preview-quizv2-correct") {
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 700_000_000)
-                selected = currentCard?.correctAnswerIndex
+                guard let card = currentCard else { return }
+                arm(card, correctly: true)
                 commit()
             }
         } else if args.contains("-sg-preview-quizv2-wrong") {
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 700_000_000)
                 guard let card = currentCard else { return }
-                selected = card.choices.indices.first { $0 != card.correctAnswerIndex }
+                arm(card, correctly: false)
                 commit()
             }
         } else if args.contains("-sg-preview-quizv2-win") {
@@ -582,7 +689,7 @@ struct QuizV2View: View {
                 while !showEnding {
                     try? await Task.sleep(nanoseconds: 900_000_000)
                     guard let card = currentCard else { break }
-                    selected = card.correctAnswerIndex
+                    arm(card, correctly: true)
                     commit()
                     // Long enough for the whole coin flock to bank (last
                     // coin ~1.26s after commit) so captures are settled.
@@ -595,12 +702,23 @@ struct QuizV2View: View {
                 while !showEnding {
                     try? await Task.sleep(nanoseconds: 900_000_000)
                     guard let card = currentCard else { break }
-                    selected = card.choices.indices.first { $0 != card.correctAnswerIndex }
+                    arm(card, correctly: false)
                     commit()
                     try? await Task.sleep(nanoseconds: 1_100_000_000)
                     advance()
                 }
             }
+        }
+    }
+
+    /// Arms an answer the way a user would, for either card mode.
+    private func arm(_ card: Regret, correctly: Bool) {
+        if card.answerMode == .typed {
+            typedAnswer = correctly ? card.correctAnswer : "wrong on purpose"
+        } else {
+            selected = correctly
+                ? card.correctAnswerIndex
+                : card.choices.indices.first { $0 != card.correctAnswerIndex }
         }
     }
     #endif
@@ -610,6 +728,8 @@ struct QuizV2View: View {
         phase = .answering
         selected = nil
         committed = nil
+        typedAnswer = ""
+        committedTyped = nil
         hasIncorrect = false
         showEnding = false
         results = Array(repeating: nil, count: cards.count)
@@ -639,6 +759,7 @@ struct QuizV2View: View {
             + paired.filter { $0.1 == nil }.map(\.0)
             + paired.filter { $0.1 == true }.map(\.0)
         withAnimation(SGTheme.springFast) { resetRun() }
+        focusTypedIfNeeded()
     }
 
     // MARK: - Earning + endings
@@ -695,6 +816,7 @@ struct QuizV2View: View {
         // Ground airborne coins so their landing haptics can't tick after
         // the user has left the quiz.
         flyingCoins = []
+        typedFocused = false
         Analytics.unlockCloseAnyway(
             appName: "your apps",
             currentStep: index * 2 + (isRevealed ? 1 : 0),

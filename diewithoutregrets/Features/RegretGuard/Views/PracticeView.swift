@@ -35,6 +35,7 @@ struct PracticeView: View {
                         QuestionView(
                             currentRegret: viewModel.currentQuestion,
                             selectedAnswer: $viewModel.selectedAnswer,
+                            typedAnswer: $viewModel.typedAnswer,
                             showAnswer: viewModel.showAnswer,
                             explanation: viewModel.currentQuestion?.backgroundExplanation ?? ""
                         )
@@ -99,6 +100,7 @@ struct PracticeView: View {
     private struct QuestionView: View {
         let currentRegret: Regret?
         @Binding var selectedAnswer: Int?
+        @Binding var typedAnswer: String
         let showAnswer: Bool
         let explanation: String
 
@@ -125,12 +127,20 @@ struct PracticeView: View {
 
                         Spacer()
 
-                        AnswerOptionsView(
-                            choices: currentRegret.choices,
-                            selectedAnswer: $selectedAnswer,
-                            showAnswer: showAnswer,
-                            correctAnswer: currentRegret.correctAnswerIndex
-                        )
+                        if currentRegret.answerMode == .typed {
+                            TypedAnswerSection(
+                                typedAnswer: $typedAnswer,
+                                showAnswer: showAnswer,
+                                correctAnswer: currentRegret.correctAnswer
+                            )
+                        } else {
+                            AnswerOptionsView(
+                                choices: currentRegret.choices,
+                                selectedAnswer: $selectedAnswer,
+                                showAnswer: showAnswer,
+                                correctAnswer: currentRegret.correctAnswerIndex
+                            )
+                        }
                     }
                     .padding()
                 } else {
@@ -179,6 +189,46 @@ struct PracticeView: View {
             if index == correctAnswer { return .revealedCorrect }
             if index == selectedAnswer { return .revealedWrong }
             return .dimmed
+        }
+    }
+
+    /// Typed-answer practice: an input well while answering, then the
+    /// verdict as answer tiles (the miss in red, the truth sweeping mint).
+    private struct TypedAnswerSection: View {
+        @Binding var typedAnswer: String
+        let showAnswer: Bool
+        let correctAnswer: String
+
+        @FocusState private var focused: Bool
+
+        private var wasCorrect: Bool {
+            AnswerGrading.matches(typedAnswer, correctAnswer)
+        }
+
+        var body: some View {
+            VStack(spacing: 16) {
+                if showAnswer {
+                    if !wasCorrect {
+                        QuizAnswerTile(
+                            text: typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines),
+                            state: .revealedWrong
+                        )
+                    }
+                    QuizAnswerTile(text: correctAnswer, state: .revealedCorrect)
+                } else {
+                    SGField(placeholder: "Type your answer", text: $typedAnswer)
+                        .focused($focused)
+                        .submitLabel(.done)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+            .animation(SGTheme.springFast, value: showAnswer)
+            .onChange(of: showAnswer) { _, revealed in
+                if revealed { focused = false }
+            }
         }
     }
 
@@ -241,6 +291,7 @@ struct PracticeView: View {
     class PracticeViewModel: ObservableObject {
         @Published var currentStep = 0
         @Published var selectedAnswer: Int? = nil
+        @Published var typedAnswer = ""
         @Published var showFinalMessage = false
         @Published var hasIncorrectAnswers = false
         @Published var questions: [Regret] = []
@@ -267,8 +318,14 @@ struct PracticeView: View {
         }
 
         var isControlButtonDisabled: Bool {
-            !showAnswer && selectedAnswer == nil
+            guard !showAnswer else { return false }
+            if currentQuestion?.answerMode == .typed {
+                return typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            return selectedAnswer == nil
         }
+
+        private var hasArmedAnswer: Bool { !isControlButtonDisabled }
 
         var showAnswer: Bool {
             currentStep % 2 == 1
@@ -285,6 +342,7 @@ struct PracticeView: View {
             questionResults = Array(repeating: nil, count: questions.count) // Now works with the declared property
             currentStep = 0
             selectedAnswer = nil
+            typedAnswer = ""
 
             // Only track session start on the first setup call (not retries —
             // those reuse the same originalDeck via retryQuestions).
@@ -303,11 +361,12 @@ struct PracticeView: View {
             if showAnswer {
                 currentStep += 1
                 selectedAnswer = nil
+                typedAnswer = ""
                 if currentStep >= questions.count * 2 {
                     showFinalMessage = true
                     trackCompletion()
                 }
-            } else if selectedAnswer != nil {
+            } else if hasArmedAnswer {
                 checkAnswer()
                 currentStep += 1
             }
@@ -348,7 +407,9 @@ struct PracticeView: View {
 
         private func checkAnswer() {
                guard let currentQuestion = currentQuestion else { return }
-               let isCorrect = selectedAnswer == currentQuestion.correctAnswerIndex
+               let isCorrect = currentQuestion.answerMode == .typed
+                   ? AnswerGrading.matches(typedAnswer, currentQuestion.correctAnswer)
+                   : selectedAnswer == currentQuestion.correctAnswerIndex
                let questionIndex = currentStep / 2
 
                if questionIndex < questionResults.count {
