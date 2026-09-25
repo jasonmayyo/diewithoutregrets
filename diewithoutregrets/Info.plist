@@ -27,8 +27,8 @@
 	<true/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Study Guard uses tracking data to measure which ads bring in new users and improve our campaigns.</string>
-	<key>OpenAIAPIKey</key>
-	<string>$(OPENAI_API_KEY)</string>
+	<key>StudyGuardAPIHost</key>
+	<string>$(STUDY_GUARD_API_HOST)</string>
 	<key>SENTRY_DSN</key>
 	<string>$(SENTRY_DSN)</string>
 	<key>SKAdNetworkItems</key>

@@ -1,21 +1,5 @@
-//
-//  SecretsLoader.swift
-//  diewithoutregrets
-//
-//  Typed accessor for build-time secrets injected via xcconfig → Info.plist.
-//
-//  Add a new secret in three places:
-//    1. Define the key in `Secrets.xcconfig` with an env-var fallback,
-//       e.g.  MY_NEW_SECRET = $(MY_NEW_SECRET)
-//    2. Define the same key in `Secrets.local.xcconfig.example` (and your
-//       own `Secrets.local.xcconfig` for local dev).
-//    3. Add an `Info.plist` entry whose value is `$(MY_NEW_SECRET)`.
-//    4. Add a static accessor here that reads the Info.plist key.
-//
-//  The OpenAI key was historically read inline in AutoGenerateFlashcardSheet
-//  via Bundle.main.object(forInfoDictionaryKey:). Don't introduce a parallel
-//  pattern — extend this enum instead.
-//
+// Public build configuration. Info.plist is readable by anyone with the app.
+// Never add provider keys, service-role keys, or other private credentials here.
 
 import Foundation
 

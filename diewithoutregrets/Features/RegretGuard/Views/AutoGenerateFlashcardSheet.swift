@@ -31,7 +31,7 @@ enum FlashcardGenerationError: Error {
         case .textTooShort:
             return "Please provide more text content. We need at least 50 characters to generate meaningful flashcards."
         case .textTooLong:
-            return "Text is too long for processing. Please limit to 25,000 words or break into smaller sections."
+            return "Text is too long for processing. Please break it into smaller sections."
         case .textInvalidFormat:
             return "The text appears to contain invalid characters or formatting. Please paste plain text content."
         case .textLowQuality:
@@ -201,6 +201,9 @@ struct AutoGenerateFlashcardsSheet: View {
                         if selectedSource == .quizlet && !useAIEnhanced {
                             quizletDirectImportButton
                         } else {
+                            Text("When you generate flashcards, your study text is sent to Study Guard's server and OpenAI to create your cards.")
+                                .font(SGTheme.caption)
+                                .foregroundColor(SGTheme.paperSecondary)
                             generateButton
                         }
                         
@@ -1249,8 +1252,7 @@ struct AutoGenerateFlashcardsSheet: View {
             slowProgressTimer = nil
             
             DispatchQueue.main.async {
-                if let flashcardsText = apiResponse {
-                    let newFlashcards = self.parseRegrets(from: flashcardsText)
+                if let newFlashcards = apiResponse {
                     if newFlashcards.isEmpty {
                         self.currentError = .invalidResponse
                         self.errorMessage = "No valid flashcards were generated from your text. Try providing more detailed educational content with clear concepts and facts."
@@ -1293,7 +1295,7 @@ struct AutoGenerateFlashcardsSheet: View {
                     }
                 } else {
                     // generateFlashcardsAPI already classified and set a specific
-                    // currentError/errorMessage (token limit, invalid key, rate limit,
+                    // currentError/errorMessage (input limit, verification, rate limit,
                     // truncated response, real network failure, etc.). Don't clobber
                     // it with a generic "check your internet connection" — that
                     // misleads users when the issue isn't connectivity at all.
@@ -1651,7 +1653,7 @@ struct AutoGenerateFlashcardsSheet: View {
         }
         
         // Check maximum length (roughly 25,000 words = ~100,000 characters)
-        if trimmedText.count > 100000 {
+        if trimmedText.utf8.count > FlashcardAPIClient.maximumInputBytes {
             issues.append("• Text is too long (\(stats.characters) characters, maximum is 100,000)")
             issues.append("• This represents about \(stats.words) words")
             suggestions.append("• Try uploading a shorter PDF (fewer pages)")
@@ -1726,336 +1728,42 @@ struct AutoGenerateFlashcardsSheet: View {
         }
     }
     
-    private func loadOpenAIKey() -> String? {
-        guard
-          let key = Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String,
-          !key.isEmpty
-        else {
-          print("🔑 ERROR: Missing OpenAIAPIKey in Info.plist - API features will be disabled")
-          return nil
-        }
-        
-        // Reject obvious placeholder values so we fail loudly with an
-        // actionable error instead of silently 401-ing against OpenAI.
-        let lowered = key.lowercased()
-        let placeholderMarkers = [
-            "$(",                       // unresolved xcconfig substitution
-            "openai_api_key",           // any variant referencing the var name
-            "replace_me",               // template marker
-            "replace-with",             // older template marker
-            "your-real-key",            // older template marker
-            "your-key",
-            "sk-replace",
-            "sk-your"
-        ]
-        let looksLikePlaceholder = placeholderMarkers.contains { lowered.contains($0) }
-        // Real OpenAI keys are well over 40 chars (typically 50+). A short
-        // value almost always means the placeholder wasn't replaced.
-        let suspiciouslyShort = key.count < 40
-        if looksLikePlaceholder || suspiciouslyShort {
-            print("🔑 ERROR: OpenAIAPIKey appears to be a placeholder (length: \(key.count))")
-            print("🔑 Edit diewithoutregrets/Secrets.local.xcconfig and set OPENAI_API_KEY to your real key")
-            return nil
-        }
-        
-        print("🔑 OpenAI API Key loaded successfully (length: \(key.count))")
-        return key
-    }
-    
-    // MARK: - API Helpers
-    
-    func generateFlashcardsAPI(with inputText: String, language: String, completion: @escaping (String?) -> Void) {
-        print("🚀 Starting flashcard generation API call")
-        print("🌍 Target language: \(language)")
-        print("📝 Input text length: \(inputText.count) characters")
-        print("📝 Input text preview: \(String(inputText.prefix(100)))...")
-        
-        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
-            DispatchQueue.main.async {
-                currentError = .invalidResponse
-                errorMessage = currentError?.userMessage
-            }
-            completion(nil)
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 180
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        guard let apiKey = loadOpenAIKey(), !apiKey.isEmpty else {
-            DispatchQueue.main.async {
-                currentError = .networkError("API key configuration error")
-                // This is a build/config problem (key missing or still a
-                // placeholder), not a connectivity issue. Surface that clearly
-                // so users don't think it's their internet — and so we don't
-                // get bug reports about a problem only the developer can fix.
-                errorMessage = "AI flashcard generation is temporarily unavailable in this build. You can still create flashcards manually for now."
-            }
-            completion(nil)
-            return
-        }
-        
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        
-        let prompt = createFlashcardPrompt(for: language)
-        
-        // 50 flashcards × ~150 tokens each (question + context + 4 choices +
-        // index + detailed explanation) easily exceeds 4000 tokens, which
-        // caused OpenAI to truncate the response mid-card. Truncation produced
-        // an empty parse → users saw a misleading "internet connection" error.
-        // gpt-4o-mini supports up to 16,384 output tokens; 12,000 leaves
-        // generous headroom for 50 fully-formed flashcards.
-        let maxOutputTokens = 12000
-        let jsonBody: [String: Any] = [
-            "model": "gpt-4o-mini",
-            "messages": [
-                ["role": "system", "content": prompt],
-                ["role": "user", "content": inputText]
-            ],
-            "max_tokens": maxOutputTokens,
-            "temperature": 0.7
-        ]
-        
-        print("📤 API Request:")
-        print("   Model: gpt-4o-mini")
-        print("   System prompt length: \(prompt.count) characters")
-        print("   User message length: \(inputText.count) characters")
-        print("   Max tokens: \(maxOutputTokens)")
-        print("   Temperature: 0.7")
-        
-        guard let httpBody = try? JSONSerialization.data(withJSONObject: jsonBody, options: []) else {
-            DispatchQueue.main.async {
-                currentError = .invalidResponse
-                errorMessage = currentError?.userMessage
-            }
-            completion(nil)
-            return
-        }
-        
-        request.httpBody = httpBody
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error as NSError? {
-                    print("🔴 API Error: \(error.localizedDescription)")
-                    print("🔴 Error Code: \(error.code)")
-                    print("🔴 Error Domain: \(error.domain)")
-                    switch error.code {
-                    case NSURLErrorTimedOut:
+    // MARK: - Secure generation service
+
+    func generateFlashcardsAPI(with inputText: String, language: String, completion: @escaping ([Regret]?) -> Void) {
+        Task { @MainActor in
+            do {
+                let cards = try await FlashcardAPIClient.shared.generate(text: inputText, language: language)
+                completion(cards.map { card in
+                    Regret(regretPrompt: card.regretPrompt, regret: card.regret,
+                           choices: card.choices, correctAnswerIndex: card.correctAnswerIndex,
+                           backgroundExplanation: card.backgroundExplanation)
+                })
+            } catch {
+                if let serviceError = error as? FlashcardServiceError {
+                    errorMessage = serviceError.localizedDescription
+                    currentError = .networkError(serviceError.localizedDescription)
+                } else if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .timedOut:
                         currentError = .timeout
-                        errorMessage = currentError?.userMessage
-                    case NSURLErrorNotConnectedToInternet,
-                         NSURLErrorNetworkConnectionLost,
-                         NSURLErrorDataNotAllowed:
-                        // Only surface "internet connection" copy when the OS
-                        // actually says connectivity is the problem.
+                        errorMessage = "Generation took too long. Please try again with shorter text."
+                    case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
                         currentError = .networkError("No internet connection")
-                        errorMessage = "It looks like your device is offline. Please check your internet connection and try again."
-                    case NSURLErrorCannotFindHost,
-                         NSURLErrorCannotConnectToHost,
-                         NSURLErrorDNSLookupFailed:
-                        currentError = .networkError(error.localizedDescription)
-                        errorMessage = "Couldn't reach the AI service right now. Please try again in a moment."
+                        errorMessage = "It looks like your device is offline. Please check your connection and try again."
                     default:
-                        currentError = .networkError(error.localizedDescription)
-                        errorMessage = "Couldn't generate flashcards: \(error.localizedDescription). Please try again."
+                        currentError = .networkError("Service unreachable")
+                        errorMessage = "Couldn't reach the AI service. Please try again in a moment."
                     }
-                    completion(nil)
-                    return
-                }
-                
-                guard let httpResponse = response as? HTTPURLResponse else {
+                } else {
                     currentError = .invalidResponse
                     errorMessage = currentError?.userMessage
-                    completion(nil)
-                    return
                 }
-                
-                switch httpResponse.statusCode {
-                case 200:
-                    if let data = data,
-                       let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let choices = (jsonResponse["choices"] as? [[String: Any]])?.first,
-                       let message = choices["message"] as? [String: Any],
-                       let content = message["content"] as? String {
-                        print("✅ API Success: Generated \(content.count) characters")
-                        completion(content)
-                    } else {
-                        print("🔴 Failed to parse API response")
-                        if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                            print("🔴 Raw response: \(responseString)")
-                        }
-                        currentError = .invalidResponse
-                        errorMessage = currentError?.userMessage
-                        completion(nil)
-                    }
-                case 413:
-                    print("🔴 API Error 413: Payload too large")
-                    currentError = .fileTooLarge
-                    errorMessage = currentError?.userMessage
-                    completion(nil)
-                case 429:
-                    print("🔴 API Error 429: Rate limit exceeded")
-                    currentError = .networkError("Rate limit exceeded")
-                    errorMessage = "Rate limit exceeded. Please try again in a few minutes."
-                    completion(nil)
-                case 400:
-                    if let data = data,
-                       let responseString = String(data: data, encoding: .utf8) {
-                        print("🔴 API Error 400: \(responseString)")
-                    }
-                    if let data = data,
-                       let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let error = jsonResponse["error"] as? [String: Any],
-                       let message = error["message"] as? String,
-                       message.contains("maximum context length") {
-                        currentError = .tokenLimitExceeded
-                        errorMessage = currentError?.userMessage
-                    } else {
-                        currentError = .invalidResponse
-                        errorMessage = currentError?.userMessage
-                    }
-                    completion(nil)
-                case 401:
-                    print("🔴 API Error 401: Invalid API key")
-                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                        print("🔴 Response: \(responseString)")
-                    }
-                    currentError = .networkError("Invalid API key")
-                    errorMessage = "API authentication failed. Please check your API key configuration."
-                    completion(nil)
-                default:
-                    print("🔴 API Error \(httpResponse.statusCode)")
-                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                        print("🔴 Response: \(responseString)")
-                    }
-                    currentError = .networkError("Server error (Status \(httpResponse.statusCode))")
-                    errorMessage = "Server error (Status \(httpResponse.statusCode)). Please try again."
-                    completion(nil)
-                }
+                completion(nil)
             }
-        }.resume()
-    }
-    
-    // MARK: - Parser Helpers
-    
-    func parseRegrets(from input: String) -> [Regret] {
-        var regrets: [Regret] = []
-        // Split the input by occurrences of "Regret(" and re-add the prefix to each block.
-        let blocks = input.components(separatedBy: "Regret(")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        for block in blocks {
-            let flashcardText = "Regret(" + block  // Prepend the missing "Regret(" removed during splitting.
-            guard let prompt = extractField("regretPrompt", from: flashcardText),
-                  let regretText = extractField("regret", from: flashcardText),
-                  let explanation = extractField("backgroundExplanation", from: flashcardText),
-                  let correctAnswerIndexStr = extractField("correctAnswerIndex", from: flashcardText),
-                  let correctAnswerIndex = Int(correctAnswerIndexStr),
-                  let choices = extractChoices(from: flashcardText)
-            else { continue }
-            
-            let newRegret = Regret(
-                regretPrompt: prompt,
-                regret: regretText,
-                choices: choices,
-                correctAnswerIndex: correctAnswerIndex,
-                backgroundExplanation: explanation
-            )
-            regrets.append(newRegret)
         }
-        return regrets
     }
-    
-    func extractField(_ field: String, from text: String) -> String? {
-        let quotedPattern = "\(field):\\s*\"([^\"]+)\""
-        if let result = matchRegex(quotedPattern, in: text) {
-            return result
-        }
-        if field == "correctAnswerIndex" {
-            let numberPattern = "\(field):\\s*([0-9]+)"
-            return matchRegex(numberPattern, in: text)
-        }
-        return nil
-    }
-    
-    func matchRegex(_ pattern: String, in text: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
-        let nsText = text as NSString
-        let results = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
-        if let match = results.first, match.numberOfRanges > 1 {
-            return nsText.substring(with: match.range(at: 1))
-        }
-        return nil
-    }
-    
-    func extractChoices(from text: String) -> [String]? {
-        let pattern = "choices:\\s*\\[([^\\]]+)\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
-        let nsText = text as NSString
-        let results = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
-        if let match = results.first, match.numberOfRanges > 1 {
-            let choicesContent = nsText.substring(with: match.range(at: 1))
-            let choicePattern = "\"([^\"]+)\""
-            guard let choiceRegex = try? NSRegularExpression(pattern: choicePattern, options: []) else { return nil }
-            let choiceMatches = choiceRegex.matches(in: choicesContent, options: [], range: NSRange(location: 0, length: (choicesContent as NSString).length))
-            var choices: [String] = []
-            for choiceMatch in choiceMatches {
-                if choiceMatch.numberOfRanges > 1 {
-                    let choice = (choicesContent as NSString).substring(with: choiceMatch.range(at: 1))
-                    choices.append(choice)
-                }
-            }
-            return choices
-        }
-        return nil
-    }
-    
-    // MARK: - Prompt
-    
-    func createFlashcardPrompt(for language: String) -> String {
-        return """
-Generate exactly 50 educational flashcards from the provided text in **\(language)** language.
 
-CRITICAL INSTRUCTION: ALL content (questions, context, choices, explanations) MUST be in \(language). DO NOT use any other language.
-
-Requirements:
-
-1. **Language:**
-   - ALL flashcards MUST be in \(language)
-   - Questions: \(language)
-   - Context statements: \(language)
-   - Answer choices: \(language)
-   - Explanations: \(language)
-   - For True/False questions, use appropriate \(language) words
-
-2. **Flashcard Format:**
-   Use this EXACT format for each flashcard:
-   
-   Regret( regretPrompt: "Question text", regret: "Brief context", choices: [ "Option A", "Option B", "Option C", "Option D" ], correctAnswerIndex: X, backgroundExplanation: "Detailed explanation" ),
-
-3. **Question Types:**
-   - Mix of True/False (2 options) and multiple-choice (4 options)
-   - Vary correctAnswerIndex positions (use 0, 1, 2, 3 - don't always use the same)
-   - Make answer options similar length
-
-4. **Content:**
-   - Base questions on key concepts, definitions, and facts from the text
-   - Each flashcard needs: question, context, choices, correct index, explanation
-   - Focus on educational value and clear learning points
-
-5. **Output Format:**
-   - Exactly 50 flashcards
-   - One flashcard per line
-   - Plain text format as shown above
-   - No extra formatting or markdown
-
-Generate all 50 flashcards in \(language) now. Remember: EVERY word in EVERY flashcard must be in \(language).
-"""
-    }
-    
     // MARK: - Text Validation Functions
     
     private func validateTextInput(_ text: String) -> FlashcardGenerationError? {
@@ -2067,7 +1775,7 @@ Generate all 50 flashcards in \(language) now. Remember: EVERY word in EVERY fla
         }
         
         // Check maximum length (roughly 25,000 words = ~100,000 characters)
-        if trimmedText.count > 100000 {
+        if trimmedText.utf8.count > FlashcardAPIClient.maximumInputBytes {
             return .textTooLong
         }
         

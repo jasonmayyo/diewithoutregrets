@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Reuse the Worker that already holds the user's encrypted OpenAI key.
+  // Its historical "staging" suffix is only a name; this is the live service.
+  "name": "studyguard-ai-staging",
+  "account_id": "7493b409da23325b041baf8e7df06cef",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "durable_objects": {
+    "bindings": [{ "name": "GATE", "class_name": "StudyGuardGate" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StudyGuardGate"] }],
+  "vars": {
+    "APP_ID_PREFIX": "5BFXSF2PS6",
+    "BUNDLE_ID": "com.jasonmayo.diewithoutregrets",
+    "ALLOW_DEVELOPMENT_ATTESTATION": "false",
+    "AI_ENABLED": "true",
+    "DEVICE_DAILY_LIMIT": "10",
+    "GLOBAL_DAILY_LIMIT": "20",
+    "GLOBAL_MONTHLY_LIMIT": "100"
+  }
+  // OPENAI_API_KEY is set with `wrangler secret put`, never in this file.
+  // The existing restricted key is already set. Enable AI after billing is restored.
+}

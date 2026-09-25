@@ -61,8 +61,8 @@
 		45B688D2E356D325CC81E59B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */; };
 		481F6073E7A5A543F22EDD3C /* SGComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4091CCCB419A7361C68A59 /* SGComponents.swift */; };
 		4A0BB7032FA0000000000003 /* TikTokBusinessSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 4A0BB7022FA0000000000002 /* TikTokBusinessSDK */; };
-		AB57ACC32FA0000000000003 /* AppstackSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AB57ACC22FA0000000000002 /* AppstackSDK */; };
 		4A0BB7052FA0000000000005 /* AdsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BB7042FA0000000000004 /* AdsTracker.swift */; };
+		4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */; };
 		4D9C7ABE3611F485F9F9AD89 /* EmergencyUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */; };
 		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
 		5A9A3C9A83F2D711DBE5BFBE /* StudyGuardState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A76BC31490CEAECF9B75109 /* StudyGuardState.swift */; };
@@ -130,6 +130,7 @@
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
 		6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */; };
+		777ED1FFDEBFE89954CE0F5A /* FlashcardAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */; };
 		814B6A23485D02B9033A6EB8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 168A7A9CDF38BD1EB046B7FD /* PrivacyInfo.xcprivacy */; };
 		84E77F1FE8E9F6B573A79A68 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		8A2C9D2322A500EFFEF8401E /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C6511A34903E18E985B70 /* MonsterLiveActivityAttributes.swift */; };
@@ -144,6 +145,8 @@
 		A9A60040A3FFDF926B0EE179 /* MigrationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA21584A731ED7770616A869 /* MigrationCard.swift */; };
 		AA00010100000000CARD0002 /* CreateFirstCardsOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */; };
 		AA00020100000000CHCK0002 /* OnboardingChecklistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */; };
+		AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020300000000REVW0001 /* ReviewAskSheet.swift */; };
+		AB57ACC32FA0000000000003 /* AppstackSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AB57ACC22FA0000000000002 /* AppstackSDK */; };
 		AF7ACEE45B2570316DBC954A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		B21F0755744881EE4A04479B /* SGTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */; };
 		B3EA81FB0B915028AA57994E /* MeadowHomeV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */; };
@@ -182,7 +185,6 @@
 		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
 		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
-		AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00020300000000REVW0001 /* ReviewAskSheet.swift */; };
 		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -288,7 +290,6 @@
 		16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A9C722A0BF6E3B21D6BF84F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2StreakView.swift; sourceTree = "<group>"; };
-		AA00020300000000REVW0001 /* ReviewAskSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewAskSheet.swift; sourceTree = "<group>"; };
 		1D37AD2FC44104F8E71F01BA /* SGTabBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTabBar.swift; sourceTree = "<group>"; };
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
 		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -335,6 +336,7 @@
 		522EC8F7112FFAF62F3DC02F /* StudyGuardShieldActionExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldActionExtension.swift; sourceTree = "<group>"; };
 		53D5949165897B100D1AC547 /* OnboardingScaffold.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingScaffold.swift; sourceTree = "<group>"; };
 		565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmergencyUnlockSheet.swift; sourceTree = "<group>"; };
+		5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FlashcardAPIClient.swift; sourceTree = "<group>"; };
 		5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTheme.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000A1 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000B1 /* SecretsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretsLoader.swift; sourceTree = "<group>"; };
@@ -411,6 +413,7 @@
 		A5FD537ABAF4DD66948B15BA /* SGButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGButton.swift; sourceTree = "<group>"; };
 		AA00010100000000CARD0001 /* CreateFirstCardsOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFirstCardsOnboardingView.swift; sourceTree = "<group>"; };
 		AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingChecklistCard.swift; sourceTree = "<group>"; };
+		AA00020300000000REVW0001 /* ReviewAskSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReviewAskSheet.swift; sourceTree = "<group>"; };
 		ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTranscriptService.swift; sourceTree = "<group>"; };
 		AF83E3CD1A228EE63512F641 /* StudyGuardShield.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardShield.entitlements; sourceTree = "<group>"; };
 		B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV4Steps.swift; sourceTree = "<group>"; };
@@ -428,6 +431,7 @@
 		C55C1F0880889794F7BBC604 /* 1_idle_shadow.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = 1_idle_shadow.json; sourceTree = "<group>"; };
 		C5B684B8E0357F56C6BF8C00 /* SGContract.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGContract.swift; sourceTree = "<group>"; };
 		C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV2Components.swift; sourceTree = "<group>"; };
+		C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FlashcardAPIClientTests.swift; sourceTree = "<group>"; };
 		C992836E11460BAE0C22D50D /* QuizV2Kit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Kit.swift; sourceTree = "<group>"; };
 		CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonsterWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
@@ -546,6 +550,7 @@
 			children = (
 				ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */,
 				02A44E4579757FFA9816BECB /* QuizletImportService.swift */,
+				5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -933,6 +938,7 @@
 			isa = PBXGroup;
 			children = (
 				4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */,
+				C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */,
 			);
 			path = diewithoutregretsTests;
 			sourceTree = "<group>";
@@ -1138,6 +1144,7 @@
 				6B22E88C2D4A1D78003A5685 /* Embed ExtensionKit Extensions */,
 				879A2A49C3EC1EACEDC197CA /* Embed Foundation Extensions */,
 				51D9D3B18DD54F578E91D5DD /* Upload Debug Symbols to Sentry */,
+				3C9ABEA178F9F86BEA353A92 /* Verify No Client Provider Keys */,
 			);
 			buildRules = (
 			);
@@ -1357,6 +1364,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		3C9ABEA178F9F86BEA353A92 /* Verify No Client Provider Keys */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Verify No Client Provider Keys";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "python3 \"${SRCROOT}/scripts/verify_no_client_secrets.py\" \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"";
+		};
 		51D9D3B18DD54F578E91D5DD /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1526,6 +1552,7 @@
 				94D93C9BF65A47DC9B3E0AA6 /* QuizV2Coins.swift in Sources */,
 				FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */,
 				AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */,
+				777ED1FFDEBFE89954CE0F5A /* FlashcardAPIClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1544,6 +1571,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */,
+				4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1615,7 +1643,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardReport/StudyGuardReport.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardReport/Info.plist;
@@ -1627,7 +1655,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1644,7 +1672,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MonsterWidget/Info.plist;
@@ -1656,7 +1684,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1673,7 +1701,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MonsterWidget/Info.plist;
@@ -1685,7 +1713,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.MonsterWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1701,7 +1729,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -1713,7 +1741,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1728,7 +1756,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = RegretGuardIntent/RegretGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RegretGuardIntent/Info.plist;
@@ -1740,7 +1768,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.RegretGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1755,7 +1783,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -1767,7 +1795,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1782,7 +1810,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OpenGuardIntent/OpenGuardIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenGuardIntent/Info.plist;
@@ -1794,7 +1822,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.OpenGuardIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1930,11 +1958,12 @@
 			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				APP_ATTEST_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -1953,7 +1982,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1971,11 +2000,12 @@
 			baseConfigurationReference = 6B74330C2DB19E5F0007270C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				APP_ATTEST_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -1994,7 +2024,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2013,7 +2043,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardShieldAction/StudyGuardShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardShieldAction/Info.plist;
@@ -2025,7 +2055,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2043,7 +2073,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
@@ -2064,7 +2094,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardShieldAction/StudyGuardShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardShieldAction/Info.plist;
@@ -2076,7 +2106,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShieldAction;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2095,7 +2125,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardMonitor/StudyGuardMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardMonitor/Info.plist;
@@ -2107,7 +2137,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2125,7 +2155,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardReport/StudyGuardReport.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardReport/Info.plist;
@@ -2137,7 +2167,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2154,7 +2184,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardShield/StudyGuardShield.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardShield/Info.plist;
@@ -2166,7 +2196,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2184,7 +2214,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardMonitor/StudyGuardMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardMonitor/Info.plist;
@@ -2196,7 +2226,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardMonitor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2213,7 +2243,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
@@ -2233,7 +2263,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = StudyGuardShield/StudyGuardShield.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = StudyGuardShield/Info.plist;
@@ -2245,7 +2275,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardShield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2352,14 +2382,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/appstack-tech/ios-appstack-sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.6.0;
-			};
-		};
 		4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tiktok/tiktok-business-ios-sdk";
@@ -2392,6 +2414,14 @@
 				minimumVersion = 3.10.0;
 			};
 		};
+		AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appstack-tech/ios-appstack-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 		C0A200012F61000000000010 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
@@ -2421,11 +2451,6 @@
 			package = 4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */;
 			productName = TikTokBusinessSDK;
 		};
-		AB57ACC22FA0000000000002 /* AppstackSDK */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */;
-			productName = AppstackSDK;
-		};
 		6B45F2E52DADB48E0053351D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
@@ -2445,6 +2470,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6BE29CF92DB82D0800505D57 /* XCRemoteSwiftPackageReference "ios-branch-sdk-spm" */;
 			productName = BranchSDK;
+		};
+		AB57ACC22FA0000000000002 /* AppstackSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB57ACC12FA0000000000001 /* XCRemoteSwiftPackageReference "ios-appstack-sdk" */;
+			productName = AppstackSDK;
 		};
 		C0A200022F61000000000011 /* Lottie */ = {
 			isa = XCSwiftPackageProductDependency;

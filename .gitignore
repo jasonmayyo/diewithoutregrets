@@ -1,5 +1,5 @@
 # --- Secrets ---
-# Local-only override that injects the OpenAI key + Sentry DSN for archive builds.
+# Local public endpoint and Sentry configuration overrides. Never add provider keys.
 # Never commit. See diewithoutregrets/Secrets.local.xcconfig.example.
 diewithoutregrets/Secrets.local.xcconfig
 **/Secrets.local.xcconfig
@@ -27,3 +27,6 @@ xcuserdata/
 # --- Local build output ---
 # xcodebuild output directory (multi-GB); never commit.
 build/
+
+# Python build-check bytecode
+__pycache__/
