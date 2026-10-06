@@ -108,7 +108,7 @@ struct PracticeView: View {
             Group {
                 if let currentRegret = currentRegret {
                     VStack(spacing: 0) {
-                        Text(currentRegret.regretPrompt)
+                        Text(currentRegret.quizPrompt.text)
                             .font(SGTheme.display(22))
                             .foregroundColor(SGTheme.paper)
                             .multilineTextAlignment(.center)

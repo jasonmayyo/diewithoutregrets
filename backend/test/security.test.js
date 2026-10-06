@@ -111,14 +111,45 @@ test('real cryptographic assertions reject tampering, replay and wrong app ident
   assert.throws(() => validKeyID('arbitrary-spoofed-device-id'));
 });
 
+const clozeCard = () => ({ regretPrompt: '“光” means ___.', regret: 'light', choices: ['light', 'dark', 'water', 'wind'],
+  correctAnswerIndex: 0, backgroundExplanation: 'A "quoted" example\nwith a newline: 光 means light.' });
+
 test('structured cards preserve quotes/unicode and reject incomplete or invalid answers', () => {
-  const card = { regretPrompt: 'What does “光” mean?', regret: 'A "quoted" example\nwith a newline', choices: ['light', 'dark'],
-    correctAnswerIndex: 0, backgroundExplanation: 'It means light.' };
+  const card = clozeCard();
   const result = { cards: Array.from({ length: 50 }, () => ({ ...card })) };
   assert.deepEqual(validateCards(JSON.parse(JSON.stringify(result))), result);
   assert.equal(validateCards({ cards: result.cards.slice(1) }).cards.length, 49);
   assert.equal(validateCards({ cards: [...result.cards, { ...card }] }).cards.length, 50);
   rejectsCode(() => validateCards({ cards: result.cards.slice(0, 19) }), 'invalid_response');
-  result.cards[0].correctAnswerIndex = 2;
+  result.cards[0].correctAnswerIndex = 4;
   rejectsCode(() => validateCards(result), 'invalid_response');
+});
+
+test('generation specifies complete cloze prompts and short answer fragments', () => {
+  const body = openAIBody('Relationships require ongoing effort and self-awareness.', 'French');
+  assert.match(body.messages[0].content, /exactly one blank/);
+  assert.match(body.messages[0].content, /only the missing word or short phrase/);
+  assert.match(body.messages[0].content, /in French/);
+  assert.equal(body.messages[1].content, 'Relationships require ongoing effort and self-awareness.');
+});
+
+test('rejects missing context, placeholder prompts, multiple blanks and unusable choices', () => {
+  const invalid = [
+    ...['N/A', ' n / a ', 'Not applicable', 'null', 'undefined', '___', ' ___. ',
+      'N/A ___.', 'Relationships require ongoing effort.', 'Relationships require ___ and ___.',
+      'Relationships require ____.', 'Relationships require ___ and ____.'].map(regretPrompt => ({ regretPrompt })),
+    { choices: ['light', 'Light ', 'water', 'wind'] },
+    { choices: ['light', ' ', 'water', 'wind'] },
+    { choices: ['light', '___', 'water', 'wind'] },
+    { choices: ['light', 'x'.repeat(121), 'water', 'wind'] },
+    { choices: ['True', 'False'] },
+    { regret: 'What does “光” mean?' },
+  ];
+  for (const change of invalid) {
+    const cards = Array.from({ length: 20 }, clozeCard);
+    cards[0] = { ...cards[0], ...change };
+    rejectsCode(() => validateCards({ cards }), 'invalid_response');
+  }
+  const cards = Array.from({ length: 20 }, () => ({ ...clozeCard(), regretPrompt: '光的意思是___。' }));
+  assert.equal(validateCards({ cards }).cards[0].regretPrompt, '光的意思是___。');
 });

@@ -7,9 +7,9 @@
 //
 //  - One draw per lock session; retries reorder the SAME draw (missed
 //    first), never a fresh roll.
-//  - The grant fires synchronously at the final correct commit, before any
+//  - The grant fires synchronously at the final commit, before any
 //    celebration choreography can put it at risk.
-//  - Every card right or the run is sealed as failed.
+//  - Each correct answer earns time; only a zero-correct run needs a retry.
 //
 //  This screen only handles the happy v2 path. Legacy users, empty-deck
 //  rescue and already-unlocked entries fall back to RegretView, whose
@@ -64,9 +64,6 @@ struct QuizV2View: View {
     @State private var showEmergencySheet = false
     /// Updated by the streak ledger at the grant moment.
     @State private var streak = 1
-    /// The displayed streak just before the grant, so the celebration can
-    /// roll the numeral up from it (0 -> 1 on a fresh or broken streak).
-    @State private var streakBefore = 0
 
     // Analytics bookkeeping (mirrors RegretView)
     @State private var attemptStartTime = Date()
@@ -79,10 +76,9 @@ struct QuizV2View: View {
     //
     // The real economy: each correct card is worth perCardSeconds of screen
     // time, visualized as a flock of coins that each bank a slice of it.
-    // The grant itself is the whole draw's worth (rounded up to minutes,
-    // floored at SGContract.minEarnedMinutes) and fires at the final commit;
-    // the chip tops up to that real number as the last flock banks, so the
-    // display always ends equal to what was granted.
+    // The chip shows the correct answers' worth, capped at the budget limit.
+    // On completion the receipt shows the actual grant, rounded up to minutes.
+    // Animation timing never determines the grant.
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var earnedSeconds = 0
@@ -92,8 +88,7 @@ struct QuizV2View: View {
     /// Gates the progress-bar bump: a correct card fills the bar only once
     /// its first coin banks, so the fill reads as part of the earn payoff.
     @State private var coinsLandedThisCard = false
-    /// The real grant, written at earnUnlock; the final flock's last coin
-    /// rolls the chip up to it (the floor can exceed the per-card sum).
+    /// The real grant, written once at completion, independent of coin flights.
     @State private var grantedMinutes = 0
     @State private var chipFrame: CGRect = .zero
     @State private var ctaFrame: CGRect = .zero
@@ -101,7 +96,8 @@ struct QuizV2View: View {
     /// Coins per correct CHECK; together they bank the card's perCardSeconds.
     private let coinsPerCorrect = 5
 
-    private var perCardSeconds: Int { studyGuard.perCardSeconds }
+    /// Freeze the rate so display and grant use the same value for this quiz.
+    @State private var perCardSeconds: Int
 
     /// One coin's slice of the card's worth; the last coin takes the
     /// remainder so the flock always sums exactly to perCardSeconds.
@@ -121,6 +117,7 @@ struct QuizV2View: View {
         let sg = StudyGuardManager.shared
         let deckHasCards = !(DeckStore.shared.selectedDeck?.cards.isEmpty ?? true)
         _useLegacy = State(initialValue: !(sg.isSetupComplete && sg.state == .locked && deckHasCards))
+        _perCardSeconds = State(initialValue: sg.perCardSeconds)
     }
 
     private var currentCard: Regret? {
@@ -135,6 +132,10 @@ struct QuizV2View: View {
 
     private var correctCount: Int {
         results.compactMap { $0 }.filter { $0 }.count
+    }
+
+    private var rewardSeconds: Int {
+        Int(min(Double(SGContract.maxEarnedMinutes * 60), Double(correctCount) * Double(perCardSeconds)))
     }
 
     var body: some View {
@@ -229,7 +230,7 @@ struct QuizV2View: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(SGPressStyle())
-            .accessibilityLabel("Exit without unlocking")
+            .accessibilityLabel(grantedMinutes > 0 ? "Close quiz" : "Exit without unlocking")
 
             QV2ProgressBar(fraction: progressFraction, fill: progressColor)
 
@@ -238,12 +239,13 @@ struct QuizV2View: View {
         }
     }
 
-    /// Wrong answers don't move the bar: the contract is every card right.
-    /// A correct one moves it only when its first coin banks in the chip,
-    /// so the fill lands as part of the earn payoff.
+    /// Every answered card advances completion. Correct answers wait for their
+    /// first coin to land so progress still accompanies the earn animation.
     private var progressFraction: CGFloat {
         guard !cards.isEmpty else { return 0 }
-        let landed = phase == .revealed(correct: true) && coinsLandedThisCard ? index + 1 : index
+        let answered = phase == .revealed(correct: false)
+            || (phase == .revealed(correct: true) && coinsLandedThisCard)
+        let landed = answered ? index + 1 : index
         return CGFloat(landed) / CGFloat(cards.count)
     }
 
@@ -253,37 +255,44 @@ struct QuizV2View: View {
 
     // MARK: Sentence
 
-    private func tokens(for card: Regret) -> [QV2Token] {
-        var t = card.regretPrompt
-            .split(separator: " ")
-            .map { QV2Token.word(String($0)) }
-
+    private func sentence(_ card: Regret) -> some View {
+        let prompt = card.quizPrompt
+        let answer: String?
+        let answerColor: Color
         switch phase {
         case .answering:
-            t.append(.blank)
+            answer = nil
+            answerColor = QV2.text
         case .revealed(let correct):
-            // Correct: the right words land in green. Wrong: the committed
-            // answer lands in red; the panel below teaches the right one.
-            let fillText: String
+            answerColor = correct ? QV2.green : QV2.redDeep
             if card.answerMode == .typed {
-                fillText = correct ? card.correctAnswer : (committedTyped ?? "")
+                answer = correct ? card.correctAnswer : (committedTyped ?? "")
             } else {
-                let filledIndex = correct ? card.correctAnswerIndex : (committed ?? card.correctAnswerIndex)
-                fillText = card.choices.indices.contains(filledIndex) ? card.choices[filledIndex] : ""
+                let answerIndex = correct ? card.correctAnswerIndex : (committed ?? card.correctAnswerIndex)
+                answer = card.choices.indices.contains(answerIndex) ? card.choices[answerIndex] : ""
             }
-            t += fillText
-                .split(separator: " ")
-                .map { QV2Token.fill(String($0), correct: correct) }
         }
-        return t
-    }
 
-    private func sentence(_ card: Regret) -> some View {
-        QV2Flow(spacing: 7, lineSpacing: 22) {
-            ForEach(Array(tokens(for: card).enumerated()), id: \.offset) { _, token in
-                QV2TokenView(token: token)
+        // Preserve the sentence around the blank, including punctuation and
+        // languages without spaces. Ordinary questions stay unchanged on reveal.
+        return prompt.parts(revealing: answer).reduce(Text("")) { result, part in
+            switch part {
+            case .text(let text):
+                return result + Text(text)
+                    .foregroundColor(QV2.text)
+                    .underline(prompt.hasBlank, pattern: .dash, color: QV2.rule)
+            case .blank:
+                return result + Text("______").foregroundColor(QV2.blankRule)
+            case .answer(let text):
+                return result + Text(text)
+                    .foregroundColor(answerColor)
+                    .underline(true, pattern: .dash, color: answerColor)
             }
         }
+        .font(QV2.font(19, .medium))
+        .lineSpacing(16)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Options
@@ -428,7 +437,7 @@ struct QuizV2View: View {
                 detailLabel: card.backgroundExplanation.isEmpty ? nil : "Why:",
                 detail: card.backgroundExplanation.isEmpty ? nil : card.backgroundExplanation
             ) {
-                QV2CTAButton(title: "CONTINUE", variant: .green, action: advance)
+                QV2CTAButton(title: index == cards.count - 1 ? "SEE RESULTS" : "CONTINUE", variant: .green, action: advance)
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
 
@@ -441,25 +450,7 @@ struct QuizV2View: View {
                     ? card.choices[card.correctAnswerIndex]
                     : nil
             ) {
-                VStack(spacing: 10) {
-                    // One wrong answer already seals this run — the real way
-                    // forward comes first.
-                    QV2CTAButton(title: "RETRY FROM THE TOP", variant: .red) {
-                        retryRun(source: "early_retry")
-                    }
-                    Button {
-                        advance()
-                    } label: {
-                        Text("KEEP GOING")
-                            .font(QV2.font(15, .bold))
-                            .tracking(1.4)
-                            .foregroundColor(QV2.redDeep)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 36)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(SGPressStyle())
-                }
+                QV2CTAButton(title: index == cards.count - 1 ? "SEE RESULTS" : "CONTINUE", variant: .red, action: advance)
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
@@ -469,7 +460,7 @@ struct QuizV2View: View {
 
     @ViewBuilder
     private var ending: some View {
-        if hasIncorrect {
+        if grantedMinutes == 0 {
             QuizV2FailureView(
                 correctCount: correctCount,
                 totalCount: cards.count,
@@ -479,12 +470,16 @@ struct QuizV2View: View {
                 onGiveUp: giveUp
             )
         } else {
-            // The grant already happened at the final commit — this screen
-            // is the receipt plus the streak habit loop.
-            QuizV2StreakView(
+            // One clear reward screen. Streak remains a quiet supporting
+            // detail instead of becoming a separate celebration flow.
+            UnlockSuccessView(
+                minutes: grantedMinutes,
+                earnedSeconds: rewardSeconds,
+                correctCount: correctCount,
+                totalCount: cards.count,
                 streak: streak,
-                previousStreak: streakBefore,
-                onClose: handleCelebrationCTA
+                destination: NavigationModel.shared.unlockReturnDestination,
+                onContinue: handleCelebrationCTA
             )
         }
     }
@@ -499,7 +494,7 @@ struct QuizV2View: View {
     }
 
     /// The moment of truth. Judges the selection, records it, and — on the
-    /// final correct commit — grants the unlock RIGHT HERE, before any
+    /// final commit — grants the unlock RIGHT HERE, before any
     /// celebration choreography can put it at risk.
     private func commit() {
         guard case .answering = phase,
@@ -540,9 +535,9 @@ struct QuizV2View: View {
             )
         }
 
-        // Invariant: a grant requires every question answered correctly and
-        // at least one question answered.
-        if correct && !hasIncorrect && index == cards.count - 1 {
+        // Complete the run even when the last answer is wrong. The grant
+        // validates completion and pays only for correct answers.
+        if index == cards.count - 1 {
             earnUnlock()
         }
 
@@ -583,7 +578,7 @@ struct QuizV2View: View {
             // No flight: bank the whole card's worth at once. No extra
             // haptic — the commit's correctBurst already marks the moment,
             // and one press must never buzz twice.
-            earnedSeconds += perCardSeconds
+            earnedSeconds = rewardSeconds
             coinsBanked += 1
             coinsLandedThisCard = true
             return
@@ -602,15 +597,8 @@ struct QuizV2View: View {
         guard flyingCoins.contains(where: { $0.id == coin.id }) else { return }
 
         QuizHaptics.coinLand(progress: Double(coin.index + 1) / Double(coin.flockSize))
-        let isLastOfFinalFlock = grantedMinutes > 0
-            && coin.cardIndex == cards.count - 1
-            && coin.index == coin.flockSize - 1
         withAnimation(SGTheme.springPop) {
-            // The final coin of the run rolls the chip to the REAL grant
-            // (the 5-minute floor can exceed the per-card sum).
-            earnedSeconds = isLastOfFinalFlock
-                ? grantedMinutes * 60
-                : earnedSeconds + coinValue(coin)
+            earnedSeconds = min(earnedSeconds + coinValue(coin), rewardSeconds)
             coinsBanked += 1
             // Stragglers from an already-advanced card keep banking time
             // but must not pre-arm the next card's progress gate.
@@ -668,6 +656,8 @@ struct QuizV2View: View {
     ///                               celebration (exercises the real grant)
     ///   -sg-preview-quizv2-fail     answer everything wrong, end on the
     ///                               failure screen
+    ///   -sg-preview-quizv2-partial  two correct, then mistakes; verifies that
+    ///                               a wrong last answer still grants time
     private func driveForScreenshotsIfRequested() {
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-sg-preview-quizv2-correct") {
@@ -684,12 +674,13 @@ struct QuizV2View: View {
                 arm(card, correctly: false)
                 commit()
             }
-        } else if args.contains("-sg-preview-quizv2-win") {
+        } else if args.contains("-sg-preview-quizv2-win") || args.contains("-sg-preview-quizv2-partial") {
+            let partial = args.contains("-sg-preview-quizv2-partial")
             Task { @MainActor in
                 while !showEnding {
                     try? await Task.sleep(nanoseconds: 900_000_000)
                     guard let card = currentCard else { break }
-                    arm(card, correctly: true)
+                    arm(card, correctly: !partial || index < 2)
                     commit()
                     // Long enough for the whole coin flock to bank (last
                     // coin ~1.26s after commit) so captures are settled.
@@ -751,8 +742,7 @@ struct QuizV2View: View {
         )
         attemptNumber += 1
 
-        // Same cards, missed first — the contract is "every card right",
-        // not "reshuffle until the draw gets easier".
+        // Keep the same draw when a zero-earning run is retried.
         let paired = Array(zip(cards, results))
         cards =
             paired.filter { $0.1 == false }.map(\.0)
@@ -765,17 +755,9 @@ struct QuizV2View: View {
     // MARK: - Earning + endings
 
     private func earnUnlock() {
-        guard correctCount > 0 else { return }
-
-        grantedMinutes = StudyGuardManager.shared.grantEarnedBudget(cardCount: cards.count)
-        if reduceMotion {
-            // The instant-bank path already ran for this card; snap the chip
-            // straight to the real grant.
-            earnedSeconds = grantedMinutes * 60
-        }
-        // current(), not count: a lapsed streak reads 0, so the roll-up
-        // goes 0 -> 1 instead of counting backwards from the stale total.
-        streakBefore = QV2Streak.current()
+        guard grantedMinutes == 0 else { return }
+        grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: perCardSeconds)
+        guard grantedMinutes > 0 else { return }
         streak = QV2Streak.recordSuccess()
 
         Analytics.unlockCompleted(
@@ -903,114 +885,6 @@ private struct QV2ProgressBar: View {
         .frame(height: 16)
         .animation(.easeOut(duration: 0.35), value: fraction)
         .animation(.easeOut(duration: 0.2), value: fill)
-    }
-}
-
-// MARK: - Sentence tokens
-
-private enum QV2Token {
-    case word(String)                    // dark text, gray dashed rule
-    case fill(String, correct: Bool)     // revealed answer word: green or red
-    case blank                           // solid line placeholder
-}
-
-private struct QV2TokenView: View {
-    let token: QV2Token
-
-    var body: some View {
-        switch token {
-        case .word(let s):
-            ruled(Text(s).foregroundColor(QV2.text), rule: QV2.rule, dashed: true)
-        case .fill(let s, let correct):
-            ruled(Text(s).foregroundColor(correct ? QV2.green : QV2.redDeep),
-                  rule: correct ? QV2.green : QV2.redDeep,
-                  dashed: true)
-        case .blank:
-            ruled(Text(" ").frame(width: 64), rule: QV2.blankRule, dashed: false)
-        }
-    }
-
-    private func ruled(_ content: some View, rule: Color, dashed: Bool) -> some View {
-        content
-            .font(QV2.font(19, .medium))
-            .padding(.bottom, 7)
-            .overlay(alignment: .bottom) {
-                QV2Line()
-                    .stroke(rule, style: StrokeStyle(
-                        lineWidth: dashed ? 2.25 : 2.5,
-                        dash: dashed ? [3.5, 3.25] : []
-                    ))
-                    .frame(height: 2.5)
-            }
-    }
-}
-
-private struct QV2Line: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: 0, y: rect.midY))
-        p.addLine(to: CGPoint(x: rect.width, y: rect.midY))
-        return p
-    }
-}
-
-// MARK: - Wrapping token layout
-
-private struct QV2Flow: Layout {
-    var spacing: CGFloat
-    var lineSpacing: CGFloat
-
-    private struct Row {
-        var items: [(index: Int, x: CGFloat, size: CGSize)] = []
-        var height: CGFloat = 0
-        var y: CGFloat = 0
-    }
-
-    private func rows(for width: CGFloat, subviews: Subviews) -> [Row] {
-        var rows: [Row] = []
-        var current = Row()
-        var x: CGFloat = 0
-        for (i, sub) in subviews.enumerated() {
-            let size = sub.sizeThatFits(.unspecified)
-            if x > 0, x + size.width > width {
-                rows.append(current)
-                current = Row()
-                x = 0
-            }
-            current.items.append((i, x, size))
-            x += size.width + spacing
-            current.height = max(current.height, size.height)
-        }
-        if !current.items.isEmpty { rows.append(current) }
-
-        var y: CGFloat = 0
-        for idx in rows.indices {
-            rows[idx].y = y
-            y += rows[idx].height + lineSpacing
-        }
-        return rows
-    }
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? 350
-        let r = rows(for: width, subviews: subviews)
-        let height = r.last.map { $0.y + $0.height } ?? 0
-        return CGSize(width: width, height: height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        for row in rows(for: bounds.width, subviews: subviews) {
-            for item in row.items {
-                subviews[item.index].place(
-                    at: CGPoint(
-                        x: bounds.minX + item.x,
-                        y: bounds.minY + row.y + row.height - item.size.height
-                    ),
-                    anchor: .topLeading,
-                    proposal: ProposedViewSize(item.size)
-                )
-            }
-        }
     }
 }
 

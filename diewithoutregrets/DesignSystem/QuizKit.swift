@@ -490,190 +490,20 @@ struct QuizFeedbackPanel: View {
 
 // MARK: - Celebration
 
-/// The full-screen "time unlocked" moment, staged like the Meadow home it
-/// hands off to: the mint grant stamp and the full "+N m" numeral land
-/// together on ONE landing haptic, a single ring pulse blooms, and the CTA
-/// is live almost immediately. No count-up here — the home hero rolls the
-/// new minutes in after the handoff, so the earned time is counted exactly
-/// once. Any tap after the opening beat snaps the whole show settled.
+/// Focus and legacy callers share the same animated earned-time receipt.
 struct UnlockCelebrationView: View {
     let minutes: Int
     let ctaTitle: String
-    /// The proud one-liner under the numeral; the flashcard flow keeps the
-    /// default, the focus flow passes its own.
-    var subtitle: String = "Every card correct. He's impressed."
+    var subtitle: String = "A little studying. More time for you."
+    var correctCount: Int? = nil
+    var totalCount: Int? = nil
     let onStart: () -> Void
 
-    @State private var revealed = false
-    @State private var stamped = false
-    @State private var ringsFired = false
-    @State private var showCTA = false
-    @State private var mascotReplay = 0
-    @State private var canSkip = false
-    @State private var hapticPlayed = false
-    @State private var seq: Task<Void, Never>?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
-        VStack(spacing: 0) {
-            // The air: stamp + readout, styled exactly like the home hero so
-            // returning home feels like the same number settling in.
-            VStack(spacing: 18) {
-                Spacer(minLength: 24)
-
-                ZStack {
-                    CelebrationRings(fired: ringsFired)
-
-                    Circle()
-                        .fill(SGTheme.mint)
-                        .frame(width: 64, height: 64)
-                        .overlay(
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.white)
-                        )
-                        .sgShadow(SGTheme.glow(SGTheme.mint))
-                        .scaleEffect(stamped ? 1.0 : 0.2)
-                        .opacity(stamped ? 1 : 0)
-                }
-                .frame(height: 84)
-
-                VStack(spacing: 14) {
-                    numeral
-                        .scaleEffect(stamped ? 1.0 : 0.85)
-                        .opacity(stamped ? 1 : 0)
-
-                    SGMicroLabel(text: "Time unlocked", color: SGTheme.mintDeep)
-                        .opacity(stamped ? 1 : 0)
-
-                    Text(subtitle)
-                        .font(SGTheme.body)
-                        .foregroundColor(SGTheme.paperSecondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 300)
-                        .padding(.top, 2)
-                        .opacity(stamped ? 1 : 0)
-                }
-
-                Spacer(minLength: 0)
-                    .frame(maxHeight: 56)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            // The meadow: mascot on the crest, CTA on the grass.
-            VStack(spacing: 0) {
-                SGButton(title: ctaTitle, variant: .white, action: onStart)
-                    .opacity(showCTA ? 1 : 0)
-                    .offset(y: showCTA ? 0 : 16)
-            }
-            .padding(.horizontal, SGTheme.screenPadding)
-            .padding(.top, 150)
-            .padding(.bottom, 24)
-            .frame(maxWidth: .infinity)
-            .background(
-                MeadowHill()
-                    .fill(SGTheme.meadowGradient)
-                    .shadow(color: SGTheme.mint.opacity(0.28), radius: 24, y: -8)
-                    .padding(.top, 92)
-                    .ignoresSafeArea(edges: .bottom)
-            )
-            .overlay(alignment: .top) {
-                MascotView(pose: .teaching, loops: 2, replayKey: mascotReplay)
-                    .frame(width: 150, height: 150)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(SGTheme.ink.ignoresSafeArea())
-        // The circle-mask reveal: the whole screen blooms out of the center.
-        .mask(
-            Circle()
-                .scale(revealed ? 4 : 0.02)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: revealed)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { skipToSettled() }
-        .onAppear(perform: play)
-        .onDisappear { seq?.cancel() }
-    }
-
-    /// "+15 m" — the home hero's exact type treatment (SGTheme.heroDigit +
-    /// heroUnit, thin space between digits and unit), shown at full value:
-    /// this screen is the receipt, the home hero does the counting.
-    private var numeral: some View {
-        (Text("+\(minutes)")
-            .font(SGTheme.heroDigit)
-         + Text("\u{2009}m")
-            .font(SGTheme.heroUnit)
-            .foregroundColor(SGTheme.paperSecondary))
-            .foregroundColor(SGTheme.paper)
-    }
-
-    private func play() {
-        guard !reduceMotion else {
-            revealed = true
-            stamped = true
-            showCTA = true
-            if !hapticPlayed {
-                hapticPlayed = true
-                SGTheme.successHaptic()
-            }
-            return
-        }
-
-        revealed = true
-        seq = Task {
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            guard !Task.isCancelled else { return }
-            landStamp()
-
-            try? await Task.sleep(nanoseconds: 200_000_000)
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.7)) { ringsFired = true }
-            mascotReplay += 1
-            canSkip = true
-
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            guard !Task.isCancelled else { return }
-            withAnimation(SGTheme.spring) { showCTA = true }
-        }
-    }
-
-    private func landStamp() {
-        if !hapticPlayed {
-            hapticPlayed = true
-            QuizHaptics.celebrationLanding()
-        }
-        withAnimation(SGTheme.springPop) { stamped = true }
-    }
-
-    /// A tap after the opening beat snaps every stage to settled — the user
-    /// is never held hostage by choreography.
-    private func skipToSettled() {
-        guard canSkip, !showCTA else { return }
-        seq?.cancel()
-        withAnimation(.easeOut(duration: 0.2)) {
-            stamped = true
-            ringsFired = true
-            showCTA = true
-        }
-    }
-}
-
-/// One-shot mint ring pulse behind the grant stamp — expands and dies.
-private struct CelebrationRings: View {
-    let fired: Bool
-
-    var body: some View {
-        ZStack {
-            ForEach(0..<2, id: \.self) { index in
-                Circle()
-                    .stroke(SGTheme.mint.opacity(0.5 - Double(index) * 0.2), lineWidth: 1)
-                    .frame(width: 84, height: 84)
-                    .scaleEffect(fired ? 2.6 + CGFloat(index) * 0.5 : 0.8)
-                    .opacity(fired ? 0 : 0.9)
-                    .animation(.easeOut(duration: 0.7).delay(Double(index) * 0.12), value: fired)
-            }
-        }
+        UnlockSuccessView(minutes: minutes, correctCount: correctCount, totalCount: totalCount,
+                          subtitle: subtitle, ctaTitle: ctaTitle,
+                          destination: NavigationModel.shared.unlockReturnDestination,
+                          onContinue: onStart)
     }
 }
 

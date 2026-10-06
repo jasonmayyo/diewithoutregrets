@@ -33,7 +33,11 @@ requests or readiness for Apple submission.
    The server fixes the model to gpt-4o-mini, one completion, a 12,000 output-token
    ceiling, and a structured 50-card JSON schema. Input is capped at 100,000 UTF-8
    bytes, with an independent streamed-body limit.
-6. Exactly 50 complete, validated cards must return before the app updates its deck.
+6. At least 20 complete, validated cards must return before the app updates its deck;
+   at most 50 are kept. Generated cards use a self-contained sentence in
+   `regretPrompt` with exactly one `___` blank, four distinct short answer choices,
+   and the correct choice verbatim in `regret`. The quiz replaces the explicit
+   blank in place; existing ordinary questions remain question-style cards.
    Refusals, truncated answers, and invalid answer indexes fail without altering it.
 
 Current initial limits remain 10 attempts per installation per UTC day, three

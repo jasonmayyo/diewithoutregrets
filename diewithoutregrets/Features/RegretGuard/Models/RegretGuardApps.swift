@@ -46,6 +46,22 @@ struct Regret: Identifiable, Codable, Equatable {
         choices.indices.contains(correctAnswerIndex) ? choices[correctAnswerIndex] : ""
     }
 
+    /// Older generated decks may store the question in `regret` and
+    /// left the prompt as N/A. Recover only recognizable questions here:
+    /// `regret` also stores answers, so using it blindly would reveal them.
+    var quizPrompt: FlashcardPrompt {
+        if !FlashcardPrompt.isPlaceholder(regretPrompt) {
+            return FlashcardPrompt(regretPrompt)
+        }
+        let legacy = FlashcardPrompt(regret)
+        let isAnswer = choices.contains { AnswerGrading.matches(regret, $0) }
+        if !FlashcardPrompt.isPlaceholder(regret), !isAnswer,
+           legacy.hasBlank || legacy.text.last.map({ "?？؟".contains($0) }) == true {
+            return legacy
+        }
+        return FlashcardPrompt("Choose the correct answer.")
+    }
+
     init(id: UUID = UUID(),
          regretPrompt: String,
          regret: String,
@@ -75,6 +91,49 @@ struct Regret: Identifiable, Codable, Equatable {
         correctAnswerIndex = try c.decode(Int.self, forKey: .correctAnswerIndex)
         backgroundExplanation = try c.decode(String.self, forKey: .backgroundExplanation)
         answerMode = try c.decodeIfPresent(AnswerMode.self, forKey: .answerMode) ?? .choices
+    }
+}
+
+/// Only an explicit blank makes a card a fill-in-the-blank exercise. Ordinary
+/// questions, typed prompts and imported terms must not gain an appended blank.
+struct FlashcardPrompt {
+    enum Part: Equatable {
+        case text(String)
+        case blank
+        case answer(String)
+    }
+
+    let text: String
+    private let blankRange: Range<String.Index>?
+    var hasBlank: Bool { blankRange != nil }
+
+    init(_ text: String) {
+        self.text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Accept older underscore lengths, but never fill several blanks with
+        // a single answer or invent context for a bare placeholder.
+        if let range = self.text.range(of: "_{2,}", options: .regularExpression),
+           self.text[range.upperBound...].range(of: "_{2,}", options: .regularExpression) == nil,
+           self.text.replacingCharacters(in: range, with: "").rangeOfCharacter(from: .alphanumerics) != nil {
+            blankRange = range
+        } else {
+            blankRange = nil
+        }
+    }
+
+    func parts(revealing answer: String? = nil) -> [Part] {
+        guard let blankRange else { return [.text(text)] }
+        var parts: [Part] = []
+        let prefix = String(text[..<blankRange.lowerBound])
+        let suffix = String(text[blankRange.upperBound...])
+        if !prefix.isEmpty { parts.append(.text(prefix)) }
+        parts.append(answer.map { .answer($0) } ?? .blank)
+        if !suffix.isEmpty { parts.append(.text(suffix)) }
+        return parts
+    }
+
+    static func isPlaceholder(_ value: String) -> Bool {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalized.isEmpty || ["n/a", "n / a", "not applicable", "null", "undefined"].contains(normalized)
     }
 }
 

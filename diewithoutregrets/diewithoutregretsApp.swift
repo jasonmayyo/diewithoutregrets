@@ -13,19 +13,16 @@ struct diewithoutregretsApp: App {
         SGPreviewHarness.applyLaunchArguments()
         #endif
 
-        // Cold-launched straight from the shield's "Unlock Apps" button? The
-        // user tapped to get INTO the app right now, so drop the ~1s
-        // cold-start splash. They land on the Guard home, NOT the quiz: the
-        // story plays first — the timer runs dry, the lock clicks shut, the
-        // "He caught you scrolling" home fades up — and Study to unlock is
-        // the way into the flashcards. consumeShieldTapIfFresh still runs
-        // on foreground to consume the stamp.
+        // Cold-launched straight from the shield's "Study to unlock" button? The
+        // user tapped to get INTO the app right now, so drop the cold-start
+        // splash. The system shield already told the blocked story; the app
+        // should open directly on the first flashcard.
         if Self.launchedFromFreshShieldTap {
             _showSplash = State(initialValue: false)
         }
     }
 
-    /// True when the shield "Unlock Apps" button stamped sg_shieldTapAt within
+    /// True when the shield "Study to unlock" button stamped sg_shieldTapAt within
     /// the freshness window. Peeked (not consumed) here to choose the launch
     /// presentation; consumeShieldTapIfFresh consumes the stamp on foreground.
     private static var launchedFromFreshShieldTap: Bool {
@@ -103,10 +100,8 @@ struct diewithoutregretsApp: App {
                 if url.scheme == "diewithoutregrets" && url.host == "unlock" {
                     StudyGuardManager.shared.reconcileOnForeground()
                     if StudyGuardManager.shared.state == .locked {
-                        // Land on the Guard home, not the quiz — the lock
-                        // reveal ("He caught you scrolling") plays there and
-                        // owns the way into the flashcards.
-                        navigationModel.returnHome()
+                        navigationModel.unlockMethodOverride = "flashcards"
+                        navigationModel.navigate(to: .regretView)
                     }
                 }
             }
@@ -161,17 +156,17 @@ struct diewithoutregretsApp: App {
     }
 
     /// The shield action extension stamps sg_shieldTapAt when the user taps
-    /// "Unlock Apps" on the shield. If the app foregrounds shortly after
+    /// "Study to unlock" on the shield. If the app foregrounds shortly after
     /// (direct open via openParentalControlsApp on iOS 26.5+, a notification
-    /// tap, or the user opening the app by hand), land on the Guard home so
-    /// the lock reveal plays: timer runs dry, the lock clicks shut, and the
-    /// "He caught you scrolling" scene offers Study to unlock. The stamp is
-    /// consumed on first read.
+    /// tap, or the user opening the app by hand), go straight to the first
+    /// flashcard. The system shield already supplied the blocked beat. The
+    /// stamp is consumed on first read.
     private func consumeShieldTapIfFresh() {
         guard let defaults = SGContract.sharedDefaults else { return }
         let tapAt = defaults.double(forKey: SGContract.Keys.shieldTapAt)
         guard tapAt > 0 else { return }
         defaults.removeObject(forKey: SGContract.Keys.shieldTapAt)
+        let returnDestination = ShieldReturnContext.consumePending(in: defaults)
 
         // We're open now, so the shield tap's safety-net notification is
         // redundant — cancel it whether it's still pending (the delayed net
@@ -184,8 +179,8 @@ struct diewithoutregretsApp: App {
 
         guard Date().timeIntervalSince1970 - tapAt < 120,
               StudyGuardManager.shared.state == .locked else { return }
-        // Back out of any stale destination (an old quiz session) onto the
-        // home, where the lock reveal takes it from here.
-        navigationModel.returnHome()
+        navigationModel.unlockReturnDestination = returnDestination
+        navigationModel.unlockMethodOverride = "flashcards"
+        navigationModel.navigate(to: .regretView)
     }
 }

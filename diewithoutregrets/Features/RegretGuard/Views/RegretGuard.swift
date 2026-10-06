@@ -81,16 +81,18 @@ struct RegretGuard: View {
                 // daylight meadow.
                 LockedHomeView(
                     emergencyUnlocksRemaining: guardManager.emergencyUnlocksRemaining,
-                    deck: deckStore.selectedDeck ?? deckStore.decks.first,
                     onStudy: {
                         // Leave the night scene through the unlock wipe: the
                         // root swaps to the quiz while the screen is covered.
                         NavigationModel.shared.wipeTo(.unlock) {
+                            NavigationModel.shared.unlockMethodOverride = "flashcards"
                             NavigationModel.shared.navigate(to: .regretView)
                         }
                     },
-                    onEmergency: { showEmergencySheet = true },
-                    onDeckTap: { showDeckPicker = true }
+                    onEmergency: {
+                        guardManager.refresh()
+                        showEmergencySheet = true
+                    }
                 )
                 .transition(.opacity)
             } else {
@@ -1063,154 +1065,89 @@ private struct GlassPill: View {
 
 // MARK: - Lock-out home
 
-/// The home while the apps are locked — One Thing's home language turned
-/// into a red alert: the night canvas, the alarm dot ripple radiating from
-/// the monster at the centre of the screen, and one path forward stacked at
-/// the bottom (active deck first, the unlock CTA beneath it). Revealed by
-/// the corner wipe + lock stamp the moment screen time runs out.
+/// The fallback in-app lock screen. The system shield normally sends users
+/// directly to the quiz; manual entry also exposes the existing, limited
+/// emergency unlock flow below the primary study action.
 struct LockedHomeView: View {
     let emergencyUnlocksRemaining: Int
-    let deck: Deck?
-    var onStudy: () -> Void = {}
-    var onEmergency: () -> Void = {}
-    var onDeckTap: () -> Void = {}
+    let onStudy: () -> Void
+    let onEmergency: () -> Void
 
     /// The night scene token (SGTheme) — shared with the lock wipe's final
     /// band and the stamp overlay's background so the whole reveal reads as
     /// one continuous scene.
     static let night = SGTheme.night
 
-    /// Measured centre of the mascot (global coords). The ripple locks to
-    /// it so every crest radiates from him, wherever the layout puts him.
-    @State private var mascotCenter: CGPoint? = nil
-
     var body: some View {
         ZStack {
-            Self.night.ignoresSafeArea()
-
-            // The red dot storm — One Thing's home-screen ripple, radiating
-            // from the monster. Full-bleed so crests run out past the safe
-            // areas and under the floating glass dock.
-            SGDotGridRipple(centerPoint: mascotCenter)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-
-            // Alarm bloom behind the monster — the scene's light source.
-            // Values come from SGLockScene, shared with the lock stamp, so
-            // the overlay crossfades into this scene pixel-for-pixel.
-            RadialGradient(colors: [SGLockScene.accent.opacity(SGLockScene.bloomOpacity), .clear],
-                           center: SGLockScene.bloomCenter,
-                           startRadius: SGLockScene.bloomStartRadius,
-                           endRadius: SGLockScene.bloomEndRadius)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+            SGLockScene.accent.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Spacer(minLength: 24)
+                Spacer()
+
+                Image(systemName: "lock.fill")
+                    .font(SGTheme.display(104))
+                    .foregroundColor(.white)
+                    .accessibilityHidden(true)
 
                 VStack(spacing: 12) {
-                    SGMicroLabel(text: "Time's up", color: SGLockScene.accent)
-                    Text("He caught you scrolling")
+                    Text("Caught you scrolling")
                         .font(SGTheme.stepTitle)
-                        .foregroundColor(SGTheme.nightText)
-                        .multilineTextAlignment(.center)
-                    Text("Your screen time is spent. Answer your flashcards to win your apps back.")
+                    Text("Study to earn 5 min")
                         .font(SGTheme.body)
-                        .foregroundColor(SGTheme.nightTextSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 300)
+                        .opacity(0.82)
                 }
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.top, 32)
                 .padding(.horizontal, SGTheme.screenPadding)
 
-                Spacer(minLength: 20)
+                Spacer()
 
-                // The monster in the eye of the storm. His measured centre
-                // feeds the ripple above.
-                AngryMascotImage()
-                    .frame(width: 200, height: 200)
-                    .shadow(color: SGLockScene.accent.opacity(0.45), radius: 36, y: 12)
-                    .background(
-                        GeometryReader { proxy in
-                            let frame = proxy.frame(in: .global)
-                            Color.clear
-                                .onAppear {
-                                    mascotCenter = CGPoint(x: frame.midX, y: frame.midY)
-                                }
-                                .onChange(of: frame) { _, newFrame in
-                                    mascotCenter = CGPoint(x: newFrame.midX, y: newFrame.midY)
-                                }
-                        }
-                    )
-
-                Spacer(minLength: 20)
-
-                VStack(spacing: 12) {
-                    if let deck {
-                        deckCard(deck)
-                    }
-
+                VStack(spacing: 18) {
                     SGButton(title: "Study to unlock",
                              icon: "rectangle.stack.fill",
-                             variant: .alarm,
+                             variant: .white,
                              action: onStudy)
 
-                    if emergencyUnlocksRemaining > 0 {
-                        Button(action: onEmergency) {
-                            Text("Emergency unlock (\(emergencyUnlocksRemaining) left)")
+                    Button(action: onEmergency) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "key.fill")
+                                .accessibilityHidden(true)
+                            Text("Emergency unlock")
+                                .font(SGTheme.buttonSmall)
+                            Spacer(minLength: 8)
+                            Text("\(emergencyUnlocksRemaining) left")
                                 .font(SGTheme.caption)
-                                .foregroundColor(SGTheme.nightTextTertiary)
-                                .underline()
                         }
-                        .padding(.top, 2)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 14)
+                        .frame(minHeight: 48)
+                        .background(SGTheme.night.opacity(0.35), in: Capsule())
+                        .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                        .contentShape(Capsule())
                     }
+                    .buttonStyle(SGPressStyle())
+                    .accessibilityLabel("Emergency unlock")
+                    .accessibilityValue("\(emergencyUnlocksRemaining) left this week")
+                    .accessibilityHint(emergencyUnlocksRemaining > 0
+                        ? "Opens a confirmation before using an unlock."
+                        : "Shows when your next emergency unlock is available.")
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
                 .padding(.bottom, SGTheme.tabBarClearance)
             }
         }
     }
-
-    /// The active deck on smoked glass, so the storm stays visible through
-    /// every surface on this screen.
-    private func deckCard(_ deck: Deck) -> some View {
-        Button(action: onDeckTap) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 4) {
-                    SGMicroLabel(text: "Active deck", color: SGLockScene.accent)
-                    Text(deck.name)
-                        .font(SGTheme.display(20))
-                        .foregroundColor(SGTheme.nightText)
-                        .lineLimit(1)
-                    Text(deck.cards.count == 1
-                         ? "1 card. Answering it unlocks your apps"
-                         : "\(deck.cards.count) cards. Answering them unlocks your apps")
-                        .font(SGTheme.caption)
-                        .foregroundColor(SGTheme.nightTextSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                }
-                Spacer()
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(SGTheme.rowLabel)
-                    .foregroundColor(SGTheme.nightTextTertiary)
-            }
-            .padding(SGTheme.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .sgGlassBackground(in: RoundedRectangle(cornerRadius: SGTheme.cardRadius,
-                                                    style: .continuous),
-                               onDark: true)
-        }
-        .buttonStyle(SGPressStyle())
-    }
 }
 
 #Preview("Locked home") {
-    LockedHomeView(
-        emergencyUnlocksRemaining: 3,
-        deck: Deck(name: "Biology 101")
-    )
+    LockedHomeView(emergencyUnlocksRemaining: 3, onStudy: {}, onEmergency: {})
+}
+
+#Preview("Locked home · no unlocks left") {
+    LockedHomeView(emergencyUnlocksRemaining: 0, onStudy: {}, onEmergency: {})
 }
 
 #Preview("Empty / not set up") {

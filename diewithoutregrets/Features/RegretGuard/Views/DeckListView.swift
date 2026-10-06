@@ -315,7 +315,7 @@ struct DeckView: View {
                             showEditSheet = true
                         } label: {
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(card.regretPrompt)
+                                Text(card.quizPrompt.text)
                                     .font(SGTheme.cardTitle)
                                     .foregroundColor(SGTheme.paper)
                                     .lineLimit(nil)
@@ -466,7 +466,7 @@ struct CardDetailView: View {
                 Text("Question")
                     .font(SGTheme.display(20))
                     .foregroundColor(SGTheme.paper)
-                Text(card.regretPrompt)
+                Text(card.quizPrompt.text)
                     .foregroundColor(SGTheme.paperSecondary)
 
                 Text("Answer")

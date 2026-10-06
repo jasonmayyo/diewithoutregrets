@@ -21,6 +21,14 @@ store and stop+starts monitoring with fresh events (`includesPastActivity:
 false`) — the only reliable way to reset the usage accumulator. A fresh free
 N-minute budget arrives each new day; a lock always survives midnight.
 
+Completed Screen Time quizzes grant `ceil(correct answers × per-card seconds / 60)`
+minutes, capped at 60. Mistakes do not cancel earnings, including a wrong final
+answer. Incomplete, empty, and zero-correct quizzes grant nothing. The quiz counter
+shows earned seconds and the receipt explains any rounding up (150 seconds earns
+a 3-minute budget). Whole-minute rounding is our metering policy, not an Apple
+minimum unlock duration; the usage threshold is separate from the daily schedule.
+The grant happens synchronously at the final answer, before result animations.
+
 ## Keys
 
 | Key | Type | Writer | Reader | Semantics |
@@ -41,6 +49,8 @@ N-minute budget arrives each new day; a lock always survives midnight.
 | `sg_lastRolloverDay` | Double | both | both | Start-of-day marker; makes rollover idempotent across processes; pre-written before every `startMonitoring` so the immediate `intervalDidStart` no-ops. |
 | `sg_lockNotifThrottleAt` | Double | monitor, shield action | monitor | 30s lock-notification throttle. The shield action extension also stamps it when posting its instant unlock notification (same fixed id) so a monitor re-fire replaces rather than stacks. |
 | `sg_shieldTapAt` | Double | shield action | app (consumes) | Epoch of the last "Open Study Guard" shield-button tap. App consumes on foreground; if fresh (<120s) and locked, it navigates straight to the unlock flow. |
+| `sg_shieldReturnCandidates` | Data (JSON dictionary) | shield configuration | shield action | Up to 50 opaque-token-to-supported-app mappings. Rendering a shield caches its identity; it does not select a return destination. |
+| `sg_pendingShieldReturn` | Data (JSON object) | shield action | app (consumes) | Bundle ID and tap timestamp, selected by matching the actual tapped application token. Website/category/unknown-token taps clear it. Consumed once within 120 seconds. |
 | `sg_extLog` | [String] | monitor | app (Debug tab) | ≤200-entry ring buffer — the only extension observability on device. |
 | `sg_pendingEvents` | Data (JSON array) | both enqueue, app drains | app | Analytics queue (PostHog can't run in extensions). App swaps to `sg_pendingEventsDraining` before reading to avoid the append/drain race. |
 | `LegacyIntentFireCount` | Int | intents | app | Post-migration automation fires; flushed as `legacy_intent_noop`. |
@@ -71,6 +81,14 @@ notification while consuming `sg_shieldTapAt`. Queues `shield_button_tapped`
 analytics (`method: direct|notification`). The secondary button just closes.
 
 ## Rules
+The app captures a fresh return destination in `NavigationModel` when consuming
+the shield tap and clears it on leaving the unlock flow. The success screen
+plays `Lock.lottie`'s opening segment on a green canvas, then the user can
+return through a known app URL scheme. Unsupported apps and failed launches
+leave the earned grant intact and offer a manual return. No application is
+guessed from the last rendered shield or the legacy `LastGuardedApp` value.
+Screen Time capture and actual third-party app launches require device QA.
+
 1. Only the app starts/stops monitoring — with ONE exception: the monitor's
    day-rollover normalization restart when `armed ≠ interval`.
 2. `intervalDidEnd` and all warning callbacks are **log-only** (app-side

@@ -237,8 +237,7 @@ private struct QV2RaysShape: Shape {
 
 // MARK: - Failure ending
 
-/// The run is sealed: not every card was right. Same three ways forward as
-/// the legacy QuizFailureView, restyled as a lesson-results screen.
+/// A completed run with no correct answers earned no screen time.
 struct QuizV2FailureView: View {
     let correctCount: Int
     let totalCount: Int
@@ -263,7 +262,7 @@ struct QuizV2FailureView: View {
                     .foregroundColor(QV2.text)
                     .padding(.top, 20)
 
-                Text("You got \(correctCount) of \(totalCount). Your apps stay locked until every card is right.")
+                Text("No time earned this round. Each correct answer earns screen time. Try these cards again to unlock your apps.")
                     .font(QV2.font(17, .medium))
                     .foregroundColor(QV2.textSecondary)
                     .multilineTextAlignment(.center)
@@ -323,7 +322,7 @@ struct QuizV2FailureView: View {
 
 #Preview("Quiz v2 failure") {
     QuizV2FailureView(
-        correctCount: 1,
+        correctCount: 0,
         totalCount: 3,
         emergencyUnlocksRemaining: 3,
         onRetry: {},

@@ -22,6 +22,8 @@ public final class NavigationModel: ObservableObject {
     /// instead") without changing their saved preference. Cleared when the
     /// unlock flow dismisses.
     @Published public var unlockMethodOverride: String?
+    /// Captured from the shield tap for this flow only. Cleared on every exit.
+    @Published var unlockReturnDestination: ShieldReturnDestination?
     /// True while the Guard home's lock-stamp overlay is playing. ContentView
     /// hides the floating tab bar so the stamp owns the whole screen.
     @Published public var isLockStampPlaying: Bool = false
@@ -71,10 +73,12 @@ public final class NavigationModel: ObservableObject {
         if Thread.isMainThread {
             currentDestination = nil
             unlockMethodOverride = nil
+            unlockReturnDestination = nil
         } else {
             DispatchQueue.main.async {
                 self.currentDestination = nil
                 self.unlockMethodOverride = nil
+                self.unlockReturnDestination = nil
             }
         }
     }

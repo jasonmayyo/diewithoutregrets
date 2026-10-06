@@ -44,6 +44,11 @@ enum SGTheme {
     static let mintSoft = Color(hex: 0x8CE0C4)
     /// Pale mint wash: selected fills, chips (replaces ad-hoc mint.opacity).
     static let mintTint = Color(hex: 0xE9F8F1)
+    /// Earned-time celebration: forest green canvas with bright mint highlights.
+    static let unlockTop = Color(hex: 0x073D31)
+    static let unlockBottom = Color(hex: 0x146A43)
+    static let unlockHighlight = Color(hex: 0xC4F5D7)
+    static let unlockSecondary = Color(hex: 0xCEE5DA)
     /// Lock/alert accent (mascot horns). Deliberately not alarm-red.
     static let ember = Color(hex: 0xFF7A59)
     /// Deep ember: button ledges, text on light surfaces.

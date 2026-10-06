@@ -153,8 +153,10 @@ struct ContentView: View {
                              style: selectedTab == 0
                                 ? (navigationModel.isLockedHomeShowing ? .night : .meadow)
                                 : .light)
-                        .opacity(navigationModel.isLockStampPlaying ? 0 : 1)
+                        .opacity(navigationModel.isLockStampPlaying
+                                 || (selectedTab == 0 && navigationModel.isLockedHomeShowing) ? 0 : 1)
                         .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockStampPlaying)
+                        .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockedHomeShowing)
                 }
                 .background(SGTheme.ink.ignoresSafeArea())
                 // One-shot tab-switch requests (Creator Toolkit lands the

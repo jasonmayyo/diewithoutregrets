@@ -53,4 +53,58 @@ final class FlashcardAPIClientTests: XCTestCase {
             XCTAssertEqual(error as? FlashcardServiceError, .unavailable)
         }
     }
+
+    @MainActor func testRejectsPlaceholderPromptsAndMalformedBlanks() throws {
+        for prompt in ["N/A", " n / a ", "Not applicable", "null", "undefined", "___", " ___. ", "___ requires ___"] {
+            let card = GeneratedFlashcard(regretPrompt: prompt, regret: "effort",
+                choices: ["effort", "perfection", "avoidance", "conflict"], correctAnswerIndex: 0,
+                backgroundExplanation: "Relationships take practice.")
+            XCTAssertFalse(card.isValid, prompt)
+        }
+        var payload = try XCTUnwrap(JSONSerialization.jsonObject(with: response()) as? [String: Any])
+        var cards = try XCTUnwrap(payload["cards"] as? [[String: Any]])
+        cards[0]["regretPrompt"] = "N/A"
+        payload["cards"] = cards
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(JSONSerialization.data(withJSONObject: payload)))
+    }
+
+    func testClozeReplacesOnlyTheBlankAndPreservesContext() {
+        let prompt = FlashcardPrompt("Relationships require ongoing ___ and self-awareness.")
+        XCTAssertEqual(prompt.parts(), [.text("Relationships require ongoing "), .blank, .text(" and self-awareness.")])
+        XCTAssertEqual(prompt.parts(revealing: "effort"), [.text("Relationships require ongoing "), .answer("effort"), .text(" and self-awareness.")])
+        XCTAssertEqual(prompt.parts(revealing: "perfection"), [.text("Relationships require ongoing "), .answer("perfection"), .text(" and self-awareness.")])
+    }
+
+    func testBlankAtEitherEndAndUnicodePreservePunctuation() {
+        XCTAssertEqual(FlashcardPrompt("___ powers the cell.").parts(revealing: "ATP"), [.answer("ATP"), .text(" powers the cell.")])
+        XCTAssertEqual(FlashcardPrompt("The answer is ___.").parts(revealing: "42"), [.text("The answer is "), .answer("42"), .text(".")])
+        XCTAssertEqual(FlashcardPrompt("光的意思是____。").parts(revealing: "light"), [.text("光的意思是"), .answer("light"), .text("。")])
+    }
+
+    func testOrdinaryQuestionsAndImportedTermsNeverAppendAnswers() {
+        for text in ["What does light mean?", "True or false: plants need light.", "Photosynthesis"] {
+            let prompt = FlashcardPrompt(text)
+            XCTAssertFalse(prompt.hasBlank)
+            XCTAssertEqual(prompt.parts(), [.text(text)])
+            XCTAssertEqual(prompt.parts(revealing: "A full-sentence answer."), [.text(text)])
+        }
+    }
+
+    func testLegacyPlaceholderRecoversQuestionWithoutLeakingAnswer() {
+        var card = Regret(regretPrompt: "N/A", regret: "What do healthy relationships require?",
+            choices: ["You must always be perfect in relationships.",
+                      "Relationships require ongoing effort and self-awareness.",
+                      "Once you learn, you never need to practice again.",
+                      "You should avoid all conflict."], correctAnswerIndex: 1,
+            backgroundExplanation: "Relationships take practice.")
+        XCTAssertEqual(card.quizPrompt.text, "What do healthy relationships require?")
+        card.regret = card.correctAnswer
+        XCTAssertEqual(card.quizPrompt.text, "Choose the correct answer.")
+        XCTAssertEqual(card.quizPrompt.parts(revealing: card.choices[2]), [.text("Choose the correct answer.")])
+        card.regret = "N/A"
+        XCTAssertEqual(card.quizPrompt.text, "Choose the correct answer.")
+        card.regretPrompt = "Relationships require ___."
+        card.answerMode = .typed
+        XCTAssertEqual(card.quizPrompt.parts(revealing: "ongoing effort"), [.text("Relationships require "), .answer("ongoing effort"), .text(".")])
+    }
 }

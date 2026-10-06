@@ -13,6 +13,8 @@ struct GeneratedFlashcard: Decodable {
         let strings = [regretPrompt, regret, backgroundExplanation] + choices
         return [2, 4].contains(choices.count) && choices.indices.contains(correctAnswerIndex)
             && strings.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.count <= 4000 }
+            && !FlashcardPrompt.isPlaceholder(regretPrompt)
+            && (!regretPrompt.contains("__") || FlashcardPrompt(regretPrompt).hasBlank)
     }
 }
 

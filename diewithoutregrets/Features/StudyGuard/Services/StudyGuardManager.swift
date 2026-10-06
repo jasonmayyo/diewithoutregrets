@@ -161,15 +161,16 @@ final class StudyGuardManager: ObservableObject {
         refresh()
     }
 
-    /// The quiz grant: earned time scales with the draw (perCardSeconds per
-    /// card, rounded up to whole minutes, floored at minEarnedMinutes).
+    /// A completed quiz grants time for every correct answer, rounded up to
+    /// whole minutes. Zero earnings and unfinished quizzes never clear shields.
     /// Returns the granted minutes so callers can show the real number.
     @discardableResult
-    func grantEarnedBudget(cardCount: Int) -> Int {
-        let rate = SGContract.perCardSeconds(defaults)
-        let minutes = SGContract.earnedMinutes(cardCount: cardCount, perCardSeconds: rate)
+    func grantEarnedBudget(results: [Bool?], perCardSeconds rate: Int) -> Int {
+        let minutes = SGContract.completedQuizMinutes(results: results, perCardSeconds: rate)
+        guard minutes > 0, defaults != nil else { return 0 }
         grantFreshBudget(reason: .quiz, minutes: minutes, analyticsContext: [
-            "card_count": String(cardCount),
+            "card_count": String(results.count),
+            "correct_count": String(results.filter { $0 == true }.count),
             "per_card_seconds": String(rate),
         ])
         return minutes
@@ -495,6 +496,7 @@ final class StudyGuardManager: ObservableObject {
 
     func debugResetAll() {
         guard let d = defaults else { return }
+        ShieldReturnContext.clear(in: d)
         center.stopMonitoring([SGContract.activity])
         store.clearAllSettings()
         [SGContract.Keys.setupComplete, SGContract.Keys.guardEnabled, SGContract.Keys.selection,

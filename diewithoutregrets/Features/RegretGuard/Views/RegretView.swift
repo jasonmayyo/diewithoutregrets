@@ -9,9 +9,9 @@
 //    button is the always-present fallback and the VoiceOver path).
 //  - Correct answers auto-advance after a short dwell; the praise capsule
 //    pauses the advance and opens the explanation for anyone who wants it.
-//  - A wrong answer offers "Retry from the top" immediately — no doomed
-//    march through cards that can no longer unlock anything.
-//  - The grant fires synchronously at the final correct commit, never
+//  - Screen Time quizzes pay for correct answers after the whole run.
+//    The legacy Shortcuts route retains its all-correct rule.
+//  - The grant fires synchronously at the final commit, never
 //    inside celebration choreography, so backgrounding mid-celebration can
 //    never eat an earned unlock.
 //  - Retries reshuffle the SAME drawn cards (missed first), so the deck
@@ -58,6 +58,8 @@ struct RegretView: View {
 
     @State private var showFinalMessage = false
     @State private var hasIncorrectAnswers = false
+    @State private var grantedMinutes = 0
+    @State private var perCardSeconds = StudyGuardManager.shared.perCardSeconds
 
     // MARK: Entry / endings
 
@@ -115,7 +117,17 @@ struct RegretView: View {
         ZStack {
             // Endings own the whole canvas — no quiz header above them.
             if showFinalMessage && !showDeckRescue && !alreadyUnlocked {
-                if hasIncorrectAnswers {
+                if isV2 && grantedMinutes == 0 {
+                    QuizV2FailureView(
+                        correctCount: correctCount,
+                        totalCount: selectedRegrets.count,
+                        emergencyUnlocksRemaining: studyGuard.emergencyUnlocksRemaining,
+                        onRetry: { retryQuestions(source: "failure_screen") },
+                        onEmergency: { showEmergencySheet = true },
+                        onGiveUp: giveUp
+                    )
+                    .transition(.opacity)
+                } else if !isV2 && hasIncorrectAnswers {
                     QuizFailureView(
                         correctCount: correctCount,
                         totalCount: selectedRegrets.count,
@@ -131,10 +143,12 @@ struct RegretView: View {
                     // The grant already happened at the final commit — this
                     // screen is the receipt: one stamp, one haptic, CTA live.
                     UnlockCelebrationView(
-                        minutes: isV2 ? studyGuard.intervalMinutes : flashcardBreakDuration,
+                        minutes: grantedMinutes,
                         ctaTitle: isV2
-                            ? "Start my \(studyGuard.intervalMinutes) minutes"
+                            ? "Start my \(grantedMinutes) minutes"
                             : "Unlock \(currentAppName)",
+                        correctCount: correctCount,
+                        totalCount: selectedRegrets.count,
                         onStart: handleCelebrationCTA
                     )
                     .transition(.opacity)
@@ -260,7 +274,7 @@ struct RegretView: View {
     /// (never a fading ghost tile under a fresh one).
     private func questionUnit(_ regret: Regret) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(regret.regretPrompt)
+            Text(regret.quizPrompt.text)
                 .font(SGTheme.display(24))
                 .foregroundColor(SGTheme.paper)
                 .multilineTextAlignment(.leading)
@@ -344,15 +358,16 @@ struct RegretView: View {
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
 
-                // One wrong answer already seals this run — offer the real
-                // way forward first instead of a doomed march.
-                SGButton(title: "Retry from the top",
-                         variant: .ember,
-                         debounceWindow: 0.25) {
-                    retryQuestions(source: "early_retry")
+                if !isV2 {
+                    SGButton(title: "Retry from the top",
+                             variant: .ember,
+                             debounceWindow: 0.25) {
+                        retryQuestions(source: "early_retry")
+                    }
                 }
 
-                SGButton(title: "Keep going", variant: .text, debounceWindow: 0.25) {
+                SGButton(title: questionIndex == selectedRegrets.count - 1 ? "See results" : "Continue",
+                         variant: isV2 ? .ember : .text, debounceWindow: 0.25) {
                     advance()
                 }
             }
@@ -393,7 +408,7 @@ struct RegretView: View {
     }
 
     /// The moment of truth. Judges the armed answer, records it, and — on
-    /// the final correct commit — grants the unlock RIGHT HERE, before any
+    /// the final commit — grants the unlock RIGHT HERE, before any
     /// celebration choreography can put it at risk.
     private func commit() {
         guard case .answering = phase,
@@ -427,10 +442,10 @@ struct RegretView: View {
             )
         }
 
-        // Invariant: a grant requires every question answered correctly and
-        // at least one question answered — the empty-deck rescue path can
-        // never reach here.
-        if correct && !hasIncorrectAnswers && questionIndex == selectedRegrets.count - 1 {
+        // Screen Time pays for correct answers, including when the final
+        // answer is wrong. Legacy Shortcuts still requires a perfect run.
+        if questionIndex == selectedRegrets.count - 1,
+           isV2 || (correct && !hasIncorrectAnswers) {
             earnUnlock()
         }
 
@@ -558,6 +573,7 @@ struct RegretView: View {
         expandedWhy = false
         showFinalMessage = false
         hasIncorrectAnswers = false
+        grantedMinutes = 0
         questionResults = Array(repeating: nil, count: selectedRegrets.count)
         answeredQuestionIndices = []
     }
@@ -572,8 +588,7 @@ struct RegretView: View {
         )
         attemptNumber += 1
 
-        // Same cards, missed first — the contract is "every card right",
-        // not "reshuffle until the draw gets easier".
+        // Keep the same draw, with missed cards first, when retrying.
         let paired = Array(zip(selectedRegrets, questionResults))
         selectedRegrets =
             paired.filter { $0.1 == false }.map(\.0)
@@ -596,12 +611,13 @@ struct RegretView: View {
         // The final result was written just before this call, so
         // correctCount already includes it. At least one correct answer is
         // the free-unlock invariant.
-        guard correctCount > 0 else { return }
+        guard correctCount > 0, grantedMinutes == 0 else { return }
 
-        var grantedMinutes = flashcardBreakDuration
         if isV2 {
-            grantedMinutes = StudyGuardManager.shared.grantEarnedBudget(cardCount: selectedRegrets.count)
+            grantedMinutes = studyGuard.grantEarnedBudget(results: questionResults, perCardSeconds: perCardSeconds)
+            guard grantedMinutes > 0 else { return }
         } else {
+            grantedMinutes = flashcardBreakDuration
             // Legacy Shortcuts flow: record the break the moment it's
             // earned; the CTA still opens the guarded app.
             let currentTime = Date().timeIntervalSince1970

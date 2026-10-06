@@ -7,19 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		006DEFCA106930111FB6AA6B /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		02C1B351C8894FE0D1ACCC53 /* GuardRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE68487A12F7833146396BBE /* GuardRingView.swift */; };
 		041543A64C58B338374EEE95 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */; };
+		06772BB5EF9E199F34B7313F /* UnlockSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E417BDD6AD2ED1B227AD47FB /* UnlockSuccessView.swift */; };
 		090C58E9A9D20D7994496BC7 /* MascotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 366D2488121B0EED51D427C3 /* MascotView.swift */; };
 		10F89732518D8FA38DF9C85E /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
 		1151F2B6736387ECA78E3094 /* StudyGuardMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06C414461884222A3462D172 /* StudyGuardMonitorExtension.swift */; };
 		141817C7C754B82EF5061F21 /* UsageIntervalOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153BFDD3C51B96C1A4291672 /* UsageIntervalOnboarding.swift */; };
 		1471F72054BFFEEB9E06FD35 /* SGGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7A7BBBB44C6EEB5C416E98 /* SGGallery.swift */; };
+		17E5D1A58D6ABF3F313F4F09 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		1929484807E7DCAABFD7348E /* ScreenTimeAuthOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */; };
 		1C7C7564E40CE32E7EEE41D7 /* QuizletImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A44E4579757FFA9816BECB /* QuizletImportService.swift */; };
 		1E1D532D4103CEA0E2BAE68B /* 2_Looking down_shadow.json in Resources */ = {isa = PBXBuildFile; fileRef = 16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */; };
 		2003E5977EFC831618E3A7AB /* OnboardingScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D5949165897B100D1AC547 /* OnboardingScaffold.swift */; };
 		21B7A1AEAA11D5996BB2EABD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		2283B074EF76118C4E2220C6 /* GuardedAppsPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */; };
+		23A4945450E5D4DF407C2EA2 /* ShieldReturnContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9E75A5D01B0C7DD1AEB247 /* ShieldReturnContextTests.swift */; };
 		24943C499C1B8FB819A9CE6D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F8241C66EC48E6AE393BE1 /* ProfileView.swift */; };
 		292F9A5AE5A67AB71C23AA2F /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B044EECE4F6DE81C3E96A69 /* MonsterLiveActivityAttributes.swift */; };
 		2A110DB0804D43159A59B406 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 021B87114F8544B1BA4FCA50 /* Sentry */; };
@@ -130,6 +134,7 @@
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
 		6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */; };
+		749D9CF90DDD23E9D3626556 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		777ED1FFDEBFE89954CE0F5A /* FlashcardAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */; };
 		814B6A23485D02B9033A6EB8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 168A7A9CDF38BD1EB046B7FD /* PrivacyInfo.xcprivacy */; };
 		84E77F1FE8E9F6B573A79A68 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
@@ -169,6 +174,7 @@
 		C969C4F71D1D0713AA96E4CB /* SGButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FD537ABAF4DD66948B15BA /* SGButton.swift */; };
 		CAA0DC2839144A3B4762DFF8 /* SGPreviewHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104430C26AE79C6F4714D55 /* SGPreviewHarness.swift */; };
 		CC1F9F6F371B44A8C9262149 /* angry-mascot.png in Resources */ = {isa = PBXBuildFile; fileRef = 3899733C30CE27AC1F76F852 /* angry-mascot.png */; };
+		CE6CD17DDB43DD9EE7BE2E20 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		D0F005F3ADF8BF1A0EB78B66 /* StudyGuardShieldExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */; };
 		D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */; };
 		D32399521730C4271EE502FD /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
@@ -177,6 +183,7 @@
 		D9445B469A01523F8D95915D /* UsageIntervalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6206A7D437A5ECCF89A5A1B7 /* UsageIntervalSheet.swift */; };
 		DA3AF89DE98402B9B6EA937A /* SGTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */; };
 		E1661F51ED5BA2BEB862C113 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
+		EA730D4D0DB43F7E78D54C3F /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		EC1FD554C06F896982DED2AE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		EC4D87A0EB8C24ACF8F99F22 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */; };
 		EF8960C3CA4E55F57833C516 /* StudyGuardReportExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604F8471C8AD7073A02BBC17 /* StudyGuardReportExtension.swift */; };
@@ -338,6 +345,7 @@
 		565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmergencyUnlockSheet.swift; sourceTree = "<group>"; };
 		5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FlashcardAPIClient.swift; sourceTree = "<group>"; };
 		5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTheme.swift; sourceTree = "<group>"; };
+		5B9E75A5D01B0C7DD1AEB247 /* ShieldReturnContextTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShieldReturnContextTests.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000A1 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000B1 /* SecretsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretsLoader.swift; sourceTree = "<group>"; };
 		5E4710E700000000000000C1 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
@@ -438,10 +446,12 @@
 		D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenTimeAuthOnboarding.swift; sourceTree = "<group>"; };
 		DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Coins.swift; sourceTree = "<group>"; };
 		E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardManager.swift; sourceTree = "<group>"; };
+		E417BDD6AD2ED1B227AD47FB /* UnlockSuccessView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnlockSuccessView.swift; sourceTree = "<group>"; };
 		E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsPickerSheet.swift; sourceTree = "<group>"; };
 		E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "2_Looking down_char.json"; sourceTree = "<group>"; };
 		E5E5D5C36077513EB1D031B8 /* StudyGuardMonitor.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardMonitor.entitlements; sourceTree = "<group>"; };
 		E9FFFAAF633CE842B8784D7C /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShieldReturnContext.swift; sourceTree = "<group>"; };
 		EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEFC70BA4412FD014A8116A4 /* GuardedAppsOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsOnboarding.swift; sourceTree = "<group>"; };
 		F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardReport.entitlements; sourceTree = "<group>"; };
@@ -559,6 +569,7 @@
 			isa = PBXGroup;
 			children = (
 				C5B684B8E0357F56C6BF8C00 /* SGContract.swift */,
+				EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -939,6 +950,7 @@
 			children = (
 				4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */,
 				C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */,
+				5B9E75A5D01B0C7DD1AEB247 /* ShieldReturnContextTests.swift */,
 			);
 			path = diewithoutregretsTests;
 			sourceTree = "<group>";
@@ -1024,6 +1036,7 @@
 				6104430C26AE79C6F4714D55 /* SGPreviewHarness.swift */,
 				A5FD537ABAF4DD66948B15BA /* SGButton.swift */,
 				3C7A7BBBB44C6EEB5C416E98 /* SGGallery.swift */,
+				E417BDD6AD2ED1B227AD47FB /* UnlockSuccessView.swift */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -1409,6 +1422,7 @@
 				90170B5B6CBB15E3B292299F /* StudyGuardShieldActionExtension.swift in Sources */,
 				5FAC82EC7C71C6DB13751390 /* SGContract.swift in Sources */,
 				D9237B0A1FD757FEF4EB3E35 /* PrivateAppLauncher.swift in Sources */,
+				17E5D1A58D6ABF3F313F4F09 /* ShieldReturnContext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1427,6 +1441,7 @@
 			files = (
 				D0F005F3ADF8BF1A0EB78B66 /* StudyGuardShieldExtension.swift in Sources */,
 				84E77F1FE8E9F6B573A79A68 /* SGContract.swift in Sources */,
+				749D9CF90DDD23E9D3626556 /* ShieldReturnContext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1439,6 +1454,7 @@
 				6B706FCF2DFB2AB3004743C9 /* ColorExtension.swift in Sources */,
 				6B22E8A42D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				9F252FAD43EC4CBBDA287374 /* SGContract.swift in Sources */,
+				CE6CD17DDB43DD9EE7BE2E20 /* ShieldReturnContext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1450,6 +1466,7 @@
 				6B22E8A52D4CA96A003A5685 /* NavigationModel.swift in Sources */,
 				6B706FD02DFB2AB3004743C9 /* ColorExtension.swift in Sources */,
 				D32399521730C4271EE502FD /* SGContract.swift in Sources */,
+				EA730D4D0DB43F7E78D54C3F /* ShieldReturnContext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1553,6 +1570,8 @@
 				FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */,
 				AA00020300000000REVW0002 /* ReviewAskSheet.swift in Sources */,
 				777ED1FFDEBFE89954CE0F5A /* FlashcardAPIClient.swift in Sources */,
+				006DEFCA106930111FB6AA6B /* ShieldReturnContext.swift in Sources */,
+				06772BB5EF9E199F34B7313F /* UnlockSuccessView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1572,6 +1591,7 @@
 			files = (
 				6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */,
 				4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */,
+				23A4945450E5D4DF407C2EA2 /* ShieldReturnContextTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1655,14 +1675,18 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -2167,14 +2191,18 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets.StudyGuardReport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

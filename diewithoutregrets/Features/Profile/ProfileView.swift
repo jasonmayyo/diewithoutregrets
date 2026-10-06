@@ -370,13 +370,13 @@ struct FlashcardSettingsSheet: View {
             VStack(alignment: .leading, spacing: 20) {
                 SGSheetHeader(
                     title: "Flashcards",
-                    subtitle: "How many cards you answer to unlock your apps. Each card earns \(SGContract.perCardSeconds(SGContract.sharedDefaults)) seconds of screen time.",
+                    subtitle: "Finish your cards to unlock your apps. Each correct answer earns \(SGContract.perCardSeconds(SGContract.sharedDefaults)) seconds of screen time.",
                     onClose: { dismiss() }
                 )
 
                 VStack(spacing: 8) {
                     ForEach(options, id: \.self) { number in
-                        SGPickerRow(title: "\(number) cards · earns \(earnLabel(number))",
+                        SGPickerRow(title: "\(number) cards · up to \(earnLabel(number))",
                                     selected: !useAllCards && flashcardCount == number) {
                             flashcardCount = number
                             useAllCards = false
@@ -392,7 +392,7 @@ struct FlashcardSettingsSheet: View {
                     }
                 }
 
-                Text("Short runs still earn the \(SGContract.minEarnedMinutes)-minute minimum. If you pick more cards than a deck has, the whole deck is used.")
+                Text("Earned time is rounded up to the next whole minute. Mistakes don’t cancel time you earn. If you pick more cards than a deck has, the whole deck is used.")
                     .font(SGTheme.caption)
                     .foregroundColor(SGTheme.paperTertiary)
             }

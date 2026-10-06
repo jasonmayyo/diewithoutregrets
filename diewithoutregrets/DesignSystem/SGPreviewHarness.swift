@@ -47,6 +47,9 @@ enum SGPreviewHarness {
         if wantsQuizV2Preview {
             seed(.locked)
         }
+        if args.contains("-sg-preview-return-instagram") {
+            NavigationModel.shared.unlockReturnDestination = .app(bundleIdentifier: "com.burbn.instagram")
+        }
     }
 
     /// Seed a scenario directly — Xcode #Previews can't pass launch

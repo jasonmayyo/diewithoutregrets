@@ -15,6 +15,53 @@ import DeviceActivity
 
 final class StudyGuardEngineTests: XCTestCase {
 
+    // MARK: - Earned quiz budget
+
+    func testPartialQuizGrantsOnlyCorrectAnswersEvenWhenLastAnswerIsWrong() {
+        // Two correct answers at 75 seconds = 2m 30s, rounded UP to 3m.
+        let results: [Bool?] = [true, false, true, false, false]
+        XCTAssertEqual(SGContract.completedQuizMinutes(results: results, perCardSeconds: 75), 3)
+    }
+
+    func testPartialQuizAlsoGrantsWhenLastAnswerIsCorrect() {
+        XCTAssertEqual(SGContract.completedQuizMinutes(
+            results: [false, true, false, false, true], perCardSeconds: 30), 1)
+    }
+
+    func testUnfinishedEmptyAndZeroCorrectQuizzesEarnNothing() {
+        let runs: [[Bool?]] = [[], [nil], [true, nil], [true, false, nil], [false, false, false]]
+        for results in runs {
+            XCTAssertEqual(SGContract.completedQuizMinutes(results: results, perCardSeconds: 75), 0)
+        }
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: 0, perCardSeconds: 30), 0)
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: -1, perCardSeconds: 30), 0)
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: 1, perCardSeconds: 0), 0)
+    }
+
+    func testSmallAndPerfectRewardsRoundUpWithoutFiveMinuteFloor() {
+        XCTAssertEqual(SGContract.completedQuizMinutes(results: [true], perCardSeconds: 30), 1)
+        XCTAssertEqual(SGContract.completedQuizMinutes(
+            results: Array(repeating: true, count: 5), perCardSeconds: 30), 3)
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: 3, perCardSeconds: 60), 3)
+    }
+
+    func testEarnedBudgetCapAndLargeInputs() {
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: 200, perCardSeconds: 30), 60)
+        XCTAssertEqual(SGContract.earnedMinutes(cardCount: Int.max, perCardSeconds: Int.max), 60)
+    }
+
+    func testShortEarnedBudgetUsesShortUsageThresholdWithinDailySchedule() {
+        for minutes in [1, 2, 3] {
+            let events = SGContract.buildEvents(intervalMinutes: minutes, selection: FamilyActivitySelection())
+            let limit = events[DeviceActivityEvent.Name(SGContract.limitEventName)]
+            XCTAssertEqual(limit?.threshold, DateComponents(minute: minutes))
+            XCTAssertEqual(limit?.includesPastActivity, false)
+            XCTAssertEqual(events.count, minutes)
+        }
+        XCTAssertEqual(SGContract.dailySchedule.intervalStart, DateComponents(hour: 0, minute: 1))
+        XCTAssertEqual(SGContract.dailySchedule.intervalEnd, DateComponents(hour: 23, minute: 59, second: 59))
+    }
+
     // MARK: - Interval rounding (legacy BreakDurationMinutes seeding)
 
     func testNearestAllowedIntervalRoundsLegacyDefaultUp() {

@@ -50,12 +50,11 @@ enum SGContract {
     static let defaultIntervalMinutes = 15
 
     /// Earned-time economy: each correct flashcard in the unlock quiz earns
-    /// this many seconds of screen time. The grant is the whole draw's worth,
-    /// rounded up to whole minutes (the engine meters in minutes; DeviceActivity
-    /// events are minute-granular and fire late, so sub-minute budgets would be
-    /// swallowed by the jitter) and clamped to [min, max].
+    /// this many seconds of screen time. Completed quizzes grant time for
+    /// correct answers only, rounded UP to whole minutes to match our metering
+    /// and capped at maxEarnedMinutes. This rounding is an app policy, not an
+    /// Apple minimum: the monitoring schedule and usage threshold are separate.
     static let defaultPerCardSeconds = 30
-    static let minEarnedMinutes = 5
     static let maxEarnedMinutes = 60
 
     /// Emergency unlocks allowed per rolling 7-day window.
@@ -108,6 +107,8 @@ enum SGContract {
         /// "Open Study Guard" on the shield; consumed by the app on
         /// foreground to land directly on the unlock flow.
         static let shieldTapAt = "sg_shieldTapAt"
+        static let shieldReturnCandidates = "sg_shieldReturnCandidates"
+        static let pendingShieldReturn = "sg_pendingShieldReturn"
         /// [String] ring buffer (≤200) — extension debug log, viewable in the app's Debug tab.
         static let extLog = "sg_extLog"
         /// JSON [[String: Any]] — analytics queued by the extension, drained by the app.
@@ -150,11 +151,20 @@ enum SGContract {
         return n > 0 ? n : defaultPerCardSeconds
     }
 
-    /// Minutes a quiz of `cardCount` cards earns: rate × count, rounded up to
-    /// whole minutes, clamped to [minEarnedMinutes, maxEarnedMinutes].
+    /// Minutes earned by `cardCount` correct answers. No correct answers means
+    /// no grant; a positive reward is rounded up, never discarded by a minimum.
     static func earnedMinutes(cardCount: Int, perCardSeconds rate: Int) -> Int {
-        let raw = Int((Double(max(0, cardCount) * rate) / 60.0).rounded(.up))
-        return min(maxEarnedMinutes, max(minEarnedMinutes, raw))
+        guard cardCount > 0, rate > 0 else { return 0 }
+        let raw = (Double(cardCount) * Double(rate) / 60).rounded(.up)
+        return Int(min(Double(maxEarnedMinutes), raw))
+    }
+
+    /// The completion rule shared by both Screen Time quiz routes. A wrong
+    /// final answer must not cancel earlier earnings; incomplete/empty quizzes
+    /// must not unlock apps.
+    static func completedQuizMinutes(results: [Bool?], perCardSeconds rate: Int) -> Int {
+        guard !results.isEmpty, results.allSatisfy({ $0 != nil }) else { return 0 }
+        return earnedMinutes(cardCount: results.filter { $0 == true }.count, perCardSeconds: rate)
     }
 
     /// Append a timestamped line to the extension debug ring buffer (≤200 entries).

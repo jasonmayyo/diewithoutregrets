@@ -9,7 +9,8 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
   const keyID = randomBytes(32).toString('base64');
   const appID = '5BFXSF2PS6.com.jasonmayo.diewithoutregrets';
   let calls = 0;
-  const card = { regretPrompt: 'Question?', regret: 'Context', choices: ['Yes', 'No'], correctAnswerIndex: 0, backgroundExplanation: 'Explanation.' };
+  const card = { regretPrompt: 'Plants convert light into energy through ___.', regret: 'photosynthesis',
+    choices: ['photosynthesis', 'respiration', 'fermentation', 'osmosis'], correctAnswerIndex: 0, backgroundExplanation: 'Photosynthesis stores light energy in glucose.' };
   const mf = new Miniflare(convertV4MiniflareOptions({
     unsafeInspectDurableObjects: true,
     name: 'studyguard-test', modules: true, scriptPath: 'dist/index.js',

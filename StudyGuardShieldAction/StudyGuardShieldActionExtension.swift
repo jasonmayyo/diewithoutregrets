@@ -2,9 +2,10 @@
 //  StudyGuardShieldActionExtension.swift
 //  StudyGuardShieldAction
 //
-//  Handles taps on the shield's "Unlock Apps" button. Deliberately MINIMAL:
-//  on tap it stamps sg_shieldTapAt (so the app lands straight on the flashcards
-//  when it foregrounds) and directly opens Study Guard via PrivateAppLauncher,
+//  Handles taps on the shield's "Study to unlock" button. Deliberately MINIMAL:
+//  on tap it records the matching return-app context and stamps sg_shieldTapAt
+//  (so the app lands straight on the flashcards when it foregrounds), then
+//  directly opens Study Guard via PrivateAppLauncher,
 //  then returns .none. NOTHING else runs here — no notifications, no safety
 //  net, no analytics, no logging.
 //
@@ -22,7 +23,7 @@ import ManagedSettings
 final class StudyGuardShieldActionExtension: ShieldActionDelegate {
 
     override func handle(action: ShieldAction, for application: ApplicationToken, completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        respond(to: action, completionHandler: completionHandler)
+        respond(to: action, applicationTokenData: try? JSONEncoder().encode(application), completionHandler: completionHandler)
     }
 
     override func handle(action: ShieldAction, for webDomain: WebDomainToken, completionHandler: @escaping (ShieldActionResponse) -> Void) {
@@ -33,9 +34,11 @@ final class StudyGuardShieldActionExtension: ShieldActionDelegate {
         respond(to: action, completionHandler: completionHandler)
     }
 
-    private func respond(to action: ShieldAction, completionHandler: @escaping (ShieldActionResponse) -> Void) {
+    private func respond(to action: ShieldAction, applicationTokenData: Data? = nil,
+                         completionHandler: @escaping (ShieldActionResponse) -> Void) {
         switch action {
         case .primaryButtonPressed:
+            ShieldReturnContext.prepareReturn(for: applicationTokenData, in: SGContract.sharedDefaults)
             // Stamp the tap so the app opens straight to the flashcards.
             SGContract.sharedDefaults?.set(Date().timeIntervalSince1970,
                                            forKey: SGContract.Keys.shieldTapAt)
