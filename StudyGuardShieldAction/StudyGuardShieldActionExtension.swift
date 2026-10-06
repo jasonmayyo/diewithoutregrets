@@ -31,17 +31,23 @@ final class StudyGuardShieldActionExtension: ShieldActionDelegate {
     }
 
     override func handle(action: ShieldAction, for category: ActivityCategoryToken, completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        respond(to: action, completionHandler: completionHandler)
+        respond(to: action, categoryTokenData: try? JSONEncoder().encode(category), completionHandler: completionHandler)
     }
 
     private func respond(to action: ShieldAction, applicationTokenData: Data? = nil,
+                         categoryTokenData: Data? = nil,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
         switch action {
         case .primaryButtonPressed:
-            ShieldReturnContext.prepareReturn(for: applicationTokenData, in: SGContract.sharedDefaults)
+            let defaults = SGContract.sharedDefaults
+            if let categoryTokenData {
+                ShieldReturnContext.prepareCategoryReturn(for: categoryTokenData, in: defaults)
+            } else {
+                ShieldReturnContext.prepareReturn(for: applicationTokenData, in: defaults)
+            }
             // Stamp the tap so the app opens straight to the flashcards.
-            SGContract.sharedDefaults?.set(Date().timeIntervalSince1970,
-                                           forKey: SGContract.Keys.shieldTapAt)
+            defaults?.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.shieldTapAt)
+            defaults?.synchronize()
 
             // Fire the open on a background thread, then hand the response back
             // immediately. The private open is a SYNCHRONOUS XPC round-trip to

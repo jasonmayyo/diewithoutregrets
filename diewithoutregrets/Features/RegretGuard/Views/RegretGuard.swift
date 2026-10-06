@@ -308,7 +308,9 @@ struct RegretGuard: View {
             UsageIntervalSheet()
         }
         .sheet(isPresented: $showEmergencySheet) {
-            EmergencyUnlockSheet {}
+            EmergencyUnlockSheet {
+                NavigationModel.shared.returnHome()
+            }
         }
         .sheet(isPresented: $showDeckPicker) {
             DeckPickerSheet()

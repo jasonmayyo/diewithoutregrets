@@ -5,10 +5,8 @@
 //  Custom shield appearance for Study Guard locks. Adaptive system colors
 //  keep all four shield variants readable in light and dark appearances.
 //  ONE button only ("Study to unlock") — taps are handled by the
-//  StudyGuardShieldAction extension: on iOS 26.5+ it returns
-//  ShieldActionResponse.openParentalControlsApp for a direct, zero-tap open of
-//  Study Guard; on older iOS it posts an instant time-sensitive unlock
-//  notification (the only public route back into the app).
+//  StudyGuardShieldAction extension records the tapped shield's return app
+//  before opening Study Guard.
 //
 
 import ManagedSettings
@@ -23,24 +21,31 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
     }
 
     override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
-        remember(application)
+        remember(application, category: category)
         return studyGuardShield()
     }
 
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
-        studyGuardShield()
+        clearCategoryReturn()
+        return studyGuardShield()
     }
 
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
-        studyGuardShield()
+        clearCategoryReturn()
+        return studyGuardShield()
     }
 
-    private func remember(_ application: Application) {
+    private func remember(_ application: Application, category: ActivityCategory? = nil) {
         ShieldReturnContext.remember(
             tokenData: application.token.flatMap { try? JSONEncoder().encode($0) },
             bundleIdentifier: application.bundleIdentifier,
+            categoryTokenData: category?.token.flatMap { try? JSONEncoder().encode($0) },
             in: SGContract.sharedDefaults
         )
+    }
+
+    private func clearCategoryReturn() {
+        ShieldReturnContext.remember(tokenData: nil, bundleIdentifier: nil, in: SGContract.sharedDefaults)
     }
 
     private func studyGuardShield() -> ShieldConfiguration {

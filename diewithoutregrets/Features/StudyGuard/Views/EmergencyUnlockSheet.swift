@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct EmergencyUnlockSheet: View {
     @ObservedObject private var manager = StudyGuardManager.shared
@@ -21,6 +22,9 @@ struct EmergencyUnlockSheet: View {
     /// while the sheet is animating closed, which would swap the layout and
     /// resize the detent mid-dismissal.
     @State private var exhausted = false
+    @State private var hasUnlocked = false
+    @State private var returnDestination: ShieldReturnDestination?
+    @StateObject private var appReturn = UnlockAppReturn()
 
     var body: some View {
         SGFittedSheet(estimatedHeight: 460) {
@@ -58,17 +62,14 @@ struct EmergencyUnlockSheet: View {
 
                 VStack(spacing: 12) {
                     if !exhausted {
-                        SGButton(title: "Unlock my apps", variant: .ember) {
-                            if manager.useEmergencyUnlock() {
-                                dismiss()
-                                onUnlocked()
-                            }
-                        }
+                        SGButton(title: hasUnlocked ? "Return to app" : "Unlock my apps",
+                                 variant: .ember, loading: appReturn.isOpening, action: unlockAndReturn)
                     }
 
-                    SGButton(title: exhausted ? "Close" : "Never mind, I'll study", variant: .ghost) {
-                        dismiss()
+                    SGButton(title: hasUnlocked ? "Stay in Study Guard" : (exhausted ? "Close" : "Never mind, I'll study"), variant: .ghost) {
+                        if hasUnlocked { finish() } else { dismiss() }
                     }
+                    .disabled(appReturn.isOpening)
                 }
                 .padding(.top, 8)
             }
@@ -77,7 +78,39 @@ struct EmergencyUnlockSheet: View {
             .padding(.bottom, 8)
         }
         .onAppear {
+            guard !hasUnlocked else { return }
             exhausted = manager.emergencyUnlocksRemaining == 0
+            returnDestination = NavigationModel.shared.unlockReturnDestination
         }
+        .interactiveDismissDisabled(hasUnlocked)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+            appReturn.didEnterBackground()
+        }
+        .alert("Your apps are unlocked", isPresented: $appReturn.showFallback) {
+            if returnDestination != nil {
+                Button("Try again", action: unlockAndReturn)
+            }
+            Button("Done", action: finish)
+        } message: {
+            Text(UnlockAppReturn.fallbackMessage(for: returnDestination))
+        }
+    }
+
+    private func unlockAndReturn() {
+        guard !appReturn.isOpening else { return }
+        // A failed app open may be retried, but must never spend another unlock.
+        if !hasUnlocked {
+            guard manager.useEmergencyUnlock() else {
+                exhausted = manager.emergencyUnlocksRemaining == 0
+                return
+            }
+            hasUnlocked = true
+        }
+        appReturn.open(returnDestination, onReturned: finish)
+    }
+
+    private func finish() {
+        dismiss()
+        onUnlocked()
     }
 }

@@ -50,6 +50,14 @@ enum SGPreviewHarness {
         if args.contains("-sg-preview-return-instagram") {
             NavigationModel.shared.unlockReturnDestination = .app(bundleIdentifier: "com.burbn.instagram")
         }
+        if args.contains("-sg-preview-return-category-instagram") {
+            // Exercise the category-shield handoff, not a hard-coded view destination.
+            let category = Data("preview-social-category".utf8)
+            ShieldReturnContext.remember(tokenData: nil, bundleIdentifier: "com.burbn.instagram",
+                                         categoryTokenData: category, in: SGContract.sharedDefaults)
+            ShieldReturnContext.prepareCategoryReturn(for: category, in: SGContract.sharedDefaults)
+            NavigationModel.shared.unlockReturnDestination = ShieldReturnContext.consumePending(in: SGContract.sharedDefaults)
+        }
     }
 
     /// Seed a scenario directly — Xcode #Previews can't pass launch

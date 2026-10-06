@@ -1,5 +1,6 @@
 import SwiftUI
 import Lottie
+import UIKit
 
 /// A receipt for time already granted. Animation and app navigation never grant
 /// time themselves, so leaving halfway through either cannot lose the reward.
@@ -17,8 +18,7 @@ struct UnlockSuccessView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var appeared = false
     @State private var unlocked = false
-    @State private var openingApp = false
-    @State private var showReturnFallback = false
+    @StateObject private var appReturn = UnlockAppReturn()
 
     var body: some View {
         GeometryReader { geometry in
@@ -99,10 +99,16 @@ struct UnlockSuccessView: View {
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.45)) { appeared = true }
             if reduceMotion { finishUnlockAnimation() }
         }
-        .alert("Your apps are unlocked", isPresented: $showReturnFallback) {
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+            appReturn.didEnterBackground()
+        }
+        .alert("Your apps are unlocked", isPresented: $appReturn.showFallback) {
+            if destination != nil {
+                Button("Try again", action: continueToApp)
+            }
             Button("Done", action: onContinue)
         } message: {
-            Text("Couldn't open \(destination?.name ?? "the app") automatically. Switch back to it from your Home Screen or app switcher. Your earned time is ready.")
+            Text(UnlockAppReturn.fallbackMessage(for: destination))
         }
     }
 
@@ -178,14 +184,14 @@ struct UnlockSuccessView: View {
         VStack(spacing: 14) {
             SGButton(title: destination.map { "Back to \($0.name)" } ?? ctaTitle,
                      icon: destination == nil ? "lock.open.fill" : "arrow.up.forward.app.fill",
-                     variant: .white, loading: openingApp, action: continueToApp)
+                     variant: .white, loading: appReturn.isOpening, action: continueToApp)
 
             if destination != nil {
                 Button("Stay in Study Guard", action: onContinue)
                     .font(SGTheme.buttonSmall)
                     .foregroundStyle(SGTheme.unlockSecondary)
                     .frame(minHeight: 44)
-                    .disabled(openingApp)
+                    .disabled(appReturn.isOpening)
             } else {
                 Text("Your apps are ready to use again.")
                     .font(SGTheme.caption)
@@ -207,13 +213,67 @@ struct UnlockSuccessView: View {
     }
 
     private func continueToApp() {
-        guard !openingApp else { return }
-        guard let destination else { onContinue(); return }
-        openingApp = true
-        UIApplication.shared.open(destination.url, options: [:]) { opened in
-            openingApp = false
-            if opened { onContinue() } else { showReturnFallback = true }
+        appReturn.open(destination, onReturned: onContinue)
+    }
+}
+
+/// Shared by earned and emergency unlocks. A successful URL request alone is
+/// not the app switch: wait until Study Guard backgrounds before clearing the
+/// flow, so its home screen cannot flash in front of the returning user.
+@MainActor
+final class UnlockAppReturn: ObservableObject {
+    @Published private(set) var isOpening = false
+    @Published var showFallback = false
+    private var openSucceeded = false
+    private var leftApp = false
+    private var onReturned: (() -> Void)?
+
+    func open(_ destination: ShieldReturnDestination?, onReturned: @escaping () -> Void) {
+        guard !isOpening else { return }
+        guard let destination else {
+            // Missing identity must not silently turn "Unlock apps" into a
+            // home-screen button. Explain the manual return instead.
+            showFallback = true
+            return
         }
+        self.onReturned = onReturned
+        openSucceeded = false
+        leftApp = false
+        showFallback = false
+        isOpening = true
+        UIApplication.shared.open(destination.url, options: [:]) { [weak self] opened in
+            guard let self else { return }
+            guard opened else {
+                self.isOpening = false
+                self.onReturned = nil
+                self.showFallback = true
+                return
+            }
+            self.openSucceeded = true
+            self.leftApp = self.leftApp || UIApplication.shared.applicationState == .background
+            self.finishIfReturned()
+        }
+    }
+
+    func didEnterBackground() {
+        guard isOpening else { return }
+        leftApp = true
+        finishIfReturned()
+    }
+
+    private func finishIfReturned() {
+        guard isOpening, openSucceeded, leftApp else { return }
+        let completion = onReturned
+        onReturned = nil
+        isOpening = false
+        completion?()
+    }
+
+    static func fallbackMessage(for destination: ShieldReturnDestination?) -> String {
+        if let destination {
+            return "Couldn't open \(destination.name) automatically. Switch back to it from your Home Screen or app switcher. Your unlocked time is ready."
+        }
+        return "Switch back to the app you were using from your Home Screen or app switcher. Your unlocked time is ready."
     }
 }
 
