@@ -2,6 +2,50 @@ import XCTest
 @testable import diewithoutregrets
 
 final class FlashcardAPIClientTests: XCTestCase {
+    /// Explicit opt-in only: this makes one paid request through the live Worker.
+    /// It validates generation without saving cards or changing the user's decks.
+    @MainActor func testLiveProductionFlashcardGeneration() async throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("Live generation requires physical-device App Attest")
+        #else
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STUDY_GUARD_LIVE_GENERATION"] == "1",
+                          "Opt in with STUDY_GUARD_LIVE_GENERATION=1 for one paid generation")
+        let host = Bundle.main.object(forInfoDictionaryKey: "StudyGuardAPIHost") as? String
+        try XCTSkipUnless(host == "studyguard-ai-staging.jason-749.workers.dev",
+                          "Live generation requires the production service hostname")
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "studyguard.attestation.production.smoke"))
+        let client = FlashcardAPIClient(defaults: defaults, host: host)
+        let text = """
+        Biology revision: Cells are the basic units of life. The cell membrane controls
+        what enters and leaves a cell. Cytoplasm is where many chemical reactions occur.
+        The nucleus contains genetic material. DNA carries genetic instructions.
+        Genes are sections of DNA. Chromosomes contain DNA. Mitochondria release energy
+        through aerobic respiration. Ribosomes make proteins. Plant cell walls contain
+        cellulose. Chloroplasts contain chlorophyll. Chlorophyll absorbs light for
+        photosynthesis. Photosynthesis uses carbon dioxide and water to make glucose
+        and oxygen. Plants store glucose as starch. Root hair cells absorb water and
+        mineral ions. Xylem transports water through plants. Phloem transports dissolved
+        sugars. Stomata allow gases to move into and out of leaves. Guard cells control
+        stomatal openings. Transpiration is water loss from leaves. Diffusion moves
+        particles from higher to lower concentration. Osmosis is the movement of water
+        across a partially permeable membrane. Active transport requires energy to move
+        substances against a concentration gradient. Enzymes are biological catalysts.
+        High temperatures can denature enzymes. Amylase breaks down starch. Proteases
+        break down proteins. Lipases break down fats. Red blood cells carry oxygen using
+        haemoglobin. White blood cells help defend against pathogens. Platelets help
+        blood clot. The heart pumps blood. Arteries carry blood away from the heart.
+        Veins carry blood toward the heart. Capillaries exchange substances with tissues.
+        Alveoli are air sacs where gas exchange occurs in the lungs. The diaphragm helps
+        ventilate the lungs. Kidneys filter blood and produce urine. Neurons transmit
+        electrical impulses. Hormones are chemical messengers transported in the blood.
+        """
+        let cards = try await client.generate(text: text, language: "English")
+        XCTAssertTrue((FlashcardAPIClient.minimumCards...FlashcardAPIClient.maximumCards).contains(cards.count))
+        XCTAssertTrue(cards.allSatisfy(\.isValid))
+        print("Live production generation returned \(cards.count) validated flashcards.")
+        #endif
+    }
+
     @MainActor func testLiveProductionAppAttestEnrollment() async throws {
         #if targetEnvironment(simulator)
         throw XCTSkip("Apple App Attest enrollment requires a physical device")

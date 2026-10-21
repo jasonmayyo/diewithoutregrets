@@ -102,6 +102,7 @@ struct UnlockSuccessView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             appReturn.didEnterBackground()
         }
+        .onDisappear { appReturn.cancel() }
         .alert("Your apps are unlocked", isPresented: $appReturn.showFallback) {
             if destination != nil {
                 Button("Try again", action: continueToApp)
@@ -214,66 +215,6 @@ struct UnlockSuccessView: View {
 
     private func continueToApp() {
         appReturn.open(destination, onReturned: onContinue)
-    }
-}
-
-/// Shared by earned and emergency unlocks. A successful URL request alone is
-/// not the app switch: wait until Study Guard backgrounds before clearing the
-/// flow, so its home screen cannot flash in front of the returning user.
-@MainActor
-final class UnlockAppReturn: ObservableObject {
-    @Published private(set) var isOpening = false
-    @Published var showFallback = false
-    private var openSucceeded = false
-    private var leftApp = false
-    private var onReturned: (() -> Void)?
-
-    func open(_ destination: ShieldReturnDestination?, onReturned: @escaping () -> Void) {
-        guard !isOpening else { return }
-        guard let destination else {
-            // Missing identity must not silently turn "Unlock apps" into a
-            // home-screen button. Explain the manual return instead.
-            showFallback = true
-            return
-        }
-        self.onReturned = onReturned
-        openSucceeded = false
-        leftApp = false
-        showFallback = false
-        isOpening = true
-        UIApplication.shared.open(destination.url, options: [:]) { [weak self] opened in
-            guard let self else { return }
-            guard opened else {
-                self.isOpening = false
-                self.onReturned = nil
-                self.showFallback = true
-                return
-            }
-            self.openSucceeded = true
-            self.leftApp = self.leftApp || UIApplication.shared.applicationState == .background
-            self.finishIfReturned()
-        }
-    }
-
-    func didEnterBackground() {
-        guard isOpening else { return }
-        leftApp = true
-        finishIfReturned()
-    }
-
-    private func finishIfReturned() {
-        guard isOpening, openSucceeded, leftApp else { return }
-        let completion = onReturned
-        onReturned = nil
-        isOpening = false
-        completion?()
-    }
-
-    static func fallbackMessage(for destination: ShieldReturnDestination?) -> String {
-        if let destination {
-            return "Couldn't open \(destination.name) automatically. Switch back to it from your Home Screen or app switcher. Your unlocked time is ready."
-        }
-        return "Switch back to the app you were using from your Home Screen or app switcher. Your unlocked time is ready."
     }
 }
 

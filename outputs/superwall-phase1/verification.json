@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-21",
+  "phase": 1,
+  "superwall_app_url": "https://app.superwall.com/20025/58386/products?tab=entitlements",
+  "revenuecat_integration_url": "https://app.revenuecat.com/projects/02430e5b/integrations/superwall",
+  "bundle_id": "com.jasonmayo.diewithoutregrets",
+  "sdk_version": "4.18.0",
+  "revenuecat_version": "5.84.0",
+  "entitlement_mapping": {
+    "Pro Acess": "pro"
+  },
+  "products": [
+    "study_guard_weekly",
+    "study_guard_yearly_pro",
+    "studyguard_lifetime",
+    "buy_back_offer",
+    "sg_plus",
+    "sg_plus_yearly"
+  ],
+  "apple_notification_routing": "Apple production and sandbox -> RevenueCat -> Superwall",
+  "revenue_provider": "RevenueCat",
+  "billing_owner": "RevenueCat",
+  "build_succeeded": true,
+  "tests_succeeded": true,
+  "tests_passed": [
+    "testCancellationIsNotReportedAsPurchaseFailure",
+    "testExistingRevenueCatSubscriberReceivesSuperwallProAccess",
+    "testExpiredOrMissingEntitlementDoesNotGrantAccess",
+    "testNetworkFailureRetainsOriginalError",
+    "testPendingApprovalIsNotReportedAsSuccess"
+  ],
+  "runtime_configured": true,
+  "runtime_revenuecat_access_synced": true,
+  "superwall_event_collector_http_status": 200,
+  "phase_2": "Create and preview the Superwall paywall; configure preview price and trial metadata from App Store Connect.",
+  "phase_3": "Replace the onboarding RevenueCat paywall presentation with a Superwall placement and verify purchase, restore, cancellation, pending and offline handling.",
+  "transaction_testing": "Deferred until the paywall and onboarding presentation exist. No purchase made.",
+  "existing_paywall_presentation": "Unchanged until phase 3",
+  "runtime_dashboard_session_received": true,
+  "superwall_entitlement_product_count": 6
+}

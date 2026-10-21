@@ -2,18 +2,11 @@
 //  StudyGuardReadyView.swift
 //  diewithoutregrets
 //
-//  Onboarding v2 hard paywall (step 20, daylight). Personalized backdrop
-//  (mascot + "win back your N years" + feature rows) that auto-presents the
-//  RevenueCatUI paywall once offerings load. Purchase/restore are the ONLY
-//  paths that advance. Declines run the ladder: dismiss #1 shows a reason
-//  survey then the buyback offer; dismiss #2+ goes straight to buyback via
-//  NavigationModel.presentBuyBackOffer().
+//  Onboarding hard gate. Superwall presents the hosted flow; RevenueCat
+//  verifies access. Declines retain the existing survey and buyback ladder.
 //
 
 import SwiftUI
-import RevenueCat
-import RevenueCatUI
-import PostHog
 
 struct HardPaywallView: View {
     @EnvironmentObject var viewModel: OnboardingViewModel
@@ -23,35 +16,16 @@ struct HardPaywallView: View {
     @State private var shown = false
     @State private var appeared = false
 
-    // Offerings
-    @State private var currentOffering: Offering?
-    @State private var isLoadingOffering = true
-    @State private var loadFailed = false
-    @State private var didAutoRetry = false
-    @State private var hasAutoPresented = false
-    /// The offer backdrop only appears after the user dismisses the
-    /// RevenueCat cover; before that the screen is a quiet loading state so
-    /// nothing paywall-shaped flashes behind the real paywall.
+    @StateObject private var paywall = SGOnboardingPaywallCoordinator()
     @State private var backdropRevealed = false
-
-    // RevenueCat cover
-    @State private var showingRevenueCatPaywall = false
     @State private var didCompletePurchase = false
-    /// Set when NavigationModel closes the cover (buyback deep link etc.) so
-    /// the dismissal doesn't count as a user decline.
-    @State private var externallyDismissed = false
 
     // Decline ladder
-    @State private var declineCount = 0
+    private var declineCount: Int { paywall.declineCount }
     @State private var showDeclineSurvey = false
     /// Idempotency latch: at most one buyback presentation per cover
     /// dismissal round. Reset at the start of each new dismissal.
     @State private var didTriggerBuyBackThisRound = false
-
-    // Restore
-    @State private var isRestoringPurchases = false
-    @State private var restoreErrorMessage: String?
-    @State private var restoreSuccessMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -75,11 +49,6 @@ struct HardPaywallView: View {
         }
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
-        // The RevenueCat template inside this cover is styled from the RC
-        // dashboard, not SGTheme — a known spec gap.
-        .fullScreenCover(isPresented: $showingRevenueCatPaywall, onDismiss: handleCoverDismissed) {
-            paywallCover
-        }
         .sheet(isPresented: $showDeclineSurvey, onDismiss: presentBuyBack) {
             DeclineSurveySheet { reason in
                 viewModel.screenAction("decline_survey_reason", properties: ["reason": reason])
@@ -87,43 +56,31 @@ struct HardPaywallView: View {
             .presentationDetents([.medium])
             .sgSheetChrome()
         }
-        .alert("Restore Error", isPresented: .constant(restoreErrorMessage != nil)) {
-            Button("OK") { restoreErrorMessage = nil }
-        } message: {
-            Text(restoreErrorMessage ?? "Unknown error")
-        }
-        .alert("Restore Successful", isPresented: .constant(restoreSuccessMessage != nil)) {
-            Button("OK") { restoreSuccessMessage = nil }
-        } message: {
-            Text(restoreSuccessMessage ?? "Purchases restored successfully")
-        }
-        .onChange(of: navigationModel.shouldDismissPaywall) { _, newValue in
-            if newValue && showingRevenueCatPaywall {
-                print("[HardPaywallView] Received dismiss signal, closing paywall")
-                externallyDismissed = true
-                showingRevenueCatPaywall = false
-            }
-        }
-        .onChange(of: navigationModel.buyBackPurchasedDuringOnboarding) { _, newValue in
-            guard newValue else { return }
-            print("[HardPaywallView] Buyback purchased during onboarding, advancing")
+        .onChange(of: paywall.state) { _, state in
+            guard state == .completed, !didCompletePurchase else { return }
             didCompletePurchase = true
-            navigationModel.buyBackPurchasedDuringOnboarding = false
-            if showingRevenueCatPaywall {
-                externallyDismissed = true
-                showingRevenueCatPaywall = false
-            }
-            if showDeclineSurvey {
-                showDeclineSurvey = false
-            }
+            NotificationManager.shared.resetPaywallTracking()
+            showDeclineSurvey = false
             viewModel.nextStep()
+        }
+        .onChange(of: paywall.declineCount) { _, _ in handlePaywallDeclined() }
+        .onChange(of: navigationModel.shouldDismissPaywall) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            backdropRevealed = true
+            Task { await paywall.dismissForExternalOffer() }
+        }
+        .onChange(of: navigationModel.buyBackPurchasedDuringOnboarding) { _, purchased in
+            guard purchased else { return }
+            navigationModel.buyBackPurchasedDuringOnboarding = false
+            showDeclineSurvey = false
+            Task { await paywall.verifyExternalPurchase() }
         }
         .onAppear {
             guard !appeared else { return }
             appeared = true
             shown = true
 
-            Analytics.paywallViewed(surface: "onboarding_v4", properties: [
+            Analytics.paywallViewed(surface: "onboarding_v5", properties: [
                 "student_type": viewModel.studentType,
                 "screen_time": viewModel.screenTime,
                 "phone_days": viewModel.phoneDaysToExam,
@@ -132,10 +89,10 @@ struct HardPaywallView: View {
                 "card_count": viewModel.commitCardCount
             ])
             Telemetry.breadcrumb("Paywall viewed", category: "paywall",
-                                 data: ["surface": "onboarding_v4"])
+                                 data: ["surface": "onboarding_v5"])
             AdsTracker.trackViewContent(name: "onboarding_paywall")
 
-            loadCurrentOffering()
+            Task { await paywall.present() }
         }
     }
 
@@ -145,12 +102,12 @@ struct HardPaywallView: View {
         HStack {
             Spacer()
 
-            SGButton(title: isRestoringPurchases ? "Restoring..." : "Restore",
+            SGButton(title: paywall.isRestoring ? "Restoring..." : "Restore",
                      variant: .text,
                      fullWidth: false,
-                     enabled: !isRestoringPurchases,
-                     loading: isRestoringPurchases) {
-                Task { await restorePurchases() }
+                     enabled: !paywall.isBusy,
+                     loading: paywall.isRestoring) {
+                Task { await paywall.restore() }
             }
             .accessibilityLabel("Restore purchases")
         }
@@ -178,7 +135,7 @@ struct HardPaywallView: View {
         return "\(viewModel.scrollHoursPerWeek) hours of scrolling every week from here to finals, or your study time. Your call."
     }
 
-    /// What shows while the RevenueCat paywall is being fetched and
+    /// What shows while the Superwall paywall is being fetched and
     /// auto-presented: just the mascot and a quiet loader, nothing that
     /// reads as a second paywall.
     private var loadingHero: some View {
@@ -262,7 +219,7 @@ struct HardPaywallView: View {
 
     @ViewBuilder
     private var footer: some View {
-        if isLoadingOffering {
+        if paywall.isBusy {
             VStack(spacing: 10) {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: SGTheme.mintDeep))
@@ -272,231 +229,35 @@ struct HardPaywallView: View {
             }
             .frame(height: 76)
             .accessibilityLabel("Loading your plan")
-        } else if loadFailed {
+        } else if case .failed(let message) = paywall.state {
             VStack(spacing: 12) {
-                Text("Couldn't load plans. Check your connection.")
+                Text(message)
                     .font(SGTheme.body)
                     .foregroundColor(SGTheme.paperSecondary)
                     .multilineTextAlignment(.center)
-
                 SGButton(title: "Retry") {
-                    viewModel.screenAction("offering_retry_tapped")
-                    didAutoRetry = false
-                    loadCurrentOffering()
+                    viewModel.screenAction("paywall_retry_tapped")
+                    Task { await paywall.present() }
                 }
                 .accessibilityLabel("Retry loading plans")
             }
             .padding(.horizontal, SGTheme.screenPadding)
         } else if backdropRevealed {
-            OnbCTA(title: "Start my comeback", visible: shown) {
+            OnbCTA(title: "See plans", visible: shown) {
                 viewModel.screenAction("see_plans_tapped", properties: [
                     "decline_count": declineCount
                 ])
-                showingRevenueCatPaywall = true
+                Task { await paywall.present() }
             }
-        }
-    }
-
-    // MARK: - RevenueCat cover
-
-    @ViewBuilder
-    private var paywallCover: some View {
-        if let offering = currentOffering {
-            PaywallView(offering: offering)
-                .onAppear {
-                    print("🎯 Showing paywall with offering: \(offering.identifier)")
-                    Analytics.paywallViewed(surface: "onboarding_v4_rc", properties: [
-                        "offering_id": offering.identifier,
-                        "has_offering": true
-                    ])
-                    viewModel.screenAction("rc_paywall_presented", properties: [
-                        "offering_id": offering.identifier,
-                        "has_offering": true
-                    ])
-
-                    // Mark that user viewed the paywall (drives the buyback
-                    // notification when they leave without purchasing).
-                    NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                    print("[HardPaywallView] 📝 Marked paywall as viewed")
-                }
-                .onPurchaseCompleted { customerInfo in
-                    var price: Double?
-                    var currency: String?
-                    var productId: String = "unknown"
-                    var isTrial: Bool = false
-
-                    if let entitlement = customerInfo.entitlements.active.values.first,
-                       let package = offering.availablePackages.first(where: { $0.storeProduct.productIdentifier == entitlement.productIdentifier }) {
-                        price = Double(truncating: package.storeProduct.price as NSNumber)
-                        currency = package.storeProduct.currencyCode ?? "USD"
-                        productId = package.storeProduct.productIdentifier
-                        isTrial = entitlement.periodType == .trial
-
-                        if isTrial {
-                            AdsTracker.trackStartTrial(
-                                productId: package.storeProduct.productIdentifier,
-                                productName: package.storeProduct.localizedTitle,
-                                price: price ?? 0,
-                                currency: currency ?? "USD"
-                            )
-                        } else {
-                            AdsTracker.trackSubscribe(
-                                productId: package.storeProduct.productIdentifier,
-                                productName: package.storeProduct.localizedTitle,
-                                price: price ?? 0,
-                                currency: currency ?? "USD"
-                            )
-                            AdsTracker.trackPurchase(
-                                productId: package.storeProduct.productIdentifier,
-                                productName: package.storeProduct.localizedTitle,
-                                price: price ?? 0,
-                                currency: currency ?? "USD"
-                            )
-                        }
-                    }
-
-                    // New unified subscription event (replaces the old
-                    // `onboarding_purchase_completed` event — kept below
-                    // for dashboards that haven't migrated yet).
-                    Analytics.subscriptionStarted(
-                        surface: "onboarding_v4",
-                        productId: productId,
-                        price: price,
-                        currency: currency,
-                        isTrial: isTrial,
-                        offeringId: offering.identifier,
-                        entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                    )
-                    Analytics.capture("onboarding_purchase_completed", properties: [
-                        "offering_id": offering.identifier,
-                        "entitlements": customerInfo.entitlements.active.keys.map { $0 }
-                    ])
-
-                    didCompletePurchase = true
-
-                    NotificationManager.shared.resetPaywallTracking()
-
-                    showingRevenueCatPaywall = false
-                    viewModel.nextStep()
-                }
-                .onRestoreCompleted { customerInfo in
-                    let hasActive = !customerInfo.entitlements.active.isEmpty
-                    Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v4",
-                        hasActiveEntitlements: hasActive
-                    )
-                    if hasActive {
-                        didCompletePurchase = true
-                        NotificationManager.shared.resetPaywallTracking()
-                        showingRevenueCatPaywall = false
-                        viewModel.nextStep()
-                    }
-                }
-                .onDisappear {
-                    Analytics.paywallDismissed(
-                        surface: "onboarding_v4_rc",
-                        didPurchase: didCompletePurchase
-                    )
-                }
-        } else {
-            PaywallView()
-                .onAppear {
-                    print("❌ ERROR: Showing fallback paywall - currentOffering is nil!")
-                    Analytics.paywallViewed(surface: "onboarding_v4_rc", properties: [
-                        "has_offering": false
-                    ])
-                    viewModel.screenAction("rc_paywall_presented", properties: [
-                        "has_offering": false
-                    ])
-                    NotificationManager.shared.markPaywallViewedWithoutPurchase()
-                }
-                .onPurchaseCompleted { customerInfo in
-                    if let entitlement = customerInfo.entitlements.active.values.first {
-                        Task {
-                            let products = await Purchases.shared.products([entitlement.productIdentifier])
-                            if let product = products.first {
-                                let price = Double(truncating: product.price as NSNumber)
-                                let currency = product.currencyCode ?? "USD"
-                                let isTrial = entitlement.periodType == .trial
-                                if isTrial {
-                                    AdsTracker.trackStartTrial(
-                                        productId: product.productIdentifier,
-                                        productName: product.localizedTitle,
-                                        price: price,
-                                        currency: currency
-                                    )
-                                } else {
-                                    AdsTracker.trackSubscribe(
-                                        productId: product.productIdentifier,
-                                        productName: product.localizedTitle,
-                                        price: price,
-                                        currency: currency
-                                    )
-                                    AdsTracker.trackPurchase(
-                                        productId: product.productIdentifier,
-                                        productName: product.localizedTitle,
-                                        price: price,
-                                        currency: currency
-                                    )
-                                }
-                                Analytics.subscriptionStarted(
-                                    surface: "onboarding_v4",
-                                    productId: product.productIdentifier,
-                                    price: price,
-                                    currency: currency,
-                                    isTrial: isTrial,
-                                    offeringId: nil,
-                                    entitlements: customerInfo.entitlements.active.keys.map { $0 }
-                                )
-                            }
-                        }
-                    }
-                    Analytics.capture("onboarding_purchase_completed", properties: [
-                        "offering_id": "fallback",
-                        "entitlements": customerInfo.entitlements.active.keys.map { $0 }
-                    ])
-
-                    didCompletePurchase = true
-                    NotificationManager.shared.resetPaywallTracking()
-                    showingRevenueCatPaywall = false
-                    viewModel.nextStep()
-                }
-                .onRestoreCompleted { customerInfo in
-                    let hasActive = !customerInfo.entitlements.active.isEmpty
-                    Analytics.restorePurchasesSucceeded(
-                        surface: "onboarding_v4",
-                        hasActiveEntitlements: hasActive
-                    )
-                    if hasActive {
-                        didCompletePurchase = true
-                        NotificationManager.shared.resetPaywallTracking()
-                        showingRevenueCatPaywall = false
-                        viewModel.nextStep()
-                    }
-                }
-                .onDisappear {
-                    Analytics.paywallDismissed(
-                        surface: "onboarding_v4_rc",
-                        didPurchase: didCompletePurchase
-                    )
-                }
         }
     }
 
     // MARK: - Decline ladder
 
-    private func handleCoverDismissed() {
-        if didCompletePurchase { return }
-        // Whatever the dismissal path, the user is now looking at this
-        // screen: show the full offer backdrop from here on.
+    private func handlePaywallDeclined() {
+        guard !didCompletePurchase else { return }
         withAnimation(.easeInOut(duration: 0.3)) { backdropRevealed = true }
-        if externallyDismissed {
-            externallyDismissed = false
-            return
-        }
-
         didTriggerBuyBackThisRound = false
-        declineCount += 1
         viewModel.screenAction("paywall_declined", properties: [
             "decline_count": declineCount
         ])
@@ -504,9 +265,9 @@ struct HardPaywallView: View {
         if declineCount == 1 {
             // Let the cover finish its dismissal transition before the sheet.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                // Guard the race: skip if the RC cover was re-presented in
+                // Guard the race: skip if the Superwall paywall was re-presented in
                 // the meantime or the survey is already up.
-                guard !showingRevenueCatPaywall, !showDeclineSurvey else { return }
+                guard !paywall.isBusy, !didCompletePurchase, !showDeclineSurvey else { return }
                 showDeclineSurvey = true
             }
         } else {
@@ -525,122 +286,6 @@ struct HardPaywallView: View {
         NavigationModel.shared.presentBuyBackOffer()
     }
 
-    // MARK: - Offerings
-
-    private func loadCurrentOffering() {
-        isLoadingOffering = true
-        loadFailed = false
-
-        Purchases.shared.getOfferings { offerings, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("❌ RevenueCat Offerings Error: \(error.localizedDescription)")
-                    if !didAutoRetry {
-                        // One automatic retry before surfacing the failure UI.
-                        didAutoRetry = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            loadCurrentOffering()
-                        }
-                    } else {
-                        isLoadingOffering = false
-                        loadFailed = true
-                    }
-                    return
-                }
-
-                if let offerings = offerings {
-                    print("✅ Available offerings: \(offerings.all.keys)")
-                    print("🔍 Current offering: \(offerings.current?.identifier ?? "none")")
-
-                    // Use the default/current offering (can be changed in RevenueCat dashboard)
-                    currentOffering = offerings.current
-
-                    if let current = offerings.current {
-                        print("✅ Using default offering: \(current.identifier)")
-                        print("📦 Available packages: \(current.availablePackages.map { $0.identifier })")
-                    } else {
-                        print("⚠️ No current offering set - check RevenueCat dashboard")
-                    }
-                } else {
-                    print("❌ No offerings available - check RevenueCat configuration")
-                    currentOffering = nil
-                }
-
-                isLoadingOffering = false
-                loadFailed = false
-                autoPresentIfNeeded()
-            }
-        }
-    }
-
-    /// Auto-presents the RC paywall the first time offerings land — the
-    /// backdrop is only briefly visible behind it. Later re-presents go
-    /// through the "See plans" CTA.
-    private func autoPresentIfNeeded() {
-        guard !hasAutoPresented, !didCompletePurchase, !isRestoringPurchases else { return }
-        hasAutoPresented = true
-
-        let delay = UIAccessibility.isReduceMotionEnabled ? 0.1 : 0.2
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            guard !didCompletePurchase, !isRestoringPurchases else { return }
-            showingRevenueCatPaywall = true
-        }
-    }
-
-    // MARK: - Restore Purchases
-
-    private func restorePurchases() async {
-        guard !isRestoringPurchases else { return }
-        isRestoringPurchases = true
-        defer { isRestoringPurchases = false }
-
-        Analytics.restorePurchasesAttempted(surface: "onboarding_v4")
-
-        do {
-            print("🔄 Starting restore purchases...")
-
-            // Invalidate cache before restore to get fresh data
-            Purchases.shared.invalidateCustomerInfoCache()
-
-            // Add small delay to ensure cache invalidation completes
-            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-
-            let customerInfo = try await Purchases.shared.restorePurchases()
-
-            // Check if user has active entitlements after restore
-            if !customerInfo.entitlements.active.isEmpty {
-                print("✅ Restore successful - user has active entitlements: \(customerInfo.entitlements.active.keys)")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v4", hasActiveEntitlements: true)
-
-                // Guard the decline ladder and auto-present: they have Pro now.
-                didCompletePurchase = true
-
-                // Show success message
-                DispatchQueue.main.async {
-                    self.restoreSuccessMessage = "Your purchases have been restored successfully!"
-                }
-
-                // Continue onboarding flow
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    self.viewModel.nextStep()
-                }
-            } else {
-                print("ℹ️ Restore completed but no active entitlements found")
-                Analytics.restorePurchasesSucceeded(surface: "onboarding_v4", hasActiveEntitlements: false)
-                DispatchQueue.main.async {
-                    self.restoreErrorMessage = "No previous purchases found to restore."
-                }
-            }
-        } catch {
-            print("❌ Restore purchases error: \(error)")
-            Analytics.restorePurchasesFailed(surface: "onboarding_v4", error: error.localizedDescription)
-            Telemetry.capture(error,
-                              tags: ["feature": "paywall", "surface": "onboarding_v4", "operation": "restore_purchases"])
-            DispatchQueue.main.async {
-                self.restoreErrorMessage = error.localizedDescription
-            }
-        }
-    }
 }
 
 // MARK: - Feature row

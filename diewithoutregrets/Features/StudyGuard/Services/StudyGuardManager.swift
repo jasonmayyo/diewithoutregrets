@@ -147,8 +147,12 @@ final class StudyGuardManager: ObservableObject {
     func grantFreshBudget(reason: GrantReason, minutes: Int? = nil, analyticsContext: [String: String] = [:]) {
         guard let d = defaults else { return }
         let granted = minutes ?? effectiveInterval(d)
-        store.clearAllSettings()
         writeFreshBudgetKeys(d, minutes: granted)
+        // Publish the grant before removing the shield. A monitor callback in
+        // between these operations must see the new budget, not reapply the
+        // old lock just as the user tries to return to their app.
+        d.synchronize()
+        store.clearAllSettings()
         _ = restartMonitoring(thresholdMinutes: granted)
         var properties = [
             "source": reason.rawValue,
@@ -406,12 +410,13 @@ final class StudyGuardManager: ObservableObject {
     }
 
     private func writeFreshBudgetKeys(_ d: UserDefaults, minutes n: Int) {
-        d.set(SGContract.StateValue.metering, forKey: SGContract.Keys.state)
         d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.budgetGrantedAt)
         d.set(Double(n * 60), forKey: SGContract.Keys.budgetTotalSeconds)
         d.set(0.0, forKey: SGContract.Keys.budgetUsedSeconds)
         d.set(false, forKey: SGContract.Keys.warnedThisBudget)
         d.removeObject(forKey: SGContract.Keys.lockedAt)
+        // Publish the metering state only after its allowance is populated.
+        d.set(SGContract.StateValue.metering, forKey: SGContract.Keys.state)
     }
 
     /// Stop + start with fresh events (the only reliable threshold reset).
@@ -534,6 +539,8 @@ final class StudyGuardManager: ObservableObject {
             ("needsReauth", String(d.bool(forKey: SGContract.Keys.needsReauth))),
             ("legacyIntentFires", String(d.integer(forKey: SGContract.Keys.legacyIntentFireCount))),
             ("tokens", "\(SGContract.tokenCount(selection))"),
+            ("appVersion", "\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"))"),
+            ("appReturn", (UserDefaults.standard.stringArray(forKey: "sg_appReturnLog") ?? []).joined(separator: "\n")),
         ]
     }
 

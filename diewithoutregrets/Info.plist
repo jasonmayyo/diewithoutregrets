@@ -19,7 +19,16 @@
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string></string>
+		<string>instagram</string>
+		<string>youtube</string>
+		<string>tiktok</string>
+		<string>snapchat</string>
+		<string>fb</string>
+		<string>twitter</string>
+		<string>reddit</string>
+		<string>netflix</string>
+		<string>barcelona</string>
+		<string>bereal</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Study Guard uses the front camera during True Focus study sessions to detect whether you are at your desk and looking at your work. All video is processed live on your device. Frames are never recorded, stored, or transmitted off the device.</string>

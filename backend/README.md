@@ -15,7 +15,10 @@ The unused studyguard-ai Worker remains disabled and is no longer referenced by
 the app or deployment configuration. OneThing's source and service are unchanged.
 No end-user account or login has been added.
 
-**AI generation remains disabled while OpenAI billing/access is blocked.**
+**AI generation is enabled.** On 19 October 2026, the production ledger reached
+the shared 100-attempt monthly limit. The monthly limit is now configured as 300;
+the existing usage counter is preserved. The daily limits and $5 OpenAI project
+budget are unchanged. The OpenAI billing blockage described below is historical.
 A deployed Worker and a successful build are not evidence of successful paid AI
 requests or readiness for Apple submission.
 
@@ -40,8 +43,8 @@ requests or readiness for Apple submission.
    blank in place; existing ordinary questions remain question-style cards.
    Refusals, truncated answers, and invalid answer indexes fail without altering it.
 
-Current initial limits remain 10 attempts per installation per UTC day, three
-per minute, 20 globally per UTC day, and 100 globally per UTC month. One call per
+Current limits are 10 attempts per installation per UTC day, three
+per minute, 20 globally per UTC day, and 300 globally per UTC month. One call per
 installation and eight globally may be in flight. Failed or timed-out upstream
 calls remain counted; paid calls are never retried automatically. These request
 ceilings supplement the $5 enforced OpenAI project budget. Review capacity before
@@ -86,11 +89,23 @@ credentials are encrypted with their encryption key in macOS Keychain. The
 existing OPENAI_API_KEY Worker secret is preserved during normal deployments.
 Never place it in source, Info.plist, xcconfig, chat, or command arguments.
 
-When billing is restored, change AI_ENABLED to true in wrangler.jsonc and deploy.
-Verify health, then a real-device generation. Health only reports configuration;
+AI_ENABLED is currently true in wrangler.jsonc and on the live Worker.
+After changing configuration, verify health, then a real-device generation. Health only reports configuration;
 it does not authenticate the key with OpenAI or verify billing.
 
-## OpenAI account state
+API key rotation does not require an iOS release: the app calls the same public
+Worker hostname, and only the Worker reads OPENAI_API_KEY. Create a replacement
+with the required project/model permissions, update the existing Worker secret,
+verify a real-device generation, then revoke the old key. Never put the key in
+the iOS app. On 19 October 2026, the replacement key
+`Study Guard production — 2026-10-19` was deployed in Worker version `1886f483`.
+It retains only Chat Completions Request permission and expires on 18 November
+2026. A real iPhone generation test passed on 19 October at 18:49 UTC,
+returning 40 validated flashcards in 28.247 seconds through the live Worker.
+OpenAI records the replacement key as used on 19 October. The previous
+`Study Guard staging — server only` key was then revoked, completing the rotation.
+
+## Historical OpenAI account state (20 September 2026)
 
 - Project: Study Guard Server. Only gpt-4o-mini is allowed; enforced monthly limit $5.
 - The existing key is active with only Chat Completions Request permission.
@@ -128,9 +143,25 @@ From the repository root, with your physical iPhone connected:
 
 Simulator runs always skip this test. No paid generation is performed by it.
 
+For a separate, explicit one-request generation check after rotating a key:
+
+    xcodebuild -project diewithoutregrets.xcodeproj -scheme diewithoutregrets \
+      -configuration Debug -destination 'platform=iOS,id=YOUR_DEVICE_UDID' \
+      -allowProvisioningUpdates STUDY_GUARD_LIVE_GENERATION=1 \
+      -only-testing:diewithoutregretsTests/FlashcardAPIClientTests/testLiveProductionFlashcardGeneration test
+
+This opt-in test uses synthetic biology material, verifies a 20–50-card response
+through production App Attest, and does not save cards or modify existing decks.
+It consumes one generation attempt and a paid OpenAI request; do not enable
+automatic retries. A missing opt-in or a simulator causes it to skip.
+
 ## Verification and release
 
-- Nine backend unit/security tests pass.
+- Eleven backend unit/security tests passed on 19 October 2026.
+- A live generation test on an iPhone 17 Pro passed through production App Attest
+  and the replacement OpenAI key, returning 40 valid cards in 28.247 seconds.
+  This confirms the text-generation path; YouTube transcript extraction is a
+  separate failure and was not fixed by rotating the key.
 - The runtime integration test passes for valid signed requests, tampering,
   replay, quota exhaustion, and failed-request accounting. It also verifies that
   legacy/development registrations cannot authorize the production ledger.
@@ -141,12 +172,13 @@ Simulator runs always skip this test. No paid generation is performed by it.
 - The updated unsigned Release build compiled and passed the full bundle secret
   scan. Its Info.plist confirms version 2.0.2 build 62 and the existing
   studyguard-ai-staging hostname, with no legacy OpenAI key entry.
-- Live Apple enrollment, successful OpenAI generation, signed Release provisioning,
-  TestFlight testing, and App Store upload remain unverified.
+- The simulator and build details above describe the earlier release checks.
+  Signed Release provisioning, testing the actual TestFlight build, and App Store
+  upload were not verified as part of the 19 October server repair.
 
 Before submission:
 
-1. Restore OpenAI billing/access, enable the Worker, and test actual generation.
+1. Confirm the Worker remains enabled and verify generation with the release candidate.
 2. Remove any old OPENAI_API_KEY from Xcode Cloud settings. Historical archives
    are incident evidence and must not be re-released.
 3. Inspect a signed Release archive: production App Attest and the existing

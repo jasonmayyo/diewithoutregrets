@@ -20,8 +20,8 @@
     "AI_ENABLED": "true",
     "DEVICE_DAILY_LIMIT": "10",
     "GLOBAL_DAILY_LIMIT": "20",
-    "GLOBAL_MONTHLY_LIMIT": "100"
+    "GLOBAL_MONTHLY_LIMIT": "300"
   }
   // OPENAI_API_KEY is set with `wrangler secret put`, never in this file.
-  // The existing restricted key is already set. Enable AI after billing is restored.
+  // The existing restricted key is already set; rotate it in the Worker secrets.
 }

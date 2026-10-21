@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Guard · Onboarding review</title><link rel="stylesheet" href="review.css">
+</head>
+<body>
+<header class="page-header">
+  <a class="brand" href="#top"><img src="assets/idle.png" alt="">Study Guard <span>/ Design review</span></a>
+  <div class="header-meta"><span class="live-dot"></span> OneThing V5 → Study Guard <span class="date">21 October 2026</span></div>
+</header>
+<main id="top">
+  <section class="intro">
+    <div><p class="eyebrow">ONBOARDING · ROUND 1</p><h1>Scroll less.<br>Study more.</h1><p class="description">The OneThing flow, tailored to Study Guard.<br>Flashcards, your studies, and the countdown to your exam.</p></div>
+    <aside class="overview"><div><strong>23</strong><span>screens</span></div><div><strong>5</strong><span>phases</span></div><div><strong>V5</strong><span>source flow</span></div><p>Round 1: original welcome video, automatic flashcard demo, study level, subject, exam date, exam-based projection, and a choice of flashcards for five minutes.</p></aside>
+  </section>
+  <section class="toolbar" aria-label="Review controls">
+    <div class="segmented" aria-label="Display mode"><button data-mode="studyguard" aria-pressed="true">Study Guard</button><button data-mode="reference" aria-pressed="false">OneThing original</button><button data-mode="compare" aria-pressed="false">Compare</button></div>
+    <div class="tools"><label class="size-control">Size <input id="size" type="range" min="210" max="368" value="270" aria-label="Screenshot width"></label><button id="walkthrough" class="primary">Walk through ↗</button><button id="print">Print</button></div>
+  </section>
+  <nav class="phase-nav" aria-label="Filter by phase"><button data-phase="All" aria-pressed="true">All screens <span>23</span></button><button data-phase="Round 1">Round 1 changes <span>23</span></button><button data-phase="Value">01 · Value</button><button data-phase="Personalize">02 · Personalize</button><button data-phase="Time back">03 · Time back</button><button data-phase="Your plan">04 · Your plan</button><button data-phase="Setup">05 · Offer & setup</button></nav>
+  <div class="board-heading"><p id="result-count">23 screens · in app order</p><p>Click a screen to enlarge · use ← → to browse</p></div>
+  <div id="board"></div>
+  <section class="source-note"><h2>About this round</h2><p>The SwiftUI working files in OneThing are the source of truth, including uncommitted edits newer than its saved storyboard. Original screenshots are kept for comparison; older references are labeled. Each screen’s first Study Guard image is captured from the native app. Additional states use native captures where available; HTML previews are labeled.</p><p>The welcome now plays Study Guard’s original video. Screen 06 automatically animates notes into flashcards with a single, immediately available Continue button. Study level and exam subject have separate screens; the subject question comes immediately before the exam date. The exam date replaces the original habit question. Phone-time estimates use the days until that exam. Screen 11 shows those days as dots, highlights the full-day equivalent lost to scrolling, and types the study opportunities beneath the hours total. The founder story has been removed. The exam-time calculation now leads to “It’s not your fault”, the method, then the study-to-scroll rule. Screen 14 returns to OneThing’s dial: a large estimate of extra study hours before the selected exam. The 5, 10, or 20-card slider changes the estimate and earns five minutes, with 10 selected by default. A small estimate note explains the 30-second-per-card assumption and how study replaces part of the current phone-time window. The choice sets the real earning rate and quiz size, and carries through the commitment and visual journey. Page 15 now uses study-focused messaging and attributed excerpts from Study Guard’s App Store reviews, with links to the original listings. Copied rating and user-count badges are removed. Page 16 uses a generated fist-bump mascot with a tap-to-commit celebration. The onboarding and setup progress bars now match the flashcard quiz: a thick mint capsule, pale track, and inset shine. Primary CTAs now share a solid mint pill and consistent floating placement. Screens 20–23 now extend their white cards around both primary and secondary actions. A newly generated transparent reading mascot fills the protection circle, while the actual Study Guard app icon appears at the circle’s base and in notification examples. Setup copy now refers to studying. Page 18 is now a three-chapter illustrated student journey: make a start, build a rhythm, and walk into the exam. New generated artwork follows the same student and mascot, with short personalized captions, swipeable scenes and tappable chapter stops. Research copy remains for a later content pass. The offer leads into Study Guard’s existing RevenueCat purchase flow, so its configured pricing and trial eligibility still apply.</p><p class="mono">Source: OneThing working copy · baseline f287864 · 20 October 2026</p></section>
+</main>
+<dialog id="viewer" aria-labelledby="viewer-title">
+  <div class="viewer-head"><div><p id="viewer-counter"></p><h2 id="viewer-title"></h2></div><button id="close" aria-label="Close enlarged screenshot">✕</button></div>
+  <div id="viewer-content"></div><div id="viewer-states"></div><p id="viewer-note"></p>
+  <div class="viewer-controls"><button id="prev">← Previous</button><button id="next">Next →</button></div>
+</dialog>
+<dialog id="player" aria-labelledby="player-title"><div class="viewer-head"><div><p>CLICKABLE COMPANION · HTML PREVIEW</p><h2 id="player-title">Walk through the flow</h2></div><button id="close-player" aria-label="Close walkthrough">✕</button></div><div class="player-body"><iframe id="preview" title="Interactive Study Guard onboarding" src="about:blank"></iframe><aside><label for="jump">Jump to a screen</label><select id="jump"></select><p id="player-note">Choose answers to follow the flow. Permission and purchase actions are simulated in this HTML companion.</p><button id="player-next">Next screen →</button><p class="small">The screenshot board shows the native app. This companion is a lightweight HTML recreation for discussing the sequence.</p></aside></div></dialog>
+<script src="flow.js?v=20261021-setup-artwork"></script><script src="captures.js?v=20261021-setup-artwork"></script><script src="review.js?v=20261021-setup-artwork"></script>
+</body></html>

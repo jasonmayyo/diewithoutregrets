@@ -29,6 +29,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         // Configure RevenueCat before attribution callbacks can set attributes.
         Purchases.configure(withAPIKey: "appl_ArMMMNZWiwLJiQVDcmVCwLigzmG")
+        SGSuperwallBilling.shared.configure()
 
         // RevenueCat assigns an anonymous appUserID at first launch, which
         // is the same ID PostHog identifies with. Reuse it for Sentry user

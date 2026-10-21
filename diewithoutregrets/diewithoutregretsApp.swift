@@ -1,5 +1,6 @@
 import SwiftUI
 import RevenueCatUI
+import SuperwallKit
 import BranchSDK
 import UIKit
 import UserNotifications
@@ -91,6 +92,8 @@ struct diewithoutregretsApp: App {
             }
             .onOpenURL { url in
                 print("[App] onOpenURL: \(url)")
+                // Enables Superwall's on-device preview links for phase 2.
+                if Superwall.handleDeepLink(url) { return }
                 _ = Branch.getInstance().application(UIApplication.shared, open: url, options: [:])
 
                 if url.scheme == "diewithoutregrets" && url.host == "buyback" {
@@ -117,6 +120,7 @@ struct diewithoutregretsApp: App {
                 
                 // When app becomes active, clear any badge
                 if newPhase == .active {
+                    Task { await SGSuperwallBilling.shared.refreshSubscriptionStatus() }
                     print("[App] ✅ App became active - clearing badge")
                     NotificationManager.shared.clearBadge()
 

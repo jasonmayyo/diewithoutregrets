@@ -1,0 +1,12 @@
+Mode: Built-in image generation, two independent assets.
+Reference: design/onboarding-v5/assets/mascot-reading.png
+
+Asset: assets/study-guard-hero.png
+Prompt:
+Create a premium mobile paywall hero illustration for Study Guard, using the attached teal furry monster mascot as the exact character design reference: teal fluffy round body, coral orange horns, tiny head tuft, huge expressive dark eyes with white highlights, pink cheeks, cream belly, two little fangs. Portrait 2:3 composition. Narrative scene: the cheerful mascot sits at a warm wooden study desk, actively reviewing a small stack of cream flashcards and an open teal book, with a smartphone face down off to the side. The mascot is the clear central hero, shown large and fully recognizable, wearing no clothes. Quiet cozy study nook, dark midnight navy shadows in the upper left, beautiful soft golden afternoon light streaming from upper right, soft teal accents. Subtle academic objects, a neat book stack and small desk plant. Soft polished storybook 3D illustration, tactile furry mascot consistent with reference, premium cinematic lighting, emotionally optimistic and focused. Keep main character and study tools within central 75% to survive narrow mobile crop. Top 10% dark quiet breathing space, bottom 15% fades naturally to very dark navy-black so the image blends into a black paywall background. No text, no letters, no numbers, no logos, no UI mockup, no watermark. Produce one finished artwork.
+Transparent background: false
+
+Asset: assets/study-guard-reminder.png
+Prompt:
+Create one premium mobile paywall illustration for Study Guard using the attached teal furry monster as the exact character reference: round teal fluffy body, coral orange horns, head tuft, huge friendly dark eyes with white highlights, rosy pink cheeks, cream belly, tiny fangs. Transparent background cutout, square composition. A cheerful reassuring mascot sits beside a large elegant warm golden notification bell with a small rounded teal checkmark badge. Mascot gently holds the bell handle with one hand and waves with the other, friendly smile. One small closed dark teal study book underneath the bell subtly connects to studying. No smartphone, no complex background. Polished soft 3D storybook illustration matching the mascot, clean silhouette, warm gold and teal palette, soft studio illumination, cute but refined. All objects fully visible, no cropping, 12% transparent padding around edges. No text, no letters, no numbers, no logos, no watermark.
+Transparent background: true

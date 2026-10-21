@@ -13,6 +13,13 @@
 import SwiftUI
 
 struct OnboardingView: View {
+    var body: some View {
+        SGV5RootView()
+    }
+}
+
+/// Retained for existing preview harnesses and a reversible migration.
+struct LegacyOnboardingView: View {
     @StateObject private var onboardingViewModel = OnboardingViewModel()
 
     var body: some View {

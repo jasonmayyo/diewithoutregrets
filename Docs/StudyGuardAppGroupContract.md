@@ -89,6 +89,20 @@ leave the earned grant intact and offer a manual return. No application is
 guessed from the last rendered shield or the legacy `LastGuardedApp` value.
 Screen Time capture and actual third-party app launches require device QA.
 
+Return attempts allow 350ms for shield removal to settle, then use the known
+app's URL. An immediate refusal (under 500ms) gets one retry after 650ms while
+Study Guard is still active. A slower refusal, which could be a cancelled iOS
+prompt, is not automatically retried. An accepted URL request must also be
+followed by Study Guard backgrounding before navigation is cleared; a two-second
+watchdog releases the button if that transition never arrives. Leaving the flow
+invalidates pending callbacks. None of these steps grants time or spends an
+emergency unlock. The existing debug dump includes the app version and the last
+12 local return events; these are not uploaded to analytics.
+
+The grant is persisted before clearing shields so callbacks starting during the
+transition can observe the new allowance. The settling delay is best effort:
+ManagedSettings does not provide a shield-removal completion notification.
+
 1. Only the app starts/stops monitoring — with ONE exception: the monitor's
    day-rollover normalization restart when `armed ≠ interval`.
 2. `intervalDidEnd` and all warning callbacks are **log-only** (app-side

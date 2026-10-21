@@ -1,0 +1,9 @@
+# Study Guard fist-bump mascot
+
+Generated on 21 October 2026 with the built-in image generation tool. The PNG preserves the generated alpha channel and is copied unchanged into the native asset catalog and HTML assets.
+
+Reference 1: the existing Study Guard mascot (`idle.png`). Reference 2: OneThing's `ghost-fistpump.png`, used only for the forward-facing fist-bump pose.
+
+## Final prompt
+
+Use case: identity-preserve. Asset type: transparent full-body mascot illustration for a tappable fist-bump commitment screen in the Study Guard iPhone app. Reference image 1 is the exact character to preserve: the turquoise fluffy rounded monster, coral horns, dark teal hair tuft and eyebrows, huge white and navy eyes, pink cheeks, happy open smile with two little teeth, pale mint belly, small feet. Reference image 2 is ONLY a pose reference: the OneThing ghost is offering a friendly forward-facing fist bump toward the viewer. Create the Study Guard monster in that same inviting fist-bump pose: one arm extends forward, with a clearly readable rounded closed turquoise fist in the foreground, on the left side of the image like the pose reference. The other arm relaxes at its side. Keep its face completely visible and cheerful, looking directly at the viewer. Match image 1's clean flat vector-like 2D illustration style, original colors, face, fur silhouette and body proportions. Use minimal dark teal contour lines just on the fist to define knuckles and tucked thumb, no realistic human hand. Full body, centered, large within a square canvas with comfortable transparent padding; no cropping. True transparent background with alpha, no white rectangle, no checkerboard pattern, no background glow, no ground shadow. No text, no accessories, no second character, no ghost, no scenery, no watermark. This should feel like the exact existing Study Guard mascot reaching out to be tapped.

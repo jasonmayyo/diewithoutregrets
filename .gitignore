@@ -27,6 +27,11 @@ xcuserdata/
 # --- Local build output ---
 # xcodebuild output directory (multi-GB); never commit.
 build/
+*.xcresult/
+outputs/**/*.log
+
+# Local business documents are not app source or review assets.
+outputs/studyguard-sale-*/
 
 # Python build-check bytecode
 __pycache__/

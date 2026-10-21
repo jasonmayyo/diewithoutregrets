@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jasonmayo/Desktop/OneThing",
+  "captured": "2026-10-20",
+  "baselineCommit": "f287864",
+  "usesUncommittedWorkingFiles": true,
+  "files": {
+    "OneThing/Onboarding/V5/V5OnboardingProfile.swift": "a6dc09c1fcbe3471dd9ae7e498bea770cba8201868e7c7364952f491ad02a4de",
+    "OneThing/Onboarding/V5/V5OnboardingView.swift": "52e1e1176def83e08f17c631dbc09df860cfb4eb81b8037d9c289e28a8f2738c",
+    "OneThing/Onboarding/View/V4/V4PersonalizedPlanView.swift": "f13eff2b5e2d7916477c1f2d05b12db348d27b771bc86dca299ececf84a696aa"
+  },
+  "studyGuardRevision": "Round 1: study level, subject, exam date, flashcard demos",
+  "studyGuardWelcomeVideo": {
+    "source": "mockupvideo.mp4",
+    "sha256": "4a47cc70eaef4d2d997deda13d228d3e244d10aae8b0a2b6ca2f9f637b4b9df9"
+  }
+}

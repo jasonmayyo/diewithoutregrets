@@ -1,0 +1,61 @@
+{
+  "group": "interface",
+  "tokens": [
+    {
+      "name": "background",
+      "values": {
+        "light": "#FDFDFB",
+        "dark": "#FDFDFB"
+      }
+    },
+    {
+      "name": "primary",
+      "values": {
+        "light": "#2BC391",
+        "dark": "#2BC391"
+      }
+    },
+    {
+      "name": "secondary",
+      "values": {
+        "light": "#F4F6F5",
+        "dark": "#F4F6F5"
+      }
+    },
+    {
+      "name": "ctaText",
+      "values": {
+        "light": "#FFFFFF",
+        "dark": "#FFFFFF"
+      }
+    },
+    {
+      "name": "text50",
+      "values": {
+        "light": "#14211D8C",
+        "dark": "#14211D8C"
+      }
+    },
+    {
+      "name": "productSelectedBg",
+      "values": {
+        "light": "#E9F8F1",
+        "dark": "#E9F8F1"
+      }
+    },
+    {
+      "name": "text",
+      "values": {
+        "light": "#14211D",
+        "dark": "#14211D"
+      }
+    },
+    {
+      "name": "border",
+      "values": {
+        "light": "#00000012",
+        "dark": "#00000012"
+      }
+    }
+  ]
+}

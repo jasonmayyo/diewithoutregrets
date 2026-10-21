@@ -86,6 +86,7 @@ struct EmergencyUnlockSheet: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             appReturn.didEnterBackground()
         }
+        .onDisappear { appReturn.cancel() }
         .alert("Your apps are unlocked", isPresented: $appReturn.showFallback) {
             if returnDestination != nil {
                 Button("Try again", action: unlockAndReturn)

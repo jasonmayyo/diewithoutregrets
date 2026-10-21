@@ -1,0 +1,41 @@
+{
+  "phase": 2,
+  "paywallName": "Study Guard | Study First",
+  "applicationId": 58386,
+  "paywallId": 283322,
+  "editorUrl": "https://superwall.com/editor/?source=web2#/applications/58386/paywalls/283322/latest",
+  "products": {
+    "primary": "study_guard_yearly_pro",
+    "secondary": "study_guard_weekly"
+  },
+  "dashboardPreviewOnly": {
+    "currency": "USD",
+    "yearlyPrice": 34.99,
+    "yearlyFreeTrialDays": 3,
+    "weeklyPrice": 4.99,
+    "weeklyFreeTrialDays": 0
+  },
+  "realPricingSource": "App Store product data; RevenueCat handles purchases and access",
+  "introductoryOfferEligibility": "Automatic",
+  "artwork": [
+    "assets/study-guard-hero.png",
+    "assets/study-guard-reminder.png"
+  ],
+  "checks": [
+    "Trial-eligible introduction and reminder displayed in interactive preview",
+    "Weekly selection removes free-trial purchase copy and uses weekly pricing",
+    "Trial-ineligible introduction skips reminder and opens paid-plan screen",
+    "iPhone and iPhone SE layouts inspected",
+    "Exit message opens and contains Study Guard copy",
+    "No remaining One Thing, Faith Garden, 50000-user, 21-day-plan or Mac-app text claims",
+    "Trial duration uses product data without copied seven-day fallback",
+    "Privacy URL matches Study Guard; Apple standard EULA preserved",
+    "Restore purchase action and RevenueCat-backed product purchase actions preserved",
+    "Exit message scrolls to its purchase button on iPhone SE"
+  ],
+  "notPerformed": [
+    "Live purchase",
+    "Notification delivery on device",
+    "Onboarding integration or campaign activation (phase 3)"
+  ]
+}

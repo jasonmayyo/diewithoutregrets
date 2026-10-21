@@ -28,7 +28,21 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "NO"
       shouldAutocreateTestPlan = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "6B9D89C02D3552DF00DE8B2E"
+            BuildableName = "diewithoutregrets.app"
+            BlueprintName = "diewithoutregrets"
+            ReferencedContainer = "container:diewithoutregrets.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "STUDY_GUARD_LIVE_GENERATION"
+            value = "$(STUDY_GUARD_LIVE_GENERATION)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
          <EnvironmentVariable
             key = "STUDY_GUARD_LIVE_ATTESTATION"
             value = "$(STUDY_GUARD_LIVE_ATTESTATION)"
