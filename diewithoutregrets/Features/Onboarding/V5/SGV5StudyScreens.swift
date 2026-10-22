@@ -59,8 +59,9 @@ struct SGV5StudyLevelView: View {
                     VStack(spacing: 10) {
                         ForEach(SGV5V5OnboardingProfile.StudyLevel.allCases) { level in
                             Button {
+                                guard viewModel.v5Profile.studyLevel != level else { return }
                                 viewModel.v5Profile.studyLevel = level
-                                SGTheme.beat()
+                                SGV5Haptics.play(.selection)
                             } label: {
                                 HStack(spacing: 14) {
                                     Image(systemName: level.symbol).frame(width: 24)
@@ -116,6 +117,9 @@ struct SGV5ExamSubjectView: View {
                         TextField("e.g. Biology", text: subject)
                             .font(.system(size: 18)).textInputAutocapitalization(.words)
                             .submitLabel(.continue).focused($subjectFocused)
+                            .onChange(of: subjectFocused) { _, focused in
+                                if focused { SGV5Haptics.play(.selection) }
+                            }
                             .onSubmit { if viewModel.v5Profile.canContinue(from: .subject) { advance() } }
                             .padding(17)
                             .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: 16))
@@ -154,7 +158,15 @@ struct SGV5ExamDateView: View {
                     SGV5QuizGhostSpeechBubble(question: "When is your next exam?")
                     Text("Your \(viewModel.v5Profile.subjectLabel) exam")
                         .font(.system(size: 18, weight: .semibold))
-                    DatePicker("Exam date", selection: $pickedDate, in: today..., displayedComponents: .date)
+                    DatePicker("Exam date", selection: Binding(
+                        get: { pickedDate },
+                        set: { date in
+                            if !Calendar.current.isDate(date, inSameDayAs: pickedDate) {
+                                SGV5Haptics.play(.selection)
+                            }
+                            pickedDate = date
+                        }
+                    ), in: today..., displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .tint(SGTheme.mintDeep)
                         .padding(8)
@@ -298,17 +310,29 @@ struct SGV5ExamCostView: View {
         do {
             revealedDays = 0; typedText = ""
             withAnimation(.easeOut(duration: 0.35)) { dotsShown = true }
+            SGV5Haptics.animate(.reveal)
             try await Task.sleep(for: .seconds(0.45))
             withAnimation(.easeInOut(duration: 1.0)) { revealedDays = phoneDays }
-            try await Task.sleep(for: .seconds(1.05))
+            // Mark the fill with a bounded rhythm, even for distant exam dates.
+            let fillBeats = max(1, min(10, Int(ceil(phoneDays))))
+            for _ in 0..<fillBeats {
+                try await Task.sleep(for: .seconds(1.0 / Double(fillBeats)))
+                SGV5Haptics.animate(.reveal)
+            }
+            try await Task.sleep(for: .milliseconds(90))
+            SGV5Haptics.animate(.emphasis)
+            try await Task.sleep(for: .milliseconds(120))
             for ending in endings {
                 typedText = ""
                 for character in ending {
                     try Task.checkCancellation()
                     typedText.append(character)
+                    if !character.isWhitespace { SGV5Haptics.animate(.typing) }
                     try await Task.sleep(for: .milliseconds(32))
                 }
-                try await Task.sleep(for: .seconds(1.5))
+                try await Task.sleep(for: .milliseconds(90))
+                SGV5Haptics.animate(ending == endings.last ? .emphasis : .reveal)
+                try await Task.sleep(for: .seconds(1.41))
             }
         } catch { /* Navigation and inactive scenes cancel the sequence. */ }
     }
@@ -546,10 +570,13 @@ struct SGV5FlashcardGenerationDemo: View {
                 withAnimation(.easeInOut(duration: 1.3)) { scanProgress = 1 }
                 try await Task.sleep(for: .seconds(1.35))
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { phase = 1 }
+                SGV5Haptics.animate(.reveal)
                 try await Task.sleep(for: .seconds(0.55))
                 withAnimation(.spring(response: 0.65, dampingFraction: 0.75)) { phase = 2 }
+                SGV5Haptics.animate(.success)
                 try await Task.sleep(for: .seconds(1.8))
                 withAnimation(.easeInOut(duration: 0.65)) { answerShown = true }
+                SGV5Haptics.animate(.reveal)
                 try await Task.sleep(for: .seconds(2.6))
                 withAnimation(.easeOut(duration: 0.3)) { phase = 0 }
                 try await Task.sleep(for: .seconds(0.35))

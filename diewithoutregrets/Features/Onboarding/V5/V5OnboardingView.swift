@@ -149,6 +149,7 @@ private struct SGV5V5QuestionView<Choice: SGV5V5OnboardingChoice>: View {
 
     private func select(_ choice: Choice) {
         guard advanceTask == nil else { return }
+        SGV5Haptics.play(.selection)
         selection = choice
         if step == .habit { viewModel.v5Profile.startSmaller = false }
         viewModel.trackUserInput(screenId: step.rawValue, inputType: "single_choice", value: choice.rawValue)
@@ -323,7 +324,10 @@ private struct SGV5StudyRuleView: View {
                                     .accessibilityAddTraits(profile.selectedStudyRule == rule ? .isSelected : [])
                                 }
                             }
-                            Button { showsEstimate = true } label: {
+                            Button {
+                                SGV5Haptics.play(.selection)
+                                showsEstimate = true
+                            } label: {
                                 Label("Estimate · 30 sec per card", systemImage: "info.circle")
                                     .font(.system(size: 11)).foregroundStyle(SGTheme.paperSecondary)
                                     .frame(minHeight: 44)
@@ -391,7 +395,7 @@ private struct SGV5StudyRuleView: View {
         withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.85)) {
             viewModel.v5Profile.studyRule = next
         }
-        SGTheme.beat()
+        SGV5Haptics.play(.selection)
     }
 }
 

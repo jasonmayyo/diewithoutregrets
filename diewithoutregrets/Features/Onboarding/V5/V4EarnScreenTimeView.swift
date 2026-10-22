@@ -25,6 +25,7 @@ import UniformTypeIdentifiers
 
 struct SGV5V4EarnScreenTimeView: View {
     @ObservedObject var viewModel: SGV5FlowModel
+    @Environment(\.scenePhase) private var scenePhase
 
     /// When true the Continue button dismisses via `onClose` instead of advancing
     /// the onboarding flow, and a close (✕) button is shown. Set from the debug view.
@@ -171,6 +172,9 @@ struct SGV5V4EarnScreenTimeView: View {
             play(showcaseOnly ? .done : .lock)
         }
         .onDisappear(perform: cancelAll)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { play(beat) } else { cancelAll() }
+        }
     }
 
     // MARK: - Stage
@@ -469,7 +473,7 @@ struct SGV5V4EarnScreenTimeView: View {
         let lockStagger = 0.26
         for i in 0..<appIconNames.count {
             after(lockBase + Double(i) * lockStagger) {
-                UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 1.0)
+                SGV5Haptics.animate(.lock)
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { lockedIconCount = i + 1 }
             }
         }
@@ -529,12 +533,13 @@ struct SGV5V4EarnScreenTimeView: View {
                 runCount(from: 0, to: biologyReward, duration: 2.6, isGain: true)
                 for i in 0..<appIconNames.count {
                     after(Double(i) * 0.1) {
-                        UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.5)
+                        SGV5Haptics.animate(.gain)
                         lockedIconCount = appIconNames.count - 1 - i
                     }
                 }
             }
-            after(0.8 + 2.6 + 1.3) { play(.criminalLaw) }
+            // Hand off just after the Biology count settles.
+            after(0.8 + 2.6 + 0.15) { play(.criminalLaw) }
 
         case .criminalLaw:
             // Reading example: keep the same headline, swap the ghost, float the
@@ -542,11 +547,12 @@ struct SGV5V4EarnScreenTimeView: View {
             beat = .criminalLaw
             setCopy("Answer flashcards.\nEarn screen time.", "Correct answers unlock your apps.")
             withAnimation(.easeInOut(duration: 0.45)) { ghostAnim = Self.criminalLawMascot }
-            after(0.6) {
+            let countInDelay = 0.15
+            after(countInDelay) {
                 showCriminalLawChip = true
                 runCount(from: biologyReward, to: totalReward, duration: 2.0, isGain: true)
             }
-            revealContinue(after: 0.6 + 2.0 + 1.0)
+            revealContinue(after: countInDelay + 2.0 + 1.0)
 
         case .scroll:
             // Drain all the way to 0 while the mini app row LOCKS in parallel near
@@ -566,7 +572,7 @@ struct SGV5V4EarnScreenTimeView: View {
             let lockStart = countdownDelay + countdownDuration - 0.6
             for i in 0..<appIconNames.count {
                 after(lockStart + Double(i) * 0.15) {
-                    UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.85)
+                    SGV5Haptics.animate(.lock)
                     lockedIconCount = i + 1
                 }
             }
@@ -598,6 +604,8 @@ struct SGV5V4EarnScreenTimeView: View {
     }
 
     private func setCopy(_ newTitle: String, _ newSubtitle: String) {
+        // Both earning examples share their copy; keep it visible at handoff.
+        guard title != newTitle || subtitle != newSubtitle else { return }
         withAnimation(.easeOut(duration: 0.25)) { showCopy = false }
         after(0.28) {
             title = newTitle
@@ -637,8 +645,7 @@ struct SGV5V4EarnScreenTimeView: View {
                 withAnimation(.easeInOut(duration: max(0.05, stepDur))) {
                     orbMinutes += isGain ? 1 : -1
                 }
-                let g = UIImpactFeedbackGenerator(style: isGain ? .soft : .rigid)
-                g.impactOccurred(intensity: isGain ? 0.7 : 0.9)
+                SGV5Haptics.animate(isGain ? .gain : .lock)
             }
             elapsed += stepDur
         }

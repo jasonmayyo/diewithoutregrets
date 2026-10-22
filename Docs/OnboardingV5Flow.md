@@ -15,7 +15,7 @@ Round 1 replaces the original priority question with separate study-level and ex
 ## Round 1 — 20 October 2026
 
 - **01 / 800:** “Scroll Less. Study More.” uses the original bundled `mockupvideo.mp4` from Study Guard's earlier onboarding. The video loops silently and pauses when inactive or Reduce Motion is enabled.
-- **02 / 813:** Biology (10 correct flashcards) earns 5 minutes; Criminal Law (20 correct flashcards) earns 10. Rewards use `SGContract.defaultPerCardSeconds`, currently 30 seconds per correct card.
+- **02 / 813:** Biology (10 correct flashcards) earns 5 minutes; Criminal Law (20 correct flashcards) earns 10. Rewards use `SGContract.defaultPerCardSeconds`, currently 30 seconds per correct card. The 22 October pacing update shortens the pause between the two count animations from 1.9 seconds to 0.3 seconds and keeps their shared headline visible during the handoff.
 - **03 / 803:** Required study level (high school, college/university, postgraduate, professional exams).
 - **06 / 806:** An automatic visual demo inspired by the earlier Study Guard onboarding (`AIFlashcardDemo`, commit `7a2e2b6`): a scanning note sheet → animated card stack → automatic answer flip. Copy is reduced to “Your notes. Instant flashcards.” and “Less prep. More studying.” Continue is always available and advances immediately. The loop pauses when inactive, cancels on navigation, and shows a static finished card with Reduce Motion. It does not call the generation service or create a real deck.
 - **07 / 820:** Required exam subject on its own screen, immediately before the exam date. Whitespace-only subjects cannot continue. Existing screen IDs remain stable.
@@ -66,7 +66,15 @@ The protection circle now contains a newly generated transparent reading pose of
 
 The white card now wraps its progress header, scrollable content, footer copy, secondary action and primary button. Buttons stay solid mint and sit inside the card with consistent padding. The body can scroll on shorter screens while the actions remain available. Remaining OneThing wording in these four pages and their notification examples now refers to studying. The existing Screen Time, app picker, notification authorization, deferral and completion callbacks are retained.
 
+## Haptic feedback — 22 October 2026
+
+The native V5 flow uses a shared, foreground-only haptic vocabulary in `SGTheme.swift`. The exam-cost screen clicks softly for each non-whitespace typed character, marks the grid fill with up to ten beats, and punctuates the total and completed sentences. Continue/back actions, question choices, study level, exam date, subject focus, rule-slider stops, estimate details, journey chapters, restore outcomes, and setup controls also provide feedback. The notes-to-cards demo marks the stack, ready state, and answer flip. Existing earning, fist-bump, and plan-checklist feedback uses the same generators.
+
+Generators are reused and closely overlapping callbacks are coalesced, so a CTA and its navigation callback produce one pulse. Decorative feedback follows Reduce Motion; action confirmations remain available. The typewriter and flashcard-demo tasks cancel on navigation or inactivity. The empathy reveals and plan checklist now use cancellable tasks, and the earning demo cancels its scheduled beats on backgrounding and restarts its current stage on return. Physical haptic strength and cadence require an iPhone; the Simulator can verify the flow but cannot reproduce the sensation.
+
 ## Validation
+
+The 22 October haptic update passed the Simulator Debug build and all 14 `OnboardingV5Tests`. Native smoke checks verified the exam-cost typewriter, continuing before the sequence finished, the three empathy headline taps and completed statistics reveal, returning from the background, automatic checklist progression, and journey chapter selection. Physical haptic feel has not been tested on an iPhone.
 
 The screens 20–23 artwork and card update passed a fresh Simulator Debug build and JavaScript syntax checks. All four native screenshots were refreshed and visually checked for readable content and contained actions. Native setup introduction forward/back navigation, HTML setup progression and app-selection deferral, and the refreshed notification screenshot in the review board were verified. Both logo copies match the actual app icon byte-for-byte, and the generated mascot retains its alpha channel. Existing permission services and earning logic were unchanged; live system permissions and the earlier unit-test suite were not rerun for this styling update.
 

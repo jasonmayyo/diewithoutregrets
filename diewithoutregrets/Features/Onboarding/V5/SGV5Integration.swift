@@ -124,6 +124,7 @@ struct SGV5WelcomeView: View {
 
     private func restore() {
         guard !restoring else { return }
+        SGV5Haptics.play(.tap)
         restoring = true
         Task { @MainActor in
             defer { restoring = false }
@@ -131,11 +132,13 @@ struct SGV5WelcomeView: View {
                 let customer = try await Purchases.shared.restorePurchases()
                 guard SGSuperwallBilling.hasActiveAccess(customer) else {
                     errorMessage = "We couldn't find an active subscription. Please continue to subscribe."
+                    SGV5Haptics.play(.warning)
                     return
                 }
                 viewModel.startSetupAfterPurchase()
             } catch {
                 errorMessage = "Could not restore purchases. Check your connection and try again."
+                SGV5Haptics.play(.error)
             }
         }
     }
@@ -195,7 +198,10 @@ struct SGV5SetupView: View {
                             if hasSelection {
                                 Label("Your apps are selected", systemImage: "checkmark.circle.fill")
                                     .font(.subheadline).foregroundStyle(SGTheme.mintDeep)
-                                Button("Edit apps") { showPicker = true }
+                                Button("Edit apps") {
+                                    SGV5Haptics.play(.selection)
+                                    showPicker = true
+                                }
                             } else {
                                 Text("Your choice. Your pace.").font(.system(size: 13))
                                     .foregroundStyle(SGTheme.paperSecondary)
@@ -220,7 +226,11 @@ struct SGV5SetupView: View {
             if SGContract.tokenCount(newValue) > SGContract.maxSelectionTokens {
                 selection = previousSelection
                 showLimit = true
-            } else { previousSelection = newValue }
+                SGV5Haptics.play(.warning)
+            } else if newValue != previousSelection {
+                previousSelection = newValue
+                SGV5Haptics.play(.selection)
+            }
         }
         .alert("That's the limit", isPresented: $showLimit) {
             Button("OK", role: .cancel) {}

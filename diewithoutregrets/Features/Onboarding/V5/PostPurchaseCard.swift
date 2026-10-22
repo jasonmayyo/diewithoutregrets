@@ -306,7 +306,10 @@ struct SGV5PostPurchaseCard<Content: View>: View {
 
                     VStack(spacing: 12) {
                         if let secondaryTitle, let secondaryAction {
-                            Button(secondaryTitle, action: secondaryAction)
+                            Button(secondaryTitle) {
+                                SGV5Haptics.play(.selection)
+                                secondaryAction()
+                            }
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(SGV5PostPurchaseStyle.secondary)
                                 .frame(minHeight: 44)

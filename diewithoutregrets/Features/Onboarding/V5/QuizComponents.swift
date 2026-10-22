@@ -457,7 +457,10 @@ struct SGV5QuizContinueButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            SGV5Haptics.play(.tap)
+            action()
+        } label: {
             HStack(spacing: 10) {
                 if isLoading { ProgressView().tint(SGTheme.paper) }
                 Text(text)

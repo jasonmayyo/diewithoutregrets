@@ -292,7 +292,7 @@ struct SGV5V4GhostWitnessCommitmentView: View {
         guard !oathComplete else { return }
         oathComplete = true
         burstOrigin = location
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        SGV5Haptics.play(.emphasis)
         ghostPunch = !reduceMotion
         if !reduceMotion {
             spawnParticles()
@@ -303,7 +303,7 @@ struct SGV5V4GhostWitnessCommitmentView: View {
         completionTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(120))
             guard !Task.isCancelled else { return }
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            SGV5Haptics.play(.success)
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 180 : 300))
             guard !Task.isCancelled else { return }
             ghostPunch = false

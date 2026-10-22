@@ -38,6 +38,105 @@ final class SuperwallBillingTests: XCTestCase {
         }
         XCTAssertEqual(returnedError as NSError, error)
     }
+
+    func testInvalidReceiptOffersRestoreWithoutClaimingSuccess() {
+        let error = RevenueCat.ErrorCode.invalidReceiptError as NSError
+        guard case .failed(let returnedError) = SGSuperwallBilling.purchaseFailure(error) else {
+            return XCTFail("An unverified receipt must remain a failure.")
+        }
+        XCTAssertTrue(returnedError.localizedDescription.contains("Restore Purchases"))
+    }
+}
+
+@MainActor
+final class PurchaseReceiptRecoveryTests: XCTestCase {
+    private let productID = "study_guard_yearly_pro"
+    private let receiptError = RevenueCat.ErrorCode.invalidReceiptError as NSError
+
+    func testReceiptFailureSyncsOnceAndReturnsVerifiedAccess() async throws {
+        let info = customerInfo()
+        var syncCount = 0
+        let recovered = try await SGSuperwallBilling.recoverReceiptFailure(receiptError, productID: productID) {
+            syncCount += 1
+            return info
+        }
+        XCTAssertTrue(recovered === info)
+        XCTAssertEqual(syncCount, 1)
+    }
+
+    func testSyncWithoutMatchingActiveEntitlementCannotRecoverPurchase() async throws {
+        let invalidResults: [(String, RevenueCat.CustomerInfo)] = [
+            ("empty", customerInfo(entitlementID: nil)),
+            ("expired", customerInfo(isActive: false)),
+            ("wrong entitlement", customerInfo(entitlementID: "Pro Access")),
+            ("different product", customerInfo(productID: "study_guard_weekly")),
+            ("different environment", customerInfo(wrongEnvironment: true))
+        ]
+        for (reason, info) in invalidResults {
+            var syncCount = 0
+            let recovered = try await SGSuperwallBilling.recoverReceiptFailure(receiptError, productID: productID) {
+                syncCount += 1
+                return info
+            }
+            XCTAssertNil(recovered, reason)
+            XCTAssertEqual(syncCount, 1, reason)
+        }
+    }
+
+    func testOtherPurchaseErrorsNeverTriggerReceiptSync() async throws {
+        let errors: [Error] = [
+            RevenueCat.ErrorCode.purchaseCancelledError as NSError,
+            RevenueCat.ErrorCode.paymentPendingError as NSError,
+            RevenueCat.ErrorCode.receiptAlreadyInUseError as NSError,
+            URLError(.notConnectedToInternet)
+        ]
+        for error in errors {
+            var syncCount = 0
+            let recovered = try await SGSuperwallBilling.recoverReceiptFailure(error, productID: productID) {
+                syncCount += 1
+                return self.customerInfo()
+            }
+            XCTAssertNil(recovered)
+            XCTAssertEqual(syncCount, 0)
+        }
+    }
+
+    func testFailedReceiptSyncPropagatesErrorWithoutRetrying() async {
+        let syncError = URLError(.notConnectedToInternet)
+        var syncCount = 0
+        do {
+            _ = try await SGSuperwallBilling.recoverReceiptFailure(receiptError, productID: productID) {
+                syncCount += 1
+                throw syncError
+            }
+            XCTFail("A failed sync must not recover access.")
+        } catch {
+            XCTAssertEqual(error as NSError, syncError as NSError)
+        }
+        XCTAssertEqual(syncCount, 1)
+    }
+
+    private func customerInfo(
+        entitlementID: String? = "Pro Acess",
+        productID: String = "study_guard_yearly_pro",
+        isActive: Bool = true,
+        wrongEnvironment: Bool = false
+    ) -> RevenueCat.CustomerInfo {
+        // Probe the SDK's environment so these fixtures also work on devices.
+        let sandboxProbe = RevenueCat.EntitlementInfo(
+            identifier: "probe", isActive: true, willRenew: true, periodType: .normal,
+            store: .appStore, productIdentifier: productID, isSandbox: true, ownershipType: .purchased
+        )
+        let entitlement = RevenueCat.EntitlementInfo(
+            identifier: entitlementID ?? "", isActive: isActive, willRenew: isActive, periodType: .normal,
+            store: .appStore, productIdentifier: productID,
+            isSandbox: sandboxProbe.isActiveInCurrentEnvironment != wrongEnvironment, ownershipType: .purchased
+        )
+        return RevenueCat.CustomerInfo(
+            entitlements: .init(entitlements: entitlementID.map { [$0: entitlement] } ?? [:]),
+            requestDate: Date(), firstSeen: Date(), originalAppUserId: "receipt-recovery-test"
+        )
+    }
 }
 
 @MainActor

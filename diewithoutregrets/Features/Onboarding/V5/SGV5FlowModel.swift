@@ -91,7 +91,7 @@ final class SGV5FlowModel: ObservableObject {
         syncV5Profile()
         trackScreenAction(screenId: currentPageIndex, action: "completed")
         currentPageIndex = activeFlowOrder[index + 1]
-        SGTheme.beat()
+        SGV5Haptics.play(.tap)
     }
 
     func previousPage() {
@@ -100,12 +100,14 @@ final class SGV5FlowModel: ObservableObject {
         guard currentPageIndex != 601 else { return }
         currentPageIndex = activeFlowOrder[index - 1]
         lastAdvance = .distantPast
+        SGV5Haptics.play(.selection)
     }
 
     func startSetupAfterPurchase() {
         syncV5Profile()
         currentPageIndex = 601
         lastAdvance = .distantPast
+        SGV5Haptics.play(.success)
     }
 
     func syncV5Profile() {
@@ -176,9 +178,10 @@ final class SGV5FlowModel: ObservableObject {
             ])
             AdsTracker.trackCompleteRegistration()
             defaults.set(true, forKey: "hasCompletedOnboarding")
-            SGTheme.successHaptic()
+            SGV5Haptics.play(.success)
         } catch {
             completionError = "Couldn't verify your subscription. Check your connection and try again."
+            SGV5Haptics.play(.error)
         }
     }
 

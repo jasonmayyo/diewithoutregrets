@@ -12,6 +12,8 @@ import UIKit
 
 struct SGV5V4GeneratingPlanView: View {
     @ObservedObject var viewModel: SGV5FlowModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var checkedItems: Set<Int> = []
     @State private var showGhost = false
@@ -104,7 +106,8 @@ struct SGV5V4GeneratingPlanView: View {
                 Spacer()
             }
         }
-        .task {
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
             showGhost = true
             if usesV5Profile {
                 viewModel.syncV5Profile()
@@ -117,17 +120,15 @@ struct SGV5V4GeneratingPlanView: View {
 
     @MainActor private func startChecklist() async {
         let screenId = viewModel.currentPageIndex
-        let mediumGenerator = UIImpactFeedbackGenerator(style: .medium)
-        mediumGenerator.prepare()
-        for index in checklistItems.indices {
+        for index in checklistItems.indices where !checkedItems.contains(index) {
             try? await Task.sleep(nanoseconds: 550_000_000)
             guard !Task.isCancelled, viewModel.currentPageIndex == screenId else { return }
-            withAnimation { _ = checkedItems.insert(index) }
-            mediumGenerator.impactOccurred(intensity: 0.5)
+            withAnimation(reduceMotion ? nil : .spring(response: 0.3)) { _ = checkedItems.insert(index) }
+            SGV5Haptics.animate(.reveal)
         }
         try? await Task.sleep(nanoseconds: 500_000_000)
         guard !Task.isCancelled, viewModel.currentPageIndex == screenId else { return }
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        SGV5Haptics.animate(.success)
         if usesV5Profile { viewModel.advanceV5() } else { viewModel.nextPage() }
     }
 

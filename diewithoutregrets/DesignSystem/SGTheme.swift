@@ -13,6 +13,61 @@
 //
 
 import SwiftUI
+import UIKit
+
+/// The onboarding's tactile vocabulary. Reuse generators for the typewriter's
+/// fast cadence, and keep button + navigation callbacks from doubling a tap.
+@MainActor
+enum SGV5Haptics {
+    enum Cue { case typing, selection, tap, reveal, emphasis, lock, gain, success, warning, error }
+
+    private static let soft = UIImpactFeedbackGenerator(style: .soft)
+    private static let light = UIImpactFeedbackGenerator(style: .light)
+    private static let medium = UIImpactFeedbackGenerator(style: .medium)
+    private static let heavy = UIImpactFeedbackGenerator(style: .heavy)
+    private static let rigid = UIImpactFeedbackGenerator(style: .rigid)
+    private static let selection = UISelectionFeedbackGenerator()
+    private static let notification = UINotificationFeedbackGenerator()
+    private static var lastCue: Cue?
+    private static var lastPlayedAt = -Double.infinity
+
+    static func play(_ cue: Cue) {
+        guard UIApplication.shared.applicationState == .active, !Task.isCancelled else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        // A real action can interrupt the typewriter immediately.
+        let minimumInterval = lastCue == .typing ? (cue == .typing ? 0.025 : 0) : 0.06
+        guard now - lastPlayedAt >= minimumInterval else { return }
+        lastPlayedAt = now
+        lastCue = cue
+
+        switch cue {
+        case .typing: impact(soft, intensity: 0.35)
+        case .selection:
+            selection.selectionChanged()
+            selection.prepare()
+        case .tap: impact(medium, intensity: 0.8)
+        case .reveal: impact(light, intensity: 0.65)
+        case .emphasis: impact(heavy, intensity: 1)
+        case .lock: impact(rigid, intensity: 0.9)
+        case .gain: impact(soft, intensity: 0.7)
+        case .success, .warning, .error:
+            notification.notificationOccurred(cue == .success ? .success : cue == .warning ? .warning : .error)
+            notification.prepare()
+        }
+    }
+
+    /// Decorative beats follow the animation's accessibility setting. Explicit
+    /// taps and selections still confirm actions when Reduce Motion is enabled.
+    static func animate(_ cue: Cue) {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        play(cue)
+    }
+
+    private static func impact(_ generator: UIImpactFeedbackGenerator, intensity: CGFloat) {
+        generator.impactOccurred(intensity: intensity)
+        generator.prepare()
+    }
+}
 
 enum SGTheme {
 

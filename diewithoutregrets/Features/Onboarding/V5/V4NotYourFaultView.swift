@@ -12,6 +12,8 @@ import SwiftUI
 
 struct SGV5V4NotYourFaultView: View {
     @ObservedObject var viewModel: SGV5FlowModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let words = ["It's", "not", "your", "fault."]
 
@@ -24,6 +26,10 @@ struct SGV5V4NotYourFaultView: View {
     @State private var showKickerLeadIn = false
     @State private var kickerWordsRevealed = 0
     @State private var showButton = false
+
+    private var sequencePhase: Int {
+        scenePhase == .active ? (headlinesRevealed >= 3 ? 2 : 1) : 0
+    }
 
     var body: some View {
         ZStack {
@@ -41,7 +47,13 @@ struct SGV5V4NotYourFaultView: View {
                 bottomArea
             }
         }
-        .onAppear { startWordReveal() }
+        .task(id: sequencePhase) {
+            guard scenePhase == .active else { return }
+            do {
+                if headlinesRevealed < 3 { try await startWordReveal() }
+                else { try await beginStatsPhase() }
+            } catch { /* Leaving the screen or backgrounding cancels every beat. */ }
+        }
     }
 
     // MARK: - Background
@@ -218,7 +230,7 @@ struct SGV5V4NotYourFaultView: View {
     private func handleTap() {
         guard readyForTaps, headlinesRevealed < 3 else { return }
 
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        SGV5Haptics.play(.tap)
 
         withAnimation(.spring(response: 0.55, dampingFraction: 0.78)) {
             headlinesRevealed += 1
@@ -227,58 +239,59 @@ struct SGV5V4NotYourFaultView: View {
 
         if headlinesRevealed >= 3 {
             withAnimation(.easeOut(duration: 0.3)) { showTapHint = false }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                beginStatsPhase()
-            }
         }
     }
 
     // MARK: - Animation Sequences
 
-    private func startWordReveal() {
+    @MainActor private func startWordReveal() async throws {
+        guard !readyForTaps else { return }
         viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "word_reveal_started")
-        for i in 1...words.count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + Double(i) * 0.35) {
+        if reduceMotion {
+            wordsRevealed = words.count
+        } else {
+            try await Task.sleep(for: .seconds(0.5))
+            for i in 1...words.count where i > wordsRevealed {
+                try await Task.sleep(for: .seconds(0.35))
                 withAnimation { wordsRevealed = i }
+                SGV5Haptics.animate(i == words.count ? .tap : .reveal)
             }
+            try await Task.sleep(for: .seconds(1))
         }
-
-        let readyTime = 0.5 + Double(words.count) * 0.35 + 1.0
-        DispatchQueue.main.asyncAfter(deadline: .now() + readyTime) {
-            readyForTaps = true
-            withAnimation { showTapHint = true }
-            viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "ready_for_taps")
-        }
+        readyForTaps = true
+        withAnimation { showTapHint = true }
+        viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "ready_for_taps")
     }
 
-    private func beginStatsPhase() {
-        viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "stats_cascade_started")
-        withAnimation { inStatsPhase = true }
-
-        let statDelays: [Double] = [0.5, 1.2, 1.9]
-        for (i, delay) in statDelays.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                withAnimation { statsRevealed = i + 1 }
+    @MainActor private func beginStatsPhase() async throws {
+        guard !showButton else { return }
+        if reduceMotion {
+            inStatsPhase = true; statsRevealed = 3
+            showKickerLeadIn = true; kickerWordsRevealed = 4
+        } else {
+            if !inStatsPhase {
+                try await Task.sleep(for: .seconds(1))
+                viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "stats_cascade_started")
+                withAnimation { inStatsPhase = true }
             }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            withAnimation { showKickerLeadIn = true }
-        }
-
-        let wordDelays: [Double] = [3.8, 4.3, 4.8, 5.3]
-        for (i, delay) in wordDelays.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                withAnimation { kickerWordsRevealed = i + 1 }
-                let style: UIImpactFeedbackGenerator.FeedbackStyle = (i == 3) ? .heavy : .medium
-                UIImpactFeedbackGenerator(style: style).impactOccurred()
+            for i in 1...3 where i > statsRevealed {
+                try await Task.sleep(for: .seconds(i == 1 ? 0.5 : 0.7))
+                withAnimation { statsRevealed = i }
+                SGV5Haptics.animate(.reveal)
             }
+            if !showKickerLeadIn {
+                try await Task.sleep(for: .seconds(1.1))
+                withAnimation { showKickerLeadIn = true }
+            }
+            for i in 1...4 where i > kickerWordsRevealed {
+                try await Task.sleep(for: .seconds(i == 1 ? 0.8 : 0.5))
+                withAnimation { kickerWordsRevealed = i }
+                SGV5Haptics.animate(i == 4 ? .emphasis : .tap)
+            }
+            try await Task.sleep(for: .seconds(0.9))
         }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.2) {
-            withAnimation { showButton = true }
-            viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "continue_button_shown")
-        }
+        withAnimation { showButton = true }
+        viewModel.trackScreenAction(screenId: viewModel.currentPageIndex, action: "continue_button_shown")
     }
 }
 

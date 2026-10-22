@@ -120,7 +120,7 @@ struct SGV5V4PersonalizedPlanView: View {
             #endif
         }
         .onChange(of: chapter) { _, selected in
-            SGTheme.tick()
+            SGV5Haptics.play(selected == 2 ? .success : .selection)
             viewModel.trackScreenAction(screenId: 816, action: "journey_chapter_viewed",
                                        properties: ["chapter": selected + 1])
         }

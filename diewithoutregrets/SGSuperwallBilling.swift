@@ -117,14 +117,63 @@ final class SGSuperwallBilling: PurchaseController {
             }
             return result.userCancelled ? .cancelled : .purchased
         } catch {
+            if Self.isReceiptValidationFailure(error) {
+                capturePurchaseError(error, productID: storeKitProduct.id, phase: "purchase")
+                do {
+                    if let info = try await Self.recoverReceiptFailure(
+                        error,
+                        productID: storeKitProduct.id,
+                        syncPurchases: { try await Purchases.shared.syncPurchases() }
+                    ) {
+                        apply(info)
+                        // A sync can recover an existing subscription. Don't
+                        // count it as a new purchase in ad revenue events.
+                        Analytics.capture("onboarding_purchase_recovered", properties: [
+                            "product_id": storeKitProduct.id
+                        ])
+                        return .purchased
+                    }
+                } catch {
+                    capturePurchaseError(error, productID: storeKitProduct.id, phase: "receipt_sync")
+                }
+            } else if (error as? RevenueCat.ErrorCode) != .purchaseCancelledError,
+                      (error as? RevenueCat.ErrorCode) != .paymentPendingError {
+                capturePurchaseError(error, productID: storeKitProduct.id, phase: "purchase")
+            }
             return Self.purchaseFailure(error)
         }
+    }
+
+    /// Reconcile a confirmed purchase once if receipt validation failed. This
+    /// never launches another payment or treats a successful sync as access.
+    static func recoverReceiptFailure(
+        _ error: Error,
+        productID: String,
+        syncPurchases: () async throws -> RevenueCat.CustomerInfo
+    ) async throws -> RevenueCat.CustomerInfo? {
+        guard isReceiptValidationFailure(error) else { return nil }
+        let info = try await syncPurchases()
+        guard let entitlement = info.entitlements.activeInCurrentEnvironment[revenueCatEntitlementID],
+              entitlement.productIdentifier == productID else { return nil }
+        return info
+    }
+
+    nonisolated private static func isReceiptValidationFailure(_ error: Error) -> Bool {
+        (error as? RevenueCat.ErrorCode) == .invalidReceiptError
+    }
+
+    private func capturePurchaseError(_ error: Error, productID: String, phase: String) {
+        Telemetry.capture(error, context: [
+            "product_id": productID,
+            "revenuecat_sdk_version": Purchases.frameworkVersion
+        ], tags: ["feature": "purchase", "surface": "onboarding_superwall", "phase": phase])
     }
 
     nonisolated static func purchaseFailure(_ error: Error) -> SuperwallKit.PurchaseResult {
         switch error as? RevenueCat.ErrorCode {
         case .purchaseCancelledError: return .cancelled
         case .paymentPendingError: return .pending
+        case .invalidReceiptError: return .failed(BillingError.purchaseVerificationFailed)
         default: return .failed(error)
         }
     }
@@ -158,9 +207,15 @@ final class SGSuperwallBilling: PurchaseController {
 
     private enum BillingError: LocalizedError {
         case storeKitProductUnavailable
+        case purchaseVerificationFailed
 
         var errorDescription: String? {
-            "This product is unavailable. Please try again later."
+            switch self {
+            case .storeKitProductUnavailable:
+                return "This product is unavailable. Please try again later."
+            case .purchaseVerificationFailed:
+                return "We couldn't verify your purchase with the App Store. Please tap Restore Purchases. If it still doesn't work, try again later."
+            }
         }
     }
 }
