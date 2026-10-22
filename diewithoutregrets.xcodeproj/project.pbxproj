@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		57A11A002026102100000006 /* SuperwallBillingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A11A002026102100000007 /* SuperwallBillingTests.swift */; };
-		57A11A002026102100000001 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 57A11A002026102100000002 /* SuperwallKit */; };
-		57A11A002026102100000003 /* SGSuperwallBilling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A11A002026102100000004 /* SGSuperwallBilling.swift */; };
 		006DEFCA106930111FB6AA6B /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		02C1B351C8894FE0D1ACCC53 /* GuardRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE68487A12F7833146396BBE /* GuardRingView.swift */; };
 		041543A64C58B338374EEE95 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */; };
@@ -83,6 +80,9 @@
 		4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */; };
 		4D9C7ABE3611F485F9F9AD89 /* EmergencyUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */; };
 		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
+		57A11A002026102100000001 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 57A11A002026102100000002 /* SuperwallKit */; };
+		57A11A002026102100000003 /* SGSuperwallBilling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A11A002026102100000004 /* SGSuperwallBilling.swift */; };
+		57A11A002026102100000006 /* SuperwallBillingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A11A002026102100000007 /* SuperwallBillingTests.swift */; };
 		5A9A3C9A83F2D711DBE5BFBE /* StudyGuardState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A76BC31490CEAECF9B75109 /* StudyGuardState.swift */; };
 		5E4710E700000000000000A2 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4710E700000000000000A1 /* AppEnvironment.swift */; };
 		5E4710E700000000000000B2 /* SecretsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4710E700000000000000B1 /* SecretsLoader.swift */; };
@@ -310,8 +310,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		57A11A002026102100000007 /* SuperwallBillingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuperwallBillingTests.swift; sourceTree = "<group>"; };
-		57A11A002026102100000004 /* SGSuperwallBilling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SGSuperwallBilling.swift; sourceTree = "<group>"; };
 		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0191E9CECE70FF6BB46CE75F /* V5OnboardingProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V5OnboardingProfile.swift; sourceTree = "<group>"; };
 		022EF66829006A39DC358F1E /* QuizV2View.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2View.swift; sourceTree = "<group>"; };
@@ -380,6 +378,8 @@
 		53D5949165897B100D1AC547 /* OnboardingScaffold.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingScaffold.swift; sourceTree = "<group>"; };
 		565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmergencyUnlockSheet.swift; sourceTree = "<group>"; };
 		56B14922C6CF02970BFC76E3 /* OrbComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OrbComponents.swift; sourceTree = "<group>"; };
+		57A11A002026102100000004 /* SGSuperwallBilling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SGSuperwallBilling.swift; sourceTree = "<group>"; };
+		57A11A002026102100000007 /* SuperwallBillingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuperwallBillingTests.swift; sourceTree = "<group>"; };
 		5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FlashcardAPIClient.swift; sourceTree = "<group>"; };
 		5B4C2E09928DB387AD4CDA94 /* SGTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGTheme.swift; sourceTree = "<group>"; };
 		5B9E75A5D01B0C7DD1AEB247 /* ShieldReturnContextTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShieldReturnContextTests.swift; sourceTree = "<group>"; };
@@ -707,7 +707,6 @@
 				AC9F876A6C56EBFA404F543A /* V5OnboardingView.swift */,
 				7E4B09BDD4370866D7D8EB62 /* SGV5StudyScreens.swift */,
 			);
-			name = V5;
 			path = V5;
 			sourceTree = "<group>";
 		};
@@ -2096,7 +2095,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -2138,7 +2137,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -2519,20 +2518,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		57A11A002026102100000005 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/superwall/Superwall-iOS";
-			requirement = {
-				kind = exactVersion;
-				version = 4.18.0;
-			};
-		};
 		4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tiktok/tiktok-business-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.6.1;
+			};
+		};
+		57A11A002026102100000005 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/superwall/Superwall-iOS";
+			requirement = {
+				kind = exactVersion;
+				version = 4.18.0;
 			};
 		};
 		6B45F2E42DADB48E0053351D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
@@ -2586,11 +2585,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		57A11A002026102100000002 /* SuperwallKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 57A11A002026102100000005 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
-			productName = SuperwallKit;
-		};
 		021B87114F8544B1BA4FCA50 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DD904B62617F4A2F8E29E7A8 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
@@ -2600,6 +2594,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4A0BB7012FA0000000000001 /* XCRemoteSwiftPackageReference "tiktok-business-ios-sdk" */;
 			productName = TikTokBusinessSDK;
+		};
+		57A11A002026102100000002 /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 57A11A002026102100000005 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
+			productName = SuperwallKit;
 		};
 		6B45F2E52DADB48E0053351D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
