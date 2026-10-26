@@ -56,7 +56,7 @@ final class StudyGuardEngineTests: XCTestCase {
             let limit = events[DeviceActivityEvent.Name(SGContract.limitEventName)]
             XCTAssertEqual(limit?.threshold, DateComponents(minute: minutes))
             XCTAssertEqual(limit?.includesPastActivity, false)
-            XCTAssertEqual(events.count, minutes)
+            XCTAssertEqual(events.count, minutes + 2) // primary + terminal + recovery
         }
         XCTAssertEqual(SGContract.dailySchedule.intervalStart, DateComponents(hour: 0, minute: 1))
         XCTAssertEqual(SGContract.dailySchedule.intervalEnd, DateComponents(hour: 23, minute: 59, second: 59))
@@ -85,28 +85,81 @@ final class StudyGuardEngineTests: XCTestCase {
 
     // MARK: - Event construction
 
+    func testPriorRegistrationCannotDebitOrLockNewBudget() throws {
+        let suite = "StudyGuardGenerationTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(15, forKey: SGContract.Keys.armedThresholdMinutes)
+        let old = SGContract.beginMonitoringGeneration(defaults)
+        let oldEvents = SGContract.buildEvents(intervalMinutes: 15, selection: FamilyActivitySelection(), generation: old)
+        let current = SGContract.beginMonitoringGeneration(defaults)
+        XCTAssertNotEqual(old, current)
+        // A long wall-time gap must not make an old event valid again.
+        defaults.set(Date().addingTimeInterval(-3_600).timeIntervalSince1970,
+                     forKey: SGContract.Keys.budgetGrantedAt)
+        for name in oldEvents.keys {
+            XCTAssertNil(SGContract.usageEvent(named: name.rawValue, defaults: defaults))
+        }
+        let currentEvents = SGContract.buildEvents(intervalMinutes: 15, selection: FamilyActivitySelection(), generation: current)
+        for name in currentEvents.keys {
+            XCTAssertNotNil(SGContract.usageEvent(named: name.rawValue, defaults: defaults))
+        }
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_limit:\(current)", defaults: defaults), .limit)
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_used_p14:\(current)", defaults: defaults), .progress(14))
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_used_p15:\(current)", defaults: defaults), .progress(15))
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_used_p16:\(current)", defaults: defaults), .progress(16))
+    }
+
+    func testLegacyRegistrationWorksOnlyUntilFirstGenerationIsArmed() throws {
+        let suite = "StudyGuardLegacyEventsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(3, forKey: SGContract.Keys.armedThresholdMinutes)
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_limit", defaults: defaults), .limit)
+        XCTAssertEqual(SGContract.usageEvent(named: "sg_used_p2", defaults: defaults), .progress(2))
+        XCTAssertNil(SGContract.usageEvent(named: "sg_limit:unknown", defaults: defaults))
+        let generation = SGContract.beginMonitoringGeneration(defaults)
+        for name in ["sg_limit", "sg_used_p2", "", "sg_used_p0:\(generation)",
+                     "sg_used_p5:\(generation)", "sg_limit:\(generation):extra"] {
+            XCTAssertNil(SGContract.usageEvent(named: name, defaults: defaults))
+        }
+    }
+
+    func testMissingLimitCallbackHasUsageBasedRecoveryEvents() {
+        for minutes in [1, 2, 3, 15, 30, 60] {
+            let events = SGContract.buildEvents(intervalMinutes: minutes, selection: FamilyActivitySelection())
+            // Ignoring sg_limit entirely must still allow the recorded usage
+            // to reach the budget, including a one-minute earned allowance.
+            let terminal = events[DeviceActivityEvent.Name("\(SGContract.progressEventPrefix)\(minutes)")]
+            let recovery = events[DeviceActivityEvent.Name("\(SGContract.progressEventPrefix)\(minutes + 1)")]
+            XCTAssertEqual(terminal?.threshold, DateComponents(minute: minutes))
+            XCTAssertEqual(recovery?.threshold, DateComponents(minute: minutes + 1))
+            XCTAssertEqual(recovery?.includesPastActivity, false)
+        }
+    }
+
     func testBuildEventsContainsLimitEvent() {
         let events = SGContract.buildEvents(intervalMinutes: 15, selection: FamilyActivitySelection())
         XCTAssertNotNil(events[DeviceActivityEvent.Name(SGContract.limitEventName)])
     }
 
     func testBuildEventsProgressStepMath() {
-        // step = max(1, ceil(N/20)): N=15 → 1-min steps → events at 1..14 (14) + limit.
+        // Below-budget progress + primary limit + terminal/recovery progress.
         let n15 = SGContract.buildEvents(intervalMinutes: 15, selection: FamilyActivitySelection())
-        XCTAssertEqual(n15.count, 15) // 14 progress + 1 limit
+        XCTAssertEqual(n15.count, 17)
 
-        // N=30 → step 2 → 2,4,…,28 (14 progress) + limit.
+        // N=30 → step 2 → 2,4,…,28 + limit + terminal/recovery.
         let n30 = SGContract.buildEvents(intervalMinutes: 30, selection: FamilyActivitySelection())
-        XCTAssertEqual(n30.count, 15)
+        XCTAssertEqual(n30.count, 17)
         XCTAssertNotNil(n30[DeviceActivityEvent.Name("\(SGContract.progressEventPrefix)28")])
-        XCTAssertNil(n30[DeviceActivityEvent.Name("\(SGContract.progressEventPrefix)30")]) // < N, never == N
+        XCTAssertNotNil(n30[DeviceActivityEvent.Name("\(SGContract.progressEventPrefix)30")])
 
-        // N=60 → step 3 → 3,6,…,57 (19 progress) + limit = 20 total (≤ 20 progress cap holds).
+        // N=60 → step 3 → 3,6,…,57 + limit + terminal/recovery = 22.
         let n60 = SGContract.buildEvents(intervalMinutes: 60, selection: FamilyActivitySelection())
-        XCTAssertEqual(n60.count, 20)
+        XCTAssertEqual(n60.count, 22)
     }
 
-    func testBuildEventsProgressNeverReachesLimit() {
+    func testBuildEventsProgressIncludesBoundedRecoveryBeyondLimit() {
         for n in SGContract.allowedIntervals {
             let events = SGContract.buildEvents(intervalMinutes: n, selection: FamilyActivitySelection())
             let progressMinutes = events.keys
@@ -114,9 +167,10 @@ final class StudyGuardEngineTests: XCTestCase {
                 .filter { $0.hasPrefix(SGContract.progressEventPrefix) }
                 .compactMap { Int($0.dropFirst(SGContract.progressEventPrefix.count)) }
             XCTAssertFalse(progressMinutes.isEmpty, "N=\(n) should have progress events")
-            XCTAssertLessThan(progressMinutes.max() ?? 0, n)
-            // Progress cap: at most 20 progress events.
-            XCTAssertLessThanOrEqual(progressMinutes.count, 20)
+            XCTAssertEqual(progressMinutes.max(), n + 1)
+            XCTAssertTrue(progressMinutes.contains(n))
+            // At most 19 below-budget samples plus two recovery samples.
+            XCTAssertLessThanOrEqual(progressMinutes.count, 21)
         }
     }
 

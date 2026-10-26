@@ -17,6 +17,7 @@ import SwiftUI
 import FamilyControls
 import ManagedSettings
 import DeviceActivity
+import UserNotifications
 
 @MainActor
 final class StudyGuardManager: ObservableObject {
@@ -152,6 +153,9 @@ final class StudyGuardManager: ObservableObject {
         // between these operations must see the new budget, not reapply the
         // old lock just as the user tries to return to their app.
         d.synchronize()
+        let notifications = UNUserNotificationCenter.current()
+        notifications.removePendingNotificationRequests(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
+        notifications.removeDeliveredNotifications(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
         store.clearAllSettings()
         _ = restartMonitoring(thresholdMinutes: granted)
         var properties = [
@@ -385,7 +389,7 @@ final class StudyGuardManager: ObservableObject {
         // (e) Monitoring health: iOS silently dropped our schedule → re-baseline restart.
         if currentState == SGContract.StateValue.metering,
            let stored = SGContract.decodeSelection(d), !SGContract.isSelectionEmpty(stored),
-           !isMonitoringActive {
+           (!isMonitoringActive || d.string(forKey: SGContract.Keys.monitoringGeneration) == nil) {
             let total = d.double(forKey: SGContract.Keys.budgetTotalSeconds)
             let used = d.double(forKey: SGContract.Keys.budgetUsedSeconds)
             let remaining = max(1, Int(((max(total, 60) - used) / 60).rounded(.up)))
@@ -410,6 +414,9 @@ final class StudyGuardManager: ObservableObject {
     }
 
     private func writeFreshBudgetKeys(_ d: UserDefaults, minutes n: Int) {
+        // Invalidate queued events before changing any budget fields.
+        SGContract.beginMonitoringGeneration(d)
+        d.synchronize()
         d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.budgetGrantedAt)
         d.set(Double(n * 60), forKey: SGContract.Keys.budgetTotalSeconds)
         d.set(0.0, forKey: SGContract.Keys.budgetUsedSeconds)
@@ -428,6 +435,7 @@ final class StudyGuardManager: ObservableObject {
               let stored = SGContract.decodeSelection(d) ?? optionalCurrentSelection(),
               !SGContract.isSelectionEmpty(stored) else { return false }
 
+        let generation = SGContract.beginMonitoringGeneration(d)
         d.set(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970, forKey: SGContract.Keys.lastRolloverDay)
         d.set(thresholdMinutes, forKey: SGContract.Keys.armedThresholdMinutes)
         d.synchronize()
@@ -437,7 +445,7 @@ final class StudyGuardManager: ObservableObject {
             try center.startMonitoring(
                 SGContract.activity,
                 during: SGContract.dailySchedule,
-                events: SGContract.buildEvents(intervalMinutes: thresholdMinutes, selection: stored)
+                events: SGContract.buildEvents(intervalMinutes: thresholdMinutes, selection: stored, generation: generation)
             )
             return true
         } catch {
@@ -507,7 +515,7 @@ final class StudyGuardManager: ObservableObject {
         [SGContract.Keys.setupComplete, SGContract.Keys.guardEnabled, SGContract.Keys.selection,
          SGContract.Keys.intervalMinutes, SGContract.Keys.state, SGContract.Keys.lockedAt,
          SGContract.Keys.budgetGrantedAt, SGContract.Keys.budgetTotalSeconds, SGContract.Keys.budgetUsedSeconds,
-         SGContract.Keys.warnedThisBudget, SGContract.Keys.armedThresholdMinutes,
+         SGContract.Keys.warnedThisBudget, SGContract.Keys.armedThresholdMinutes, SGContract.Keys.monitoringGeneration,
          SGContract.Keys.emergencyUnlockTimestamps, SGContract.Keys.needsReauth,
          SGContract.Keys.lastRolloverDay, SGContract.Keys.lockNotifThrottleAt,
          SGContract.Keys.extLog, SGContract.Keys.pendingEvents].forEach { d.removeObject(forKey: $0) }
@@ -528,6 +536,7 @@ final class StudyGuardManager: ObservableObject {
             ("guardEnabled", String(d.bool(forKey: SGContract.Keys.guardEnabled))),
             ("intervalMinutes", String(d.integer(forKey: SGContract.Keys.intervalMinutes))),
             ("armedThreshold", String(d.integer(forKey: SGContract.Keys.armedThresholdMinutes))),
+            ("monitoringGeneration", d.string(forKey: SGContract.Keys.monitoringGeneration) ?? "legacy"),
             ("budgetGrantedAt", ts(SGContract.Keys.budgetGrantedAt)),
             ("budgetTotal", "\(Int(d.double(forKey: SGContract.Keys.budgetTotalSeconds)))s"),
             ("budgetUsed", "\(Int(d.double(forKey: SGContract.Keys.budgetUsedSeconds)))s"),

@@ -97,6 +97,9 @@ enum SGContract {
         /// diverges from intervalMinutes after a re-baseline; the extension
         /// normalizes it back at day rollover.
         static let armedThresholdMinutes = "sg_armedThresholdMinutes"
+        /// Identity of the current event registration, carried in every event
+        /// name so late callbacks cannot consume a subsequent earned budget.
+        static let monitoringGeneration = "sg_monitoringGeneration"
         /// JSON [Double] — rolling 7-day emergency-unlock ledger.
         static let emergencyUnlockTimestamps = "sg_emergencyUnlockTimestamps"
         static let needsReauth = "sg_needsReauth"
@@ -134,6 +137,39 @@ enum SGContract {
     // MARK: - Shared helpers
 
     static var sharedDefaults: UserDefaults? { UserDefaults(suiteName: appGroupID) }
+
+    @discardableResult
+    static func beginMonitoringGeneration(_ defaults: UserDefaults) -> String {
+        let generation = UUID().uuidString
+        defaults.set(generation, forKey: Keys.monitoringGeneration)
+        return generation
+    }
+
+    static func monitoringEventName(_ base: String, generation: String?) -> String {
+        generation.map { "\(base):\($0)" } ?? base
+    }
+
+    enum UsageEvent: Equatable {
+        case limit
+        case progress(Int)
+    }
+
+    /// Reject old registrations by identity, even hours after the next grant.
+    /// Generationless names remain valid only until an upgrade first re-arms.
+    static func usageEvent(named name: String, defaults: UserDefaults) -> UsageEvent? {
+        let parts = name.split(separator: ":", omittingEmptySubsequences: false)
+        if let generation = defaults.string(forKey: Keys.monitoringGeneration) {
+            guard parts.count == 2, parts[1] == generation else { return nil }
+        } else {
+            guard parts.count == 1 else { return nil }
+        }
+        let base = String(parts[0])
+        if base == limitEventName { return .limit }
+        guard base.hasPrefix(progressEventPrefix),
+              let minutes = Int(base.dropFirst(progressEventPrefix.count)), minutes > 0,
+              minutes <= defaults.integer(forKey: Keys.armedThresholdMinutes) + 1 else { return nil }
+        return .progress(minutes)
+    }
 
     /// Round an arbitrary minute count to the nearest allowed interval
     /// (used to seed sg_intervalMinutes from the legacy BreakDurationMinutes;
@@ -212,9 +248,14 @@ enum SGContract {
 
     /// Build the full event set for one budget: the sg_limit lock trigger at
     /// N minutes plus progress events every step = max(1, ceil(N/20)) minutes.
+    /// Terminal progress at N and recovery at N+1 let the missed-lock fallback
+    /// reach the total even if the primary limit callback never arrives.
     /// Always concrete tokens (empty-token events never fire) and
     /// includesPastActivity:false (a restart must count usage from zero).
-    static func buildEvents(intervalMinutes n: Int, selection: FamilyActivitySelection) -> [DeviceActivityEvent.Name: DeviceActivityEvent] {
+    static func buildEvents(intervalMinutes n: Int, selection: FamilyActivitySelection, generation: String? = nil) -> [DeviceActivityEvent.Name: DeviceActivityEvent] {
+        func name(_ base: String) -> DeviceActivityEvent.Name {
+            DeviceActivityEvent.Name(monitoringEventName(base, generation: generation))
+        }
         func event(thresholdMinutes: Int) -> DeviceActivityEvent {
             DeviceActivityEvent(
                 applications: selection.applicationTokens,
@@ -225,14 +266,16 @@ enum SGContract {
             )
         }
         var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [
-            DeviceActivityEvent.Name(limitEventName): event(thresholdMinutes: n)
+            name(limitEventName): event(thresholdMinutes: n)
         ]
         let step = max(1, Int((Double(n) / 20.0).rounded(.up)))
         var m = step
         while m < n {
-            events[DeviceActivityEvent.Name("\(progressEventPrefix)\(m)")] = event(thresholdMinutes: m)
+            events[name("\(progressEventPrefix)\(m)")] = event(thresholdMinutes: m)
             m += step
         }
+        events[name("\(progressEventPrefix)\(n)")] = event(thresholdMinutes: n)
+        events[name("\(progressEventPrefix)\(n + 1)")] = event(thresholdMinutes: n + 1)
         return events
     }
 

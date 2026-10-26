@@ -44,6 +44,7 @@ The grant happens synchronously at the final answer, before result animations.
 | `sg_budgetUsedSeconds` | Double | monitor (app resets on grant) | both | max(current, m×60) at each progress event. Drives UI + missed-lock fallbacks. |
 | `sg_warnedThisBudget` | Bool | monitor (app clears on grant) | monitor | "Almost out" notification sent once per budget. |
 | `sg_armedThresholdMinutes` | Int | app (+monitor at rollover) | all | Threshold actually armed at last start. Normalized back to `sg_intervalMinutes` by the monitor at day rollover (the ONE sanctioned extension-side restart). Also feeds shield copy. |
+| `sg_monitoringGeneration` | String (UUID) | app (+monitor at normalization) | monitor | Every registration gets a new identity, included in event names. Events from previous registrations cannot debit, warn, or lock a new budget. |
 | `sg_emergencyUnlockTimestamps` | Data (JSON [Double]) | app | app | Rolling 7-day ledger, ≤3 per window; pruned on read. |
 | `sg_needsReauth` | Bool | app | app | Authorization revoked; UI shows re-auth card; never quiz-blackmail. |
 | `sg_lastRolloverDay` | Double | both | both | Start-of-day marker; makes rollover idempotent across processes; pre-written before every `startMonitoring` so the immediate `intervalDidStart` no-ops. |
@@ -62,8 +63,9 @@ The grant happens synchronously at the final answer, before result animations.
 
 ## Activity / event naming
 - Activity: `sg_daily` — daily repeating 00:01 → 23:59:59.
-- `sg_limit` — lock trigger at N minutes, concrete tokens, `includesPastActivity: false`.
-- `sg_used_p<m>` — progress events at m = step, 2·step, … < N with step = max(1, ⌈N/20⌉). The event with m ≥ ⌈0.8·N⌉ triggers the warning notification.
+- `sg_limit:<generation>` — lock trigger at N minutes, concrete tokens, `includesPastActivity: false`.
+- `sg_used_p<m>:<generation>` — progress events below N with step = max(1, ⌈N/20⌉), plus terminal progress at N and recovery progress at N+1. Either terminal event can lock if `sg_limit` is missed. Below N, the event with m ≥ ⌈0.8·N⌉ triggers the warning notification. Exhausted budgets lock before considering a warning.
+- Generationless events are accepted only for an existing pre-upgrade registration; foreground reconciliation upgrades it without adding back used minutes. Each grant and restart invalidates the previous generation before publishing its new allowance.
 - Notifications: `sg_lock_notification` (fixed id, replace + 30s throttle, deeplink `diewithoutregrets://unlock`), `sg_warning_notification`. The shield action extension reuses `sg_lock_notification` (unthrottled — explicit user intent) for its pre-iOS 26.5 fallback so the existing tap route applies.
 
 ## Shield buttons
@@ -110,8 +112,9 @@ ManagedSettings does not provide a shield-removal completion notification.
    whole suppression-flag class of bugs).
 3. Never `startMonitoring` with an empty selection (empty-token events don't fire).
 4. Shield exactly what the user picked — no `.all()` fallbacks.
-5. Grant-epsilon: the monitor ignores `sg_limit` within 90s of a grant with
-   used < 60s (stale delivery from the pre-grant monitoring generation).
+5. Validate event generation before any usage, warning, or lock mutation.
+   Elapsed wall time cannot identify which registration delivered an event.
+   The old timing check is retained only for generationless upgrade callbacks.
 6. `synchronize()` after every write the other process must observe.
 7. Every locked user must always have ≥1 legitimate unlock path (empty deck →
    create-a-card flow; camera denied → flashcards; both methods always offered).
@@ -121,3 +124,50 @@ ManagedSettings does not provide a shield-removal completion notification.
 - Revoking Screen Time authorization in Settings (reconcile forgives via `sg_needsReauth`).
 - A deck of trivial cards (the quiz is the user's own commitment device).
 - Manual clock jumps can grant one free meter reset per day (locks are never time-based, so a lock cannot be escaped this way).
+
+## Regression checks for earned time and missing cards
+
+The October 2026 report describes a one-minute remaining allowance that never
+re-locks apps, plus flashcards disappearing. The report contains no app/iOS
+version or device logs, so the code paths below are confirmed weaknesses, not
+a confirmed diagnosis of that user's installation.
+
+- Old event names were reused across grants. A delayed progress callback could
+  pass the elapsed-time heuristic and debit a newer allowance. Generation IDs
+  now distinguish registrations directly.
+- Progress previously stopped below N, making the `used >= total` missed-lock
+  fallback unreachable without the primary lock callback. Terminal and N+1
+  recovery events now provide independent usage-based paths. They still require
+  iOS to deliver a callback; there is no wall-clock countdown while apps are idle.
+- The selected deck was a separate value copy. Direct card bindings could save
+  cards without updating that copy; the rescue-card flow could then write the
+  outdated copy back over the stored deck. Selection now stores an ID and reads
+  the current deck. This prevents that overwrite path; it does not recover cards
+  already lost or prove that it caused the user's report.
+
+Run `StudyGuardEngineTests` and `DeckStoreTests` for regression coverage. On a
+physical iPhone, earn 1, 3, and 15 minutes; use a selected app until it shields;
+repeat immediately after the prior lock and after leaving Study Guard in the
+background. Pause usage partway through to verify idle time is not charged.
+Also verify a selection edit, day rollover, and an upgrade with an existing
+generationless registration. Inspect `monitoringGeneration`, `budgetUsed`,
+`monitoringActive`, and the extension log if it fails.
+
+For cards, add a manual card and an AI/imported batch to the active deck, enter
+the unlock quiz immediately, then relaunch. Confirm card IDs/counts persist and
+that adding a rescue card preserves all earlier cards. A decode failure in the
+existing `SavedDecks` payload is a separate possible cause of an empty library
+and is not established by this report.
+
+Validation on 2026-10-26: all five new baseline tests failed before the fixes
+(four deck tests and one missing-lock-recovery test). After the fixes, the
+Simulator app and extensions built and 58 tests passed across the engine, deck,
+flashcard, shield-return, and app-return suites. Two opt-in live App Attest/AI
+tests were skipped because they require a physical device. Physical Screen Time
+enforcement has not been verified in this investigation.
+
+The monitoring design uses Apple's documented
+[event identity callback](https://developer.apple.com/documentation/deviceactivity/deviceactivitymonitor/eventdidreachthreshold(_:activity:))
+and [`includesPastActivity`](https://developer.apple.com/documentation/deviceactivity/deviceactivityevent/includespastactivity)
+semantics. Adding recovery events reduces reliance on a single callback; it does
+not guarantee delivery if the system stops reporting all activity.

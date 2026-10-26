@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D3C570002026102600000001 /* DeckStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C570002026102600000002 /* DeckStoreTests.swift */; };
 		006DEFCA106930111FB6AA6B /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		02C1B351C8894FE0D1ACCC53 /* GuardRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE68487A12F7833146396BBE /* GuardRingView.swift */; };
 		041543A64C58B338374EEE95 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */; };
@@ -310,6 +311,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D3C570002026102600000002 /* DeckStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStoreTests.swift; sourceTree = "<group>"; };
 		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0191E9CECE70FF6BB46CE75F /* V5OnboardingProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V5OnboardingProfile.swift; sourceTree = "<group>"; };
 		022EF66829006A39DC358F1E /* QuizV2View.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2View.swift; sourceTree = "<group>"; };
@@ -1026,6 +1028,7 @@
 		7FD5E5D101BE782BB770BA6B /* diewithoutregretsTests */ = {
 			isa = PBXGroup;
 			children = (
+				D3C570002026102600000002 /* DeckStoreTests.swift */,
 				4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */,
 				C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */,
 				DB026ADBAC29470EAD1EDE88 /* UnlockAppReturnTests.swift */,
@@ -1694,6 +1697,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D3C570002026102600000001 /* DeckStoreTests.swift in Sources */,
 				6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */,
 				4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */,
 				3C62887BAFFF482E927E78E1 /* UnlockAppReturnTests.swift in Sources */,

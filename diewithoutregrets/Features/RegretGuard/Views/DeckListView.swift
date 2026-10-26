@@ -407,10 +407,6 @@ struct DeckView: View {
                 deckStore.updateDeck(updatedDeck)
             })
         }
-        .onChange(of: deck) { newDeck in
-            // Update the deck store whenever the deck changes
-            deckStore.updateDeck(newDeck)
-        }
     }
 
     private func deleteCards(at offsets: IndexSet) {

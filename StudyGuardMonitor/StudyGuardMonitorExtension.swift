@@ -57,48 +57,44 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
               d.bool(forKey: SGContract.Keys.guardEnabled),
               d.bool(forKey: SGContract.Keys.setupComplete) else { return }
 
-        if event.rawValue == SGContract.limitEventName {
-            guard d.string(forKey: SGContract.Keys.state) != SGContract.StateValue.locked else { return }
-            // Stale-generation guard: a queued sg_limit from the PRE-grant
-            // monitoring generation can be delivered late (minutes late, so a
-            // fixed epsilon can't catch it). Physics decides instead: the
-            // current generation's sg_limit needs the full armed threshold of
-            // foreground usage, which needs at least that much wall time
-            // since the grant. Anything earlier is stale — re-locking on it
-            // would replay the whole time's-up cycle (shields + notification)
-            // on a budget the user just earned.
-            let grantedAt = d.double(forKey: SGContract.Keys.budgetGrantedAt)
-            let elapsed = Date().timeIntervalSince1970 - grantedAt
-            let armedMinutes = d.integer(forKey: SGContract.Keys.armedThresholdMinutes)
-            let legitFloor = armedMinutes > 0
-                ? Double(armedMinutes * 60)
-                : d.double(forKey: SGContract.Keys.budgetTotalSeconds)
-            if grantedAt > 0, legitFloor > 0, elapsed + 5 < legitFloor {
-                sgLog(d, "sg_limit ignored (stale: \(Int(elapsed))s since grant < \(Int(legitFloor))s floor)")
-                return
-            }
-            lock(d, detectedBy: "extension")
-        } else if event.rawValue.hasPrefix(SGContract.progressEventPrefix),
-                  let m = Int(event.rawValue.dropFirst(SGContract.progressEventPrefix.count)) {
-            // Progress telemetry only makes sense while metering (shield-overlay
-            // foreground time can still tick events after a lock).
-            guard d.string(forKey: SGContract.Keys.state) == SGContract.StateValue.metering else { return }
-            // Same stale-generation physics as sg_limit: a legitimate
-            // sg_used_p<m> needs m minutes of wall time since the grant.
-            // Without this, a stale progress event lands on a fresh budget,
-            // collapses the countdown (e.g. 10m left → 1m), re-fires the
-            // "Almost out of time" warning, and can even re-lock via the
-            // missed-lock fallback below.
-            let grantedAt = d.double(forKey: SGContract.Keys.budgetGrantedAt)
-            let elapsed = Date().timeIntervalSince1970 - grantedAt
-            if grantedAt > 0, elapsed + 5 < Double(m * 60) {
-                sgLog(d, "sg_used_p\(m) ignored (stale: \(Int(elapsed))s since grant)")
-                return
-            }
-            let used = max(d.double(forKey: SGContract.Keys.budgetUsedSeconds), Double(m * 60))
-            d.set(used, forKey: SGContract.Keys.budgetUsedSeconds)
+        guard let usageEvent = SGContract.usageEvent(named: event.rawValue, defaults: d) else {
+            sgLog(d, "ignored event from obsolete registration: \(event.rawValue)")
+            return
+        }
+        guard d.string(forKey: SGContract.Keys.state) == SGContract.StateValue.metering else { return }
 
-            let totalMinutes = Int(d.double(forKey: SGContract.Keys.budgetTotalSeconds) / 60)
+        // Only old, generationless registrations need the timing heuristic.
+        // Current callbacks carry identity: elapsed time cannot distinguish a
+        // late old event from a genuine event belonging to the new allowance.
+        if d.string(forKey: SGContract.Keys.monitoringGeneration) == nil {
+            let grantedAt = d.double(forKey: SGContract.Keys.budgetGrantedAt)
+            let elapsed = Date().timeIntervalSince1970 - grantedAt
+            let floor: Double
+            switch usageEvent {
+            case .limit:
+                let armed = d.integer(forKey: SGContract.Keys.armedThresholdMinutes)
+                floor = armed > 0 ? Double(armed * 60) : d.double(forKey: SGContract.Keys.budgetTotalSeconds)
+            case .progress(let minutes):
+                floor = Double(minutes * 60)
+            }
+            guard grantedAt <= 0 || elapsed + 5 >= floor else { return }
+        }
+
+        switch usageEvent {
+        case .limit:
+            lock(d, detectedBy: "extension")
+        case .progress(let m):
+            let total = d.double(forKey: SGContract.Keys.budgetTotalSeconds)
+            guard total > 0 else { return }
+            let used = min(total, max(d.double(forKey: SGContract.Keys.budgetUsedSeconds), Double(m * 60)))
+            d.set(used, forKey: SGContract.Keys.budgetUsedSeconds)
+            d.synchronize()
+            if used >= total {
+                checkForMissedLock(d)
+                return // Never announce "1 min left" when the budget is exhausted.
+            }
+
+            let totalMinutes = Int(total / 60)
             if totalMinutes > 0,
                Double(m) >= (0.8 * Double(totalMinutes)).rounded(.up),
                !d.bool(forKey: SGContract.Keys.warnedThisBudget) {
@@ -107,7 +103,6 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
             }
             d.synchronize()
             sgLog(d, "progress: ~\(m) min used of \(totalMinutes)")
-            checkForMissedLock(d)
         }
     }
 
@@ -150,12 +145,16 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
            let selection = SGContract.decodeSelection(d),
            !SGContract.isSelectionEmpty(selection) {
             let center = DeviceActivityCenter()
+            let generation = SGContract.beginMonitoringGeneration(d)
+            d.set(interval, forKey: SGContract.Keys.armedThresholdMinutes)
+            d.set(Double(interval * 60), forKey: SGContract.Keys.budgetTotalSeconds)
+            d.synchronize()
             center.stopMonitoring([SGContract.activity])
             do {
                 try center.startMonitoring(
                     SGContract.activity,
                     during: SGContract.dailySchedule,
-                    events: SGContract.buildEvents(intervalMinutes: interval, selection: selection)
+                    events: SGContract.buildEvents(intervalMinutes: interval, selection: selection, generation: generation)
                 )
                 d.set(interval, forKey: SGContract.Keys.armedThresholdMinutes)
                 effectiveMinutes = interval
@@ -232,6 +231,8 @@ final class StudyGuardMonitorExtension: DeviceActivityMonitor {
         d.set(now, forKey: SGContract.Keys.lockNotifThrottleAt)
 
         let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [SGContract.warningNotificationID])
+        center.removeDeliveredNotifications(withIdentifiers: [SGContract.warningNotificationID])
         center.removeDeliveredNotifications(withIdentifiers: [SGContract.lockNotificationID])
 
         let content = UNMutableNotificationContent()

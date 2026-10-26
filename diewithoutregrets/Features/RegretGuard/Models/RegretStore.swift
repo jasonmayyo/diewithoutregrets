@@ -69,43 +69,44 @@ class RegretStore: ObservableObject {
 
 class DeckStore: ObservableObject {
     static let shared = DeckStore()
+    private let defaults: UserDefaults
     
     @Published var decks: [Deck] {
         didSet {
             saveDecks()
+            if !decks.contains(where: { $0.id == selectedDeckID }) {
+                selectedDeck = decks.first
+            }
         }
     }
     
-    @Published var selectedDeck: Deck? {
-        didSet {
-            saveSelectedDeck()
-        }
-    }
-    
-    private func saveSelectedDeck() {
-        if let deck = selectedDeck {
-            UserDefaults.standard.set(deck.id.uuidString, forKey: "SelectedDeckID")
+    // Keep only the selection identity. A second Deck value can go stale when
+    // a card binding edits `decks`, then overwrite newer cards in the rescue flow.
+    @Published private var selectedDeckID: UUID?
+    var selectedDeck: Deck? {
+        get { decks.first { $0.id == selectedDeckID } }
+        set {
+            selectedDeckID = newValue.flatMap { candidate in
+                decks.contains(where: { $0.id == candidate.id }) ? candidate.id : nil
+            }
+            defaults.set(selectedDeckID?.uuidString, forKey: "SelectedDeckID")
         }
     }
     
     func selectDeck(_ deck: Deck) {
-        if let index = decks.firstIndex(where: { $0.id == deck.id }) {
-               selectedDeck = decks[index]
-               print("Selected deck: \(selectedDeck?.name ?? "nil")")
-               print("Cards count: \(selectedDeck?.cards.count ?? 0)")
-           } else {
-               print("⚠️ Failed to find deck in store: \(deck.name)")
-           }    }
+        guard decks.contains(where: { $0.id == deck.id }) else { return }
+        selectedDeck = deck
+    }
     
     func loadSelectedDeck() {
-        if let deckID = UserDefaults.standard.string(forKey: "SelectedDeckID") {
-            selectedDeck = decks.first { $0.id.uuidString == deckID }
-        }
+        let deckID = defaults.string(forKey: "SelectedDeckID")
+        selectedDeck = decks.first { $0.id.uuidString == deckID } ?? decks.first
     }
     
     
-    init() {
-        if let data = UserDefaults.standard.data(forKey: "SavedDecks"),
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        if let data = defaults.data(forKey: "SavedDecks"),
            let savedDecks = try? JSONDecoder().decode([Deck].self, from: data) {
             self.decks = savedDecks
         } else {
@@ -113,16 +114,12 @@ class DeckStore: ObservableObject {
             addSampleData()
         }
         loadSelectedDeck()
-        
-        if decks.count == 1 && selectedDeck == nil {
-                    selectedDeck = decks.first
-                }
     }
     
      func saveDecks() {
         do {
             let encoded = try JSONEncoder().encode(decks)
-            UserDefaults.standard.set(encoded, forKey: "SavedDecks")
+            defaults.set(encoded, forKey: "SavedDecks")
         } catch {
             print("Error saving decks: \(error)")
             let totalCards = decks.reduce(0) { $0 + $1.cards.count }
@@ -146,14 +143,6 @@ class DeckStore: ObservableObject {
     func updateDeck(_ updatedDeck: Deck) {
         if let index = decks.firstIndex(where: { $0.id == updatedDeck.id }) {
             decks[index] = updatedDeck
-            
-            // Update selectedDeck if it's the same deck that was updated
-            if selectedDeck?.id == updatedDeck.id {
-                selectedDeck = updatedDeck
-            }
-            
-            // Force update to ensure proper state synchronization
-            objectWillChange.send()
         }
     }
     

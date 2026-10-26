@@ -709,7 +709,7 @@ struct RegretView: View {
     private var rescueDeckBinding: Binding<Deck>? {
         guard let deck = deckStore.selectedDeck else { return nil }
         return Binding(
-            get: { deckStore.selectedDeck ?? deck },
+            get: { deckStore.decks.first { $0.id == deck.id } ?? deck },
             set: { updated in
                 deckStore.updateDeck(updated)
             }
@@ -822,7 +822,8 @@ struct RegretView: View {
             )
         ]
     )
-    deckStore.selectedDeck = sampleDeck
+    deckStore.addDeck(sampleDeck)
+    deckStore.selectDeck(sampleDeck)
 
     return RegretView()
         .environmentObject(deckStore)
