@@ -783,14 +783,7 @@ struct QuizV2View: View {
             guard let correct = result else { continue }
             outcomes[card.id] = correct   // a re-queued card keeps its last outcome
         }
-        guard !outcomes.isEmpty,
-              var deck = deckStore.decks.first(where: { $0.id == deckID }) else { return }
-        let now = Date()
-        for i in deck.cards.indices {
-            guard let correct = outcomes[deck.cards[i].id] else { continue }
-            deck.cards[i].recordReview(correct: correct, now: now)
-        }
-        deckStore.updateDeck(deck)
+        deckStore.recordOutcomes(outcomes, deckID: deckID)
     }
 
     /// Celebration CTA: pure navigation — the grant already happened.

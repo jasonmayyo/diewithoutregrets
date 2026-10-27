@@ -14,6 +14,9 @@ struct ContentView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
+    /// Tutor Monster (Phase 1) QA flag: route the flashcard unlock through the
+    /// monster chat instead of QuizV2View. Opt-in; off by default.
+    @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = false
 
     init() {
         #if DEBUG
@@ -102,6 +105,10 @@ struct ContentView: View {
                             NavigationModel.shared.returnHome()
                         }
                     )
+                } else if monsterUnlockEnabled, !(DeckStore.shared.selectedDeck?.cards.isEmpty ?? true) {
+                    // Tutor Monster (Phase 1), behind the QA flag. Needs a non-empty
+                    // deck; otherwise fall through to the quiz's empty-deck rescue.
+                    MonsterChatView(session: MonsterSession())
                 } else {
                     // The redesigned quiz. It gates itself: legacy engine,
                     // empty-deck rescue and already-unlocked entries fall

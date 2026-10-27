@@ -70,6 +70,9 @@ struct diewithoutregretsApp: App {
                             .environmentObject(DeckStore.shared)
                             .environmentObject(RegretStore.shared)
                     }
+                    if SGPreviewHarness.wantsMonsterPreview {
+                        MonsterChatView(session: MonsterSession())
+                    }
                 }
                 #endif
 

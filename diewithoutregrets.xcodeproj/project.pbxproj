@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D3C570002026102600000001 /* DeckStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C570002026102600000002 /* DeckStoreTests.swift */; };
 		006DEFCA106930111FB6AA6B /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		02C1B351C8894FE0D1ACCC53 /* GuardRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE68487A12F7833146396BBE /* GuardRingView.swift */; };
 		041543A64C58B338374EEE95 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */; };
@@ -26,6 +25,7 @@
 		1C7C7564E40CE32E7EEE41D7 /* QuizletImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A44E4579757FFA9816BECB /* QuizletImportService.swift */; };
 		1E058DDEA91876CD02405577 /* V4GeneratingPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095C17995B527FF2BDCEE8D2 /* V4GeneratingPlanView.swift */; };
 		1E1D532D4103CEA0E2BAE68B /* 2_Looking down_shadow.json in Resources */ = {isa = PBXBuildFile; fileRef = 16F183B527A06DD64E6FE45D /* 2_Looking down_shadow.json */; };
+		1F05B5668C8B60FB6825BF59 /* MonsterMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB6C5445046BDA86C7BBCC8 /* MonsterMessage.swift */; };
 		2003E5977EFC831618E3A7AB /* OnboardingScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D5949165897B100D1AC547 /* OnboardingScaffold.swift */; };
 		21B7A1AEAA11D5996BB2EABD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		2283B074EF76118C4E2220C6 /* GuardedAppsPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */; };
@@ -149,11 +149,13 @@
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
+		6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */; };
 		6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */; };
 		749D9CF90DDD23E9D3626556 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		777ED1FFDEBFE89954CE0F5A /* FlashcardAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */; };
 		814B6A23485D02B9033A6EB8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 168A7A9CDF38BD1EB046B7FD /* PrivacyInfo.xcprivacy */; };
 		84E77F1FE8E9F6B573A79A68 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
+		851AC9CEE24E51A2CB2EDE6A /* MonsterChatComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F24B05469208BE08FFB0B367 /* MonsterChatComponents.swift */; };
 		85D16724C4B76C2A9485B54F /* V4PersonalizedPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D073F4CF6445E5A0F6B8A /* V4PersonalizedPlanView.swift */; };
 		862D7504E59590F3E3B0780F /* V4EarnScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC7F94797B8F7C517B0AEF09 /* V4EarnScreenTimeView.swift */; };
 		88CA5CCAAB8E48A3A9A902FE /* UnlockAppReturn.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F050BDD5594A768CC07917 /* UnlockAppReturn.swift */; };
@@ -181,6 +183,7 @@
 		B4A11C0DE5F60718293A4B5D /* OnboardingV4Steps.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A11C0DE5F60718293A4B5E /* OnboardingV4Steps.swift */; };
 		B52574801368481E26769917 /* QuizV2Kit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C992836E11460BAE0C22D50D /* QuizV2Kit.swift */; };
 		B64F0B5E2FA9B91AD295E779 /* StudyGuardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */; };
+		B6C6DB38019406F623F82372 /* MonsterScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9009389569D2B10C6BF54142 /* MonsterScript.swift */; };
 		B9D9030B97C69157B57DAE35 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 		BA3310850A54B4D7B2A5AE9E /* V4GhostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC2FBB831151D32BD61CFF /* V4GhostView.swift */; };
 		BC58C05B1CCF4393B88D9E71 /* GuardedAppsOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFC70BA4412FD014A8116A4 /* GuardedAppsOnboarding.swift */; };
@@ -202,6 +205,7 @@
 		D0F005F3ADF8BF1A0EB78B66 /* StudyGuardShieldExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */; };
 		D1A65E05B3C7F9E1D2468B11 /* OnboardingDiagnosisReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */; };
 		D32399521730C4271EE502FD /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B684B8E0357F56C6BF8C00 /* SGContract.swift */; };
+		D3C570002026102600000001 /* DeckStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C570002026102600000002 /* DeckStoreTests.swift */; };
 		D72EAFC35626EC02FB376DB5 /* MonsterActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */; };
 		D9237B0A1FD757FEF4EB3E35 /* PrivateAppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60993D42257B333EBAB51231 /* PrivateAppLauncher.swift */; };
 		D9445B469A01523F8D95915D /* UsageIntervalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6206A7D437A5ECCF89A5A1B7 /* UsageIntervalSheet.swift */; };
@@ -217,6 +221,7 @@
 		F1F04FF61C72BAEACB6C3B30 /* SGBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0632A3B5575B52ACF1A16423 /* SGBackground.swift */; };
 		F5AB134975BEAC1AA211E342 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */; };
 		F71FB90AEEFDB5B4FCF09A2E /* StudyGuardReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FDC7A57974345D9384BBDB8D /* MonsterSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ACEDB86D6566223EC82B46 /* MonsterSession.swift */; };
 		FE6581A894232F0752FD9F59 /* QuizV2StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3CF1DA2039D61F7C7E53 /* QuizV2StreakView.swift */; };
 		FFD54A3BE092D60A1977885B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BE717004B4EDEB4CA1B443 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -311,11 +316,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D3C570002026102600000002 /* DeckStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStoreTests.swift; sourceTree = "<group>"; };
 		00A54CC7312FB5F80A04A6EE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0191E9CECE70FF6BB46CE75F /* V5OnboardingProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V5OnboardingProfile.swift; sourceTree = "<group>"; };
 		022EF66829006A39DC358F1E /* QuizV2View.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2View.swift; sourceTree = "<group>"; };
 		02A44E4579757FFA9816BECB /* QuizletImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizletImportService.swift; sourceTree = "<group>"; };
+		04ACEDB86D6566223EC82B46 /* MonsterSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterSession.swift; path = TutorMonster/MonsterSession.swift; sourceTree = "<group>"; };
 		0537F1EDF7F180E47B13E923 /* StudyGuardShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0632A3B5575B52ACF1A16423 /* SGBackground.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGBackground.swift; sourceTree = "<group>"; };
 		06C414461884222A3462D172 /* StudyGuardMonitorExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardMonitorExtension.swift; sourceTree = "<group>"; };
@@ -332,6 +337,7 @@
 		1F11A7991CAE6AD43030DD66 /* StudyGuardDebugSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardDebugSection.swift; sourceTree = "<group>"; };
 		20C3A20C15F7AADF9956EC72 /* SGV5FlowModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGV5FlowModel.swift; sourceTree = "<group>"; };
 		26C9E267F7FEBB87F86CAC9B /* V4ScienceBackedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V4ScienceBackedView.swift; sourceTree = "<group>"; };
+		2CB6C5445046BDA86C7BBCC8 /* MonsterMessage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterMessage.swift; path = TutorMonster/MonsterMessage.swift; sourceTree = "<group>"; };
 		2DE855658F4799BE7F1E120B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CountdownReadout.swift; sourceTree = "<group>"; };
 		33A924FB635B69F15C0BA5E9 /* ScaleButtonStyle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScaleButtonStyle.swift; sourceTree = "<group>"; };
@@ -444,6 +450,7 @@
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
 		76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterWidgetBundle.swift; sourceTree = "<group>"; };
+		78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterChatView.swift; path = TutorMonster/MonsterChatView.swift; sourceTree = "<group>"; };
 		79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterActivityManager.swift; sourceTree = "<group>"; };
 		7E4B09BDD4370866D7D8EB62 /* SGV5StudyScreens.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGV5StudyScreens.swift; sourceTree = "<group>"; };
 		7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -453,6 +460,7 @@
 		851298717875E9AB9A676D34 /* V4FounderStoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V4FounderStoryView.swift; sourceTree = "<group>"; };
 		882C1D94811AB1DB0B3069D2 /* MeadowHomeV2.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeadowHomeV2.swift; sourceTree = "<group>"; };
 		8C4091CCCB419A7361C68A59 /* SGComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGComponents.swift; sourceTree = "<group>"; };
+		9009389569D2B10C6BF54142 /* MonsterScript.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterScript.swift; path = TutorMonster/MonsterScript.swift; sourceTree = "<group>"; };
 		94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldExtension.swift; sourceTree = "<group>"; };
 		97FA13DC544E39E05528794C /* StudyGuardMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A76BC31490CEAECF9B75109 /* StudyGuardState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardState.swift; sourceTree = "<group>"; };
@@ -492,6 +500,7 @@
 		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
 		D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenTimeAuthOnboarding.swift; sourceTree = "<group>"; };
 		D2F4032C172C74225C9504CA /* V4NotYourFaultView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V4NotYourFaultView.swift; sourceTree = "<group>"; };
+		D3C570002026102600000002 /* DeckStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStoreTests.swift; sourceTree = "<group>"; };
 		DB026ADBAC29470EAD1EDE88 /* UnlockAppReturnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockAppReturnTests.swift; sourceTree = "<group>"; };
 		DFA9498D389D41FAA5942841 /* QuizV2Coins.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Coins.swift; sourceTree = "<group>"; };
 		E2BF9546841418DB7F1C126F /* StudyGuardManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardManager.swift; sourceTree = "<group>"; };
@@ -504,6 +513,7 @@
 		EC7F94797B8F7C517B0AEF09 /* V4EarnScreenTimeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V4EarnScreenTimeView.swift; sourceTree = "<group>"; };
 		EDB434E97D21B0958C6D9727 /* StudyGuardReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEFC70BA4412FD014A8116A4 /* GuardedAppsOnboarding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsOnboarding.swift; sourceTree = "<group>"; };
+		F24B05469208BE08FFB0B367 /* MonsterChatComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterChatComponents.swift; path = TutorMonster/MonsterChatComponents.swift; sourceTree = "<group>"; };
 		F7BEDE0DD29D3E96CF36D84F /* StudyGuardReport.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardReport.entitlements; sourceTree = "<group>"; };
 		FE68487A12F7833146396BBE /* GuardRingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardRingView.swift; sourceTree = "<group>"; };
 		FE8DBA1E2CE011B7B61ED083 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -712,6 +722,18 @@
 			path = V5;
 			sourceTree = "<group>";
 		};
+		54828C9621556EC32DB23056 /* TutorMonster */ = {
+			isa = PBXGroup;
+			children = (
+				2CB6C5445046BDA86C7BBCC8 /* MonsterMessage.swift */,
+				9009389569D2B10C6BF54142 /* MonsterScript.swift */,
+				04ACEDB86D6566223EC82B46 /* MonsterSession.swift */,
+				F24B05469208BE08FFB0B367 /* MonsterChatComponents.swift */,
+				78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */,
+			);
+			name = TutorMonster;
+			sourceTree = "<group>";
+		};
 		6079273468E18DCEBFE663E6 /* StudyGuard */ = {
 			isa = PBXGroup;
 			children = (
@@ -748,6 +770,7 @@
 				6B22E84C2D48045D003A5685 /* RegretReport */,
 				6079273468E18DCEBFE663E6 /* StudyGuard */,
 				9D3BBA6EDF51231EC7D48B7A /* Profile */,
+				54828C9621556EC32DB23056 /* TutorMonster */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -1680,6 +1703,11 @@
 				8D49F113CC5DB5117280B2E8 /* V5OnboardingProfile.swift in Sources */,
 				29E33C94DB55D2655CC0E4DC /* V5OnboardingView.swift in Sources */,
 				30550406CD2D8D097417066C /* SGV5StudyScreens.swift in Sources */,
+				1F05B5668C8B60FB6825BF59 /* MonsterMessage.swift in Sources */,
+				B6C6DB38019406F623F82372 /* MonsterScript.swift in Sources */,
+				FDC7A57974345D9384BBDB8D /* MonsterSession.swift in Sources */,
+				851AC9CEE24E51A2CB2EDE6A /* MonsterChatComponents.swift in Sources */,
+				6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2099,7 +2127,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 67;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -2109,16 +2137,19 @@
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Study Guard";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Study Guard uses the front camera during True Focus study sessions to detect whether you are at your desk and looking at your work. All video is processed live on your device. Frames are never recorded, stored, or transmitted off the device.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Study Guard uses tracking data to measure which ads bring in new users and improve our campaigns.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.6;
+				MARKETING_VERSION = 2.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2141,7 +2172,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = diewithoutregrets/diewithoutregrets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 67;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"diewithoutregrets/Preview Content\"";
 				DEVELOPMENT_TEAM = 5BFXSF2PS6;
@@ -2151,16 +2182,19 @@
 				INFOPLIST_FILE = diewithoutregrets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Study Guard";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Study Guard uses the front camera during True Focus study sessions to detect whether you are at your desk and looking at your work. All video is processed live on your device. Frames are never recorded, stored, or transmitted off the device.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Study Guard uses tracking data to measure which ads bring in new users and improve our campaigns.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.6;
+				MARKETING_VERSION = 2.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jasonmayo.diewithoutregrets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

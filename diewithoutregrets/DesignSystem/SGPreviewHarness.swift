@@ -30,6 +30,15 @@ enum SGPreviewHarness {
             .contains { $0.hasPrefix("-sg-preview-quizv2") }
     }
 
+    /// Tutor Monster (Phase 1) review hook: the app root presents the monster
+    /// chat over a seeded locked state + deck for any -sg-preview-monster*
+    /// argument. Suffixes tune it: -diva/-coach/-gremlin pick the persona,
+    /// -feral forces a high-pressure mood.
+    static var wantsMonsterPreview: Bool {
+        ProcessInfo.processInfo.arguments
+            .contains { $0.hasPrefix("-sg-preview-monster") }
+    }
+
     static func applyLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
         guard args.contains(where: { $0.hasPrefix("-sg-preview") }) else { return }
@@ -46,6 +55,10 @@ enum SGPreviewHarness {
         }
         if wantsQuizV2Preview {
             seed(.locked)
+        }
+        if wantsMonsterPreview {
+            seed(.locked)
+            applyMonsterPreviewTuning(args)
         }
         if args.contains("-sg-preview-return-instagram") {
             NavigationModel.shared.unlockReturnDestination = .app(bundleIdentifier: "com.burbn.instagram")
@@ -120,6 +133,20 @@ enum SGPreviewHarness {
         ])
         DeckStore.shared.addDeck(deck)
         DeckStore.shared.selectDeck(deck)
+    }
+
+    private static func applyMonsterPreviewTuning(_ args: [String]) {
+        if args.contains("-sg-preview-monster-diva") { PersonaStore.shared.select(.diva) }
+        else if args.contains("-sg-preview-monster-coach") { PersonaStore.shared.select(.coach) }
+        else if args.contains("-sg-preview-monster-gremlin") { PersonaStore.shared.select(.gremlin) }
+        else { PersonaStore.shared.select(.willow) }
+
+        if args.contains("-sg-preview-monster-feral"), let d = SGContract.sharedDefaults {
+            // Hammer the gate counter + an imminent exam → feral mood for review.
+            d.set(42, forKey: SGContract.gateEncounterKey(day: SGContract.dayStamp()))
+            ExamStore.shared.exams = [StudyExam(subject: "Anatomy",
+                                                date: Date().addingTimeInterval(2 * 86_400))]
+        }
     }
 }
 #endif

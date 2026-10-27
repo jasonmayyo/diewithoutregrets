@@ -263,3 +263,20 @@ final class PersonaStore: ObservableObject {
 
     func select(_ persona: MonsterPersona) { selectedID = persona.id }
 }
+
+// MARK: - Mastery writeback (shared by the quiz and the monster chat)
+
+extension DeckStore {
+    /// Apply graded outcomes (card id → was it correct) to the live deck as Leitner
+    /// mastery, and persist. Reads the current deck (not a stale snapshot) and only
+    /// touches answered cards.
+    func recordOutcomes(_ outcomes: [UUID: Bool], deckID: UUID, now: Date = Date()) {
+        guard !outcomes.isEmpty,
+              var deck = decks.first(where: { $0.id == deckID }) else { return }
+        for i in deck.cards.indices {
+            guard let correct = outcomes[deck.cards[i].id] else { continue }
+            deck.cards[i].recordReview(correct: correct, now: now)
+        }
+        updateDeck(deck)
+    }
+}
