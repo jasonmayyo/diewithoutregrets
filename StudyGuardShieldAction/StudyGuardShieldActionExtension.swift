@@ -47,6 +47,9 @@ final class StudyGuardShieldActionExtension: ShieldActionDelegate {
             }
             // Stamp the tap so the app opens straight to the flashcards.
             defaults?.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.shieldTapAt)
+            // Count this as a gate encounter — the tutor-monster pressure signal.
+            // Pure UserDefaults increment; adds no measurable delay to the hot path.
+            SGContract.recordGateEncounter(defaults)
             defaults?.synchronize()
 
             // Fire the open on a background thread, then hand the response back

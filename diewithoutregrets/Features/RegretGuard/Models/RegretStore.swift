@@ -177,3 +177,89 @@ class DeckStore: ObservableObject {
     private func addSampleData() {
     }
 }
+
+// MARK: - Exam store (tutor-monster foundation)
+
+/// Stores the user's upcoming exams. Migrates the single write-only onboarding
+/// exam (studySubject + examDate) into the first StudyExam on first run, and
+/// mirrors the nearest upcoming exam's date into the app group for the extensions.
+final class ExamStore: ObservableObject {
+    static let shared = ExamStore()
+    private let defaults: UserDefaults
+    private let sharedDefaults: UserDefaults?
+    private let storeKey = "sg_studyExams"
+
+    @Published var exams: [StudyExam] {
+        didSet { save() }
+    }
+
+    init(defaults: UserDefaults = .standard,
+         sharedDefaults: UserDefaults? = SGContract.sharedDefaults) {
+        self.defaults = defaults
+        self.sharedDefaults = sharedDefaults
+        if let data = defaults.data(forKey: storeKey),
+           let saved = try? JSONDecoder().decode([StudyExam].self, from: data) {
+            exams = saved
+        } else {
+            exams = ExamStore.migratedFromOnboarding(defaults)
+        }
+        save()   // persist any migration + mirror the nearest exam
+    }
+
+    /// The soonest upcoming exam (today or later), nil if none.
+    var nextExam: StudyExam? {
+        exams.filter { $0.isUpcoming }.min { $0.date < $1.date }
+    }
+
+    func add(_ exam: StudyExam) { exams.append(exam) }
+
+    func update(_ exam: StudyExam) {
+        if let i = exams.firstIndex(where: { $0.id == exam.id }) { exams[i] = exam }
+    }
+
+    func remove(_ exam: StudyExam) { exams.removeAll { $0.id == exam.id } }
+
+    private func save() {
+        if let data = try? JSONEncoder().encode(exams) {
+            defaults.set(data, forKey: storeKey)
+        }
+        if let next = nextExam {
+            sharedDefaults?.set(next.date.timeIntervalSince1970,
+                                forKey: SGContract.Keys.onboardingExamDate)
+        }
+    }
+
+    private static func migratedFromOnboarding(_ defaults: UserDefaults) -> [StudyExam] {
+        let ts = defaults.double(forKey: "examDate")
+        guard ts > 0 else { return [] }
+        let raw = defaults.string(forKey: "studySubject")?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let subject = (raw?.isEmpty == false) ? raw! : "My exam"
+        return [StudyExam(subject: subject,
+                          date: Date(timeIntervalSince1970: ts),
+                          topics: subject == "My exam" ? [] : [subject])]
+    }
+}
+
+// MARK: - Persona store (selected tutor monster)
+
+/// Holds the user's chosen tutor-monster persona by id. Defaults to the safe
+/// fallback until onboarding sets one.
+final class PersonaStore: ObservableObject {
+    static let shared = PersonaStore()
+    private let defaults: UserDefaults
+    private let key = "sg_selectedPersonaID"
+
+    @Published var selectedID: String {
+        didSet { defaults.set(selectedID, forKey: key) }
+    }
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        selectedID = defaults.string(forKey: key) ?? MonsterPersona.fallback.id
+    }
+
+    var persona: MonsterPersona { MonsterPersona.with(id: selectedID) }
+
+    func select(_ persona: MonsterPersona) { selectedID = persona.id }
+}

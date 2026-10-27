@@ -234,3 +234,207 @@ final class StudyGuardEngineTests: XCTestCase {
         XCTAssertEqual(GuardState.derive(from: d), .metering)
     }
 }
+
+// MARK: - Tutor Monster foundation (Phase 0)
+
+/// Unit tests for the invisible Phase 0 foundation: Leitner mastery on cards,
+/// the pressure→mood escalation ladder, gate-encounter counters, weighted card
+/// selection, the multi-exam model + onboarding migration, and persona storage.
+final class TutorMonsterFoundationTests: XCTestCase {
+
+    private func makeCard(topic: String? = nil, box: Int = 1) -> Regret {
+        Regret(regretPrompt: "Q", regret: "A", choices: ["A", "B"],
+               correctAnswerIndex: 0, backgroundExplanation: "",
+               box: box, topic: topic)
+    }
+
+    private func freshDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "test.tutormonster.\(UUID().uuidString)")!
+    }
+
+    // MARK: Leitner mastery
+
+    func testNewCardIsWeakDueAndUnmastered() {
+        let c = makeCard()
+        XCTAssertEqual(c.box, 1)
+        XCTAssertTrue(c.isWeak)
+        XCTAssertTrue(c.isDue())
+        XCTAssertEqual(c.masteryStrength, 0, accuracy: 0.0001)
+        XCTAssertEqual(c.accuracy, 0, accuracy: 0.0001)
+    }
+
+    func testCorrectAnswerPromotesBoxAndSchedulesForward() {
+        var c = makeCard()
+        let now = Date()
+        c.recordReview(correct: true, now: now)
+        XCTAssertEqual(c.box, 2)
+        XCTAssertEqual(c.timesSeen, 1)
+        XCTAssertEqual(c.timesCorrect, 1)
+        XCTAssertFalse(c.isDue(asOf: now))                               // box 2 is due in a day
+        XCTAssertTrue(c.isDue(asOf: now.addingTimeInterval(2 * 86_400)))
+    }
+
+    func testBoxClimbsToMaxAndCaps() {
+        var c = makeCard()
+        for _ in 0..<10 { c.recordReview(correct: true) }
+        XCTAssertEqual(c.box, Regret.maxBox)
+        XCTAssertFalse(c.isWeak)
+        XCTAssertEqual(c.masteryStrength, 1, accuracy: 0.0001)
+    }
+
+    func testWrongAnswerResetsToBoxOne() {
+        var c = makeCard()
+        c.recordReview(correct: true)
+        c.recordReview(correct: true)     // box 3
+        c.recordReview(correct: false)    // reset
+        XCTAssertEqual(c.box, 1)
+        XCTAssertTrue(c.isWeak)
+        XCTAssertTrue(c.isDue())
+        XCTAssertEqual(c.timesSeen, 3)
+        XCTAssertEqual(c.timesCorrect, 2)
+        XCTAssertEqual(c.accuracy, 2.0 / 3.0, accuracy: 0.0001)
+    }
+
+    // MARK: Pressure → mood ladder
+
+    func testCalmContextIsChill() {
+        XCTAssertEqual(SGContract.dials(for: SGContract.PressureInputs()).mood, .chill)
+    }
+
+    func testNearbyExamAndScrollingClimbsToAnnoyed() {
+        let p = SGContract.PressureInputs(gateEncountersToday: 10, daysSinceStudy: 2, nearestExamDays: 5)
+        XCTAssertEqual(SGContract.pressureScore(p), 6)   // 2 + 2 + 2
+        XCTAssertEqual(SGContract.mood(forScore: 6), .annoyed)
+    }
+
+    func testRelentlessContextIsFeral() {
+        let p = SGContract.PressureInputs(gateEncountersToday: 40, daysSinceStudy: 5,
+                                          nearestExamDays: 0, weakCardLoad: 20, fastBurn: true)
+        XCTAssertEqual(SGContract.pressureScore(p), 14) // 4 + 3 + 4 + 2 + 1
+        XCTAssertEqual(SGContract.dials(for: p).mood, .feral)
+    }
+
+    func testPastExamAddsNoPressure() {
+        XCTAssertEqual(SGContract.pressureScore(SGContract.PressureInputs(nearestExamDays: -3)), 0)
+    }
+
+    func testEscalationTurnsAllThreeDials() {
+        let chill = SGContract.dials(for: .chill)
+        let feral = SGContract.dials(for: .feral)
+        XCTAssertEqual(chill.questions, 3);  XCTAssertEqual(chill.minutesBack, 6)
+        XCTAssertEqual(feral.questions, 10); XCTAssertEqual(feral.minutesBack, 2)
+        XCTAssertGreaterThan(feral.questions, chill.questions)   // more work
+        XCTAssertLessThan(feral.minutesBack, chill.minutesBack)  // less reward
+    }
+
+    func testPerCardSecondsRealizesMoodReward() {
+        XCTAssertEqual(SGContract.perCardSeconds(for: SGContract.dials(for: .chill)), 120) // 6m / 3
+        XCTAssertEqual(SGContract.perCardSeconds(for: SGContract.dials(for: .feral)), 12)  // 2m / 10
+    }
+
+    // MARK: Gate-encounter counters
+
+    func testGateEncounterIncrementsForToday() {
+        let d = freshDefaults()
+        XCTAssertEqual(SGContract.gateEncountersToday(d), 0)
+        SGContract.recordGateEncounter(d)
+        SGContract.recordGateEncounter(d)
+        XCTAssertEqual(SGContract.gateEncountersToday(d), 2)
+    }
+
+    func testGateEncounterPruneDropsOldDays() {
+        let d = freshDefaults()
+        let oldKey = SGContract.gateEncounterKey(day: SGContract.dayStamp(Date().addingTimeInterval(-86_400)))
+        d.set(5, forKey: oldKey)
+        SGContract.recordGateEncounter(d)
+        SGContract.pruneOldGateEncounters(d)
+        XCTAssertEqual(d.integer(forKey: oldKey), 0)
+        XCTAssertEqual(SGContract.gateEncountersToday(d), 1)
+    }
+
+    // MARK: Deck aggregation + weighted selection
+
+    func testDeckTopicsAndWeakness() {
+        var cards = [makeCard(topic: "A"), makeCard(topic: "A"), makeCard(topic: "B")]
+        cards[0].recordReview(correct: true)
+        cards[0].recordReview(correct: true)   // one A card now stronger
+        let deck = Deck(name: "D", cards: cards)
+        XCTAssertEqual(Set(deck.topics), ["A", "B"])
+        let tw = deck.topicWeakness()
+        XCTAssertEqual(tw["B"] ?? 0, 1, accuracy: 0.0001)      // all of B is weak
+        XCTAssertLessThan(tw["A"] ?? 1, 1)                     // A partially mastered
+        XCTAssertGreaterThan(deck.masteryFraction, 0)
+    }
+
+    func testSelectionFavorsWeakExamTopicCards() {
+        var strongs: [Regret] = []
+        for _ in 0..<5 {
+            var s = makeCard(topic: "easy")
+            for _ in 0..<5 { s.recordReview(correct: true) }
+            strongs.append(s)
+        }
+        let examWeak = (0..<8).map { _ in makeCard(topic: "exam") }
+        let cards = strongs + examWeak
+
+        var rng = SystemRandomNumberGenerator()
+        let trials = 200
+        var examHits = 0
+        for _ in 0..<trials {
+            let pick = CardSelection.pick(from: cards, count: 3, examTopics: ["exam"], using: &rng)
+            XCTAssertEqual(pick.count, 3)
+            examHits += pick.filter { $0.topic == "exam" }.count
+        }
+        // Weakness + exam weighting pushes well past the unweighted 8/13 ≈ 0.62.
+        XCTAssertGreaterThan(Double(examHits) / Double(trials * 3), 0.8)
+    }
+
+    func testSelectionReturnsWholeDeckWhenCountExceedsIt() {
+        let cards = [makeCard(), makeCard()]
+        XCTAssertEqual(CardSelection.pick(from: cards, count: 5).count, 2)
+    }
+
+    // MARK: Exams + migration
+
+    func testStudyExamDaysUntilAndUpcoming() {
+        let cal = Calendar.current
+        let exam = StudyExam(subject: "Bio", date: cal.date(byAdding: .day, value: 3, to: Date())!)
+        XCTAssertEqual(exam.daysUntil(), 3)
+        XCTAssertTrue(exam.isUpcoming)
+        let past = StudyExam(subject: "Old", date: cal.date(byAdding: .day, value: -2, to: Date())!)
+        XCTAssertFalse(past.isUpcoming)
+    }
+
+    func testExamStoreMigratesOnboardingExamAndMirrorsNearest() {
+        let d = freshDefaults()
+        let shared = freshDefaults()
+        let ts = Date().addingTimeInterval(5 * 86_400).timeIntervalSince1970
+        d.set(ts, forKey: "examDate")
+        d.set("Chemistry", forKey: "studySubject")
+
+        let store = ExamStore(defaults: d, sharedDefaults: shared)
+        XCTAssertEqual(store.exams.count, 1)
+        XCTAssertEqual(store.exams.first?.subject, "Chemistry")
+        XCTAssertEqual(store.nextExam?.subject, "Chemistry")
+        XCTAssertEqual(shared.double(forKey: SGContract.Keys.onboardingExamDate), ts, accuracy: 1)
+    }
+
+    func testExamStoreEmptyWithoutOnboardingExam() {
+        XCTAssertTrue(ExamStore(defaults: freshDefaults(), sharedDefaults: nil).exams.isEmpty)
+    }
+
+    // MARK: Personas
+
+    func testPersonaStoreDefaultsToFallbackAndPersists() {
+        let d = freshDefaults()
+        let store = PersonaStore(defaults: d)
+        XCTAssertEqual(store.persona.id, MonsterPersona.fallback.id)
+        store.select(.diva)
+        XCTAssertEqual(PersonaStore(defaults: d).persona.name, "Zaza")
+    }
+
+    func testPersonaLookupFallsBack() {
+        XCTAssertEqual(MonsterPersona.with(id: "nope").id, MonsterPersona.fallback.id)
+        XCTAssertEqual(MonsterPersona.with(id: nil).id, MonsterPersona.fallback.id)
+        XCTAssertEqual(MonsterPersona.all.count, 4)
+    }
+}
