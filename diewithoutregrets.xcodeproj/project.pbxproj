@@ -161,6 +161,7 @@
 		862D7504E59590F3E3B0780F /* V4EarnScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC7F94797B8F7C517B0AEF09 /* V4EarnScreenTimeView.swift */; };
 		88CA5CCAAB8E48A3A9A902FE /* UnlockAppReturn.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F050BDD5594A768CC07917 /* UnlockAppReturn.swift */; };
 		8A2C9D2322A500EFFEF8401E /* MonsterLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C6511A34903E18E985B70 /* MonsterLiveActivityAttributes.swift */; };
+		8C883B25924C4CC27004CF58 /* MonsterAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEC86A9E206DD0E2A8B43B4 /* MonsterAI.swift */; };
 		8D49F113CC5DB5117280B2E8 /* V5OnboardingProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0191E9CECE70FF6BB46CE75F /* V5OnboardingProfile.swift */; };
 		8E450DB369B374DE26BC9079 /* CountdownReadout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301EA72F7A857C3AAE82DD99 /* CountdownReadout.swift */; };
 		8E9AF29971E1001F20D923FF /* MonsterWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -497,6 +498,7 @@
 		C79CCB100B77E24EB05CE411 /* OnboardingV2Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV2Components.swift; sourceTree = "<group>"; };
 		C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FlashcardAPIClientTests.swift; sourceTree = "<group>"; };
 		C992836E11460BAE0C22D50D /* QuizV2Kit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuizV2Kit.swift; sourceTree = "<group>"; };
+		CAEC86A9E206DD0E2A8B43B4 /* MonsterAI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterAI.swift; path = TutorMonster/MonsterAI.swift; sourceTree = "<group>"; };
 		CB7C908F9A21C0881BF43648 /* OnboardingV5Tests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingV5Tests.swift; sourceTree = "<group>"; };
 		CB997EA8F864C3C5AAC75648 /* MonsterWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonsterWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A65E05B3C7F9E1D2468B10 /* OnboardingDiagnosisReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingDiagnosisReport.swift; sourceTree = "<group>"; };
@@ -733,6 +735,7 @@
 				F24B05469208BE08FFB0B367 /* MonsterChatComponents.swift */,
 				78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */,
 				985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */,
+				CAEC86A9E206DD0E2A8B43B4 /* MonsterAI.swift */,
 			);
 			name = TutorMonster;
 			sourceTree = "<group>";
@@ -1712,6 +1715,7 @@
 				851AC9CEE24E51A2CB2EDE6A /* MonsterChatComponents.swift in Sources */,
 				6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */,
 				4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */,
+				8C883B25924C4CC27004CF58 /* MonsterAI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

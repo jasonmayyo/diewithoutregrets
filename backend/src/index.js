@@ -1,10 +1,11 @@
 import { DurableObject } from 'cloudflare:workers';
 import { createHash, randomBytes } from 'node:crypto';
-import { APIError, json, readBody, validKeyID, validateGeneration, openAIBody, validateCards } from './protocol.js';
-import { GateStore, generationLimits } from './store.js';
+import { APIError, json, readBody, validKeyID, validateGeneration, openAIBody, validateCards,
+  validateScriptRequest, openAIScriptBody, validateScript } from './protocol.js';
+import { GateStore, generationLimits, scriptLimits } from './store.js';
 import { attest, assertRequest } from './attestation.js';
 
-const paths = new Set(['/v1/challenge', '/v1/attest', '/v1/flashcards']);
+const paths = new Set(['/v1/challenge', '/v1/attest', '/v1/flashcards', '/v1/script']);
 
 export default {
   async fetch(request, env) {
@@ -64,9 +65,10 @@ export class StudyGuardGate extends DurableObject {
       this.store.addKey(keyID, result.publicKey);
       return json({ registered: true });
     }
-    if (path !== '/v1/flashcards') throw new APIError(404, 'not_found');
+    if (path !== '/v1/flashcards' && path !== '/v1/script') throw new APIError(404, 'not_found');
     if (this.env.AI_ENABLED !== 'true' || !this.env.OPENAI_API_KEY) throw new APIError(503, 'service_unavailable');
-    validateGeneration(body);
+    const isScript = path === '/v1/script';
+    if (isScript) validateScriptRequest(body); else validateGeneration(body);
     const keyID = validKeyID(request.headers.get('X-App-Attest-Key-ID'));
     const key = this.store.key(keyID);
     if (!key) throw new APIError(401, 'key_not_registered');
@@ -78,15 +80,15 @@ export class StudyGuardGate extends DurableObject {
     catch { throw new APIError(401, 'invalid_assertion'); }
     this.store.advanceCounter(keyID, key.counter, result.signCount);
     const reservedAt = Date.now();
-    this.store.reserve(keyID, body.requestId, generationLimits(this.env, keyID, reservedAt), reservedAt);
+    this.store.reserve(keyID, body.requestId, (isScript ? scriptLimits : generationLimits)(this.env, keyID, reservedAt), reservedAt);
     try {
       // No automatic retries: a timeout may still have incurred provider usage.
       const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
         // Workers supports manual redirects; reject any 3xx below without
         // forwarding the provider credential or study text to another host.
-        method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(170_000),
+        method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(isScript ? 30_000 : 170_000),
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this.env.OPENAI_API_KEY}` },
-        body: JSON.stringify(openAIBody(body.text, body.language)),
+        body: JSON.stringify(isScript ? openAIScriptBody(body.context) : openAIBody(body.text, body.language)),
       });
       if (!upstream.ok) { await upstream.body?.cancel(); throw new APIError(503, 'service_unavailable'); }
       const { body: response } = await readBody(upstream, 300_000);
@@ -97,11 +99,15 @@ export class StudyGuardGate extends DurableObject {
           refusal: !!choice?.message?.refusal, usage: response.usage ?? null }));
         throw new APIError(502, 'invalid_response');
       }
-      let cards;
-      try { cards = JSON.parse(choice.message.content); } catch { throw new APIError(502, 'invalid_response'); }
-      console.log(JSON.stringify({ event: 'generation_parsed', count: Array.isArray(cards?.cards) ? cards.cards.length : -1,
+      let parsed;
+      try { parsed = JSON.parse(choice.message.content); } catch { throw new APIError(502, 'invalid_response'); }
+      if (isScript) {
+        console.log(JSON.stringify({ event: 'script_parsed', usage: response.usage ?? null }));
+        return json(validateScript(parsed));
+      }
+      console.log(JSON.stringify({ event: 'generation_parsed', count: Array.isArray(parsed?.cards) ? parsed.cards.length : -1,
         usage: response.usage ?? null }));
-      return json(validateCards(cards));
+      return json(validateCards(parsed));
     } catch (error) {
       if (error instanceof APIError) throw error;
       throw new APIError(503, 'service_unavailable');

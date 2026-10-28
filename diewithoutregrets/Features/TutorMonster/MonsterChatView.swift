@@ -63,7 +63,7 @@ struct MonsterChatView: View {
                     ForEach(visibleMessages) { msg in
                         row(for: msg).id(msg.id)
                     }
-                    if showTyping {
+                    if showTyping || session.isThinking {
                         MonsterTypingIndicator(tint: accent).id("typing")
                     }
                     if session.isFinished && revealed >= session.messages.count {

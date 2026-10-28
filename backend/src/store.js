@@ -78,3 +78,29 @@ export function generationLimits(env, keyID, now) {
     { bucket: `global:${month}`, limit: limit('GLOBAL_MONTHLY_LIMIT'), expires: nextMonth, code: 'service_limit' },
   ];
 }
+
+// Tutor Monster session scripts are cheap (gpt-4o-mini, ~800 tokens/call) and fire
+// on most unlocks, so they get their OWN generous buckets, separate from flashcard
+// generation. Per-device + per-minute bound individual abuse; the global caps are
+// the total spend ceiling. All overridable via the SCRIPT_* env vars.
+export function scriptLimits(env, keyID, now) {
+  const date = new Date(now);
+  const day = date.toISOString().slice(0, 10);
+  const month = day.slice(0, 7);
+  const midnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1);
+  const nextMonth = Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
+  const limit = (name, fallback) => {
+    const raw = env[name];
+    if (raw === undefined || raw === '') return fallback;
+    const n = Number(raw);
+    if (!Number.isSafeInteger(n) || n < 1 || n > 1_000_000) throw new APIError(503, 'service_unavailable');
+    return n;
+  };
+  const minute = Math.floor(now / 60_000);
+  return [
+    { bucket: `script-minute:${keyID}:${minute}`, limit: limit('SCRIPT_MINUTE_LIMIT', 15), expires: (minute + 1) * 60_000, code: 'rate_limited' },
+    { bucket: `script-device:${keyID}:${day}`, limit: limit('SCRIPT_DEVICE_DAILY_LIMIT', 120), expires: midnight, code: 'daily_limit' },
+    { bucket: `script-global:${day}`, limit: limit('SCRIPT_GLOBAL_DAILY_LIMIT', 20_000), expires: midnight, code: 'service_limit' },
+    { bucket: `script-global:${month}`, limit: limit('SCRIPT_GLOBAL_MONTHLY_LIMIT', 400_000), expires: nextMonth, code: 'service_limit' },
+  ];
+}

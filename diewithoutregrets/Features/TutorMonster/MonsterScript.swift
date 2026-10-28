@@ -65,6 +65,27 @@ enum MonsterScript {
         return s
     }
 
+    /// A persona-voiced "why these cards" line (exam proximity + weakness),
+    /// surfaced after the demand when an exam is upcoming (Phase 2 adaptive).
+    static func reasonLine(persona: MonsterPersona,
+                           vars: MonsterScriptVars,
+                           seed: Int = Int.random(in: 0...9_999)) -> String {
+        let bank: [String]
+        switch persona.id {
+        case MonsterPersona.diva.id:
+            bank = ["and {exam}'s in {days} days?? we're drilling the stuff you keep fumbling. 💀"]
+        case MonsterPersona.willow.id:
+            bank = ["{exam} is only {days} days away, love, so these are the ones you keep slipping on."]
+        case MonsterPersona.coach.id:
+            bank = ["{exam} in {days} days. these are your weak reps. we fix them now."]
+        case MonsterPersona.gremlin.id:
+            bank = ["{exam} in {days}?? heheh. serving you the ones you're BAD at. 😈"]
+        default:
+            bank = ["{exam} is in {days} days, so these target your weak spots."]
+        }
+        return fill(bank[abs(seed) % bank.count], vars: vars)
+    }
+
     // MARK: - Banks
 
     /// Mood collapses to three tiers for copy: calm, mid, hot.

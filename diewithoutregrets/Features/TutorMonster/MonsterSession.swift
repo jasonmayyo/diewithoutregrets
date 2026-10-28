@@ -19,6 +19,7 @@ final class MonsterSession: ObservableObject {
     @Published private(set) var awaitingAnswer = false
     @Published private(set) var isFinished = false
     @Published private(set) var grantedMinutes = 0
+    @Published private(set) var isThinking = false
 
     // MARK: Session config (frozen at init)
     let persona: MonsterPersona
@@ -35,6 +36,8 @@ final class MonsterSession: ObservableObject {
     private var currentCard: Regret?
     private var results: [Bool?] = []
     private var outcomes: [UUID: Bool] = [:]
+    private var presented: [UUID: Regret] = [:]
+    private var bundle: MonsterScriptBundle?
     private var correctCount = 0
     private var lineSeed = 0
     private var vars: MonsterScriptVars
@@ -96,9 +99,29 @@ final class MonsterSession: ObservableObject {
     /// Open the conversation: greeting + demand, then the first card.
     func start() {
         guard messages.isEmpty, canRun else { return }
+        Task { await run() }
+    }
+
+    /// Fetch a personalized AI script (best-effort, time-boxed), then run the flow.
+    /// On any failure the scripted banks are used — the gate never waits on the net.
+    private func run() async {
+        isThinking = true
+        bundle = await MonsterAI.fetchBundle(persona: persona, mood: dials.mood, vars: vars)
+        isThinking = false
         say(.greeting)
         say(.demand)
+        // Surface WHY these cards: exam proximity + weakness (Phase 2 adaptive).
+        if bundle != nil || vars.examDays != nil { sayReason() }
         presentNextCard()
+    }
+
+    private func sayReason() {
+        lineSeed += 1
+        if let b = bundle {
+            append(.monster(MonsterScript.fill(b.reason, vars: vars)))
+        } else {
+            append(.monster(MonsterScript.reasonLine(persona: persona, vars: vars, seed: lineSeed)))
+        }
     }
 
     /// Answer a multiple-choice card by option index.
@@ -120,6 +143,7 @@ final class MonsterSession: ObservableObject {
         guard let next = queue.first else { finish(); return }
         queue.removeFirst()
         currentCard = next
+        presented[next.id] = next
         awaitingAnswer = true
         append(MonsterMessage(sender: .monster, kind: .card(next)))
     }
@@ -168,19 +192,53 @@ final class MonsterSession: ObservableObject {
         } else {
             say(.fail)
         }
+        appendRecap()
         say(.sendoff)
         isFinished = true
+    }
+
+    /// A post-session recap (Phase 2 adaptive): how many locked in and which to
+    /// review. A neutral system line; the persona pass/fail + sendoff bracket it.
+    private func appendRecap() {
+        let total = outcomes.count
+        guard total > 0 else { return }
+        let correct = outcomes.values.filter { $0 }.count
+        var recap = "Recap: \(correct)/\(total) locked in."
+        let missed = presented.values
+            .filter { outcomes[$0.id] == false }
+            .map { $0.quizPrompt.text }
+        if !missed.isEmpty {
+            recap += " Worth another look: " + missed.prefix(2).joined(separator: "; ")
+        }
+        append(.system(recap))
     }
 
     // MARK: Voice
 
     private func say(_ context: MonsterContext) {
         lineSeed += 1
-        append(.monster(MonsterScript.line(persona: persona,
-                                           mood: dials.mood,
-                                           context: context,
-                                           vars: vars,
-                                           seed: lineSeed)))
+        let line = bundleLine(context) ?? MonsterScript.line(persona: persona,
+                                                             mood: dials.mood,
+                                                             context: context,
+                                                             vars: vars,
+                                                             seed: lineSeed)
+        append(.monster(line))
+    }
+
+    /// A line from the AI bundle for this context, if one was fetched.
+    private func bundleLine(_ context: MonsterContext) -> String? {
+        guard let b = bundle else { return nil }
+        let raw: String?
+        switch context {
+        case .greeting: raw = b.greeting
+        case .demand:   raw = b.demand
+        case .correct:  raw = b.correct.isEmpty ? nil : b.correct[abs(lineSeed) % b.correct.count]
+        case .wrong:    raw = b.wrong.isEmpty ? nil : b.wrong[abs(lineSeed) % b.wrong.count]
+        case .pass:     raw = b.pass
+        case .fail:     raw = b.fail
+        case .sendoff:  raw = b.sendoff
+        }
+        return raw.map { MonsterScript.fill($0, vars: vars) }
     }
 
     private func append(_ message: MonsterMessage) { messages.append(message) }

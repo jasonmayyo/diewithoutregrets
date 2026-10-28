@@ -100,6 +100,32 @@ final class FlashcardAPIClient {
         return try Self.decodeCards(data)
     }
 
+    /// Fetch a personalized Tutor Monster session script. Reuses the same App
+    /// Attest flow as generate(); throws on any failure so the caller falls back
+    /// to the offline scripted banks. Cheap vs. flashcard generation (short output).
+    func generateScript(_ context: MonsterScriptContext) async throws -> MonsterScriptBundle {
+        guard baseURL != nil else { throw FlashcardServiceError.unavailable }
+        guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
+        let (keyID, challenge) = try await verifiedGenerationChallenge()
+        let payload = ScriptPayload(action: "generate_script", context: context,
+                                    challenge: challenge, requestId: UUID().uuidString)
+        let body = try JSONEncoder().encode(payload)
+        let assertion: Data
+        do { assertion = try await attestation.generateAssertion(keyID, clientDataHash: Data(SHA256.hash(data: body))) }
+        catch {
+            clearInvalidKey(error)
+            throw FlashcardServiceError.verificationFailed
+        }
+        let data = try await post("v1/script", body: body, headers: [
+            "X-App-Attest-Key-ID": keyID,
+            "X-App-Attest-Assertion": assertion.base64EncodedString(),
+        ])
+        guard let bundle = try? JSONDecoder().decode(MonsterScriptBundle.self, from: data) else {
+            throw FlashcardServiceError.invalidResponse
+        }
+        return bundle
+    }
+
     static func decodeCards(_ data: Data) throws -> [GeneratedFlashcard] {
         guard let result = try? JSONDecoder().decode(CardsResponse.self, from: data),
               result.cards.count >= minimumCards, result.cards.allSatisfy(\.isValid) else {
@@ -187,6 +213,9 @@ final class FlashcardAPIClient {
     private struct Enrollment: Encodable { let keyId: String; let challenge: String; let attestation: String }
     private struct Payload: Encodable {
         let action: String; let text: String; let language: String; let challenge: String; let requestId: String
+    }
+    private struct ScriptPayload: Encodable {
+        let action: String; let context: MonsterScriptContext; let challenge: String; let requestId: String
     }
     private struct CardsResponse: Decodable { let cards: [GeneratedFlashcard] }
     private struct ErrorResponse: Decodable {
