@@ -35,6 +35,7 @@ struct ContentView: View {
             SGTabItem(id: 1, title: "Study", icon: "nav-study"),
             SGTabItem(id: 2, title: "Blocks", icon: "nav-blocks"),
             SGTabItem(id: 3, title: "Profile", icon: "nav-profile"),
+            SGTabItem(id: 4, title: "Exams", icon: "sf:calendar"),
         ]
     }
 
@@ -150,6 +151,13 @@ struct ContentView: View {
                             .toolbar(.hidden, for: .tabBar)
                     }
                     .tag(3)
+
+                    // Fifth Tab - Exams (Tutor Monster Phase 2)
+                    NavigationStack {
+                        ExamCalendarView()
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+                    .tag(4)
                 }
                 .tint(SGTheme.mint)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -183,6 +191,7 @@ struct ContentView: View {
                     case 1: tabName = "study"
                     case 2: tabName = "blocks"
                     case 3: tabName = "profile"
+                    case 4: tabName = "exams"
                     default: tabName = "unknown"
                     }
                     Analytics.tabSelected(tabName)

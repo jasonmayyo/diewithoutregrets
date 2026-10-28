@@ -108,15 +108,25 @@ private struct SGTabButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 5) {
-                Image(item.icon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 36, height: 36)
-                    // Idle stickers go monochrome so the selected one
-                    // carries the only color in the dock.
-                    .saturation(selected ? 1 : 0)
-                    .opacity(selected ? 1 : idleIconOpacity)
-                    .scaleEffect(selected ? 1.0 : 0.92)
+                Group {
+                    if item.icon.hasPrefix("sf:") {
+                        // Temporary SF Symbol icon (e.g. the Exams tab) until a
+                        // proper icons8 sticker is added in the design pass.
+                        Image(systemName: String(item.icon.dropFirst(3)))
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(selected ? selectedLabel : idleLabel)
+                    } else {
+                        Image(item.icon)
+                            .resizable()
+                            .scaledToFit()
+                            // Idle stickers go monochrome so the selected one
+                            // carries the only color in the dock.
+                            .saturation(selected ? 1 : 0)
+                    }
+                }
+                .frame(width: 36, height: 36)
+                .opacity(selected ? 1 : idleIconOpacity)
+                .scaleEffect(selected ? 1.0 : 0.92)
                 Text(item.title)
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundColor(selected ? selectedLabel : idleLabel)

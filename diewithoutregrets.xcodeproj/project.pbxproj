@@ -79,6 +79,7 @@
 		4A0BB7032FA0000000000003 /* TikTokBusinessSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 4A0BB7022FA0000000000002 /* TikTokBusinessSDK */; };
 		4A0BB7052FA0000000000005 /* AdsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BB7042FA0000000000004 /* AdsTracker.swift */; };
 		4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */; };
+		4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */; };
 		4D9C7ABE3611F485F9F9AD89 /* EmergencyUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */; };
 		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
 		57A11A002026102100000001 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 57A11A002026102100000002 /* SuperwallKit */; };
@@ -463,6 +464,7 @@
 		9009389569D2B10C6BF54142 /* MonsterScript.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterScript.swift; path = TutorMonster/MonsterScript.swift; sourceTree = "<group>"; };
 		94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldExtension.swift; sourceTree = "<group>"; };
 		97FA13DC544E39E05528794C /* StudyGuardMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExamCalendarView.swift; path = TutorMonster/ExamCalendarView.swift; sourceTree = "<group>"; };
 		9A76BC31490CEAECF9B75109 /* StudyGuardState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardState.swift; sourceTree = "<group>"; };
 		9C8529F31C9C3F564DE58279 /* StudyGuardShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9DC70B55611A6E75742F4DE4 /* diewithoutregretsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = diewithoutregretsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -730,6 +732,7 @@
 				04ACEDB86D6566223EC82B46 /* MonsterSession.swift */,
 				F24B05469208BE08FFB0B367 /* MonsterChatComponents.swift */,
 				78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */,
+				985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */,
 			);
 			name = TutorMonster;
 			sourceTree = "<group>";
@@ -1708,6 +1711,7 @@
 				FDC7A57974345D9384BBDB8D /* MonsterSession.swift in Sources */,
 				851AC9CEE24E51A2CB2EDE6A /* MonsterChatComponents.swift in Sources */,
 				6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */,
+				4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
