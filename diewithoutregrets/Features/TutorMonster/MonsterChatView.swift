@@ -53,7 +53,7 @@ struct MonsterChatView: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(MonsterPalette.bg)
-        .overlay(Rectangle().fill(MonsterPalette.surfaceHi).frame(height: 0.5), alignment: .bottom)
+        .overlay(Rectangle().fill(MonsterPalette.hairline).frame(height: 0.5), alignment: .bottom)
     }
 
     private var transcript: some View {
@@ -99,7 +99,7 @@ struct MonsterChatView: View {
         case let .reveal(correct, answer, why):
             MonsterRevealBubble(correct: correct, answer: answer, why: why)
         case let .grant(minutes):
-            MonsterGrantBubble(minutes: minutes, accent: accent)
+            MonsterGrantBubble(minutes: minutes)
         case let .media(asset, label):
             MonsterMediaBubble(asset: asset, label: label)
         }

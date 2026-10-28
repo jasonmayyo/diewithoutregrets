@@ -10,13 +10,19 @@
 
 import SwiftUI
 
-/// Placeholder palette for the monster chat. Swap for the design-shotgun output.
+/// "Meadow Study Buddy" palette (/design-shotgun 2026-10-28, direction A): light +
+/// green, consistent with the app's home; the persona accent is the pop. Deliberately
+/// NOT the night/ember lock scene. Tracks SGTheme Meadow tokens.
 enum MonsterPalette {
-    static let bg = Color(red: 0.05, green: 0.06, blue: 0.07)
-    static let surface = Color(red: 0.12, green: 0.13, blue: 0.15)
-    static let surfaceHi = Color(red: 0.17, green: 0.18, blue: 0.20)
-    static let text = Color(white: 0.96)
-    static let textDim = Color(white: 0.62)
+    static let bg = Color(red: 0.992, green: 0.992, blue: 0.984)          // #FDFDFB canvas
+    static let surface = Color(red: 0.945, green: 0.953, blue: 0.949)     // #F1F3F2 monster bubbles
+    static let surfaceHi = Color(red: 0.965, green: 0.973, blue: 0.969)   // #F6F8F7 tiles / input
+    static let cardBg = Color.white                                        // the flashcard
+    static let hairline = Color.black.opacity(0.07)
+    static let text = Color(red: 0.102, green: 0.141, blue: 0.125)        // #1A2420
+    static let textDim = Color(red: 0.420, green: 0.478, blue: 0.455)     // #6B7A74
+    static let successBg = Color(red: 0.890, green: 0.969, blue: 0.937)   // #E3F7EF earned-time
+    static let successText = Color(red: 0.118, green: 0.541, blue: 0.404) // #1E8A67 mint deep
 
     static func accent(_ persona: MonsterPersona) -> Color { color(persona.accentHex) }
 
@@ -143,14 +149,13 @@ struct MonsterRevealBubble: View {
 
 struct MonsterGrantBubble: View {
     let minutes: Int
-    let accent: Color
     var body: some View {
         HStack {
             Label("+\(minutes) min unlocked", systemImage: "lock.open.fill")
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(MonsterPalette.successText)
                 .padding(.horizontal, 16).padding(.vertical, 12)
-                .background(accent, in: Capsule())
+                .background(MonsterPalette.successBg, in: Capsule())
             Spacer(minLength: 44)
         }
     }
@@ -196,6 +201,8 @@ struct MonsterCardBubble: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 14).padding(.vertical, 12)
                             .background(MonsterPalette.surfaceHi, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .strokeBorder(MonsterPalette.hairline, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                     .disabled(!enabled)
@@ -204,10 +211,11 @@ struct MonsterCardBubble: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(MonsterPalette.cardBg, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(accent.opacity(enabled ? 0.5 : 0), lineWidth: 1.5)
+                .strokeBorder(enabled ? accent.opacity(0.55) : MonsterPalette.hairline, lineWidth: enabled ? 1.5 : 1)
         )
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
 }
