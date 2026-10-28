@@ -10,7 +10,8 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
   const appID = '5BFXSF2PS6.com.jasonmayo.diewithoutregrets';
   let calls = 0;
   const card = { regretPrompt: 'Plants convert light into energy through ___.', regret: 'photosynthesis',
-    choices: ['photosynthesis', 'respiration', 'fermentation', 'osmosis'], correctAnswerIndex: 0, backgroundExplanation: 'Photosynthesis stores light energy in glucose.' };
+    choices: ['photosynthesis', 'respiration', 'fermentation', 'osmosis'], correctAnswerIndex: 0,
+    backgroundExplanation: 'Photosynthesis stores light energy in glucose.', topic: 'Photosynthesis' };
   const mf = new Miniflare(convertV4MiniflareOptions({
     unsafeInspectDurableObjects: true,
     name: 'studyguard-test', modules: true, scriptPath: 'dist/index.js',

@@ -1737,7 +1737,7 @@ struct AutoGenerateFlashcardsSheet: View {
                 completion(cards.map { card in
                     Regret(regretPrompt: card.regretPrompt, regret: card.regret,
                            choices: card.choices, correctAnswerIndex: card.correctAnswerIndex,
-                           backgroundExplanation: card.backgroundExplanation)
+                           backgroundExplanation: card.backgroundExplanation, topic: card.topic)
                 })
             } catch {
                 if let serviceError = error as? FlashcardServiceError {

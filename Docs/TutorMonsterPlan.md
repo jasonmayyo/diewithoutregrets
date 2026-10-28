@@ -281,6 +281,19 @@ offline, scripted version of the whole loop; the live AI arrives in Phase 2.
 - Done when: decks refill themselves on weak/near-exam topics and the monster has reactions
   with media, gate still offline-safe.
 
+> **Decisions + split (2026-10-28, with Jason).** Phase 3 runs in two passes.
+> **Pass A — targeting backbone (this pass):** topic-tag cards at generation (the LLM now
+> returns a `topic` per card — the §6d/§0 auto-tag that was never built, and the reason
+> `topicWeakness`/`CardSelection` exam-boost/`ExamCalendarView.readiness` were dead until now);
+> extend `/v1/flashcards` with `topic`+`difficulty`+`count`; a **prompted** "top up" of
+> weak/near-exam topics (NOT silent/background — the Worker budget is tiny and the key-abuse
+> incident is recent, so generation only fires on an explicit tap); and MC distractor backfill
+> via a new cheap `/v1/distractors` endpoint (one call upgrades a whole deck's typed cards).
+> Surfaces: "Top up {topic}" on the exam calendar, "Add answer options" on a deck with typed
+> cards. **Pass B — feel (next):** curated persona reaction media (reusing the existing in-app
+> stickers + mascot poses; real per-persona art waits for `/design-shotgun`, §6h) and cached
+> persona openers for an instant greeting. The gate stays 100% local in both passes.
+
 ### Phase 4 — Depth, retention, monetization, polish
 - More personas / persona unlocks / cosmetics; the meanness dial per persona; A/B on toll
   size and grant amount (PostHog); paywall interplay; Live Activity / Dynamic Island

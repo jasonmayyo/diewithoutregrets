@@ -14,8 +14,11 @@ import SwiftUI
 struct ExamCalendarView: View {
     @ObservedObject private var store = ExamStore.shared
     @ObservedObject private var deckStore = DeckStore.shared
+    @ObservedObject private var enrichment = DeckEnrichment.shared
     @State private var editing: StudyExam?
     @State private var showingAdd = false
+    @State private var pendingTopic: String?
+    @State private var topUpResult: String?
 
     /// Approximate Meadow mint; replace with SGTheme tokens in the design pass.
     private let accent = Color(red: 0.17, green: 0.76, blue: 0.57)
@@ -24,6 +27,7 @@ struct ExamCalendarView: View {
         ScrollView {
             VStack(spacing: 20) {
                 countdownHero
+                topUpSection
                 if !store.exams.isEmpty { examList }
             }
             .padding(20)
@@ -118,6 +122,62 @@ struct ExamCalendarView: View {
         let cards = deckStore.decks.flatMap(\.cards).filter { ($0.topic.map(topics.contains)) ?? false }
         guard !cards.isEmpty else { return nil }
         return Double(cards.filter { !$0.isWeak }.count) / Double(cards.count)
+    }
+
+    // MARK: Phase 3 top-up (prompted, never silent)
+
+    @ViewBuilder private var topUpSection: some View {
+        let topics = DeckEnrichment.examTopUpTopics(exam: store.nextExam, decks: deckStore.decks)
+        if let exam = store.nextExam, !topics.isEmpty, !deckStore.decks.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Top up for \(exam.subject)").font(.system(size: 15, weight: .semibold))
+                Text("These topics are thin or shaky. Pull a few fresh cards so the monster can drill them.")
+                    .font(.caption).foregroundStyle(.secondary)
+                ForEach(Array(topics.prefix(3)), id: \.self) { topic in
+                    Button { Task { await runTopUp(topic) } } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "sparkles")
+                            Text("Top up \(topic)")
+                            Spacer()
+                            if enrichment.phase == .generating, pendingTopic == topic {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "plus.circle")
+                            }
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .padding(12).frame(maxWidth: .infinity)
+                        .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .foregroundStyle(accent)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(enrichment.isWorking)
+                }
+                if let topUpResult {
+                    Text(topUpResult).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    private func runTopUp(_ topic: String) async {
+        guard let deckID = enrichment.targetDeckID(forTopic: topic) else {
+            topUpResult = "Create a deck first, then top up."
+            return
+        }
+        pendingTopic = topic
+        topUpResult = nil
+        let added = await enrichment.topUp(topic: topic, into: deckID)
+        pendingTopic = nil
+        if added > 0 {
+            let deckName = deckStore.decks.first(where: { $0.id == deckID })?.name ?? "your deck"
+            topUpResult = "Added \(added) \(topic) card\(added == 1 ? "" : "s") to \(deckName)."
+        } else {
+            topUpResult = enrichment.lastError ?? "No new cards were added."
+        }
     }
 }
 

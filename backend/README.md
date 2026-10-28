@@ -50,6 +50,22 @@ calls remain counted; paid calls are never retried automatically. These request
 ceilings supplement the $5 enforced OpenAI project budget. Review capacity before
 wider rollout; do not silently raise spend or request limits.
 
+Tutor Monster content enrichment (Phase 3) extends the same hardened path.
+`/v1/flashcards` now also accepts an optional `topic`, `difficulty`
+(easy/medium/hard) and `count`; a request must carry EITHER study text (>= 50
+chars) OR a topic. Topic mode generates textbook-grounded cards for weak or
+near-exam topics without a source document, and every card is returned with a
+short `topic` label (document mode now labels each card too). Topic-mode top-ups
+deliberately SHARE the flashcard generation budget above — there is no separate,
+higher limit — so they cannot increase spend; a small `count` relaxes the
+minimum-card floor proportionally. `/v1/distractors` is a new, cheaper endpoint
+that returns three wrong options per typed card so the app can upgrade typed
+cards to multiple choice. It reuses the same App Attest + reservation flow and
+has its OWN deliberately low buckets (defaults: 3/min, 10 per installation/day,
+50 globally/day, 500 globally/month), overridable only via the `DISTRACTOR_*`
+env vars, never silently. Both share the `AI_ENABLED` gate. The unlock gate
+never depends on either; the app falls back to existing cards when offline.
+
 Promotion uses the studyguard-production-v1 Durable Object ledger. Old
 studyguard-v1 registrations and development registrations are not accepted in
 that ledger. The client's cached App Attest key namespace is also production

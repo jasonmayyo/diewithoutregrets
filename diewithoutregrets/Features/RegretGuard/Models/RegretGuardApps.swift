@@ -250,6 +250,34 @@ enum AnswerGrading {
 }
 
 extension Regret {
+    /// Build a multiple-choice version of a typed card by folding in generated
+    /// distractors. Drops any distractor that is blank, grades equal to the answer,
+    /// or duplicates another option; returns nil unless three usable distractors
+    /// survive, so a card is only ever upgraded when it can be answered fairly.
+    func promotedToChoices(with distractors: [String]) -> Regret? {
+        let answer = correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !answer.isEmpty else { return nil }
+        var seen: Set<String> = [AnswerGrading.normalize(answer)]
+        var options: [String] = []
+        for raw in distractors {
+            let option = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            let normalized = AnswerGrading.normalize(option)
+            guard !option.isEmpty, !normalized.isEmpty, seen.insert(normalized).inserted else { continue }
+            options.append(option)
+            if options.count == 3 { break }
+        }
+        guard options.count == 3 else { return nil }
+        var shuffled = options + [answer]
+        shuffled.shuffle()
+        guard let index = shuffled.firstIndex(of: answer) else { return nil }
+        var card = self
+        card.regret = answer
+        card.choices = shuffled
+        card.correctAnswerIndex = index
+        card.answerMode = .choices
+        return card
+    }
+
     static let regrets: [Regret] = [
         Regret(
             regretPrompt: "Not spending enough time with family",

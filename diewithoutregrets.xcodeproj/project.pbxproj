@@ -18,6 +18,7 @@
 		1151F2B6736387ECA78E3094 /* StudyGuardMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06C414461884222A3462D172 /* StudyGuardMonitorExtension.swift */; };
 		141817C7C754B82EF5061F21 /* UsageIntervalOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153BFDD3C51B96C1A4291672 /* UsageIntervalOnboarding.swift */; };
 		1471F72054BFFEEB9E06FD35 /* SGGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7A7BBBB44C6EEB5C416E98 /* SGGallery.swift */; };
+		166966268BA1DA4D6D4CFE05 /* DeckEnrichment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DE413B9F0E49529AD52B6E /* DeckEnrichment.swift */; };
 		17E5D1A58D6ABF3F313F4F09 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */; };
 		18821B0AB8E599E755DA3D24 /* ScaleButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A924FB635B69F15C0BA5E9 /* ScaleButtonStyle.swift */; };
 		1929484807E7DCAABFD7348E /* ScreenTimeAuthOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FB3DC9BE8F578A0E524AFF /* ScreenTimeAuthOnboarding.swift */; };
@@ -514,6 +515,7 @@
 		E501B50367E13445791D184D /* GuardedAppsPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuardedAppsPickerSheet.swift; sourceTree = "<group>"; };
 		E5998AA66D0AF676962F9C51 /* 2_Looking down_char.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "2_Looking down_char.json"; sourceTree = "<group>"; };
 		E5E5D5C36077513EB1D031B8 /* StudyGuardMonitor.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = StudyGuardMonitor.entitlements; sourceTree = "<group>"; };
+		E7DE413B9F0E49529AD52B6E /* DeckEnrichment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeckEnrichment.swift; sourceTree = "<group>"; };
 		E9FFFAAF633CE842B8784D7C /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EB991A59FDDD7A01BE6E0B0B /* ShieldReturnContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShieldReturnContext.swift; sourceTree = "<group>"; };
 		EC7F94797B8F7C517B0AEF09 /* V4EarnScreenTimeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = V4EarnScreenTimeView.swift; sourceTree = "<group>"; };
@@ -629,6 +631,7 @@
 				ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */,
 				02A44E4579757FFA9816BECB /* QuizletImportService.swift */,
 				5AE7AEB44EC2A59BE01B27B4 /* FlashcardAPIClient.swift */,
+				E7DE413B9F0E49529AD52B6E /* DeckEnrichment.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1720,6 +1723,7 @@
 				4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */,
 				8C883B25924C4CC27004CF58 /* MonsterAI.swift in Sources */,
 				51AD4433C487967C7C8DB7C4 /* MonsterNudges.swift in Sources */,
+				166966268BA1DA4D6D4CFE05 /* DeckEnrichment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -12,6 +12,22 @@ struct diewithoutregretsApp: App {
     init() {
         #if DEBUG
         SGPreviewHarness.applyLaunchArguments()
+        // Device-safe enabler for the Tutor Monster unlock flow: flips the flag
+        // WITHOUT seeding/freezing guard state (unlike -sg-preview-monster, which
+        // is simulator-only). Add -sg-monster-on to the Run scheme to test the real
+        // shield -> monster flow; remove -sg-monster-off to turn it back off.
+        if ProcessInfo.processInfo.arguments.contains("-sg-monster-on") {
+            UserDefaults.standard.set(true, forKey: "sg_monsterUnlock")
+        }
+        if ProcessInfo.processInfo.arguments.contains("-sg-monster-off") {
+            UserDefaults.standard.set(false, forKey: "sg_monsterUnlock")
+        }
+        // Pick the persona for testing (no onboarding picker yet). Persists.
+        let monsterArgs = ProcessInfo.processInfo.arguments
+        if monsterArgs.contains("-sg-monster-diva") { PersonaStore.shared.select(.diva) }
+        else if monsterArgs.contains("-sg-monster-coach") { PersonaStore.shared.select(.coach) }
+        else if monsterArgs.contains("-sg-monster-gremlin") { PersonaStore.shared.select(.gremlin) }
+        else if monsterArgs.contains("-sg-monster-willow") { PersonaStore.shared.select(.willow) }
         #endif
 
         // Cold-launched straight from the shield's "Study to unlock" button? The

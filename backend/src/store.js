@@ -83,6 +83,11 @@ export function generationLimits(env, keyID, now) {
 // on most unlocks, so they get their OWN generous buckets, separate from flashcard
 // generation. Per-device + per-minute bound individual abuse; the global caps are
 // the total spend ceiling. All overridable via the SCRIPT_* env vars.
+//
+// NOTE: scripts intentionally have their own higher global ceiling because they are
+// ~15x cheaper per call (max_tokens 500 vs 12000) and fire on most unlocks. Distractor
+// generation below is the opposite: same model + max_tokens as flashcards, so it must
+// NOT get its own extra global budget (see distractorLimits).
 export function scriptLimits(env, keyID, now) {
   const date = new Date(now);
   const day = date.toISOString().slice(0, 10);
@@ -102,5 +107,41 @@ export function scriptLimits(env, keyID, now) {
     { bucket: `script-device:${keyID}:${day}`, limit: limit('SCRIPT_DEVICE_DAILY_LIMIT', 120), expires: midnight, code: 'daily_limit' },
     { bucket: `script-global:${day}`, limit: limit('SCRIPT_GLOBAL_DAILY_LIMIT', 20_000), expires: midnight, code: 'service_limit' },
     { bucket: `script-global:${month}`, limit: limit('SCRIPT_GLOBAL_MONTHLY_LIMIT', 400_000), expires: nextMonth, code: 'service_limit' },
+  ];
+}
+
+// Distractor generation is a paid gpt-4o-mini call with the SAME max_tokens as
+// flashcards, but one call enriches a whole deck so it fires rarely. It gets its
+// own per-minute + per-installation buckets for abuse isolation, but it SHARES the
+// flashcard global daily/monthly ceilings (the same `global:` counters) so the two
+// together can never exceed the $5/mo envelope those caps were sized for — adding
+// this endpoint does not raise total spend. The DISTRACTOR_* env vars tune only the
+// per-device/per-minute isolation; GLOBAL_* still governs the shared total.
+export function distractorLimits(env, keyID, now) {
+  const date = new Date(now);
+  const day = date.toISOString().slice(0, 10);
+  const month = day.slice(0, 7);
+  const midnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1);
+  const nextMonth = Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
+  const optLimit = (name, fallback) => {
+    const raw = env[name];
+    if (raw === undefined || raw === '') return fallback;
+    const n = Number(raw);
+    if (!Number.isSafeInteger(n) || n < 1 || n > 1_000_000) throw new APIError(503, 'service_unavailable');
+    return n;
+  };
+  // The shared global ceiling is required config and fails closed, exactly like generationLimits.
+  const globalLimit = name => {
+    const n = Number(env[name]);
+    if (!Number.isSafeInteger(n) || n < 1 || n > 100_000) throw new APIError(503, 'service_unavailable');
+    return n;
+  };
+  const minute = Math.floor(now / 60_000);
+  return [
+    { bucket: `distractor-minute:${keyID}:${minute}`, limit: optLimit('DISTRACTOR_MINUTE_LIMIT', 3), expires: (minute + 1) * 60_000, code: 'rate_limited' },
+    { bucket: `distractor-device:${keyID}:${day}`, limit: optLimit('DISTRACTOR_DEVICE_DAILY_LIMIT', 10), expires: midnight, code: 'daily_limit' },
+    // Shared with flashcard generation — the combined spend ceiling, not a new one.
+    { bucket: `global:${day}`, limit: globalLimit('GLOBAL_DAILY_LIMIT'), expires: midnight, code: 'service_limit' },
+    { bucket: `global:${month}`, limit: globalLimit('GLOBAL_MONTHLY_LIMIT'), expires: nextMonth, code: 'service_limit' },
   ];
 }
