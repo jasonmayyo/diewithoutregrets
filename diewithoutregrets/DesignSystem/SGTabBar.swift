@@ -42,8 +42,8 @@ struct SGTabBar: View {
     private static let meadowBottom = Color(hex: 0x2F7E37)
 
     var body: some View {
-        // Fixed-width tabs clustered at the center (not stretched across
-        // the slab) so the group reads at a standard tab-bar density.
+        // Tabs share the width evenly so all of them fit without overflowing the
+        // screen (fixed widths overflowed once the Exams tab made it five).
         HStack(spacing: 10) {
             ForEach(items) { item in
                 SGTabButton(item: item,
@@ -131,7 +131,7 @@ private struct SGTabButton: View {
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundColor(selected ? selectedLabel : idleLabel)
             }
-            .frame(width: 76)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)

@@ -70,6 +70,23 @@ struct StudyGuardDebugSection: View {
             }
 
             Button {
+                // Jump straight into the monster chat to test it (and the AI),
+                // bypassing the flaky Screen Time lock. Force the flag on and make
+                // sure a non-empty deck is selected so the monster shows (not the
+                // legacy fallback).
+                UserDefaults.standard.set(true, forKey: "sg_monsterUnlock")
+                if DeckStore.shared.selectedDeck?.cards.isEmpty ?? true,
+                   let deck = DeckStore.shared.decks.first(where: { !$0.cards.isEmpty }) {
+                    DeckStore.shared.selectDeck(deck)
+                }
+                NavigationModel.shared.unlockMethodOverride = "flashcards"
+                NavigationModel.shared.navigate(to: .regretView)
+                lastAction = "Opened monster chat"
+            } label: {
+                Label("Open monster chat (debug)", systemImage: "bubble.left.and.bubble.right.fill")
+            }
+
+            Button {
                 manager.grantFreshBudget(reason: .debug)
                 lastAction = "Granted fresh budget"
             } label: {
