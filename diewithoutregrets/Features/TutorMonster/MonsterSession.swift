@@ -105,10 +105,14 @@ final class MonsterSession: ObservableObject {
     /// Fetch a personalized AI script (best-effort, time-boxed), then run the flow.
     /// On any failure the scripted banks are used — the gate never waits on the net.
     private func run() async {
+        // Instant opener (Phase 3): the persona's scripted greeting shows immediately
+        // (local, context-filled via {slots}), so the first line never waits on the
+        // network. The live bundle then loads in the background and voices the demand,
+        // reactions and sign-off from the next line on.
+        say(.greeting)
         isThinking = true
         bundle = await MonsterAI.fetchBundle(persona: persona, mood: dials.mood, vars: vars)
         isThinking = false
-        say(.greeting)
         say(.demand)
         // Surface WHY these cards: exam proximity + weakness (Phase 2 adaptive).
         if bundle != nil || vars.examDays != nil { sayReason() }
@@ -165,6 +169,7 @@ final class MonsterSession: ObservableObject {
                                             why: correct ? nil : why)))
         vars.score = "\(correctCount)/\(vars.questions)"
         say(correct ? .correct : .wrong)
+        appendReaction(correct ? .correct : .wrong)
 
         // Harder pass bar at higher moods: annoyed and up re-queue misses, so you
         // must actually get them right. Chill/nudgy let a miss slide (earn less).
@@ -188,9 +193,11 @@ final class MonsterSession: ObservableObject {
             vars.minutes = grantedMinutes
             append(MonsterMessage(sender: .monster, kind: .grant(minutes: grantedMinutes)))
             say(.pass)
+            appendReaction(.pass)
             _ = QV2Streak.recordSuccess()
         } else {
             say(.fail)
+            appendReaction(.fail)
         }
         appendRecap()
         say(.sendoff)
@@ -212,6 +219,13 @@ final class MonsterSession: ObservableObject {
             recap += " Worth another look: " + missed.prefix(2).joined(separator: "; ")
         }
         append(.system(recap))
+    }
+
+    /// A persona reaction sticker for the moment (Phase 3), reusing the in-app
+    /// sticker set. Offline-safe: the asset is bundled. Nil for moments without media.
+    private func appendReaction(_ context: MonsterContext) {
+        guard let reaction = MonsterReaction.sticker(persona: persona, context: context, mood: dials.mood) else { return }
+        append(.sticker(reaction.asset, label: reaction.label))
     }
 
     // MARK: Voice

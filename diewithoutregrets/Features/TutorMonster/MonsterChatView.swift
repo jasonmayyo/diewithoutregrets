@@ -100,6 +100,8 @@ struct MonsterChatView: View {
             MonsterRevealBubble(correct: correct, answer: answer, why: why)
         case let .grant(minutes):
             MonsterGrantBubble(minutes: minutes, accent: accent)
+        case let .media(asset, label):
+            MonsterMediaBubble(asset: asset, label: label)
         }
     }
 

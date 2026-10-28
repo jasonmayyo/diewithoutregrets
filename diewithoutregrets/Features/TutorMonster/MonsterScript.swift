@@ -231,3 +231,39 @@ enum MonsterScript {
         }
     }
 }
+
+/// Phase 3 reaction media: maps a moment to a persona-flavored sticker from the
+/// existing in-app `sticker-*` set. Bundled, so it works offline. Real per-persona
+/// reaction art is a /design-shotgun task (§6h); this is the first-pass mapping.
+enum MonsterReaction {
+    /// A sticker for the moment, or nil for moments that carry no media.
+    static func sticker(persona: MonsterPersona,
+                        context: MonsterContext,
+                        mood: SGContract.MonsterMood) -> (asset: String, label: String)? {
+        switch context {
+        case .correct:
+            // When it's been a grind (fed up / feral), hype lands as fire.
+            if mood >= .fedUp { return ("sticker-fire", "on fire") }
+            switch persona.id {
+            case "diva":    return ("sticker-crown", "slay")
+            case "coach":   return ("sticker-trophy", "good rep")
+            case "gremlin": return ("sticker-star", "gold star")
+            default:        return ("sticker-sparkling", "lovely")   // willow
+            }
+        case .wrong:
+            switch persona.id {
+            case "diva":    return ("sticker-skull", "oof")
+            case "coach":   return ("sticker-target", "again")
+            case "gremlin": return ("sticker-skull", "wrong")
+            default:        return ("sticker-idea", "think again")   // willow
+            }
+        case .pass:
+            return ("sticker-trophy", "cleared")
+        case .fail:
+            // Don't pile on: nothing for the gentle persona, a soft marker otherwise.
+            return persona.id == "willow" ? nil : ("sticker-hourglass", "time's up")
+        case .greeting, .demand, .sendoff:
+            return nil
+        }
+    }
+}

@@ -97,6 +97,26 @@ struct MonsterTextBubble: View {
     }
 }
 
+/// A persona reaction sticker (Phase 3): a small bundled image, left-aligned like a
+/// monster line. Offline — the asset ships in the catalog. Real per-persona art is a
+/// /design-shotgun task; this reuses the existing sticker set.
+struct MonsterMediaBubble: View {
+    let asset: String
+    let label: String
+    var body: some View {
+        HStack {
+            Image(asset)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 52, height: 52)
+                .padding(10)
+                .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .accessibilityLabel(label)
+            Spacer(minLength: 44)
+        }
+    }
+}
+
 struct MonsterRevealBubble: View {
     let correct: Bool
     let answer: String

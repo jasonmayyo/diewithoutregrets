@@ -22,6 +22,8 @@ struct MonsterMessage: Identifiable, Equatable {
         case reveal(correct: Bool, answer: String, why: String?)
         /// The unlock payoff.
         case grant(minutes: Int)
+        /// A persona reaction sticker: an asset-catalog image name + an accessibility label.
+        case media(asset: String, label: String)
     }
 
     let id: UUID
@@ -40,6 +42,7 @@ struct MonsterMessage: Identifiable, Equatable {
     static func monster(_ text: String) -> MonsterMessage { .init(sender: .monster, kind: .text(text)) }
     static func user(_ text: String) -> MonsterMessage { .init(sender: .user, kind: .text(text)) }
     static func system(_ text: String) -> MonsterMessage { .init(sender: .system, kind: .text(text)) }
+    static func sticker(_ asset: String, label: String) -> MonsterMessage { .init(sender: .monster, kind: .media(asset: asset, label: label)) }
 
     /// The plain text of a `.text` message, else nil.
     var text: String? {
