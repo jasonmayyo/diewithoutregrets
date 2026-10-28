@@ -77,6 +77,7 @@
 		436A33E9953E377660CF2348 /* V4NotYourFaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2F4032C172C74225C9504CA /* V4NotYourFaultView.swift */; };
 		45B688D2E356D325CC81E59B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16F83AFCDD9450DD7BF88C52 /* Assets.xcassets */; };
 		481F6073E7A5A543F22EDD3C /* SGComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4091CCCB419A7361C68A59 /* SGComponents.swift */; };
+		491EDFEEEC2699CDD12031DB /* MonsterPersonaPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810F5AF32451EA32E9B37E49 /* MonsterPersonaPicker.swift */; };
 		4A0BB7032FA0000000000003 /* TikTokBusinessSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 4A0BB7022FA0000000000002 /* TikTokBusinessSDK */; };
 		4A0BB7052FA0000000000005 /* AdsTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BB7042FA0000000000004 /* AdsTracker.swift */; };
 		4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */; };
@@ -458,6 +459,7 @@
 		79CB75293EF68FD74F0B76FE /* MonsterActivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterActivityManager.swift; sourceTree = "<group>"; };
 		7E4B09BDD4370866D7D8EB62 /* SGV5StudyScreens.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGV5StudyScreens.swift; sourceTree = "<group>"; };
 		7EEBAF7D8F7C633A97AD8C4E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		810F5AF32451EA32E9B37E49 /* MonsterPersonaPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterPersonaPicker.swift; path = TutorMonster/MonsterPersonaPicker.swift; sourceTree = "<group>"; };
 		8195E6759D8FF900F0607392 /* PostPurchaseCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PostPurchaseCard.swift; sourceTree = "<group>"; };
 		82F8241C66EC48E6AE393BE1 /* ProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		83D656411657069E8D8F29D0 /* TopOffendersReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TopOffendersReport.swift; sourceTree = "<group>"; };
@@ -742,6 +744,7 @@
 				985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */,
 				CAEC86A9E206DD0E2A8B43B4 /* MonsterAI.swift */,
 				95583181F12CFC8222E81273 /* MonsterNudges.swift */,
+				810F5AF32451EA32E9B37E49 /* MonsterPersonaPicker.swift */,
 			);
 			name = TutorMonster;
 			sourceTree = "<group>";
@@ -1724,6 +1727,7 @@
 				8C883B25924C4CC27004CF58 /* MonsterAI.swift in Sources */,
 				51AD4433C487967C7C8DB7C4 /* MonsterNudges.swift in Sources */,
 				166966268BA1DA4D6D4CFE05 /* DeckEnrichment.swift in Sources */,
+				491EDFEEEC2699CDD12031DB /* MonsterPersonaPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

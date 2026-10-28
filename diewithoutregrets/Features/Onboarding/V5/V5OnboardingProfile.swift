@@ -16,13 +16,17 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
     case age
     // Separate subject question; preserve the IDs of all existing screens.
     case subject
+    // Appended last (raw 821) so every existing screen keeps its stable raw value.
+    // Placed after `.method` in the funnel: pick your tutor monster right after
+    // learning how study-to-unlock works.
+    case persona
 
     // Keep IDs stable when moving screens or retiring one from the active funnel.
     // `reflection` and `founders` are retired. The exam-time projection leads into
     // reassurance, the method, then the user's study-to-scroll rule.
     static let prePaywallSteps: [Self] = [
         .welcome, .demo, .goal, .pain, .moment, .activities, .subject, .habit,
-        .baseline, .age, .lifeCost, .empathy, .method, .timeBack,
+        .baseline, .age, .lifeCost, .empathy, .method, .persona, .timeBack,
         .moreLife, .commitment, .assembly, .plan
     ]
     static let flowOrder = prePaywallSteps.map(\.rawValue) + [506, 601, 602, 606, 604]
@@ -58,6 +62,7 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
         case .lifeCost: return "Time Before Your Exam"
         case .timeBack: return "Your Extra Study Time"
         case .method: return "One Thing Method"
+        case .persona: return "Your Tutor Monster"
         case .demo: return "Try Your One Thing"
         case .commitment: return "Start Small"
         case .assembly: return "Build Your Plan"
@@ -70,7 +75,7 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
         case .welcome, .demo, .stoppingPoint: return "Value"
         case .goal, .subject, .pain, .moment, .activities, .habit: return "Personalize"
         case .founders: return "Trust"
-        case .baseline, .age, .reflection, .lifeCost, .empathy, .timeBack, .method: return "Time Back"
+        case .baseline, .age, .reflection, .lifeCost, .empathy, .timeBack, .method, .persona: return "Time Back"
         case .moreLife, .commitment, .assembly, .plan: return "Your Plan"
         }
     }

@@ -10,6 +10,11 @@ struct diewithoutregretsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
+        // Tutor Monster unlock is ON by default. register(defaults:) makes BOTH
+        // @AppStorage and raw UserDefaults.bool(forKey:) read true until the user
+        // flips the Profile toggle; the DEBUG -sg-monster-off arg still overrides.
+        UserDefaults.standard.register(defaults: ["sg_monsterUnlock": true])
+
         #if DEBUG
         SGPreviewHarness.applyLaunchArguments()
         // Device-safe enabler for the Tutor Monster unlock flow: flips the flag
@@ -22,7 +27,7 @@ struct diewithoutregretsApp: App {
         if ProcessInfo.processInfo.arguments.contains("-sg-monster-off") {
             UserDefaults.standard.set(false, forKey: "sg_monsterUnlock")
         }
-        // Pick the persona for testing (no onboarding picker yet). Persists.
+        // Override the chosen persona for testing (the onboarding picker sets it normally). Persists.
         let monsterArgs = ProcessInfo.processInfo.arguments
         if monsterArgs.contains("-sg-monster-diva") { PersonaStore.shared.select(.diva) }
         else if monsterArgs.contains("-sg-monster-coach") { PersonaStore.shared.select(.coach) }

@@ -42,6 +42,7 @@ struct SGV5V5OnboardingView: View {
         case .lifeCost: SGV5ExamCostView(viewModel: viewModel)
         case .timeBack: SGV5StudyRuleView(viewModel: viewModel)
         case .method: SGV5V4ScienceBackedView(viewModel: viewModel)
+        case .persona: SGV5PersonaPickerView(viewModel: viewModel)
         case .demo: SGV5V4EarnScreenTimeView(viewModel: viewModel, includesShowcase: false)
         case .commitment: SGV5V4GhostWitnessCommitmentView(viewModel: viewModel)
         case .assembly: SGV5V4GeneratingPlanView(viewModel: viewModel)

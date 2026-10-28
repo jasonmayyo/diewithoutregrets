@@ -16,7 +16,7 @@ struct ContentView: View {
     @AppStorage("focusDuration") private var focusDuration: Int = 5
     /// Tutor Monster (Phase 1) QA flag: route the flashcard unlock through the
     /// monster chat instead of QuizV2View. Opt-in; off by default.
-    @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = false
+    @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
 
     init() {
         #if DEBUG
