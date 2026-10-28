@@ -136,6 +136,12 @@ struct diewithoutregretsApp: App {
                     // Keep the always-on monster mascot alive in the Dynamic
                     // Island and resume the frame rotation.
                     MonsterActivityManager.shared.ensureMonsterRunning()
+
+                    // Tutor Monster: ensure a persona-voiced study nudge is queued
+                    // (only when the monster flow is on and notifications are allowed).
+                    if UserDefaults.standard.bool(forKey: "sg_monsterUnlock") {
+                        MonsterNudges.ensureScheduled(persona: PersonaStore.shared.persona)
+                    }
                 }
                 
                 // When app moves to background, schedule notification if applicable

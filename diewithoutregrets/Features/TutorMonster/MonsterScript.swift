@@ -86,6 +86,22 @@ enum MonsterScript {
         return fill(bank[abs(seed) % bank.count], vars: vars)
     }
 
+    /// Persona-voiced re-engagement nudge (title, body) for the daily notification.
+    static func nudge(persona: MonsterPersona) -> (title: String, body: String) {
+        switch persona.id {
+        case MonsterPersona.diva.id:
+            return ("your monster misses you 💅", "it's been a sec. come lock in a few before you scroll, bestie.")
+        case MonsterPersona.willow.id:
+            return ("a gentle nudge, love", "pop back when you can and we'll do a few together.")
+        case MonsterPersona.coach.id:
+            return ("back on the clock", "no reps today? let's fix that. a quick set and you're done.")
+        case MonsterPersona.gremlin.id:
+            return ("heheh. miss me?? 😈", "you've been quiet. feed me some answers.")
+        default:
+            return ("time to study", "a few flashcards keeps your streak alive.")
+        }
+    }
+
     // MARK: - Banks
 
     /// Mood collapses to three tiers for copy: calm, mid, hot.

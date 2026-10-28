@@ -81,6 +81,7 @@
 		4A8929583DCCDEE41826A194 /* FlashcardAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8ADAEF56CDF6B67C9A4B625 /* FlashcardAPIClientTests.swift */; };
 		4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */; };
 		4D9C7ABE3611F485F9F9AD89 /* EmergencyUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565935D2D8C83EB2CF1A13DB /* EmergencyUnlockSheet.swift */; };
+		51AD4433C487967C7C8DB7C4 /* MonsterNudges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95583181F12CFC8222E81273 /* MonsterNudges.swift */; };
 		540B9C0ED0C96789456F2558 /* YouTubeTranscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB385E73B48F7FBA315B9B5 /* YouTubeTranscriptService.swift */; };
 		57A11A002026102100000001 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 57A11A002026102100000002 /* SuperwallKit */; };
 		57A11A002026102100000003 /* SGSuperwallBilling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A11A002026102100000004 /* SGSuperwallBilling.swift */; };
@@ -464,6 +465,7 @@
 		8C4091CCCB419A7361C68A59 /* SGComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SGComponents.swift; sourceTree = "<group>"; };
 		9009389569D2B10C6BF54142 /* MonsterScript.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterScript.swift; path = TutorMonster/MonsterScript.swift; sourceTree = "<group>"; };
 		94A0075F39D1891EAA917212 /* StudyGuardShieldExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardShieldExtension.swift; sourceTree = "<group>"; };
+		95583181F12CFC8222E81273 /* MonsterNudges.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterNudges.swift; path = TutorMonster/MonsterNudges.swift; sourceTree = "<group>"; };
 		97FA13DC544E39E05528794C /* StudyGuardMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StudyGuardMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExamCalendarView.swift; path = TutorMonster/ExamCalendarView.swift; sourceTree = "<group>"; };
 		9A76BC31490CEAECF9B75109 /* StudyGuardState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudyGuardState.swift; sourceTree = "<group>"; };
@@ -736,6 +738,7 @@
 				78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */,
 				985101F5EC4EB1B9718EBB39 /* ExamCalendarView.swift */,
 				CAEC86A9E206DD0E2A8B43B4 /* MonsterAI.swift */,
+				95583181F12CFC8222E81273 /* MonsterNudges.swift */,
 			);
 			name = TutorMonster;
 			sourceTree = "<group>";
@@ -1716,6 +1719,7 @@
 				6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */,
 				4D75CC4F48193026FB689C7B /* ExamCalendarView.swift in Sources */,
 				8C883B25924C4CC27004CF58 /* MonsterAI.swift in Sources */,
+				51AD4433C487967C7C8DB7C4 /* MonsterNudges.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

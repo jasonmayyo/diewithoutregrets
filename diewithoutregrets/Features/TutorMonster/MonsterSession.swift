@@ -194,6 +194,7 @@ final class MonsterSession: ObservableObject {
         }
         appendRecap()
         say(.sendoff)
+        MonsterNudges.rescheduleAfterStudy(persona: persona)
         isFinished = true
     }
 
