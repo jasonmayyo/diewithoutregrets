@@ -27,6 +27,9 @@ struct ProfileView: View {
     @State private var showingGuardedAppsPicker = false
     @State private var showingLockedEditAlert = false
     @State private var showingCreatorToolkit = false
+    @State private var showingPersonaPicker = false
+    @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
+    @ObservedObject private var personaStore = PersonaStore.shared
     #if DEBUG
     @State private var showingDebug = false
     #endif
@@ -190,7 +193,32 @@ struct ProfileView: View {
                     }
                 }
                 .padding(.horizontal, SGTheme.screenPadding)
-                
+
+                // Tutor Monster Section
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionHeader(title: "Tutor Monster")
+
+                    // On by default: get past your monster to unlock apps.
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Monster unlock").font(SGTheme.rowLabel).foregroundColor(SGTheme.paper)
+                            Text("Get past your tutor monster to unlock your apps")
+                                .font(SGTheme.caption).foregroundColor(SGTheme.paperSecondary)
+                        }
+                        Spacer(minLength: 0)
+                        Toggle("", isOn: $monsterUnlockEnabled).labelsHidden().tint(SGTheme.mint)
+                    }
+                    .padding(16)
+                    .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+
+                    SGListRow(title: "Choose your monster",
+                              subtitle: personaStore.persona.name,
+                              assetIcon: "sticker-crown") {
+                        showingPersonaPicker = true
+                    }
+                }
+                .padding(.horizontal, SGTheme.screenPadding)
+
                 // Account Section
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeader(title: "Account")
@@ -248,6 +276,9 @@ struct ProfileView: View {
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $showingCreatorToolkit) {
             CreatorToolkitView()
+        }
+        .navigationDestination(isPresented: $showingPersonaPicker) {
+            MonsterPersonaPickerScreen()
         }
         #if DEBUG
         .navigationDestination(isPresented: $showingDebug) {

@@ -538,6 +538,7 @@ struct QuizV2View: View {
         // Complete the run even when the last answer is wrong. The grant
         // validates completion and pays only for correct answers.
         if index == cards.count - 1 {
+            recordMastery()
             earnUnlock()
         }
 
@@ -768,6 +769,21 @@ struct QuizV2View: View {
             durationSec: Date().timeIntervalSince(attemptStartTime),
             breakDurationMinutes: grantedMinutes
         )
+    }
+
+    /// Write this run's results back into the deck as Leitner mastery, so the
+    /// selection engine can target weak cards and the calendar can show per-topic
+    /// readiness. Reads the live deck (not the drawn snapshot) and only touches the
+    /// cards that were answered. Phase 0: invisible to the user. Fires once per
+    /// completed run (a retry reorders the draw and records again).
+    private func recordMastery() {
+        guard let deckID = deckStore.selectedDeck?.id else { return }
+        var outcomes: [UUID: Bool] = [:]
+        for (card, result) in zip(cards, results) {
+            guard let correct = result else { continue }
+            outcomes[card.id] = correct   // a re-queued card keeps its last outcome
+        }
+        deckStore.recordOutcomes(outcomes, deckID: deckID)
     }
 
     /// Celebration CTA: pure navigation — the grant already happened.

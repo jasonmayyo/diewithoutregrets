@@ -203,6 +203,136 @@ enum SGContract {
         return earnedMinutes(cardCount: results.filter { $0 == true }.count, perCardSeconds: rate)
     }
 
+    // MARK: - Gate-encounter counters (tutor-monster pressure signal)
+    //
+    // iOS gives the app process no live usage feed, so "how hard is the user
+    // hammering the lock" is something WE count: the shield-action extension bumps
+    // a per-day counter on every "Study to unlock" tap, and the app reads it to
+    // drive the monster's mood. Pure UserDefaults — safe on the extension hot path.
+
+    private static let gateEncounterPrefix = "sg_gateEnc_"
+
+    /// yyyyMMdd in the given calendar, for day-keyed counters.
+    static func dayStamp(_ date: Date = Date(), calendar: Calendar = .current) -> String {
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d%02d%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+
+    static func gateEncounterKey(day: String) -> String { gateEncounterPrefix + day }
+
+    /// Increment today's gate-encounter count. Minimal work for the shield hot path.
+    static func recordGateEncounter(_ defaults: UserDefaults?, now: Date = Date()) {
+        guard let defaults else { return }
+        let key = gateEncounterKey(day: dayStamp(now))
+        defaults.set(defaults.integer(forKey: key) + 1, forKey: key)
+    }
+
+    /// Today's gate-encounter count (unlock attempts on the shield).
+    static func gateEncountersToday(_ defaults: UserDefaults?, now: Date = Date()) -> Int {
+        defaults?.integer(forKey: gateEncounterKey(day: dayStamp(now))) ?? 0
+    }
+
+    /// Remove stale day-counters (anything but today). App-side cleanup, kept off
+    /// the extension hot path.
+    static func pruneOldGateEncounters(_ defaults: UserDefaults?, now: Date = Date()) {
+        guard let defaults else { return }
+        let keep = gateEncounterKey(day: dayStamp(now))
+        for k in defaults.dictionaryRepresentation().keys
+        where k.hasPrefix(gateEncounterPrefix) && k != keep {
+            defaults.removeObject(forKey: k)
+        }
+    }
+
+    // MARK: - Tutor-monster mood (pressure → escalation dials)
+    //
+    // Pure and testable. Starting numbers from Docs/TutorMonsterPlan.md Appendix A.
+    // Primitives only (no app-model deps) so this compiles into every target and
+    // the shield can derive the monster's mood for its copy later.
+
+    enum MonsterMood: Int, Comparable, CaseIterable {
+        case chill = 0, nudgy, annoyed, fedUp, feral
+        static func < (lhs: MonsterMood, rhs: MonsterMood) -> Bool { lhs.rawValue < rhs.rawValue }
+    }
+
+    struct PressureInputs: Equatable {
+        var gateEncountersToday: Int = 0
+        var daysSinceStudy: Int = 0       // 0 = studied today
+        var nearestExamDays: Int? = nil   // nil = no upcoming exam
+        var weakCardLoad: Int = 0         // count of weak/overdue cards
+        var fastBurn: Bool = false        // last grant spent unusually fast
+    }
+
+    struct MoodDials: Equatable {
+        var mood: MonsterMood
+        var questions: Int      // toll size
+        var minutesBack: Int    // screen-time reward on a pass
+    }
+
+    /// 0...~12 pressure score from app-observable signals.
+    static func pressureScore(_ p: PressureInputs) -> Int {
+        var score = 0
+        switch p.gateEncountersToday {
+        case ..<3: break
+        case 3...5: score += 1
+        case 6...15: score += 2
+        case 16...30: score += 3
+        default: score += 4
+        }
+        switch p.daysSinceStudy {
+        case ..<1: break
+        case 1: score += 1
+        case 2...3: score += 2
+        default: score += 3
+        }
+        if let d = p.nearestExamDays, d >= 0 {
+            switch d {
+            case 0: score += 4
+            case 1...2: score += 3
+            case 3...6: score += 2
+            case 7...14: score += 1
+            default: break
+            }
+        }
+        switch p.weakCardLoad {
+        case ..<5: break
+        case 5...15: score += 1
+        default: score += 2
+        }
+        if p.fastBurn { score += 1 }
+        return score
+    }
+
+    static func mood(forScore score: Int) -> MonsterMood {
+        switch score {
+        case ..<3: return .chill
+        case 3...4: return .nudgy
+        case 5...6: return .annoyed
+        case 7...9: return .fedUp
+        default: return .feral
+        }
+    }
+
+    static func dials(for mood: MonsterMood) -> MoodDials {
+        switch mood {
+        case .chill:   return MoodDials(mood: .chill,   questions: 3,  minutesBack: 6)
+        case .nudgy:   return MoodDials(mood: .nudgy,   questions: 4,  minutesBack: 5)
+        case .annoyed: return MoodDials(mood: .annoyed, questions: 6,  minutesBack: 4)
+        case .fedUp:   return MoodDials(mood: .fedUp,   questions: 8,  minutesBack: 3)
+        case .feral:   return MoodDials(mood: .feral,   questions: 10, minutesBack: 2)
+        }
+    }
+
+    static func dials(for inputs: PressureInputs) -> MoodDials {
+        dials(for: mood(forScore: pressureScore(inputs)))
+    }
+
+    /// Per-card seconds that realizes a mood's `minutesBack` across `questions`
+    /// correct answers, so the existing earn economy pays the intended reward.
+    static func perCardSeconds(for dials: MoodDials) -> Int {
+        guard dials.questions > 0 else { return defaultPerCardSeconds }
+        return max(1, Int((Double(dials.minutesBack) * 60 / Double(dials.questions)).rounded()))
+    }
+
     /// Append a timestamped line to the extension debug ring buffer (≤200 entries).
     static func appendExtLog(_ defaults: UserDefaults, _ message: String) {
         let stamp = ISO8601DateFormatter().string(from: Date())

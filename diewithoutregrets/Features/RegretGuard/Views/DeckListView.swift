@@ -235,6 +235,8 @@ struct DeckView: View {
     @EnvironmentObject var deckStore: DeckStore // Add this environment object
     @State private var showingPractice = false
     @State private var showEditDeckSheet = false
+    @ObservedObject private var enrichment = DeckEnrichment.shared
+    @State private var enrichmentNote: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -369,6 +371,21 @@ struct DeckView: View {
                         AIGenerateButton(title: "Auto Generate Flashcards") {
                             showAutoGenerateSheet = true
                         }
+
+                        // Phase 3: upgrade typed cards to tap-tiles (prompted, offline-safe).
+                        if deck.cards.contains(where: { $0.answerMode == .typed }) {
+                            AIGenerateButton(title: enrichment.phase == .backfilling ? "Adding answer options…" : "Add answer options") {
+                                Task { await runBackfill() }
+                            }
+                            .disabled(enrichment.isWorking)
+                        }
+                        if let enrichmentNote {
+                            Text(enrichmentNote)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                        }
                     }
                     .padding(.horizontal, SGTheme.screenPadding)
                     .padding(.top, 16)
@@ -406,6 +423,16 @@ struct DeckView: View {
                 deck = updatedDeck
                 deckStore.updateDeck(updatedDeck)
             })
+        }
+    }
+
+    private func runBackfill() async {
+        let upgraded = await enrichment.backfillDistractors(in: deck.id)
+        if upgraded > 0 {
+            if let updated = deckStore.decks.first(where: { $0.id == deck.id }) { deck = updated }
+            enrichmentNote = "Added answer options to \(upgraded) card\(upgraded == 1 ? "" : "s")."
+        } else {
+            enrichmentNote = enrichment.lastError ?? "No typed cards needed answer options."
         }
     }
 

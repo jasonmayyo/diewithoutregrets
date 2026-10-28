@@ -88,6 +88,19 @@ final class FlashcardAPIClientTests: XCTestCase {
         XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(Data("{\"cards\":[".utf8)))
     }
 
+    @MainActor func testTopicModeTagsCardsAndRelaxesFloorForSmallCounts() throws {
+        // Topic mode stamps every card with the one requested topic.
+        let tagged = try FlashcardAPIClient.decodeCards(response(count: 8), topic: "Bones", count: 8)
+        XCTAssertEqual(tagged.count, 8)
+        XCTAssertTrue(tagged.allSatisfy { $0.topic == "Bones" })
+        // A small requested count relaxes the 20-card floor for top-ups...
+        XCTAssertEqual(try FlashcardAPIClient.decodeCards(response(count: 6), count: 10).count, 6)
+        // ...but a response far below even the relaxed floor still fails closed.
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 3), count: 10))
+        // Full decks keep the original 20-card floor.
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 19)))
+    }
+
     @MainActor func testMissingEndpointFailsBeforeAnyNetworkRequest() async {
         let client = FlashcardAPIClient(host: nil)
         do {

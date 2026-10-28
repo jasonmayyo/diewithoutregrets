@@ -10,8 +10,29 @@ struct diewithoutregretsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
+        // Tutor Monster unlock is ON by default. register(defaults:) makes BOTH
+        // @AppStorage and raw UserDefaults.bool(forKey:) read true until the user
+        // flips the Profile toggle; the DEBUG -sg-monster-off arg still overrides.
+        UserDefaults.standard.register(defaults: ["sg_monsterUnlock": true])
+
         #if DEBUG
         SGPreviewHarness.applyLaunchArguments()
+        // Device-safe enabler for the Tutor Monster unlock flow: flips the flag
+        // WITHOUT seeding/freezing guard state (unlike -sg-preview-monster, which
+        // is simulator-only). Add -sg-monster-on to the Run scheme to test the real
+        // shield -> monster flow; remove -sg-monster-off to turn it back off.
+        if ProcessInfo.processInfo.arguments.contains("-sg-monster-on") {
+            UserDefaults.standard.set(true, forKey: "sg_monsterUnlock")
+        }
+        if ProcessInfo.processInfo.arguments.contains("-sg-monster-off") {
+            UserDefaults.standard.set(false, forKey: "sg_monsterUnlock")
+        }
+        // Override the chosen persona for testing (the onboarding picker sets it normally). Persists.
+        let monsterArgs = ProcessInfo.processInfo.arguments
+        if monsterArgs.contains("-sg-monster-diva") { PersonaStore.shared.select(.diva) }
+        else if monsterArgs.contains("-sg-monster-coach") { PersonaStore.shared.select(.coach) }
+        else if monsterArgs.contains("-sg-monster-gremlin") { PersonaStore.shared.select(.gremlin) }
+        else if monsterArgs.contains("-sg-monster-willow") { PersonaStore.shared.select(.willow) }
         #endif
 
         // Cold-launched straight from the shield's "Study to unlock" button? The
@@ -69,6 +90,9 @@ struct diewithoutregretsApp: App {
                         QuizV2View()
                             .environmentObject(DeckStore.shared)
                             .environmentObject(RegretStore.shared)
+                    }
+                    if SGPreviewHarness.wantsMonsterPreview {
+                        MonsterChatView(session: MonsterSession())
                     }
                 }
                 #endif
@@ -133,6 +157,12 @@ struct diewithoutregretsApp: App {
                     // Keep the always-on monster mascot alive in the Dynamic
                     // Island and resume the frame rotation.
                     MonsterActivityManager.shared.ensureMonsterRunning()
+
+                    // Tutor Monster: ensure a persona-voiced study nudge is queued
+                    // (only when the monster flow is on and notifications are allowed).
+                    if UserDefaults.standard.bool(forKey: "sg_monsterUnlock") {
+                        MonsterNudges.ensureScheduled(persona: PersonaStore.shared.persona)
+                    }
                 }
                 
                 // When app moves to background, schedule notification if applicable

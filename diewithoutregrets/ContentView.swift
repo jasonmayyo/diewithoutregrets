@@ -14,6 +14,9 @@ struct ContentView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
+    /// Tutor Monster (Phase 1) QA flag: route the flashcard unlock through the
+    /// monster chat instead of QuizV2View. Opt-in; off by default.
+    @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
 
     init() {
         #if DEBUG
@@ -32,6 +35,7 @@ struct ContentView: View {
             SGTabItem(id: 1, title: "Study", icon: "nav-study"),
             SGTabItem(id: 2, title: "Blocks", icon: "nav-blocks"),
             SGTabItem(id: 3, title: "Profile", icon: "nav-profile"),
+            SGTabItem(id: 4, title: "Exams", icon: "sf:calendar"),
         ]
     }
 
@@ -102,6 +106,10 @@ struct ContentView: View {
                             NavigationModel.shared.returnHome()
                         }
                     )
+                } else if monsterUnlockEnabled, !(DeckStore.shared.selectedDeck?.cards.isEmpty ?? true) {
+                    // Tutor Monster (Phase 1), behind the QA flag. Needs a non-empty
+                    // deck; otherwise fall through to the quiz's empty-deck rescue.
+                    MonsterChatView(session: MonsterSession())
                 } else {
                     // The redesigned quiz. It gates itself: legacy engine,
                     // empty-deck rescue and already-unlocked entries fall
@@ -143,6 +151,13 @@ struct ContentView: View {
                             .toolbar(.hidden, for: .tabBar)
                     }
                     .tag(3)
+
+                    // Fifth Tab - Exams (Tutor Monster Phase 2)
+                    NavigationStack {
+                        ExamCalendarView()
+                            .toolbar(.hidden, for: .tabBar)
+                    }
+                    .tag(4)
                 }
                 .tint(SGTheme.mint)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -176,6 +191,7 @@ struct ContentView: View {
                     case 1: tabName = "study"
                     case 2: tabName = "blocks"
                     case 3: tabName = "profile"
+                    case 4: tabName = "exams"
                     default: tabName = "unknown"
                     }
                     Analytics.tabSelected(tabName)

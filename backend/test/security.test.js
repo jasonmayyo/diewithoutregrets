@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import cbor from 'cbor';
-import { GateStore, generationLimits } from '../src/store.js';
-import { readBody, validateGeneration, openAIBody, validateCards, validKeyID, MAX_INPUT_BYTES } from '../src/protocol.js';
+import { GateStore, generationLimits, distractorLimits } from '../src/store.js';
+import { readBody, validateGeneration, openAIBody, validateCards, validKeyID, MAX_INPUT_BYTES,
+  validateDistractorRequest, openAIDistractorBody, validateDistractors } from '../src/protocol.js';
 import { attest, assertRequest } from '../src/attestation.js';
 
 const env = { APP_ID_PREFIX: '5BFXSF2PS6', BUNDLE_ID: 'com.jasonmayo.diewithoutregrets',
@@ -30,7 +31,7 @@ test('rejects arbitrary models, prompts, tools and unsupported languages', () =>
     rejectsCode(() => validateGeneration({ ...payload(), ...extra }), 'invalid_request');
   }
   assert.doesNotThrow(() => validateGeneration(payload()));
-  const upstream = openAIBody(payload().text, 'English');
+  const upstream = openAIBody(payload());
   assert.equal(upstream.model, 'gpt-4o-mini');
   assert.equal(upstream.max_tokens, 12000);
   assert.equal(upstream.n, 1);
@@ -82,6 +83,24 @@ test('in-flight guard, failure accounting and month boundary work', () => {
   assert.doesNotThrow(() => s.reserve('device', 'r3', generationLimits(config, 'device', nextMonth), nextMonth));
 });
 
+test('distractor limits share the global spend ceiling rather than adding a new one', () => {
+  const limits = distractorLimits(env, 'key', now);
+  const buckets = limits.map(l => l.bucket);
+  // Own per-device/per-minute isolation buckets...
+  assert.ok(buckets.some(b => b.startsWith('distractor-minute:')));
+  assert.ok(buckets.some(b => b.startsWith('distractor-device:')));
+  // ...but it reuses the flashcard global counters, with NO separate higher ceiling.
+  assert.ok(buckets.some(b => /^global:\d{4}-\d{2}-\d{2}$/.test(b)), 'shares global:day');
+  assert.ok(buckets.some(b => /^global:\d{4}-\d{2}$/.test(b)), 'shares global:month');
+  assert.ok(!buckets.some(b => b.startsWith('distractor-global:')), 'no separate distractor global ceiling');
+  const monthly = limits.find(l => /^global:\d{4}-\d{2}$/.test(l.bucket));
+  assert.equal(monthly.limit, Number(env.GLOBAL_MONTHLY_LIMIT)); // the same shared ceiling
+  // Fails closed when the shared global config is missing/invalid, like generationLimits.
+  for (const invalid of ['', 'NaN', '0', '-1', '1.5']) {
+    rejectsCode(() => distractorLimits({ ...env, GLOBAL_MONTHLY_LIMIT: invalid }, 'key', now), 'service_unavailable');
+  }
+});
+
 test('bad limit configuration fails closed', () => {
   for (const invalid of ['', 'NaN', '0', '-1', '1.5', 'Infinity']) {
     rejectsCode(() => generationLimits({ ...env, GLOBAL_DAILY_LIMIT: invalid }, 'key', now), 'service_unavailable');
@@ -112,7 +131,7 @@ test('real cryptographic assertions reject tampering, replay and wrong app ident
 });
 
 const clozeCard = () => ({ regretPrompt: '“光” means ___.', regret: 'light', choices: ['light', 'dark', 'water', 'wind'],
-  correctAnswerIndex: 0, backgroundExplanation: 'A "quoted" example\nwith a newline: 光 means light.' });
+  correctAnswerIndex: 0, backgroundExplanation: 'A "quoted" example\nwith a newline: 光 means light.', topic: 'Vocabulary' });
 
 test('structured cards preserve quotes/unicode and reject incomplete or invalid answers', () => {
   const card = clozeCard();
@@ -126,11 +145,54 @@ test('structured cards preserve quotes/unicode and reject incomplete or invalid 
 });
 
 test('generation specifies complete cloze prompts and short answer fragments', () => {
-  const body = openAIBody('Relationships require ongoing effort and self-awareness.', 'French');
+  const body = openAIBody({ text: 'Relationships require ongoing effort and self-awareness.', language: 'French' });
   assert.match(body.messages[0].content, /exactly one blank/);
   assert.match(body.messages[0].content, /only the missing word or short phrase/);
   assert.match(body.messages[0].content, /in French/);
   assert.equal(body.messages[1].content, 'Relationships require ongoing effort and self-awareness.');
+});
+
+test('accepts topic mode, difficulty and count, and still requires text or topic', () => {
+  const base = { action: 'generate_flashcards', language: 'English', challenge: 'c',
+    requestId: 'dc86e5a7-9d9a-4fba-bda4-d08a1a722173' };
+  // A topic alone (no study text) is a valid top-up request.
+  assert.doesNotThrow(() => validateGeneration({ ...base, topic: 'Skeletal system', difficulty: 'hard', count: 10 }));
+  // Neither text nor topic is rejected.
+  rejectsCode(() => validateGeneration({ ...base }), 'invalid_request');
+  // Bad difficulty, out-of-range count, or an unknown key are rejected.
+  rejectsCode(() => validateGeneration({ ...base, topic: 'x', difficulty: 'brutal' }), 'invalid_request');
+  rejectsCode(() => validateGeneration({ ...base, topic: 'x', count: 2 }), 'invalid_request');
+  rejectsCode(() => validateGeneration({ ...base, topic: 'x', count: 999 }), 'invalid_request');
+  rejectsCode(() => validateGeneration({ ...base, topic: 'x', injected: 1 }), 'invalid_request');
+  const topicBody = openAIBody({ ...base, topic: 'Skeletal system', difficulty: 'hard', count: 8 });
+  assert.match(topicBody.messages[0].content, /Skeletal system/);
+  assert.match(topicBody.messages[0].content, /hard/);
+  assert.match(topicBody.messages[0].content, /textbook-accurate/); // topic mode grounds in facts, not a document
+  // A small count relaxes the floor so an 8-card topic deck validates at 6.
+  const topicCard = { ...clozeCard(), topic: 'Skeletal system' };
+  assert.equal(validateCards({ cards: Array.from({ length: 6 }, () => ({ ...topicCard })) }, 8).cards.length, 6);
+  // Every returned card must carry a topic label.
+  rejectsCode(() => validateCards({ cards: Array.from({ length: 20 }, () => {
+    const c = clozeCard(); delete c.topic; return c;
+  }) }), 'invalid_response');
+});
+
+test('distractor requests are allowlisted and responses need three distinct options per card', () => {
+  const base = { action: 'generate_distractors', language: 'English', challenge: 'c',
+    requestId: 'dc86e5a7-9d9a-4fba-bda4-d08a1a722173' };
+  assert.doesNotThrow(() => validateDistractorRequest({ ...base, cards: [{ prompt: 'The longest bone is the ___.', answer: 'femur' }] }));
+  rejectsCode(() => validateDistractorRequest({ ...base, cards: [] }), 'invalid_request');
+  rejectsCode(() => validateDistractorRequest({ ...base, cards: [{ prompt: 'x', answer: 'y', extra: 1 }] }), 'invalid_request');
+  rejectsCode(() => validateDistractorRequest({ ...base, cards: [{ prompt: '', answer: 'y' }] }), 'invalid_request');
+  const body = openAIDistractorBody({ ...base, cards: [{ prompt: 'The longest bone is the ___.', answer: 'femur' }] });
+  assert.equal(body.model, 'gpt-4o-mini');
+  assert.match(body.messages[0].content, /three plausible but INCORRECT/);
+  const ok = { sets: [{ distractors: ['tibia', 'fibula', 'humerus'] }] };
+  assert.deepEqual(validateDistractors(JSON.parse(JSON.stringify(ok)), 1), ok);
+  // Wrong count, duplicates, empties, or a mismatched set length are rejected.
+  rejectsCode(() => validateDistractors({ sets: [{ distractors: ['a', 'b'] }] }, 1), 'invalid_response');
+  rejectsCode(() => validateDistractors({ sets: [{ distractors: ['a', 'a', 'b'] }] }, 1), 'invalid_response');
+  rejectsCode(() => validateDistractors({ sets: [] }, 1), 'invalid_response');
 });
 
 test('rejects missing context, placeholder prompts, multiple blanks and unusable choices', () => {

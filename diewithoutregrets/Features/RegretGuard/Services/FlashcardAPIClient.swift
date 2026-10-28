@@ -8,6 +8,8 @@ struct GeneratedFlashcard: Decodable {
     let choices: [String]
     let correctAnswerIndex: Int
     let backgroundExplanation: String
+    /// Short topic label (set by generation; drives weakness/exam targeting).
+    var topic: String? = nil
 
     var isValid: Bool {
         let strings = [regretPrompt, regret, backgroundExplanation] + choices
@@ -74,16 +76,29 @@ final class FlashcardAPIClient {
 
     private var keyStorageName: String { "studyguard.appAttest.key.production.v1.\(baseURL?.host ?? "unconfigured")" }
 
-    func generate(text: String, language: String) async throws -> [GeneratedFlashcard] {
+    /// Generate a deck of flashcards. Supply `text` (document mode) and/or a
+    /// `topic` (topic mode, for weak/near-exam top-ups); at least one is required.
+    /// `count` and `difficulty` are optional hints. The unlock gate never depends
+    /// on this — callers fall back to existing cards on any error.
+    func generate(text: String? = nil, language: String,
+                  topic: String? = nil, difficulty: String? = nil, count: Int? = nil) async throws -> [GeneratedFlashcard] {
         guard !isGenerating else { throw FlashcardServiceError.alreadyGenerating }
         guard baseURL != nil else { throw FlashcardServiceError.unavailable }
-        guard text.utf8.count <= Self.maximumInputBytes else { throw FlashcardServiceError.inputTooLarge }
+        let trimmedText = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        // The server bounds topic at 80 chars; clamp so a long label can't 400 the request.
+        let topicValue = String((topic?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "").prefix(80))
+        let hasText = trimmedText.count >= 50
+        guard hasText || !topicValue.isEmpty else { throw FlashcardServiceError.invalidResponse }
+        if let text, text.utf8.count > Self.maximumInputBytes { throw FlashcardServiceError.inputTooLarge }
         guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
         isGenerating = true
         defer { isGenerating = false }
 
         let (keyID, challenge) = try await verifiedGenerationChallenge()
-        let payload = Payload(action: "generate_flashcards", text: text, language: language,
+        let payload = Payload(action: "generate_flashcards",
+                              text: hasText ? text : nil, language: language,
+                              topic: topicValue.isEmpty ? nil : topicValue,
+                              difficulty: difficulty, count: count,
                               challenge: challenge, requestId: UUID().uuidString)
         // Sign these exact bytes; the server must not re-serialize before verifying.
         let body = try JSONEncoder().encode(payload)
@@ -97,15 +112,83 @@ final class FlashcardAPIClient {
             "X-App-Attest-Key-ID": keyID,
             "X-App-Attest-Assertion": assertion.base64EncodedString(),
         ])
-        return try Self.decodeCards(data)
+        return try Self.decodeCards(data, topic: topicValue.isEmpty ? nil : topicValue, count: count)
     }
 
-    static func decodeCards(_ data: Data) throws -> [GeneratedFlashcard] {
-        guard let result = try? JSONDecoder().decode(CardsResponse.self, from: data),
-              result.cards.count >= minimumCards, result.cards.allSatisfy(\.isValid) else {
+    /// Backfill multiple-choice distractors for typed cards. One call enriches a
+    /// whole batch. The caller discards any option matching its answer and only
+    /// promotes a card when three usable, distinct distractors survive. Offline-safe:
+    /// any failure leaves the cards exactly as they were (typed).
+    func generateDistractors(for cards: [(prompt: String, answer: String)], language: String) async throws -> [[String]] {
+        guard !isGenerating else { throw FlashcardServiceError.alreadyGenerating }
+        guard baseURL != nil else { throw FlashcardServiceError.unavailable }
+        guard !cards.isEmpty, cards.count <= Self.maximumCards else { throw FlashcardServiceError.invalidResponse }
+        guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
+        isGenerating = true
+        defer { isGenerating = false }
+
+        let (keyID, challenge) = try await verifiedGenerationChallenge()
+        let payload = DistractorPayload(action: "generate_distractors",
+            cards: cards.map { DistractorCard(prompt: $0.prompt, answer: $0.answer) },
+            language: language, challenge: challenge, requestId: UUID().uuidString)
+        let body = try JSONEncoder().encode(payload)
+        let assertion: Data
+        do { assertion = try await attestation.generateAssertion(keyID, clientDataHash: Data(SHA256.hash(data: body))) }
+        catch {
+            clearInvalidKey(error)
+            throw FlashcardServiceError.verificationFailed
+        }
+        let data = try await post("v1/distractors", body: body, headers: [
+            "X-App-Attest-Key-ID": keyID,
+            "X-App-Attest-Assertion": assertion.base64EncodedString(),
+        ])
+        guard let decoded = try? JSONDecoder().decode(DistractorsResponse.self, from: data),
+              decoded.sets.count == cards.count else { throw FlashcardServiceError.invalidResponse }
+        return decoded.sets.map(\.distractors)
+    }
+
+    /// Fetch a personalized Tutor Monster session script. Reuses the same App
+    /// Attest flow as generate(); throws on any failure so the caller falls back
+    /// to the offline scripted banks. Cheap vs. flashcard generation (short output).
+    func generateScript(_ context: MonsterScriptContext) async throws -> MonsterScriptBundle {
+        guard baseURL != nil else { throw FlashcardServiceError.unavailable }
+        guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
+        let (keyID, challenge) = try await verifiedGenerationChallenge()
+        let payload = ScriptPayload(action: "generate_script", context: context,
+                                    challenge: challenge, requestId: UUID().uuidString)
+        let body = try JSONEncoder().encode(payload)
+        let assertion: Data
+        do { assertion = try await attestation.generateAssertion(keyID, clientDataHash: Data(SHA256.hash(data: body))) }
+        catch {
+            clearInvalidKey(error)
+            throw FlashcardServiceError.verificationFailed
+        }
+        let data = try await post("v1/script", body: body, headers: [
+            "X-App-Attest-Key-ID": keyID,
+            "X-App-Attest-Assertion": assertion.base64EncodedString(),
+        ])
+        guard let bundle = try? JSONDecoder().decode(MonsterScriptBundle.self, from: data) else {
             throw FlashcardServiceError.invalidResponse
         }
-        return Array(result.cards.prefix(maximumCards))
+        return bundle
+    }
+
+    /// `topic`, when set, overrides every card's label (topic mode generates one
+    /// subject). `count` is the number requested; it relaxes the minimum-card floor
+    /// for small top-ups (mirrors the Worker) while keeping the 20-card floor for
+    /// full 50-card decks.
+    static func decodeCards(_ data: Data, topic: String? = nil, count: Int? = nil) throws -> [GeneratedFlashcard] {
+        let requested = count.map { min(max($0, 3), maximumCards) } ?? maximumCards
+        let floor = max(3, min(minimumCards, Int(ceil(Double(requested) * 0.5))))
+        guard let result = try? JSONDecoder().decode(CardsResponse.self, from: data),
+              result.cards.count >= floor, result.cards.allSatisfy(\.isValid) else {
+            throw FlashcardServiceError.invalidResponse
+        }
+        var cards = Array(result.cards.prefix(min(maximumCards, requested)))
+        if let topic = topic?.trimmingCharacters(in: .whitespacesAndNewlines), !topic.isEmpty {
+            for i in cards.indices { cards[i].topic = topic }
+        }
+        return cards
     }
 
     /// Enrolls/verifies this installation without making a paid generation call.
@@ -158,7 +241,7 @@ final class FlashcardAPIClient {
         guard let baseURL else { throw FlashcardServiceError.unavailable }
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = "POST"
-        request.timeoutInterval = path == "v1/flashcards" ? 185 : 30
+        request.timeoutInterval = path == "v1/flashcards" ? 185 : path == "v1/distractors" ? 70 : 30
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
@@ -186,7 +269,20 @@ final class FlashcardAPIClient {
     private struct Challenge: Decodable { let challenge: String; let purpose: String }
     private struct Enrollment: Encodable { let keyId: String; let challenge: String; let attestation: String }
     private struct Payload: Encodable {
-        let action: String; let text: String; let language: String; let challenge: String; let requestId: String
+        let action: String; let text: String?; let language: String
+        let topic: String?; let difficulty: String?; let count: Int?
+        let challenge: String; let requestId: String
+    }
+    private struct ScriptPayload: Encodable {
+        let action: String; let context: MonsterScriptContext; let challenge: String; let requestId: String
+    }
+    private struct DistractorCard: Encodable { let prompt: String; let answer: String }
+    private struct DistractorPayload: Encodable {
+        let action: String; let cards: [DistractorCard]; let language: String; let challenge: String; let requestId: String
+    }
+    private struct DistractorsResponse: Decodable {
+        struct Set: Decodable { let distractors: [String] }
+        let sets: [Set]
     }
     private struct CardsResponse: Decodable { let cards: [GeneratedFlashcard] }
     private struct ErrorResponse: Decodable {

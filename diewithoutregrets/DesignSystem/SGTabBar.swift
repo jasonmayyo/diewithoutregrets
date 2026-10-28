@@ -42,8 +42,8 @@ struct SGTabBar: View {
     private static let meadowBottom = Color(hex: 0x2F7E37)
 
     var body: some View {
-        // Fixed-width tabs clustered at the center (not stretched across
-        // the slab) so the group reads at a standard tab-bar density.
+        // Tabs share the width evenly so all of them fit without overflowing the
+        // screen (fixed widths overflowed once the Exams tab made it five).
         HStack(spacing: 10) {
             ForEach(items) { item in
                 SGTabButton(item: item,
@@ -108,20 +108,30 @@ private struct SGTabButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 5) {
-                Image(item.icon)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 36, height: 36)
-                    // Idle stickers go monochrome so the selected one
-                    // carries the only color in the dock.
-                    .saturation(selected ? 1 : 0)
-                    .opacity(selected ? 1 : idleIconOpacity)
-                    .scaleEffect(selected ? 1.0 : 0.92)
+                Group {
+                    if item.icon.hasPrefix("sf:") {
+                        // Temporary SF Symbol icon (e.g. the Exams tab) until a
+                        // proper icons8 sticker is added in the design pass.
+                        Image(systemName: String(item.icon.dropFirst(3)))
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(selected ? selectedLabel : idleLabel)
+                    } else {
+                        Image(item.icon)
+                            .resizable()
+                            .scaledToFit()
+                            // Idle stickers go monochrome so the selected one
+                            // carries the only color in the dock.
+                            .saturation(selected ? 1 : 0)
+                    }
+                }
+                .frame(width: 36, height: 36)
+                .opacity(selected ? 1 : idleIconOpacity)
+                .scaleEffect(selected ? 1.0 : 0.92)
                 Text(item.title)
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundColor(selected ? selectedLabel : idleLabel)
             }
-            .frame(width: 76)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
