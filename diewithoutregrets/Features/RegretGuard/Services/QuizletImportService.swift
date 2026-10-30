@@ -107,9 +107,13 @@ class QuizletImportService {
             
             let correctIndex = allChoices.firstIndex(of: pair.definition) ?? 0
             
+            // `regret` is the correct answer and MUST equal choices[correctIndex]
+            // (the invariant the quiz grader and every other path rely on). It is
+            // the definition, not the term; using the term here made the stored
+            // answer disagree with the correct choice.
             let flashcard = Regret(
                 regretPrompt: pair.term,
-                regret: pair.term,
+                regret: allChoices[correctIndex],
                 choices: allChoices,
                 correctAnswerIndex: correctIndex,
                 backgroundExplanation: pair.definition

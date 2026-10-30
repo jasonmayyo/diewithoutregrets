@@ -6,11 +6,11 @@
 //  A night scrim fades up over the dead 0m readout, Lock.lottie clicks
 //  shut in the centre, and on the final click a single dot-ripple burst
 //  (the locked home's dot language, fired once) disperses outward. Then
-//  the whole overlay slowly fades away and the locked home, already set
+//  the whole overlay slowly fades away and the monster chat, already set
 //  underneath while the screen was covered, fades up.
 //
 //  Choreography:
-//    fade in (0.3s) → onCovered (caller swaps the locked scene in)
+//    fade in (0.3s) → onCovered (caller opens chat beneath the overlay)
 //    → Lock.lottie plays once → click: haptic slam + one-shot burst
 //    → burst disperses (~1s) → fade out (0.7s) → onFinished
 //
@@ -75,7 +75,7 @@ struct LockMomentOverlay: View {
     }
 
     /// The lock just clicked shut: slam haptic, one burst, then the slow
-    /// fade to the locked home.
+    /// fade to the selected monster's chat.
     private func fireBurst() {
         guard burstStartedAt == nil else { return }
         SGTheme.lockSlam()

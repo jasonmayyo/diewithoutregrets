@@ -110,6 +110,8 @@ enum SGContract {
         /// "Open Study Guard" on the shield; consumed by the app on
         /// foreground to land directly on the unlock flow.
         static let shieldTapAt = "sg_shieldTapAt"
+        /// Mirrored by PersonaStore for the shield configuration extension.
+        static let selectedPersonaID = "sg_selectedPersonaID"
         static let shieldReturnCandidates = "sg_shieldReturnCandidates"
         static let pendingShieldReturn = "sg_pendingShieldReturn"
         /// [String] ring buffer (≤200) — extension debug log, viewable in the app's Debug tab.

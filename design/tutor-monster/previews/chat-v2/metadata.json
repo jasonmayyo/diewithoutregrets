@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-29",
+  "provenance": "Native iOS simulator screenshots of the production MonsterConversationView and chat components, hosted in an isolated preview app with fixture data. These are not screenshots of a complete live study session.",
+  "previews": {
+    "zaza-quick-replies.png": "Conversation with multiple-choice replies and answer composer.",
+    "willow-typed-answer.png": "Conversation with a typed-answer question.",
+    "sarge-typing.png": "Typing status and animated-dot component.",
+    "gnash-complete.png": "Completed conversation with unlock confirmation and Done button.",
+    "accessibility-replies.png": "Accessibility 3 text size with a single-column, bounded, scrollable choice list.",
+    "profile-pictures.png": "Separate macOS SwiftUI ImageRenderer montage of the four production portrait components."
+  },
+  "validation": {
+    "build": "Full app Debug simulator build passed for arm64 and x86_64 with code signing disabled.",
+    "reply_guards": "Seven standalone checks of the production reply-target helper passed, covering visibility, repeated cards, thinking, finished sessions, and mismatched cards.",
+    "visual": "All screenshots inspected. Portrait crops, standard conversation, typing, completion, and larger text checked.",
+    "pending": "Full app and device QA, keyboard interaction, live AI, and real grading/grant integration. Simulator GUI controls were unavailable; fixture preview screenshots do not validate taps or keyboard behavior."
+  }
+}

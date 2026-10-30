@@ -1,0 +1,86 @@
+Study Guard character sheets, 2026-10-29
+Generated with the built-in imagegen tool.
+The overall cast direction is approved. These individual refinements are design references for review; they are not transparent production assets or integrated into the app.
+Reference: ../concepts/cast-direction-01.png
+
+WILLOW V1
+
+Use case: stylized-concept
+Asset type: individual character design specification sheet for Study Guard, for review before production export.
+Input image: the approved four-character cast sheet is the sole CANONICAL identity and style reference. Extract ONLY the named character. Keep the approved design recognisable.
+Primary request: refine this character into a consistent model sheet. Preserve approved colours, horns, tuft, eye geometry, tiny fangs, belly shape and signature accessory. Correct anatomical or colour-mark artifacts; do not redesign the cast.
+Layout: polished landscape editorial character sheet on warm off-white #FDFDFB. A compact title at top. Left 45 percent: one large full-body front view and one slightly smaller three-quarter full-body view, both standing naturally; label "Front" and "Three-quarter". Right 55 percent: six consistent large head-and-shoulders expression studies in a 3 by 2 grid, each with a small label. All art fully visible with generous margins, no overlapping text, no cropped horns or feet. Expressions should occupy enough area to assess how they work as chat avatars. No colour swatch blocks or hex-code text.
+Style: same polished simple flat 2D vector-like illustration as reference. Clean filled shapes with restrained layered shading, navy brows and eye details, cream fangs, softly shaggy rounded body, simple limbs. No photoreal fur, no 3D, no heavy outlines. Avoid adding textures, gradients or extra decoration. Shapes and face features consistent across every view. Exactly TWO pink blush patches, one per cheek, in every view, no duplicate dots or marks. Two arms and two feet in each full-body view. Match proportions across poses.
+Text: title uses the character name in a rounded dark green sans serif, short subtitle below. Only the requested labels. No product UI, speech bubbles, watermark or logos.
+Constraints: this is a cohesive character sheet, not a mood board or collage. Each expression must show the same individual with the same signature details. Do not alter identity or introduce other characters. Express personality with eyes, eyebrows, mouth and gesture. Friendly, engaging, suitable for students.
+
+Character: Willow
+Title text (verbatim): "Willow"
+Subtitle text (verbatim): "Warm, patient, quietly proud"
+Identity: Willow, first character in reference. Sage green body, soft lavender rounded horns, three-lobed rounded sage top tuft, pale mint belly. Compact soft pear-shaped body, round cheeks, gentle arch of dark brows, open friendly eyes. No accessories. Preserve the original near-symmetrical silhouette.
+Front pose: relaxed reassuring smile and a small open-palm wave. Three-quarter pose: gentle attentive listening, hands loosely together. Keep Willow calm and grounded.
+Six expression labels and meanings: "Welcome" (soft smile, welcoming eyes); "Thinking" (eyes tilted upward, thoughtful but relaxed); "Proud" (closed smiling eyes, small delighted mouth); "Try again" (supportive smile and one subtly raised brow); "Firm" (patient, steady direct gaze, gently knitted brows, never angry); "Celebrating" (warm open smile, lifted little hands near cheeks).
+Willow's pressure expression must stay compassionate; no sneer, scowl or threatening teeth. Fix the extra cheek spot visible in the cast reference: only two blush patches total.
+
+--------------------
+
+ZAZA V1
+
+Use case: stylized-concept
+Asset type: individual character design specification sheet for Study Guard, for review before production export.
+Input image: the approved four-character cast sheet is the sole CANONICAL identity and style reference. Extract ONLY the named character. Keep the approved design recognisable.
+Primary request: refine this character into a consistent model sheet. Preserve approved colours, horns, tuft, eye geometry, tiny fangs, belly shape and signature accessory. Correct anatomical or colour-mark artifacts; do not redesign the cast.
+Layout: polished landscape editorial character sheet on warm off-white #FDFDFB. A compact title at top. Left 45 percent: one large full-body front view and one slightly smaller three-quarter full-body view, both standing naturally; label "Front" and "Three-quarter". Right 55 percent: six consistent large head-and-shoulders expression studies in a 3 by 2 grid, each with a small label. All art fully visible with generous margins, no overlapping text, no cropped horns or feet. Expressions should occupy enough area to assess how they work as chat avatars. No colour swatch blocks or hex-code text.
+Style: same polished simple flat 2D vector-like illustration as reference. Clean filled shapes with restrained layered shading, navy brows and eye details, cream fangs, softly shaggy rounded body, simple limbs. No photoreal fur, no 3D, no heavy outlines. Avoid adding textures, gradients or extra decoration. Shapes and face features consistent across every view. Exactly TWO pink blush patches, one per cheek, in every view, no duplicate dots or marks. Two arms and two feet in each full-body view. Match proportions across poses.
+Text: title uses the character name in a rounded dark green sans serif, short subtitle below. Only the requested labels. No product UI, speech bubbles, watermark or logos.
+Constraints: this is a cohesive character sheet, not a mood board or collage. Each expression must show the same individual with the same signature details. Do not alter identity or introduce other characters. Express personality with eyes, eyebrows, mouth and gesture. Friendly, engaging, suitable for students.
+
+Character: Zaza
+Title text (verbatim): "Zaza"
+Subtitle text (verbatim): "Expressive, confident, proudly dramatic"
+Identity: Zaza, second character in reference. Saturated warm magenta body, pale pink belly, lavender horns, swept magenta tuft with its distinctive single small gold sparkle clip. Strong expressive navy brows and subtle outer lashes. Keep body silhouette and accessory consistent with approved reference.
+Front pose: confident hip lean, one hand on hip and other conversationally palm-up. Three-quarter pose: playful knowing smirk, shoulders relaxed, one brow raised.
+Six expression labels and meanings: "Hey bestie" (knowing warm smile); "Thinking" (one brow raised, lips tilted, gaze upward); "You ate" (delighted proud open smile); "Really?" (theatrical sideways glance and skeptical brow); "Unimpressed" (dry direct look, closed tiny mouth, one raised brow); "Celebrating" (beaming proud excitement, little hands lifted).
+Keep the gold sparkle clip identical in all views, anchored to the same anatomical side even when the pose turns. No new clothing, jewelry or accessories.
+
+--------------------
+
+SARGE V1
+
+Use case: stylized-concept
+Asset type: individual character design specification sheet for Study Guard, for review before production export.
+Input image: the approved four-character cast sheet is the sole CANONICAL identity and style reference. Extract ONLY the named character. Keep the approved design recognisable.
+Primary request: refine this character into a consistent model sheet. Preserve approved colours, horns, tuft, eye geometry, tiny fangs, belly shape and signature accessory. Correct anatomical or colour-mark artifacts; do not redesign the cast.
+Layout: polished landscape editorial character sheet on warm off-white #FDFDFB. A compact title at top. Left 45 percent: one large full-body front view and one slightly smaller three-quarter full-body view, both standing naturally; label "Front" and "Three-quarter". Right 55 percent: six consistent large head-and-shoulders expression studies in a 3 by 2 grid, each with a small label. All art fully visible with generous margins, no overlapping text, no cropped horns or feet. Expressions should occupy enough area to assess how they work as chat avatars. No colour swatch blocks or hex-code text.
+Style: same polished simple flat 2D vector-like illustration as reference. Clean filled shapes with restrained layered shading, navy brows and eye details, cream fangs, softly shaggy rounded body, simple limbs. No photoreal fur, no 3D, no heavy outlines. Avoid adding textures, gradients or extra decoration. Shapes and face features consistent across every view. Exactly TWO pink blush patches, one per cheek, in every view, no duplicate dots or marks. Two arms and two feet in each full-body view. Match proportions across poses.
+Text: title uses the character name in a rounded dark green sans serif, short subtitle below. Only the requested labels. No product UI, speech bubbles, watermark or logos.
+Constraints: this is a cohesive character sheet, not a mood board or collage. Each expression must show the same individual with the same signature details. Do not alter identity or introduce other characters. Express personality with eyes, eyebrows, mouth and gesture. Friendly, engaging, suitable for students.
+
+Character: Sarge
+Title text (verbatim): "Sarge"
+Subtitle text (verbatim): "Steady, disciplined, on your side"
+Identity: Sarge, third character in reference. Electric blue body, pale ice-blue belly, paired steel-blue horns, tidy short three-lobed blue tuft. Dark navy athletic headband with one simple white horizontal stripe. Dark navy brows. Slightly broader, sturdier upper-body silhouette than Willow, but preserve the rounded friendly creature species and approved look.
+Front pose: planted stance, arms folded, small confident approving smile. Three-quarter pose: upright coaching stance with one small thumbs-up. This is a protective tough-love sports coach, not a soldier; no military items.
+Six expression labels and meanings: "Ready" (confident small smile, steady eyes); "Focus" (intent level gaze and subtly knitted brows); "Good work" (earned broad approving grin); "Again" (firm encouraging direct look, mouth neutral); "Unimpressed" (lowered brows, lips pressed, no snarling); "Celebrating" (genuine proud grin with one little raised fist).
+Headband, stripe, horns and tuft must be identical across all eight views. Strong personality without hostility or an exaggerated muscular human body.
+
+--------------------
+
+GNASH V1
+
+Use case: stylized-concept
+Asset type: individual character design specification sheet for Study Guard, for review before production export.
+Input image: the approved four-character cast sheet is the sole CANONICAL identity and style reference. Extract ONLY the named character. Keep the approved design recognisable.
+Primary request: refine this character into a consistent model sheet. Preserve approved colours, horns, tuft, eye geometry, tiny fangs, belly shape and signature accessory. Correct anatomical or colour-mark artifacts; do not redesign the cast.
+Layout: polished landscape editorial character sheet on warm off-white #FDFDFB. A compact title at top. Left 45 percent: one large full-body front view and one slightly smaller three-quarter full-body view, both standing naturally; label "Front" and "Three-quarter". Right 55 percent: six consistent large head-and-shoulders expression studies in a 3 by 2 grid, each with a small label. All art fully visible with generous margins, no overlapping text, no cropped horns or feet. Expressions should occupy enough area to assess how they work as chat avatars. No colour swatch blocks or hex-code text.
+Style: same polished simple flat 2D vector-like illustration as reference. Clean filled shapes with restrained layered shading, navy brows and eye details, cream fangs, softly shaggy rounded body, simple limbs. No photoreal fur, no 3D, no heavy outlines. Avoid adding textures, gradients or extra decoration. Shapes and face features consistent across every view. Exactly TWO pink blush patches, one per cheek, in every view, no duplicate dots or marks. Two arms and two feet in each full-body view. Match proportions across poses.
+Text: title uses the character name in a rounded dark green sans serif, short subtitle below. Only the requested labels. No product UI, speech bubbles, watermark or logos.
+Constraints: this is a cohesive character sheet, not a mood board or collage. Each expression must show the same individual with the same signature details. Do not alter identity or introduce other characters. Express personality with eyes, eyebrows, mouth and gesture. Friendly, engaging, suitable for students.
+
+Character: Gnash
+Title text (verbatim): "Gnash"
+Subtitle text (verbatim): "Mischievous, restless, secretly rooting for you"
+Identity: Gnash, fourth character in reference. Bright acid lime body, pale lime belly, purple horns of intentionally unequal length, spiky lime tuft with one purple inner lock. The taller horn is on the image-left side in the front-view reference; preserve the same anatomical side in every view. Scruffier outline, asymmetric brows and signature playful toothy grin. Two small cream fangs.
+Front pose: compact slightly crouched stance, little hands touching in a mischievous plotting gesture. Three-quarter pose: springy forward lean with the same grin. Preserve creature anatomy, no new accessories.
+Six expression labels and meanings: "Hehehe" (crooked mischievous grin); "Plotting" (eyes narrowed with playful calculation, fingers touching); "Yippee" (huge laughing smile and crinkled eyes); "Nope" (comic incredulous sideways gaze); "Seriously?" (dramatic disbelief with one very high brow); "Celebrating" (ecstatic laugh, little hands raised).
+Differentiate from Zaza: scrappy restless prankster rather than cool judgment. No weapons, horror, malicious threats, extra rows of teeth or frightening expressions.

@@ -31,6 +31,16 @@ enum AnswerMode: String, Codable, Equatable {
     case typed
 }
 
+/// Provenance saved with each imported card, including decks with mixed sources.
+/// Keep only the kind and title; the original notes and file paths are not stored.
+struct FlashcardSource: Codable, Hashable {
+    enum Kind: String, Codable { case pdf, notes, youtube, quizlet }
+    let kind: Kind
+    var title: String? = nil
+
+
+}
+
 struct Regret: Identifiable, Codable, Equatable {
     let id: UUID
     var regretPrompt: String
@@ -56,22 +66,35 @@ struct Regret: Identifiable, Codable, Equatable {
     var nextDueAt: Date?
     /// Subject/topic tag, used for weakness aggregation and exam weighting.
     var topic: String?
+    var source: FlashcardSource?
 
     /// The canonical correct answer text, valid for both modes.
     var correctAnswer: String {
         choices.indices.contains(correctAnswerIndex) ? choices[correctAnswerIndex] : ""
     }
 
+    /// Conservatively skip unanswerable saved cards without deleting or rewriting
+    /// the user's deck. Imported ordinary questions and typed cards remain valid.
+    var isUsableForStudy: Bool {
+        guard !correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !FlashcardPrompt.isPlaceholder(quizPrompt.text),
+              quizPrompt.text != "Choose the correct answer." else { return false }
+        if answerMode == .typed { return true }
+        let options = choices.map { AnswerGrading.normalize($0) }
+        return options.count >= 2 && options.allSatisfy { !$0.isEmpty }
+            && Set(options).count == options.count
+    }
+
     /// Older generated decks may store the question in `regret` and
     /// left the prompt as N/A. Recover only recognizable questions here:
     /// `regret` also stores answers, so using it blindly would reveal them.
     var quizPrompt: FlashcardPrompt {
-        if !FlashcardPrompt.isPlaceholder(regretPrompt) {
+        if !FlashcardPrompt.isPlaceholder(regretPrompt), !FlashcardPrompt.isLegacyFeedback(regretPrompt) {
             return FlashcardPrompt(regretPrompt)
         }
         let legacy = FlashcardPrompt(regret)
         let isAnswer = choices.contains { AnswerGrading.matches(regret, $0) }
-        if !FlashcardPrompt.isPlaceholder(regret), !isAnswer,
+        if !FlashcardPrompt.isPlaceholder(regret), !FlashcardPrompt.isLegacyFeedback(regret), !isAnswer,
            legacy.hasBlank || legacy.text.last.map({ "?？؟".contains($0) }) == true {
             return legacy
         }
@@ -141,7 +164,8 @@ struct Regret: Identifiable, Codable, Equatable {
          timesCorrect: Int = 0,
          lastReviewedAt: Date? = nil,
          nextDueAt: Date? = nil,
-         topic: String? = nil) {
+         topic: String? = nil,
+         source: FlashcardSource? = nil) {
         self.id = id
         self.regretPrompt = regretPrompt
         self.regret = regret
@@ -156,6 +180,7 @@ struct Regret: Identifiable, Codable, Equatable {
         self.lastReviewedAt = lastReviewedAt
         self.nextDueAt = nextDueAt
         self.topic = topic
+        self.source = source
     }
 
     // Cards persisted before answerMode existed decode as .choices.
@@ -176,6 +201,8 @@ struct Regret: Identifiable, Codable, Equatable {
         lastReviewedAt = try c.decodeIfPresent(Date.self, forKey: .lastReviewedAt)
         nextDueAt = try c.decodeIfPresent(Date.self, forKey: .nextDueAt)
         topic = try c.decodeIfPresent(String.self, forKey: .topic)
+        // Old cards, or future source kinds unknown to this app, remain usable.
+        source = try? c.decodeIfPresent(FlashcardSource.self, forKey: .source)
     }
 }
 
@@ -219,6 +246,18 @@ struct FlashcardPrompt {
     static func isPlaceholder(_ value: String) -> Bool {
         let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return normalized.isEmpty || ["n/a", "n / a", "not applicable", "null", "undefined"].contains(normalized)
+    }
+
+    /// Early decks used this field for a wrong-answer reaction. Recover a
+    /// recognizable question from the legacy field, or skip it without changing
+    /// the saved card. Never present feedback alone as the question to answer.
+    static func isLegacyFeedback(_ value: String) -> Bool {
+        let normalized = value.lowercased()
+            .replacingOccurrences(of: "’", with: "'")
+            .components(separatedBy: .punctuationCharacters).joined()
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return ["wrong", "incorrect", "thats not right", "thats incorrect",
+                "close but not right", "not quite", "try again"].contains(normalized)
     }
 }
 
@@ -412,27 +451,23 @@ struct StudyExam: Identifiable, Codable, Equatable {
     var isUpcoming: Bool { daysUntil() >= 0 }
 }
 
-// MARK: - Monster personas (selectable tutor personalities)
+/// Calendar-day arithmetic keeps the grid aligned across time zones, DST,
+/// leap years, and the user's preferred first weekday.
+struct StudyCalendarMonth {
+    let start: Date
+    let days: [Date?]
+    let weekdaySymbols: [String]
 
-/// A selectable tutor-monster personality — tone/voice only, never a real-world
-/// demographic caricature. Referenced everywhere by `id`, so renaming is cheap.
-struct MonsterPersona: Identifiable, Equatable {
-    let id: String          // stable key; display names can change freely
-    let name: String
-    let tagline: String
-    let accentHex: String   // per-persona accent color
-
-    static let diva    = MonsterPersona(id: "diva",    name: "Zaza",   tagline: "sassy hype bestie", accentHex: "#FF2D95")
-    static let willow  = MonsterPersona(id: "willow",  name: "Willow", tagline: "warm and calm",     accentHex: "#8FBF9F")
-    static let coach   = MonsterPersona(id: "coach",   name: "Sarge",  tagline: "tough-love drill",  accentHex: "#2F6BFF")
-    static let gremlin = MonsterPersona(id: "gremlin", name: "Gnash",  tagline: "chaotic menace",    accentHex: "#A6FF2D")
-
-    /// Onboarding order (gentle first so it reads as the safe pick).
-    static let all: [MonsterPersona] = [willow, diva, coach, gremlin]
-    /// Safe default if onboarding is skipped.
-    static let fallback = willow
-
-    static func with(id: String?) -> MonsterPersona {
-        all.first { $0.id == id } ?? fallback
+    init(containing date: Date, calendar: Calendar = .current) {
+        let start = calendar.dateInterval(of: .month, for: date)?.start ?? calendar.startOfDay(for: date)
+        self.start = start
+        let offset = (calendar.component(.weekday, from: start) - calendar.firstWeekday + 7) % 7
+        let count = calendar.range(of: .day, in: .month, for: start)?.count ?? 0
+        var cells = Array<Date?>(repeating: nil, count: offset)
+        cells += (0..<count).map { calendar.date(byAdding: .day, value: $0, to: start) }
+        cells += Array<Date?>(repeating: nil, count: (7 - cells.count % 7) % 7)
+        days = cells
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        weekdaySymbols = (0..<7).map { symbols[($0 + calendar.firstWeekday - 1) % 7] }
     }
 }

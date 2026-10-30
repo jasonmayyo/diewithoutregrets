@@ -22,6 +22,16 @@ enum MonsterContext {
     case sendoff    // final line before returning to the app
 }
 
+enum MonsterRoundOutcome: String, CaseIterable {
+    case perfect, mixed, noCorrect
+
+    init(correctAnswers: Int, totalAnswers: Int) {
+        if totalAnswers > 0, correctAnswers == totalAnswers { self = .perfect }
+        else if correctAnswers > 0 { self = .mixed }
+        else { self = .noCorrect }
+    }
+}
+
 /// Runtime values a scripted line can interpolate.
 struct MonsterScriptVars: Equatable {
     var app = "your apps"
@@ -29,12 +39,423 @@ struct MonsterScriptVars: Equatable {
     var exam: String? = nil
     var examDays: Int? = nil
     var topic: String? = nil
+    var deck: String? = nil
     var questions = 0
     var minutes = 0
     var score = ""           // e.g. "4/6"
 }
 
+/// Exhaust each shuffled set before reusing a line. Save the remaining choices,
+/// not a session counter, so an app restart does not reset the conversation.
+enum MonsterOpeningRotation {
+    static func next(personaID: String, hasExam: Bool, defaults: UserDefaults?) -> (greeting: Int, prompt: Int) {
+        (draw(personaID: personaID, lane: hasExam ? "examGreeting" : "greeting", defaults: defaults),
+         draw(personaID: personaID, lane: "prompt", defaults: defaults))
+    }
+
+    /// Independent lanes keep a familiar structure without repeating the same
+    /// greeting, challenge or outcome line on each visit.
+    static func draw(personaID: String, lane: String, defaults: UserDefaults?) -> Int {
+        let key = "sg_monsterOpening.v1.\(personaID).\(lane)"
+        let saved = defaults?.dictionary(forKey: key)
+        let last = saved?["last"] as? Int
+        var bag = saved?["remaining"] as? [Int] ?? []
+        let count = MonsterScript.openingVariantCount
+        if bag.contains(where: { !(0..<count).contains($0) }) || Set(bag).count != bag.count { bag = [] }
+        if bag.isEmpty {
+            bag = Array(0..<count).shuffled()
+            if bag.first == last, let index = bag.firstIndex(where: { $0 != last }) {
+                bag.swapAt(0, index)
+            }
+        }
+        let picked = bag.removeFirst()
+        defaults?.set(["last": picked, "remaining": bag], forKey: key)
+        return picked
+    }
+}
+
 enum MonsterScript {
+
+    /// Each lane is shuffled independently and persisted across new sessions.
+    static let openingVariantCount = 12
+
+    static func hasUpcomingExam(_ vars: MonsterScriptVars) -> Bool { examReminder(vars) != nil }
+
+    static func openingGreeting(persona: MonsterPersona, mood: SGContract.MonsterMood,
+                                vars: MonsterScriptVars, seed: Int) -> String {
+        let exam = examReminder(vars)
+        let bank = greetingBank(persona.id, hasExam: exam != nil)
+        return bank[max(0, seed) % bank.count]
+            .replacingOccurrences(of: "{exam}", with: exam ?? "")
+            .replacingOccurrences(of: "{Exam}", with: exam.map(capitalizedFirst) ?? "")
+    }
+
+    static func openingPrompt(persona: MonsterPersona, vars: MonsterScriptVars,
+                              studySheet: Bool = false, seed: Int) -> String {
+        let count = max(0, vars.questions)
+        let noun = studySheet || persona.id == MonsterPersona.diva.id ? "flashcard" : "question"
+        let questions = "\(count) \(noun)\(count == 1 ? "" : "s")"
+        let topic = cleanLabel(vars.topic, limit: 60).map { " on \($0)" } ?? ""
+        let deck = cleanLabel(vars.deck, limit: 80).map { " from your \($0) deck" } ?? " from your selected deck"
+        let bank = promptBank(persona.id)
+        return bank[max(0, seed) % bank.count]
+            .replacingOccurrences(of: "{questions}", with: questions)
+            .replacingOccurrences(of: "{topic}", with: topic)
+            .replacingOccurrences(of: "{deck}", with: deck)
+    }
+
+    static func scrollCallout(seed: Int) -> String {
+        let bank = [
+            "and you're out here trying to scroll. girl.",
+            "but somehow your thumb has time for the feed?",
+            "sister, I saw that little attempt to open your apps.",
+            "the scroll was calling and you really picked up 😭",
+            "oh, we're just gonna sneak past the revision? cute.",
+            "your thumb said scroll. I'm saying hold on a second.",
+            "don't look at me like that. you know why I'm here.",
+            "you had a whole plan to disappear into that feed, didn't you?",
+            "girl, put the scrolling thumb down for one minute.",
+            "you and that feed are getting a little too comfortable.",
+            "already reaching for the apps? let me interrupt that thought.",
+            "the feed can survive without you for a few flashcards, sister."
+        ]
+        return bank[max(0, seed) % bank.count]
+    }
+
+    private static func greetingBank(_ persona: String, hasExam: Bool) -> [String] {
+        if hasExam {
+            switch persona {
+            case MonsterPersona.diva.id:
+                return [
+                    "damn girl, {exam}",
+                    "sister. {exam} we need to talk.",
+                    "hold up, {exam} you remember that, right?",
+                    "bestie, I checked the calendar. {exam}",
+                    "oh babe. {exam} let's be so serious.",
+                    "{Exam} yes, I brought the receipts 💅",
+                    "girl, quick reality check: {exam}",
+                    "sooo... {exam} how are we feeling?",
+                    "{Exam} I'm gonna need a little proof of preparation.",
+                    "before you get comfortable, {exam}",
+                    "miss thing, {exam} I'm paying attention.",
+                    "{Exam} okay. let's see where we're at."
+                ]
+            case MonsterPersona.coach.id:
+                return [
+                    "{Exam} Let's put in a focused round.",
+                    "Quick check-in. {Exam}",
+                    "Before the apps, a little practice. {Exam}",
+                    "{Exam} What can you recall without looking?",
+                    "Back to the task. {Exam}",
+                    "{Exam} One step at a time. Start here.",
+                    "Let's warm up your recall. {Exam}",
+                    "{Exam} This is a good moment for a review.",
+                    "Ready for a short set? {Exam}",
+                    "{Exam} Focus on the question in front of you.",
+                    "A few deliberate minutes now. {Exam}",
+                    "{Exam} Let's see what you know."
+                ]
+            case MonsterPersona.gremlin.id:
+                return [
+                    "psst. {exam} let's see what stuck 😈",
+                    "{Exam} surprise! it's revision time.",
+                    "heheh, caught you before the scroll. {Exam}",
+                    "tiny brain quest? {Exam}",
+                    "{Exam} I've got a little challenge for you.",
+                    "come closer, human. {exam}",
+                    "{Exam} let's poke around that memory of yours.",
+                    "one detour before your apps 😈 {Exam}",
+                    "{Exam} ready to feed me some answers?",
+                    "oh hello. excellent timing. {exam}",
+                    "{Exam} a little practice won't bite. I might.",
+                    "your friendly revision gremlin has arrived. {Exam}"
+                ]
+            default:
+                return [
+                    "{Exam} Let's do a little revision together, love.",
+                    "Hello, love. {exam} Shall we have a gentle check-in?",
+                    "A little pause before your apps. {Exam}",
+                    "{Exam} We can take this one question at a time.",
+                    "Come settle in for a moment. {Exam}",
+                    "{Exam} Let's see what feels familiar.",
+                    "Ready for a small review, love? {Exam}",
+                    "{Exam} A little practice now can help.",
+                    "I'm here for a quick check-in. {Exam}",
+                    "{Exam} Take a breath. We'll start together.",
+                    "Let's give your memory a little warm-up. {Exam}",
+                    "{Exam} There's time for a thoughtful answer."
+                ]
+            }
+        }
+        switch persona {
+        case MonsterPersona.diva.id:
+            return ["well, well, well. look who needs a little screen time.", "hiii girl. yes, I'm on duty 💅",
+                    "bestie, you thought I wasn't watching?", "oh, it's you. come here a second.",
+                    "sister, we have a tiny bit of business first.", "look who found their way back to me.",
+                    "okay girl, let's see what that brain is working with.", "miss thing has entered the chat.",
+                    "hey babe. I have questions. literally.", "there she is. ready to back yourself?",
+                    "girl, you came to the right gatekeeper.", "me again. your very nosy study bestie 💅"]
+        case MonsterPersona.coach.id:
+            return ["Let's get a focused set in.", "Quick review before the apps. Ready?",
+                    "Time to put your recall to work.", "A short round. Give it your attention.",
+                    "Let's find out what you remember.", "Settle in. First question coming up.",
+                    "One focused step at a time.", "A little practice before you move on.",
+                    "Let's make this study break count.", "Ready to test your recall?",
+                    "Start where you are. We've got a round to do.", "Your next small win starts here."]
+        case MonsterPersona.gremlin.id:
+            return ["ehehe. a tiny brain quest first 😈", "surprise revision! my favourite kind.",
+                    "human detected. answers requested.", "one little detour before the scroll.",
+                    "what's hiding in that memory of yours?", "I've brought questions. you bring the brain.",
+                    "psst. ready for a little challenge?", "welcome to my very small pop quiz 😈",
+                    "let's find out what stuck, shall we?", "a little recall snack before your apps.",
+                    "heheh. your study gremlin is on duty.", "come on in. the first question is waiting."]
+        default:
+            return ["Hello, love. Shall we do a little review?", "Let's take a quiet moment to practise.",
+                    "A small check-in before your apps.", "Come settle in. We'll start gently.",
+                    "Let's see what you remember today.", "One question at a time, love.",
+                    "Ready for a little memory warm-up?", "I'm here. Let's work through a short round.",
+                    "A little practice can go a long way.", "Take a breath, love. Ready when you are.",
+                    "Let's make a little space for revision.", "Shall we try a few together?"]
+        }
+    }
+
+    private static func promptBank(_ persona: String) -> [String] {
+        switch persona {
+        case MonsterPersona.diva.id:
+            return [
+                "I'm checking what you know before I let you scroll. {questions}{deck}. don't play with me, sister.",
+                "show me those notes actually went in. {questions}{deck}, then we'll talk screen time.",
+                "okay, back yourself. {questions}{deck}. I want answers, girl.",
+                "you want the feed? let me see the recall. {questions}{deck}. your move 💅",
+                "let's find out if you've got this. {questions}{deck}. think before you tap, babe.",
+                "I'm not sending you off without a little brain check. {questions}{deck}. let's go.",
+                "here's the deal, sister: {questions}{deck}. show me what stuck.",
+                "receipts, please. {questions}{deck}. let's see what you can remember without peeking.",
+                "alright miss thing, {questions}{deck}. put that confidence to work.",
+                "we're doing {questions}{deck} before the scroll. give me your attention for a minute.",
+                "I've pulled {questions}{deck}. make me proud, then we'll sort out your break.",
+                "{questions}{deck}. a little proof you know what you're doing, sister. that's all I'm asking."
+            ]
+        case MonsterPersona.coach.id:
+            return [
+                "{questions}{topic}. One focused set.",
+                "Start with {questions}{topic}. Take each one seriously.",
+                "Today's round: {questions}{topic}.",
+                "Let's test your recall with {questions}{topic}.",
+                "I've lined up {questions}{topic}. Begin when you're ready.",
+                "Work through {questions}{topic}. Think, then answer.",
+                "Your next task is {questions}{topic}. Keep it steady.",
+                "Let's tackle {questions}{topic}, one at a time.",
+                "A short practice set: {questions}{topic}.",
+                "{questions}{topic}. Focus on getting the idea clear.",
+                "We'll review {questions}{topic}. Here's the first step.",
+                "Give {questions}{topic} your full attention."
+            ]
+        case MonsterPersona.gremlin.id:
+            return [
+                "heheh. {questions}{topic}. feed me answers.",
+                "your quest: {questions}{topic}. 😈",
+                "I've found {questions}{topic} for our little challenge.",
+                "{questions}{topic}. let's see what's in that brain.",
+                "a tiny feast of {questions}{topic}. delicious.",
+                "ready or nearly ready: {questions}{topic}.",
+                "I brought {questions}{topic}. your move, human.",
+                "let's poke at {questions}{topic} together.",
+                "the challenge is {questions}{topic}. take your time.",
+                "{questions}{topic}. show me what stuck 😈",
+                "first, a little recall magic: {questions}{topic}.",
+                "come on then. {questions}{topic} await."
+            ]
+        default:
+            return [
+                "Let's try {questions}{topic}, love. Take your time.",
+                "I've picked {questions}{topic}. We'll work through this together.",
+                "Shall we start with {questions}{topic}?",
+                "Just {questions}{topic} for this round. No need to rush.",
+                "Let's see what you remember with {questions}{topic}.",
+                "We can practise with {questions}{topic}, one at a time.",
+                "Here's our little round: {questions}{topic}.",
+                "I'd like to go over {questions}{topic} with you.",
+                "{questions}{topic}, love. Give yourself a moment to think.",
+                "Let's warm up with {questions}{topic}.",
+                "A little recall practice: {questions}{topic}.",
+                "We'll begin with {questions}{topic}. I'm right here."
+            ]
+        }
+    }
+
+    private static func examReminder(_ vars: MonsterScriptVars) -> String? {
+        guard let subject = cleanLabel(vars.exam, limit: 80), let days = vars.examDays, days >= 0 else { return nil }
+        let generic = ["my exam", "your exam", "exam"].contains(subject.lowercased())
+        let exam = generic ? "your exam" : "your \(subject)\(subject.lowercased().hasSuffix("exam") ? "" : " exam")"
+        let when = days == 0 ? "today" : days == 1 ? "tomorrow" : "in \(days) days"
+        return "\(exam) is \(when)."
+    }
+
+    private static func cleanLabel(_ value: String?, limit: Int) -> String? {
+        let text = value?.split(whereSeparator: \.isWhitespace).joined(separator: " ") ?? ""
+        return text.isEmpty ? nil : String(text.prefix(limit))
+    }
+
+    private static func capitalizedFirst(_ text: String) -> String {
+        text.prefix(1).uppercased() + text.dropFirst()
+    }
+
+    /// Respond to the actual attempts, including misses corrected on a retry.
+    /// These lines assess this round; they never promise an exam result or grant.
+    static func zazaRoundReaction(outcome: MonsterRoundOutcome, vars: MonsterScriptVars, seed: Int) -> String {
+        let bank: [String]
+        switch outcome {
+        case .perfect:
+            bank = [
+                "damnnn, okay girl. you know your 💩. every card right.",
+                "all correct? sister, you came with receipts 💅",
+                "not a single miss. okay, I'll put the attitude away for a second.",
+                "girl, you cleared that whole round. I see you.",
+                "every answer right. that's how you get me off your back.",
+                "okayyy, brain. you didn't leave me one thing to complain about.",
+                "you really said 'test me' and meant it. perfect round, babe.",
+                "all of them? alright miss thing, I'll give you that one.",
+                "sister, the recall is recalling. every card correct.",
+                "look at you actually knowing the material. clean round 💅",
+                "I had a whole speech ready. then you went and got everything right.",
+                "damn. no misses, no notes from me. you handled that set."
+            ]
+        case .mixed:
+            bank = [
+                "yeah, those {notes} aren't gonna learn themselves, sister.",
+                "some of that stuck. some of it clearly left the group chat.",
+                "okay, you've got pieces of it. the ones you missed need another look.",
+                "girl, a few of those answers were asking for help. let's remember which ones.",
+                "you got some right, but I'm not ignoring those gaps, babe.",
+                "a little knowledge, a little guesswork? revisit the tricky ones, sister.",
+                "not a clean sweep. useful information, though: now you know what to review.",
+                "some answers showed up ready. the others need a little more time with the notes.",
+                "okay miss thing, there's work to do on the ones that caught you out.",
+                "you did get some. but those {notes} still want your attention.",
+                "I'm giving you credit for what you knew. I'm also remembering those misses.",
+                "a few wobbles in there, girl. put those tricky cards on the revisit list."
+            ]
+        case .noCorrect:
+            bank = [
+                "girl. those {notes} need you more than the feed does right now.",
+                "none right this round, sister. let's actually spend a moment with the material.",
+                "okay, that set caught you out. read the explanations before we try again.",
+                "babe, we're starting with the notes. that round gave us a clear answer.",
+                "the recall did not clock in today. give those cards another look.",
+                "not one landed, girl. take a breath and revisit the explanations.",
+                "sister, this is our sign to open the {notes}.",
+                "that round was rough. pick one thing you didn't know and start there.",
+                "okay, now we know what needs work. those answers need some study time.",
+                "the feed can wait. let's get familiar with those cards first, babe.",
+                "no correct answers yet. I'm gonna need you and those notes to reconnect.",
+                "girl, let's regroup. read through the tricky bits, then have another go."
+            ]
+        }
+        let notes = hasUpcomingExam(vars)
+            ? cleanLabel(vars.exam, limit: 80).map { "\($0) notes" } ?? "study notes" : "study notes"
+        return bank[max(0, seed) % bank.count].replacingOccurrences(of: "{notes}", with: notes)
+    }
+
+    /// The local grant is the only source of the break duration.
+    static func zazaSendoff(outcome: MonsterRoundOutcome, minutes: Int, seed: Int) -> String {
+        let bank: [String]
+        if minutes <= 0 {
+            bank = [
+                "no scroll time earned this round. come back and show me what stuck.",
+                "the apps are staying locked for now, sister. try another round when you're ready.",
+                "no time earned yet. a little revision, then you and me again.",
+                "I can't hand you a break from this one, babe. give the material another go.",
+                "no unlock this round. the next try is a fresh chance.",
+                "zero scroll minutes this time. go get familiar with those answers.",
+                "we haven't earned the scroll yet, girl. I'll be here for the next attempt.",
+                "the feed's still on hold. take your time with the explanations.",
+                "nothing to unlock this round, sister. let's come back better prepared.",
+                "no app time from that set. you can try again after a little review.",
+                "still locked, babe. read it, let it sink in, then come see me.",
+                "no minutes earned this time. don't rush the next try, girl."
+            ]
+        } else if outcome == .perfect {
+            bank = [
+                "enjoy your {time} of guilt-free scrolling, girl. you earned that break.",
+                "go on then. {time} to scroll, with my blessing 💅",
+                "that's {time} for you, sister. enjoy the break.",
+                "fine, go be unserious for {time}. that round earned it.",
+                "take your {time}, babe. I'm letting you enjoy this win.",
+                "{time} unlocked. go enjoy your feed without the study guilt.",
+                "alright, I'll stop gatekeeping. {time}. have fun, girl.",
+                "you did the work. go enjoy your {time} of scrolling.",
+                "permission to scroll: granted. {time}, miss thing.",
+                "your break is ready: {time}. go enjoy it.",
+                "off you go, sister. {time} of earned scrolling.",
+                "I'm a woman of my word. {time} for you. enjoy 💅"
+            ]
+        } else {
+            bank = [
+                "you earned {time}. have your break, then revisit the ones you missed.",
+                "{time} to scroll, sister. those tricky cards are still on the list.",
+                "take your {time}, babe. a little review after the break would help.",
+                "that's {time} for you. enjoy the break, then give those gaps some attention.",
+                "you've banked {time}. take the break and come back to the hard bits.",
+                "okay, {time} of scrolling. let's work on those misses next time.",
+                "your right answers earned {time}. enjoy the break, girl.",
+                "off you go for {time}. we know which cards need more work now.",
+                "{time} unlocked. don't forget what tripped you up, sister.",
+                "take the {time} you earned. the next study round has a to-do list.",
+                "a break's a break, babe. enjoy your {time}, then back to those tricky bits.",
+                "here's your {time}. I'm rooting for fewer misses next round."
+            ]
+        }
+        let time = "\(max(0, minutes)) minute\(minutes == 1 ? "" : "s")"
+        return bank[max(0, seed) % bank.count].replacingOccurrences(of: "{time}", with: time)
+    }
+
+    static func sheetIntroduction(persona: MonsterPersona, count: Int) -> String {
+        let cards = "\(count) flashcard\(count == 1 ? "" : "s")"
+        switch persona.id {
+        case MonsterPersona.diva.id: return "okay, \(cards). show me what you know, then we'll talk screen time. 💅"
+        case MonsterPersona.coach.id: return "\(cards). One focused set. I'll check in when you're done."
+        case MonsterPersona.gremlin.id: return "heheh. \(cards) between you and your apps. let's see what you've got. 😈"
+        default: return "Let's try \(cards), love. Take your time. I'll be here when you're done."
+        }
+    }
+
+    static func sheetRecap(persona: MonsterPersona, round: MonsterStudyRound,
+                           followUp: MonsterStudyRound?, exam: String?, examDays: Int?, seed: Int = 0) -> String {
+        let score = "\(round.correctCount) out of \(round.questions.count)"
+        if persona.id == MonsterPersona.diva.id {
+            let outcome = MonsterRoundOutcome(correctAnswers: round.correctCount, totalAnswers: round.questions.count)
+            let reaction = zazaRoundReaction(outcome: outcome,
+                vars: .init(exam: exam, examDays: examDays), seed: seed)
+            if let followUp {
+                return "\(reaction) \(followUp.cardDescription) for one final set. then we're done, sister. your earned time stays."
+            }
+            if round.isFollowUp { return "\(reaction) that's our last set. let's see what you earned altogether." }
+            return reaction
+        }
+        if let followUp {
+            let reminder: String
+            if let exam, let days = examDays, days >= 0 {
+                reminder = days == 0 ? " \(exam) is today." : " \(exam) is in \(days) day\(days == 1 ? "" : "s")."
+            } else { reminder = "" }
+            let extra = followUp.cardDescription.lowercased()
+            switch persona.id {
+            case MonsterPersona.diva.id: return "\(score)? okay, a little more practice.\(reminder) I've got \(extra) for you, then we're done. your earned time stays. 💅"
+            case MonsterPersona.coach.id: return "\(score). We can sharpen that.\(reminder) One final set: \(extra). Your earned time stays."
+            case MonsterPersona.gremlin.id: return "\(score)! a few gaps to fill.\(reminder) \(extra), then I'll let you go. keeping your earned time safe. 😈"
+            default: return "\(score), love. Let's give the tricky bits a little more time.\(reminder) Just \(extra), then we're done. Your earned time is kept."
+            }
+        }
+        if round.isFollowUp {
+            return "\(score) on the follow-up. That's our last set. You can collect any time you've earned, and we can revisit the tricky bits next time."
+        }
+        switch persona.id {
+        case MonsterPersona.diva.id: return "\(score). you did that. 💅 your screen time is ready — go collect it."
+        case MonsterPersona.coach.id: return "\(score). Solid set. Collect your screen time. You've earned it."
+        case MonsterPersona.gremlin.id: return "\(score)! okay, you win this one. go collect your screen time. 😈"
+        default: return "\(score). Lovely work, love. Your screen time is ready when you are."
+        }
+    }
 
     /// A filled line for the given persona + mood + context. `seed` rotates the
     /// choice (pass a counter to avoid immediate repeats); deterministic for tests.
@@ -228,42 +649,6 @@ enum MonsterScript {
         case .pass:    return ["ugh FINE take your {minutes} minutes 😾", "{minutes} min. go. shoo."]
         case .fail:    return ["zero!! no {app} for you 😈", "nothing!! come back and suffer more."]
         case .sendoff: return ["shoo 😈", "byeeee come back soon hehe"]
-        }
-    }
-}
-
-/// Phase 3 reaction media: maps a moment to a persona-flavored sticker from the
-/// existing in-app `sticker-*` set. Bundled, so it works offline. Real per-persona
-/// reaction art is a /design-shotgun task (§6h); this is the first-pass mapping.
-enum MonsterReaction {
-    /// A sticker for the moment, or nil for moments that carry no media.
-    static func sticker(persona: MonsterPersona,
-                        context: MonsterContext,
-                        mood: SGContract.MonsterMood) -> (asset: String, label: String)? {
-        switch context {
-        case .correct:
-            // When it's been a grind (fed up / feral), hype lands as fire.
-            if mood >= .fedUp { return ("sticker-fire", "on fire") }
-            switch persona.id {
-            case "diva":    return ("sticker-crown", "slay")
-            case "coach":   return ("sticker-trophy", "good rep")
-            case "gremlin": return ("sticker-star", "gold star")
-            default:        return ("sticker-sparkling", "lovely")   // willow
-            }
-        case .wrong:
-            switch persona.id {
-            case "diva":    return ("sticker-skull", "oof")
-            case "coach":   return ("sticker-target", "again")
-            case "gremlin": return ("sticker-skull", "wrong")
-            default:        return ("sticker-idea", "think again")   // willow
-            }
-        case .pass:
-            return ("sticker-trophy", "cleared")
-        case .fail:
-            // Don't pile on: nothing for the gentle persona, a soft marker otherwise.
-            return persona.id == "willow" ? nil : ("sticker-hourglass", "time's up")
-        case .greeting, .demand, .sendoff:
-            return nil
         }
     }
 }

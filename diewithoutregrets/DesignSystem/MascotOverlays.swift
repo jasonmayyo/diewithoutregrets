@@ -246,7 +246,7 @@ struct MascotLockOverlay: View {
                     .shadow(color: SGLockScene.accent.opacity(slammed ? 0.30 : 0), radius: 28, y: 10)
 
                 VStack(spacing: 12) {
-                    SGMicroLabel(text: "Caught you scrolling",
+                    SGMicroLabel(text: "Apps locked",
                                  color: onDark ? SGLockScene.accent : SGTheme.alarmDeep)
                     Text("Locked.")
                         .font(SGTheme.display(40))

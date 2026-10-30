@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-29",
+  "decision": "Use a text-first conversation with a fixed circular face portrait, grouped messages, typing dots and a bottom answer composer. Keep full-body character art in the picker.",
+  "references": [
+    {
+      "app": "Dot",
+      "url": "https://mobbin.com/screens/0a6aa1f9-2269-4eab-82aa-e80cd3199391",
+      "observation": "Airy transcript, restrained outgoing bubble, timestamp separator and bottom composer."
+    },
+    {
+      "app": "Grok",
+      "url": "https://mobbin.com/screens/1894e202-3b40-4a05-a2fe-bb44c70aa38d",
+      "observation": "Text gets the main screen area; user prompts are compact and input stays at the bottom."
+    },
+    {
+      "app": "ChatGPT",
+      "url": "https://mobbin.com/screens/fd13e610-4c0e-495b-bd12-5596eb03b4f0",
+      "observation": "Compact persistent composer with restrained surrounding controls."
+    },
+    {
+      "app": "Substack",
+      "url": "https://mobbin.com/screens/6b988d65-7f2f-43da-9c92-7ba32c2b3127",
+      "observation": "Compact contact portrait and name in a messaging header."
+    }
+  ],
+  "interaction": "Quick replies and typed text submit answers to the currently revealed study question. The existing local grading and time grant remain in place; this change does not add unrestricted AI chat.",
+  "validation": "Xcode build passed. Seven presentation checks cover hidden prompts, typing, finished sessions, mismatched cards and repeated occurrences of the same card."
+}

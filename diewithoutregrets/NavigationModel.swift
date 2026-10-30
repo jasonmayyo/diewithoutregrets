@@ -24,13 +24,10 @@ public final class NavigationModel: ObservableObject {
     @Published public var unlockMethodOverride: String?
     /// Captured from the shield tap for this flow only. Cleared on every exit.
     @Published var unlockReturnDestination: ShieldReturnDestination?
-    /// True while the Guard home's lock-stamp overlay is playing. ContentView
-    /// hides the floating tab bar so the stamp owns the whole screen.
+    /// ContentView owns the overlay so it survives the swap into chat.
     @Published public var isLockStampPlaying: Bool = false
-    /// True while the Guard home is showing the revealed lock-out scene.
-    /// ContentView flips the floating tab bar to its night (smoked-glass)
-    /// look so it reads against the dark ripple instead of glowing white.
-    @Published public var isLockedHomeShowing: Bool = false
+    @Published private(set) var monsterLockAnimationID: UUID?
+    private var automaticallyOpenedMonsterGrant: Double?
     /// One-shot tab-switch request (the Creator Toolkit uses it to land on
     /// the Guard tab so a staged lock or refill plays on camera).
     /// ContentView applies it to its tab selection and clears it.
@@ -82,8 +79,63 @@ public final class NavigationModel: ObservableObject {
             }
         }
     }
+
+    /// Called before the first frame on cold launch and immediately on a warm
+    /// shield return. Bypass the locked-home reveal and any pending scene wipe.
+    func openMonsterFromShield(returnDestination: ShieldReturnDestination?, grantStamp: Double? = nil) {
+        activeWipe = nil
+        wipeMidAction = nil
+        monsterLockAnimationID = nil
+        isLockStampPlaying = false
+        automaticallyOpenedMonsterGrant = grantStamp ?? SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt)
+        unlockReturnDestination = returnDestination
+        unlockMethodOverride = "monster"
+        setDestination(.regretView)
+    }
+
+    /// Manual home entry shares the guarded chat route without requiring a
+    /// shield tap or carrying a stale return-to-app destination into this chat.
+    func openMonsterFromHome() {
+        openMonsterFromShield(returnDestination: nil)
+    }
+
+    /// Enter once per allowance. Closing chat keeps Home usable instead of
+    /// immediately reopening it; a new allowance arms the next automatic entry.
+    @discardableResult
+    func beginMonsterLockEntry(grantStamp: Double, animated: Bool) -> Bool {
+        guard currentDestination == nil, activeWipe == nil, !isLockStampPlaying,
+              automaticallyOpenedMonsterGrant != grantStamp else { return false }
+        automaticallyOpenedMonsterGrant = grantStamp
+        if animated {
+            monsterLockAnimationID = UUID()
+            isLockStampPlaying = true
+        } else {
+            openMonsterFromShield(returnDestination: nil, grantStamp: grantStamp)
+        }
+        return true
+    }
+
+    func revealMonsterAfterLock(animationID: UUID) {
+        guard monsterLockAnimationID == animationID, isLockStampPlaying else { return }
+        unlockReturnDestination = nil
+        unlockMethodOverride = "monster"
+        setDestination(.regretView)
+    }
+
+    func finishMonsterLockAnimation(animationID: UUID) {
+        guard monsterLockAnimationID == animationID else { return }
+        monsterLockAnimationID = nil
+        isLockStampPlaying = false
+    }
+
+    /// Debug replay or a guard reset can explicitly arm the same allowance.
+    func resetAutomaticMonsterEntry() {
+        automaticallyOpenedMonsterGrant = nil
+        monsterLockAnimationID = nil
+        isLockStampPlaying = false
+    }
     
-    private init() {
+    init() {
         print("[NavigationModel] Initialized")
     }
     

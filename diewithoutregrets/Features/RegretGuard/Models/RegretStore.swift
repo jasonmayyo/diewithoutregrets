@@ -241,29 +241,6 @@ final class ExamStore: ObservableObject {
     }
 }
 
-// MARK: - Persona store (selected tutor monster)
-
-/// Holds the user's chosen tutor-monster persona by id. Defaults to the safe
-/// fallback until onboarding sets one.
-final class PersonaStore: ObservableObject {
-    static let shared = PersonaStore()
-    private let defaults: UserDefaults
-    private let key = "sg_selectedPersonaID"
-
-    @Published var selectedID: String {
-        didSet { defaults.set(selectedID, forKey: key) }
-    }
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-        selectedID = defaults.string(forKey: key) ?? MonsterPersona.fallback.id
-    }
-
-    var persona: MonsterPersona { MonsterPersona.with(id: selectedID) }
-
-    func select(_ persona: MonsterPersona) { selectedID = persona.id }
-}
-
 // MARK: - Mastery writeback (shared by the quiz and the monster chat)
 
 extension DeckStore {

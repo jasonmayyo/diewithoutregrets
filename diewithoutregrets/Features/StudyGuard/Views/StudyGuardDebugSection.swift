@@ -14,13 +14,26 @@ import FamilyControls
 import UserNotifications
 
 struct StudyGuardDebugSection: View {
+    @AppStorage(MonsterStudyMethod.preferenceKey) private var studyMethod = MonsterStudyMethod.defaultMethod.rawValue
     @ObservedObject private var manager = StudyGuardManager.shared
     @State private var pickerPresented = false
     @State private var pickerSelection = FamilyActivitySelection()
     @State private var lastAction = ""
+    @State private var showLockError = false
 
     var body: some View {
         Section("Study Guard v2 (Screen Time)") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Flashcard style").font(.subheadline.weight(.semibold))
+                Picker("Flashcard style", selection: $studyMethod) {
+                    ForEach(MonsterStudyMethod.allCases) { method in
+                        Text(method.title).tag(method.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+                Text("Applies to the next monster chat. In chat is the default; Study sheet remains available for comparison.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(manager.debugStateDump(), id: \.0) { key, value in
                     HStack {
@@ -63,24 +76,27 @@ struct StudyGuardDebugSection: View {
             }
 
             Button {
-                manager.debugForceLock()
-                lastAction = "Forced lock"
+                switch manager.debugForceLock() {
+                case .success:
+                    NavigationModel.shared.resetAutomaticMonsterEntry()
+                    lastAction = "Apps locked. Open a guarded app to test its shield, or open monster chat below."
+                    NavigationModel.shared.requestedTab = 0
+                case .failure(let error):
+                    lastAction = error.localizedDescription
+                    showLockError = true
+                }
             } label: {
                 Label("Force lock now", systemImage: "lock.fill")
             }
 
             Button {
-                // Jump straight into the monster chat to test it (and the AI),
-                // bypassing the flaky Screen Time lock. Force the flag on and make
-                // sure a non-empty deck is selected so the monster shows (not the
-                // legacy fallback).
-                UserDefaults.standard.set(true, forKey: "sg_monsterUnlock")
+                // Use the same direct route as the personalized shield, even
+                // with no deck or a different saved unlock preference.
                 if DeckStore.shared.selectedDeck?.cards.isEmpty ?? true,
                    let deck = DeckStore.shared.decks.first(where: { !$0.cards.isEmpty }) {
                     DeckStore.shared.selectDeck(deck)
                 }
-                NavigationModel.shared.unlockMethodOverride = "flashcards"
-                NavigationModel.shared.navigate(to: .regretView)
+                NavigationModel.shared.openMonsterFromShield(returnDestination: nil)
                 lastAction = "Opened monster chat"
             } label: {
                 Label("Open monster chat (debug)", systemImage: "bubble.left.and.bubble.right.fill")
@@ -131,6 +147,11 @@ struct StudyGuardDebugSection: View {
             if !lastAction.isEmpty {
                 Text(lastAction).font(.caption).foregroundColor(.secondary)
             }
+        }
+        .alert("Couldn't lock apps", isPresented: $showLockError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(lastAction)
         }
     }
 }

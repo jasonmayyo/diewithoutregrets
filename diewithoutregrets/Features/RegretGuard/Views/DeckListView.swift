@@ -10,212 +10,141 @@ import SwiftUI
 struct DeckListView: View {
     @EnvironmentObject var deckStore: DeckStore
     @State private var showingNewDeckSheet = false
-    @State private var deckToDelete: Deck? = nil
-    @State private var showDeleteAlert: Bool = false
-    @State private var deckToEdit: Deck? = nil
-    @State private var showEditSheet: Bool = false
+    @State private var deckToDelete: Deck?
+    @State private var deckToEdit: Deck?
+    @State private var showDeleteAlert = false
+    @State private var showingAllExams = false
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                SGTheme.ink.ignoresSafeArea()
+            VStack(spacing: 0) {
+                SGScreenHeader(eyebrow: "Exams & flashcards", title: "Study")
 
-                VStack(spacing: 0) {
-                    SGScreenHeader(eyebrow: "Your decks", title: "Decks") {
-                        Button(action: { showingNewDeckSheet = true }) {
-                            Image(systemName: "plus")
-                                .font(SGTheme.cardTitle) // 17 semibold — header icon size
-                                .foregroundColor(SGTheme.ink)
-                                .frame(width: 44, height: 44)
-                                .background(SGTheme.mint, in: Circle())
-                        }
-                        .buttonStyle(SGPressStyle())
-                        .accessibilityLabel("Create new deck")
-                    }
+                List {
+                    StudyExamCalendarSection { showingAllExams = true }
+                        .listRowInsets(EdgeInsets(top: 0, leading: SGTheme.screenPadding,
+                                                  bottom: 16, trailing: SGTheme.screenPadding))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
 
-                    // List of decks with swipe delete
+                    decksHeading
+                        .listRowInsets(EdgeInsets(top: 8, leading: SGTheme.screenPadding,
+                                                  bottom: 6, trailing: SGTheme.screenPadding))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+
                     if deckStore.decks.isEmpty {
-                        // Empty State
-                        VStack(spacing: 24) {
-                            Spacer()
-
-                            MascotView(pose: .clipboard)
-                                .frame(width: 140, height: 140)
-
-                            VStack(spacing: 10) {
-                                Text("Create your first deck")
-                                    .font(SGTheme.display(24))
-                                    .foregroundColor(SGTheme.paper)
-
-                                Text("Start building your knowledge base with flashcard decks tailored to your learning goals.")
-                                    .font(SGTheme.body)
-                                    .foregroundColor(SGTheme.paperSecondary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            .padding(.horizontal, 32)
-
-                            SGButton(title: "Create Deck", icon: "plus", fullWidth: false) {
-                                showingNewDeckSheet = true
-                            }
-
-                            Spacer()
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, SGTheme.screenPadding)
-                        .padding(.bottom, SGTheme.tabBarClearance)
+                        emptyDecks
+                            .listRowInsets(EdgeInsets(top: 6, leading: SGTheme.screenPadding,
+                                                      bottom: 6, trailing: SGTheme.screenPadding))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     } else {
-                        List {
-                            ForEach($deckStore.decks) { $deck in
-                                ZStack {
-                                    NavigationLink(destination: DeckView(deck: $deck)) {
-                                        EmptyView()
-                                    }
-                                    .opacity(0)
-
-                                    HStack(spacing: 14) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(deck.name)
-                                                .font(SGTheme.cardTitle)
-                                                .foregroundColor(SGTheme.paper)
-
-                                            HStack(spacing: 5) {
-                                                Image(systemName: "rectangle.on.rectangle")
-                                                    .font(SGTheme.caption) // matches the count label beside it
-                                                Text("\(deck.cards.count) cards")
-                                                    .font(SGTheme.caption)
-                                            }
-                                            .foregroundColor(SGTheme.paperSecondary)
-                                        }
-
-                                        Spacer()
-
-                                        Image(systemName: "chevron.right")
-                                            .font(SGTheme.rowLabel) // 14 semibold — the disclosure chevron
-                                            .foregroundColor(SGTheme.mint)
-                                    }
-                                    .padding(SGTheme.cardPadding)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                                            .fill(SGTheme.inkRaised)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
-                                                    .strokeBorder(SGTheme.hairline, lineWidth: 1)
-                                            )
-                                    )
-                                }
+                        ForEach($deckStore.decks) { $deck in
+                            deckRow($deck)
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 6, leading: SGTheme.screenPadding, bottom: 6, trailing: SGTheme.screenPadding))
+                                .listRowInsets(EdgeInsets(top: 6, leading: SGTheme.screenPadding,
+                                                          bottom: 6, trailing: SGTheme.screenPadding))
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
                                         deckToDelete = deck
                                         showDeleteAlert = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
+                                    } label: { Label("Delete", systemImage: "trash") }
                                     .tint(SGTheme.ember)
-
-                                    Button {
-                                        deckToEdit = deck
-                                        showEditSheet = true
-                                    } label: {
-                                        Label("Edit", systemImage: "pencil")
-                                    }
-                                    .tint(SGTheme.teal)
+                                    Button { deckToEdit = deck } label: { Label("Edit", systemImage: "pencil") }
+                                        .tint(SGTheme.teal)
                                 }
-                            }
-
-                            // Clearance so the floating tab bar never covers the last row.
-                            Color.clear
-                                .frame(height: SGTheme.tabBarClearance)
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets())
                         }
-                        .listStyle(PlainListStyle())
-                        .scrollContentBackground(.hidden)
-                        .background(SGTheme.ink)
-                        .padding(.top, 8)
                     }
+                    Color.clear.frame(height: SGTheme.tabBarClearance)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
                 }
-                .sheet(isPresented: $showingNewDeckSheet) {
-                    NewDeckView()
-                }
-                .sheet(isPresented: $showEditSheet, onDismiss: {
-                    deckToEdit = nil
-                }) {
-                    if let deckToEdit = deckToEdit {
-                        EditDeckView(deck: deckToEdit, onSave: { updatedDeck in
-                            if let index = deckStore.decks.firstIndex(where: { $0.id == updatedDeck.id }) {
-                                deckStore.decks[index] = updatedDeck
-                                // Update selected deck if it's the same deck that was edited
-                                if deckStore.selectedDeck?.id == updatedDeck.id {
-                                    deckStore.selectedDeck = updatedDeck
-                                }
-                            }
-                            showEditSheet = false
-                        })
-                    } else {
-                        // Fallback view if deckToEdit is nil
-                        ZStack {
-                            SGTheme.ink.ignoresSafeArea()
-
-                            VStack(spacing: 20) {
-                                Image("sticker-error")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 64, height: 64)
-
-                                Text("Error Loading Deck")
-                                    .font(SGTheme.display(22))
-                                    .foregroundColor(SGTheme.paper)
-
-                                Text("Unable to load the deck for editing. Please try again.")
-                                    .font(SGTheme.body)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(SGTheme.paperSecondary)
-
-                                SGButton(title: "Close", variant: .ghost, fullWidth: false) {
-                                    showEditSheet = false
-                                }
-                            }
-                            .padding()
-                        }
-                        .sgSheetChrome()
-                    }
-                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(SGTheme.ink)
             }
-            .navigationBarHidden(true)
-            .alert("Confirm Deletion", isPresented: $showDeleteAlert) {
+            .background(SGTheme.ink.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showingAllExams) { ExamCalendarView() }
+            .sheet(isPresented: $showingNewDeckSheet) { NewDeckView() }
+            .sheet(item: $deckToEdit) { deck in
+                EditDeckView(deck: deck) { updated in deckStore.updateDeck(updated) }
+            }
+            .alert("Delete deck?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
                     if let deck = deckToDelete,
                        let index = deckStore.decks.firstIndex(where: { $0.id == deck.id }) {
-                        let cardCount = deck.cards.count
                         deckStore.decks.remove(at: index)
-                        Analytics.deckDeleted(
-                            name: deck.name,
-                            cardCount: cardCount,
-                            totalDecksAfter: deckStore.decks.count
-                        )
+                        Analytics.deckDeleted(name: deck.name, cardCount: deck.cards.count,
+                                              totalDecksAfter: deckStore.decks.count)
                     }
                     deckToDelete = nil
                 }
-                Button("Cancel", role: .cancel) {
-                    deckToDelete = nil
-                }
+                Button("Cancel", role: .cancel) { deckToDelete = nil }
             } message: {
-                if let deck = deckToDelete {
-                    Text("Are you sure you want to delete the deck \"\(deck.name)\"?")
-                } else {
-                    Text("Are you sure you want to delete this deck?")
-                }
+                Text("Delete \"\(deckToDelete?.name ?? "this deck")\" and its flashcards?")
             }
         }
-        .tint(SGTheme.mint)
-        .navigationBarHidden(true)
+        .tint(SGTheme.mintDeep)
+    }
+
+    private var decksHeading: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Your decks").font(SGTheme.display(22)).foregroundStyle(SGTheme.paper)
+                Text("\(deckStore.decks.reduce(0) { $0 + $1.cards.count }) flashcards")
+                    .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
+            }
+            Spacer()
+            Button { showingNewDeckSheet = true } label: {
+                Label("New deck", systemImage: "plus")
+                    .font(SGTheme.buttonSmall)
+                    .foregroundStyle(SGTheme.mintDeep)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
+                    .background(SGTheme.mintTint, in: Capsule())
+            }
+            .buttonStyle(SGPressStyle())
+            .accessibilityLabel("Create new deck")
+        }
+    }
+
+    private var emptyDecks: some View {
+        SGCard(shadowed: false) {
+            VStack(spacing: 14) {
+                Image("sticker-books").resizable().scaledToFit().frame(width: 56, height: 56)
+                Text("Create your first deck").font(SGTheme.cardTitle).foregroundStyle(SGTheme.paper)
+                Text("Keep your notes and flashcards together, ready for your next study session.")
+                    .font(SGTheme.body).foregroundStyle(SGTheme.paperSecondary)
+                    .multilineTextAlignment(.center)
+                SGButton(title: "Create deck", icon: "plus") { showingNewDeckSheet = true }
+            }
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func deckRow(_ deck: Binding<Deck>) -> some View {
+        ZStack {
+            NavigationLink(destination: DeckView(deck: deck)) { EmptyView() }.opacity(0)
+            HStack(spacing: 14) {
+                Image("sticker-books").resizable().scaledToFit().frame(width: 36, height: 36)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(deck.wrappedValue.name).font(SGTheme.cardTitle).foregroundStyle(SGTheme.paper)
+                    Text("\(deck.wrappedValue.cards.count) flashcards")
+                        .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(SGTheme.rowLabel).foregroundStyle(SGTheme.mintDeep)
+            }
+            .padding(SGTheme.cardPadding)
+            .background(RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                .fill(SGTheme.inkRaised)
+                .overlay(RoundedRectangle(cornerRadius: SGTheme.cardRadius, style: .continuous)
+                    .strokeBorder(SGTheme.hairline, lineWidth: 1)))
+        }
     }
 }
 
@@ -402,6 +331,7 @@ struct DeckView: View {
         // The system bar keeps only the back button; the deck name lives in
         // the SGScreenHeader above (same chrome as the Decks tab).
         .navigationTitle("")
+        .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showAutoGenerateSheet) {
             AutoGenerateFlashcardsSheet(deck: $deck)

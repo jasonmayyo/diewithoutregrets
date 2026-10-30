@@ -1,0 +1,7 @@
+{
+  "date": "2026-10-29",
+  "file": "tutor-followup.png",
+  "source": "Native iOS simulator screenshot of production chat presentation components in an isolated preview app.",
+  "state": "Follow-up composer selected for the current card, with a fixture user question and tutor response.",
+  "limitations": "Fixture data, not a live model response. The initial composer selection was set by the preview harness. This screenshot verifies layout, not taps, keyboard behavior, attestation, or a full app session."
+}

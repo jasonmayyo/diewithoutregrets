@@ -13,6 +13,7 @@ struct ProfileView: View {
     @EnvironmentObject var deckStore: DeckStore
     @EnvironmentObject var navigationModel: NavigationModel
     @State private var showingFlashcardSettings = false
+    @State private var showingStudyDeckPicker = false
     @AppStorage("flashcardCount") private var flashcardCount: Int = 3
     @AppStorage("useAllCards") private var useAllCards: Bool = false
     @State private var showingManageSubscriptions = false
@@ -119,6 +120,14 @@ struct ProfileView: View {
                 // Study Settings Section
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeader(title: "Study Settings")
+
+                    SGListRow(
+                        title: "Flashcards to study",
+                        subtitle: deckStore.selectedDeck?.name ?? "Choose a deck for your monster chats",
+                        icon: "rectangle.stack"
+                    ) {
+                        showingStudyDeckPicker = true
+                    }
                     
                     // Unlock method picker
                     HStack(spacing: 10) {
@@ -286,6 +295,10 @@ struct ProfileView: View {
         }
         #endif
         .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
+        .sheet(isPresented: $showingStudyDeckPicker) {
+            DeckPickerSheet()
+                .environmentObject(deckStore)
+        }
         .sheet(isPresented: $showingFlashcardSettings) {
             FlashcardSettingsSheet(flashcardCount: $flashcardCount, useAllCards: $useAllCards)
         }

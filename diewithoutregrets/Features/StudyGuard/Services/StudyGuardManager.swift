@@ -64,13 +64,9 @@ final class StudyGuardManager: ObservableObject {
         }
         let interval = d.integer(forKey: SGContract.Keys.intervalMinutes)
         intervalMinutes = interval > 0 ? interval : SGContract.defaultIntervalMinutes
-        let total = d.double(forKey: SGContract.Keys.budgetTotalSeconds)
-        totalMinutes = total > 0 ? Int(total / 60) : intervalMinutes
-        // Read guard: used minutes only meaningful for a budget granted today.
-        let grantedAt = Date(timeIntervalSince1970: d.double(forKey: SGContract.Keys.budgetGrantedAt))
-        usedMinutes = Calendar.current.isDateInToday(grantedAt)
-            ? min(totalMinutes, Int(d.double(forKey: SGContract.Keys.budgetUsedSeconds) / 60))
-            : 0
+        let budget = GuardBudgetSnapshot(from: d, state: state)
+        totalMinutes = budget.totalMinutes
+        usedMinutes = budget.usedMinutes
         let ledger = EmergencyLedger.load(from: d)
         emergencyUnlocksRemaining = EmergencyLedger.remaining(ledger)
         nextEmergencyUnlockDate = EmergencyLedger.nextAvailableDate(ledger)
@@ -98,10 +94,18 @@ final class StudyGuardManager: ObservableObject {
 
     // MARK: - Setup
 
-    enum SetupError: Error {
+    enum SetupError: LocalizedError {
         case notAuthorized
         case emptySelection
         case monitoringFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .notAuthorized: return "Allow Screen Time access before forcing a lock."
+            case .emptySelection: return "Pick at least one guarded app before forcing a lock."
+            case .monitoringFailed: return "Study Guard could not start monitoring. Complete setup and try again."
+            }
+        }
     }
 
     /// Completes Screen Time setup. Flips the legacy-Shortcuts kill switch
@@ -496,15 +500,28 @@ final class StudyGuardManager: ObservableObject {
         refresh()
     }
 
-    func debugForceLock() {
-        guard let d = defaults else { return }
-        applyShieldsFromStoredSelection()
+    @discardableResult
+    func debugForceLock() -> Result<Void, SetupError> {
+        guard let d = defaults else { return .failure(.monitoringFailed) }
+        guard AuthorizationCenter.shared.authorizationStatus == .approved else { return .failure(.notAuthorized) }
+        guard !SGContract.isSelectionEmpty(selection) else { return .failure(.emptySelection) }
+
+        // A debug shield must have the same active engine as a real lock.
+        // Complete real setup (including verified monitoring), rather than
+        // writing shields while GuardState still derives .notSetUp/.disabled.
+        if !d.bool(forKey: SGContract.Keys.setupComplete)
+            || !d.bool(forKey: SGContract.Keys.guardEnabled)
+            || d.double(forKey: SGContract.Keys.budgetTotalSeconds) <= 0 {
+            if case .failure(let error) = completeSetup() { return .failure(error) }
+        }
         d.set(SGContract.StateValue.locked, forKey: SGContract.Keys.state)
         d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.lockedAt)
         let total = d.double(forKey: SGContract.Keys.budgetTotalSeconds)
         d.set(total, forKey: SGContract.Keys.budgetUsedSeconds)
         d.synchronize()
+        applyShieldsFromStoredSelection()
         refresh()
+        return .success(())
     }
 
     func debugResetAll() {
@@ -532,6 +549,8 @@ final class StudyGuardManager: ObservableObject {
         }
         return [
             ("state", d.string(forKey: SGContract.Keys.state) ?? "-"),
+            ("derivedState", state.rawValue),
+            ("authorization", String(describing: authorizationStatus)),
             ("setupComplete", String(d.bool(forKey: SGContract.Keys.setupComplete))),
             ("guardEnabled", String(d.bool(forKey: SGContract.Keys.guardEnabled))),
             ("intervalMinutes", String(d.integer(forKey: SGContract.Keys.intervalMinutes))),

@@ -1,0 +1,94 @@
+Study Guard production character atlases
+Date: 2026-10-29
+Approved designs: character-sheets/*-v1.png
+Generated using the built-in imagegen tool with transparent_background=true.
+Catalog images: ../../diewithoutregrets/Assets.xcassets/monster-{willow,zaza,sarge,gnash}-atlas.imageset/atlas.png
+Atlas dimensions: 1536 x 1024, three columns and two rows.
+Frame order: welcome, thinking, correct, retry, firm, celebrating.
+Each sheet is displayed through MonsterArtwork without rewriting its pixels or alpha.
+
+WILLOW
+
+Use case: precise-object-edit
+Asset type: production transparent sprite atlas for the Study Guard iOS app.
+Reference image: the supplied approved individual character model sheet. Preserve the character's EXACT approved identity, colours, anatomy, proportions, horn shapes, tuft, accessory, face and flat 2D illustration style.
+Primary request: turn the character into a clean production sprite atlas with SIX full-body poses. This is NOT a presentation or model sheet. It contains no lettering whatsoever.
+CRITICAL FORMAT: a landscape image in EXACT 3:2 aspect ratio, ideally 1536 by 1024 pixels, divided invisibly into THREE equal columns and TWO equal rows. Six equal SQUARE cells, each 512 by 512 if output is 1536 by 1024. Place exactly ONE complete full-body character at the exact center of each cell, with the whole character, horns, hands and feet inside the central 82% of its cell. All characters have CONSISTENT body scale and baseline, each roughly 400px tall within its 512px cell. No art crosses cell boundaries. Top row centers at (256,256), (768,256), (1280,256). Bottom row centers at (256,768), (768,768), (1280,768). Those positions are proportional if resolution changes.
+SPRITE ORDER, left to right:
+TOP LEFT: WELCOME. Approved signature standing pose and welcoming expression.
+TOP MIDDLE: THINKING. Thoughtful gaze, one hand near chin.
+TOP RIGHT: CORRECT. Proud, delighted smile with a small encouraging gesture.
+BOTTOM LEFT: TRY AGAIN. Persona-specific gentle or skeptical retry expression, no despair.
+BOTTOM MIDDLE: FIRM. Approved unimpressed or firm expression, keeping the persona's own tone.
+BOTTOM RIGHT: CELEBRATING. Happy open smile, eyes smiling, arms raised with both hands entirely inside the cell.
+Use the matching expression studies from the reference for all the faces, and the front view for body anatomy. Keep each pose recognisable as the same character. Exactly two blush patches, two eyes, two arms and two feet. Two small cream fangs where mouth is open. Avoid additional tiny details that disappear at 56px display size.
+Background: genuinely TRANSPARENT alpha, including all gutters and spaces within/around limbs. No shadows, no glow, no white background, no checkerboard printed into the artwork.
+Style: match the approved clean flat 2D shapes with restrained layered shading. No outline boxes, grid lines, captions, labels, typography, logos, swatches, props, ground plane, celebration confetti or external decorations. No redesign and no other characters.
+
+Willow: sage green, pale mint belly, soft lavender horns, rounded three-lobed tuft, no accessories. Welcome is a small wave. Thinking is quiet curiosity. Correct is warm pride. Try again is reassuring. Firm is patient focus with gently knitted brows and a tiny smile, never angry. Celebration is joyful but gentle.
+
+----------------
+
+ZAZA
+
+Use case: precise-object-edit
+Asset type: production transparent sprite atlas for the Study Guard iOS app.
+Reference image: the supplied approved individual character model sheet. Preserve the character's EXACT approved identity, colours, anatomy, proportions, horn shapes, tuft, accessory, face and flat 2D illustration style.
+Primary request: turn the character into a clean production sprite atlas with SIX full-body poses. This is NOT a presentation or model sheet. It contains no lettering whatsoever.
+CRITICAL FORMAT: a landscape image in EXACT 3:2 aspect ratio, ideally 1536 by 1024 pixels, divided invisibly into THREE equal columns and TWO equal rows. Six equal SQUARE cells, each 512 by 512 if output is 1536 by 1024. Place exactly ONE complete full-body character at the exact center of each cell, with the whole character, horns, hands and feet inside the central 82% of its cell. All characters have CONSISTENT body scale and baseline, each roughly 400px tall within its 512px cell. No art crosses cell boundaries. Top row centers at (256,256), (768,256), (1280,256). Bottom row centers at (256,768), (768,768), (1280,768). Those positions are proportional if resolution changes.
+SPRITE ORDER, left to right:
+TOP LEFT: WELCOME. Approved signature standing pose and welcoming expression.
+TOP MIDDLE: THINKING. Thoughtful gaze, one hand near chin.
+TOP RIGHT: CORRECT. Proud, delighted smile with a small encouraging gesture.
+BOTTOM LEFT: TRY AGAIN. Persona-specific gentle or skeptical retry expression, no despair.
+BOTTOM MIDDLE: FIRM. Approved unimpressed or firm expression, keeping the persona's own tone.
+BOTTOM RIGHT: CELEBRATING. Happy open smile, eyes smiling, arms raised with both hands entirely inside the cell.
+Use the matching expression studies from the reference for all the faces, and the front view for body anatomy. Keep each pose recognisable as the same character. Exactly two blush patches, two eyes, two arms and two feet. Two small cream fangs where mouth is open. Avoid additional tiny details that disappear at 56px display size.
+Background: genuinely TRANSPARENT alpha, including all gutters and spaces within/around limbs. No shadows, no glow, no white background, no checkerboard printed into the artwork.
+Style: match the approved clean flat 2D shapes with restrained layered shading. No outline boxes, grid lines, captions, labels, typography, logos, swatches, props, ground plane, celebration confetti or external decorations. No redesign and no other characters.
+
+Zaza: saturated magenta, pale pink belly, lavender horns, swept magenta tuft and gold sparkle clip fixed on the same anatomical side in every pose. Welcome is confident hand-on-hip and one palm up. Thinking is raised brow. Correct is delighted pride. Retry is theatrical side-eye. Firm is unimpressed with one raised eyebrow. Celebration is exuberant.
+
+----------------
+
+SARGE
+
+Use case: precise-object-edit
+Asset type: production transparent sprite atlas for the Study Guard iOS app.
+Reference image: the supplied approved individual character model sheet. Preserve the character's EXACT approved identity, colours, anatomy, proportions, horn shapes, tuft, accessory, face and flat 2D illustration style.
+Primary request: turn the character into a clean production sprite atlas with SIX full-body poses. This is NOT a presentation or model sheet. It contains no lettering whatsoever.
+CRITICAL FORMAT: a landscape image in EXACT 3:2 aspect ratio, ideally 1536 by 1024 pixels, divided invisibly into THREE equal columns and TWO equal rows. Six equal SQUARE cells, each 512 by 512 if output is 1536 by 1024. Place exactly ONE complete full-body character at the exact center of each cell, with the whole character, horns, hands and feet inside the central 82% of its cell. All characters have CONSISTENT body scale and baseline, each roughly 400px tall within its 512px cell. No art crosses cell boundaries. Top row centers at (256,256), (768,256), (1280,256). Bottom row centers at (256,768), (768,768), (1280,768). Those positions are proportional if resolution changes.
+SPRITE ORDER, left to right:
+TOP LEFT: WELCOME. Approved signature standing pose and welcoming expression.
+TOP MIDDLE: THINKING. Thoughtful gaze, one hand near chin.
+TOP RIGHT: CORRECT. Proud, delighted smile with a small encouraging gesture.
+BOTTOM LEFT: TRY AGAIN. Persona-specific gentle or skeptical retry expression, no despair.
+BOTTOM MIDDLE: FIRM. Approved unimpressed or firm expression, keeping the persona's own tone.
+BOTTOM RIGHT: CELEBRATING. Happy open smile, eyes smiling, arms raised with both hands entirely inside the cell.
+Use the matching expression studies from the reference for all the faces, and the front view for body anatomy. Keep each pose recognisable as the same character. Exactly two blush patches, two eyes, two arms and two feet. Two small cream fangs where mouth is open. Avoid additional tiny details that disappear at 56px display size.
+Background: genuinely TRANSPARENT alpha, including all gutters and spaces within/around limbs. No shadows, no glow, no white background, no checkerboard printed into the artwork.
+Style: match the approved clean flat 2D shapes with restrained layered shading. No outline boxes, grid lines, captions, labels, typography, logos, swatches, props, ground plane, celebration confetti or external decorations. No redesign and no other characters.
+
+Sarge: electric blue, ice-blue belly, steel-blue horns, tidy blue tuft, navy athletic headband with single white stripe fixed across all poses. Sturdy body. Welcome has folded arms and an encouraging grin. Thinking is concentrated. Correct gives a small thumbs-up. Retry is firm with a neutral mouth. Firm is unimpressed, never snarling. Celebration is proud with raised fists.
+
+----------------
+
+GNASH
+
+Use case: precise-object-edit
+Asset type: production transparent sprite atlas for the Study Guard iOS app.
+Reference image: the supplied approved individual character model sheet. Preserve the character's EXACT approved identity, colours, anatomy, proportions, horn shapes, tuft, accessory, face and flat 2D illustration style.
+Primary request: turn the character into a clean production sprite atlas with SIX full-body poses. This is NOT a presentation or model sheet. It contains no lettering whatsoever.
+CRITICAL FORMAT: a landscape image in EXACT 3:2 aspect ratio, ideally 1536 by 1024 pixels, divided invisibly into THREE equal columns and TWO equal rows. Six equal SQUARE cells, each 512 by 512 if output is 1536 by 1024. Place exactly ONE complete full-body character at the exact center of each cell, with the whole character, horns, hands and feet inside the central 82% of its cell. All characters have CONSISTENT body scale and baseline, each roughly 400px tall within its 512px cell. No art crosses cell boundaries. Top row centers at (256,256), (768,256), (1280,256). Bottom row centers at (256,768), (768,768), (1280,768). Those positions are proportional if resolution changes.
+SPRITE ORDER, left to right:
+TOP LEFT: WELCOME. Approved signature standing pose and welcoming expression.
+TOP MIDDLE: THINKING. Thoughtful gaze, one hand near chin.
+TOP RIGHT: CORRECT. Proud, delighted smile with a small encouraging gesture.
+BOTTOM LEFT: TRY AGAIN. Persona-specific gentle or skeptical retry expression, no despair.
+BOTTOM MIDDLE: FIRM. Approved unimpressed or firm expression, keeping the persona's own tone.
+BOTTOM RIGHT: CELEBRATING. Happy open smile, eyes smiling, arms raised with both hands entirely inside the cell.
+Use the matching expression studies from the reference for all the faces, and the front view for body anatomy. Keep each pose recognisable as the same character. Exactly two blush patches, two eyes, two arms and two feet. Two small cream fangs where mouth is open. Avoid additional tiny details that disappear at 56px display size.
+Background: genuinely TRANSPARENT alpha, including all gutters and spaces within/around limbs. No shadows, no glow, no white background, no checkerboard printed into the artwork.
+Style: match the approved clean flat 2D shapes with restrained layered shading. No outline boxes, grid lines, captions, labels, typography, logos, swatches, props, ground plane, celebration confetti or external decorations. No redesign and no other characters.
+
+Gnash: acid lime, pale lime belly, purple horns of unequal lengths, lime tuft with purple lock. Taller horn is on image-left in frontal views; preserve its anatomical side. Welcome is a little crouch with fingers together and crooked grin. Thinking is plotting. Correct is excited delight. Retry is comical disbelief. Firm is dramatic incredulity rather than horror. Celebration is ecstatic laughter.
