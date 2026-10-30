@@ -14,20 +14,29 @@ struct DeckListView: View {
     @State private var deckToEdit: Deck?
     @State private var showDeleteAlert = false
     @State private var showingAllExams = false
+    @State private var filter: StudyLibraryFilter = .all
+    @State private var editingFilteredExam: StudyExam?
+    @ObservedObject private var exams = ExamStore.shared
+    @ObservedObject private var subjects = StudySubjectStore.shared
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                SGScreenHeader(eyebrow: "Exams & flashcards", title: "Study")
+                SGScreenHeader(title: "Study")
 
-                List {
-                    StudyExamCalendarSection { showingAllExams = true }
+                ScrollViewReader { proxy in
+                  List {
+                    StudyExamCalendarSection(onShowAllExams: { showingAllExams = true }, onShowDecks: { exam in
+                        filter = .exam(exam.id)
+                        withAnimation { proxy.scrollTo("study-decks", anchor: .top) }
+                    })
                         .listRowInsets(EdgeInsets(top: 0, leading: SGTheme.screenPadding,
                                                   bottom: 16, trailing: SGTheme.screenPadding))
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
 
                     decksHeading
+                        .id("study-decks")
                         .listRowInsets(EdgeInsets(top: 8, leading: SGTheme.screenPadding,
                                                   bottom: 6, trailing: SGTheme.screenPadding))
                         .listRowBackground(Color.clear)
@@ -39,8 +48,13 @@ struct DeckListView: View {
                                                       bottom: 6, trailing: SGTheme.screenPadding))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
+                    } else if filteredDecks.isEmpty {
+                        filteredEmptyState
+                            .listRowInsets(EdgeInsets(top: 10, leading: SGTheme.screenPadding, bottom: 10, trailing: SGTheme.screenPadding))
+                            .listRowBackground(Color.clear).listRowSeparator(.hidden)
                     } else {
                         ForEach($deckStore.decks) { $deck in
+                          if filter.includes(deck, exams: exams.exams) {
                             deckRow($deck)
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
@@ -55,6 +69,7 @@ struct DeckListView: View {
                                     Button { deckToEdit = deck } label: { Label("Edit", systemImage: "pencil") }
                                         .tint(SGTheme.teal)
                                 }
+                          }
                         }
                     }
                     Color.clear.frame(height: SGTheme.tabBarClearance)
@@ -65,11 +80,17 @@ struct DeckListView: View {
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
                 .background(SGTheme.ink)
+                }
             }
             .background(SGTheme.ink.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $showingAllExams) { ExamCalendarView() }
-            .sheet(isPresented: $showingNewDeckSheet) { NewDeckView() }
+            .sheet(isPresented: $showingNewDeckSheet) {
+                NewDeckView(initialSubjectID: filterSubjectID, initialExamIDs: filterExam.map { [$0.id] } ?? [])
+            }
+            .sheet(item: $editingFilteredExam) { exam in
+                ExamEditSheet(exam: exam, accent: SGTheme.mintDeep, onSave: { exams.update($0) }, onDelete: { exams.remove($0) })
+            }
             .sheet(item: $deckToEdit) { deck in
                 EditDeckView(deck: deck) { updated in deckStore.updateDeck(updated) }
             }
@@ -92,10 +113,11 @@ struct DeckListView: View {
     }
 
     private var decksHeading: some View {
+      VStack(alignment: .leading, spacing: 8) {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Your decks").font(SGTheme.display(22)).foregroundStyle(SGTheme.paper)
-                Text("\(deckStore.decks.reduce(0) { $0 + $1.cards.count }) flashcards")
+                Text("\(filteredDecks.reduce(0) { $0 + $1.cards.count }) flashcards")
                     .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
             }
             Spacer()
@@ -110,6 +132,37 @@ struct DeckListView: View {
             .buttonStyle(SGPressStyle())
             .accessibilityLabel("Create new deck")
         }
+        HStack {
+            StudyDeckFilterMenu(selection: $filter)
+            Spacer()
+            if let exam = filterExam {
+                Button("Edit links") { editingFilteredExam = exam }
+                    .font(SGTheme.rowLabel).foregroundStyle(SGTheme.mintDeep)
+                    .frame(minHeight: 44).buttonStyle(.plain)
+            }
+        }
+      }
+    }
+
+    private var filteredDecks: [Deck] { deckStore.decks.filter { filter.includes($0, exams: exams.exams) } }
+    private var filterExam: StudyExam? {
+        guard case .exam(let id) = filter else { return nil }
+        return exams.exams.first { $0.id == id }
+    }
+    private var filterSubjectID: UUID? {
+        if case .subject(let id) = filter { return id }
+        return filterExam?.subjectID
+    }
+    private var filteredEmptyState: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(filterExam == nil ? "No decks in this subject yet." : "No decks linked to this exam yet.")
+                .font(SGTheme.body).foregroundStyle(SGTheme.paperSecondary)
+            if let exam = filterExam {
+                Button("Link existing decks") { editingFilteredExam = exam }.buttonStyle(.plain)
+            }
+            Button("Show all decks") { filter = .all }.buttonStyle(.plain)
+        }
+        .foregroundStyle(SGTheme.mintDeep)
     }
 
     private var emptyDecks: some View {
@@ -135,6 +188,9 @@ struct DeckListView: View {
                     Text(deck.wrappedValue.name).font(SGTheme.cardTitle).foregroundStyle(SGTheme.paper)
                     Text("\(deck.wrappedValue.cards.count) flashcards")
                         .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
+                    if let subjectName = subjects.name(for: deck.wrappedValue.subjectID) {
+                        Text(subjectName).font(SGTheme.caption.weight(.semibold)).foregroundStyle(SGTheme.mintDeep)
+                    }
                 }
                 Spacer()
                 Image(systemName: "chevron.right").font(SGTheme.rowLabel).foregroundStyle(SGTheme.mintDeep)
@@ -166,6 +222,8 @@ struct DeckView: View {
     @State private var showEditDeckSheet = false
     @ObservedObject private var enrichment = DeckEnrichment.shared
     @State private var enrichmentNote: String?
+    @ObservedObject private var subjects = StudySubjectStore.shared
+    @ObservedObject private var exams = ExamStore.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -182,7 +240,7 @@ struct DeckView: View {
                             .background(SGTheme.mint, in: Circle())
                     }
                     .buttonStyle(SGPressStyle())
-                    .accessibilityLabel("Edit deck name")
+                    .accessibilityLabel("Edit deck details")
 
                     Button(action: { showingNewCardSheet = true }) {
                         Image(systemName: "plus")
@@ -195,6 +253,22 @@ struct DeckView: View {
                     .accessibilityLabel("Add new flashcard")
                 }
             }
+
+            Button { showEditDeckSheet = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "tag")
+                    Text(subjects.name(for: deck.subjectID) ?? "Link a subject")
+                    Spacer()
+                    let count = StudyMaterialLinks.exams(for: deck.id, in: exams.exams).count
+                    Text(count == 0 ? "Link exams" : "\(count) linked \(count == 1 ? "exam" : "exams")")
+                    Image(systemName: "chevron.right").font(.caption)
+                }
+                .font(SGTheme.caption.weight(.semibold)).foregroundStyle(SGTheme.mintDeep)
+                .padding(.horizontal, SGTheme.screenPadding).frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Edit subject and exam links")
 
             if deck.cards.isEmpty {
                 // Empty State for No Flashcards
@@ -447,6 +521,15 @@ struct NewDeckView: View {
     @Environment(\.dismiss) var dismiss
     @State private var deckName = ""
     @State private var showDuplicateAlert = false
+    @State private var subjectID: UUID?
+    @State private var examIDs: Set<UUID>
+    var onCreate: ((Deck) -> Void)?
+
+    init(initialSubjectID: UUID? = nil, initialExamIDs: Set<UUID> = [], onCreate: ((Deck) -> Void)? = nil) {
+        _subjectID = State(initialValue: initialSubjectID)
+        _examIDs = State(initialValue: initialExamIDs)
+        self.onCreate = onCreate
+    }
 
     private var isDuplicateName: Bool {
         let trimmedName = deckName.trimmingCharacters(in: .whitespaces).lowercased()
@@ -460,7 +543,7 @@ struct NewDeckView: View {
     var body: some View {
         // Standard sheet anatomy: fitted detent, round-close header, one
         // input well, mint primary pinned at the bottom — no nav-bar chrome.
-        SGFittedSheet(estimatedHeight: 320) {
+        SGFittedSheet(estimatedHeight: 480) {
             VStack(alignment: .leading, spacing: 20) {
                 SGSheetHeader(title: "New Deck", onClose: { dismiss() })
 
@@ -481,6 +564,9 @@ struct NewDeckView: View {
                     }
                 }
 
+                StudySubjectField(selection: $subjectID)
+                StudyExamLinksField(selection: $examIDs, subjectID: subjectID)
+
                 SGButton(title: "Create", enabled: isValidName) {
                     let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
                     if isDuplicateName {
@@ -488,9 +574,11 @@ struct NewDeckView: View {
                     } else {
                         let newDeck = Deck(
                             name: trimmedName,
-                            cards: []
+                            cards: [], subjectID: subjectID
                         )
                         deckStore.addDeck(newDeck)
+                        ExamStore.shared.link(examIDs, to: newDeck.id)
+                        onCreate?(newDeck)
                         Analytics.deckCreated(
                             name: trimmedName,
                             totalDecksAfter: deckStore.decks.count
@@ -522,11 +610,15 @@ struct EditDeckView: View {
 
     @State private var deckName: String
     @State private var showDuplicateAlert = false
+    @State private var subjectID: UUID?
+    @State private var examIDs: Set<UUID>
 
     init(deck: Deck, onSave: @escaping (Deck) -> Void) {
         self.deck = deck
         self.onSave = onSave
         self._deckName = State(initialValue: deck.name)
+        _subjectID = State(initialValue: deck.subjectID)
+        _examIDs = State(initialValue: Set(StudyMaterialLinks.exams(for: deck.id, in: ExamStore.shared.exams).map(\.id)))
     }
 
     private var isDuplicateName: Bool {
@@ -544,7 +636,7 @@ struct EditDeckView: View {
     var body: some View {
         // Same anatomy as NewDeckView: fitted detent, round-close header,
         // one input well, mint primary at the bottom.
-        SGFittedSheet(estimatedHeight: 320) {
+        SGFittedSheet(estimatedHeight: 480) {
             VStack(alignment: .leading, spacing: 20) {
                 SGSheetHeader(title: "Edit Deck", onClose: { dismiss() })
 
@@ -565,13 +657,18 @@ struct EditDeckView: View {
                     }
                 }
 
+                StudySubjectField(selection: $subjectID)
+                StudyExamLinksField(selection: $examIDs, subjectID: subjectID)
+
                 SGButton(title: "Save", enabled: isValidName) {
                     let trimmedName = deckName.trimmingCharacters(in: .whitespaces)
                     if isDuplicateName {
                         showDuplicateAlert = true
                     } else {
-                        var updatedDeck = deck
+                        // Metadata edits must not replace cards added while this sheet was open.
+                        var updatedDeck = deckStore.decks.first { $0.id == deck.id } ?? deck
                         updatedDeck.name = trimmedName
+                        updatedDeck.subjectID = subjectID
                         if trimmedName != deck.name {
                             Analytics.deckRenamed(
                                 oldName: deck.name,
@@ -579,6 +676,7 @@ struct EditDeckView: View {
                             )
                         }
                         onSave(updatedDeck)
+                        ExamStore.shared.link(examIDs, to: deck.id)
                         dismiss()
                     }
                 }

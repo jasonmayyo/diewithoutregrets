@@ -12,11 +12,13 @@ struct StudyExamCalendarSection: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var store = ExamStore.shared
+    @ObservedObject private var decks = DeckStore.shared
     @State private var displayedMonth = Date()
     @State private var selectedDay: Date?
     @State private var showingAdd = false
     @State private var editing: StudyExam?
     let onShowAllExams: () -> Void
+    var onShowDecks: (StudyExam) -> Void = { _ in }
 
     private var month: StudyCalendarMonth {
         StudyCalendarMonth(containing: displayedMonth, calendar: calendar)
@@ -182,6 +184,17 @@ struct StudyExamCalendarSection: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Edit exam")
+                    Button {
+                        if StudyMaterialLinks.decks(for: exam, in: decks.decks).isEmpty { editing = exam }
+                        else { onShowDecks(exam) }
+                    } label: {
+                        let linked = StudyMaterialLinks.decks(for: exam, in: decks.decks)
+                        Label(linked.isEmpty ? "Link flashcard decks" : "View \(linked.count) linked \(linked.count == 1 ? "deck" : "decks")",
+                              systemImage: "rectangle.on.rectangle")
+                            .font(SGTheme.caption.weight(.semibold)).foregroundStyle(SGTheme.mintDeep)
+                            .frame(minHeight: 36)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -293,6 +306,9 @@ struct ExamCalendarView: View {
                 Text(exam.subject).font(.system(size: 16, weight: .semibold)).foregroundStyle(.primary)
                 Text(exam.date.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption).foregroundStyle(.secondary)
+                let linked = StudyMaterialLinks.decks(for: exam, in: deckStore.decks)
+                Text(linked.isEmpty ? "No decks linked" : "\(linked.count) decks · \(linked.reduce(0) { $0 + $1.cards.count }) flashcards")
+                    .font(.caption).foregroundStyle(accent)
                 if !exam.topics.isEmpty {
                     Text(exam.topics.joined(separator: ", "))
                         .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -310,12 +326,10 @@ struct ExamCalendarView: View {
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    /// Fraction mastered across the cards tagged with this exam's topics, nil
-    /// when no topics are linked or no cards match yet.
+    /// Readiness covers the same linked material the user chose for the exam.
     private func readiness(_ exam: StudyExam) -> Double? {
-        let topics = Set(exam.topics)
-        guard !topics.isEmpty else { return nil }
-        let cards = deckStore.decks.flatMap(\.cards).filter { ($0.topic.map(topics.contains)) ?? false }
+        let cards = StudyMaterialLinks.decks(for: exam, in: deckStore.decks).flatMap(\.cards)
+            .filter(\.isUsableForStudy)
         guard !cards.isEmpty else { return nil }
         return Double(cards.filter { !$0.isWeak }.count) / Double(cards.count)
     }
@@ -360,8 +374,8 @@ struct ExamCalendarView: View {
     }
 
     private func runTopUp(_ topic: String) async {
-        guard let deckID = enrichment.targetDeckID(forTopic: topic) else {
-            topUpResult = "Create a deck first, then top up."
+        guard let exam = store.nextExam, let deckID = enrichment.targetDeckID(forTopic: topic, exam: exam) else {
+            topUpResult = "Link a deck to this exam first, then top up."
             return
         }
         pendingTopic = topic
@@ -382,6 +396,11 @@ struct ExamEditSheet: View {
     @State private var subject: String
     @State private var date: Date
     @State private var topicsText: String
+    @State private var subjectID: UUID?
+    @State private var deckIDs: Set<UUID>
+    @State private var showingDeckPicker = false
+    @ObservedObject private var decks = DeckStore.shared
+    @ObservedObject private var subjects = StudySubjectStore.shared
     private let existing: StudyExam?
     private let accent: Color
     private let onSave: (StudyExam) -> Void
@@ -389,6 +408,7 @@ struct ExamEditSheet: View {
 
     init(exam: StudyExam? = nil,
          initialDate: Date? = nil,
+         initialSubjectID: UUID? = nil,
          accent: Color,
          onSave: @escaping (StudyExam) -> Void,
          onDelete: ((StudyExam) -> Void)? = nil) {
@@ -399,21 +419,46 @@ struct ExamEditSheet: View {
         _subject = State(initialValue: exam?.subject ?? "")
         _date = State(initialValue: exam?.date ?? initialDate ?? Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date())
         _topicsText = State(initialValue: exam?.topics.joined(separator: ", ") ?? "")
+        _subjectID = State(initialValue: exam?.subjectID ?? initialSubjectID)
+        _deckIDs = State(initialValue: Set(exam?.deckIDs ?? []))
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Exam") {
-                    TextField("Subject (e.g. Anatomy)", text: $subject)
+                    TextField("Exam name (e.g. Biology final)", text: $subject)
+                        .accessibilityLabel("Exam name")
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                 }
+                Section {
+                    StudySubjectField(selection: $subjectID)
+                } footer: { Text("You can use the subject name, or give this exam its own name.") }
+                Section {
+                    Button { showingDeckPicker = true } label: {
+                        HStack {
+                            Label("Choose decks", systemImage: "rectangle.on.rectangle")
+                            Spacer()
+                            Text("\(linkedDecks.count)").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption)
+                        }
+                        .frame(minHeight: 36)
+                    }
+                    ForEach(linkedDecks) { deck in
+                        HStack {
+                            Text(deck.name)
+                            Spacer()
+                            Text("\(deck.cards.count) cards").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } header: { Text("Flashcard decks") }
+                footer: { Text("Link the decks this exam covers. The monster will use this exam's countdown only when you study a linked deck.") }
                 Section {
                     TextField("Comma-separated (e.g. skeletal, cardiac)", text: $topicsText)
                 } header: {
                     Text("Topics")
                 } footer: {
-                    Text("The monster weights these topics as this exam nears.")
+                    Text("Optional. Prioritise these topics within the linked decks as this exam nears.")
                 }
                 if let existing, let onDelete {
                     Section {
@@ -429,10 +474,17 @@ struct ExamEditSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
-                        .disabled(subject.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(examName.isEmpty)
                 }
             }
+            .sheet(isPresented: $showingDeckPicker) { StudyExamDeckPicker(selection: $deckIDs, subjectID: subjectID) }
         }
+    }
+
+    private var linkedDecks: [Deck] { decks.decks.filter { deckIDs.contains($0.id) } }
+    private var examName: String {
+        let name = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? (subjects.name(for: subjectID) ?? "") : name
     }
 
     private func save() {
@@ -441,10 +493,11 @@ struct ExamEditSheet: View {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         onSave(StudyExam(id: existing?.id ?? UUID(),
-                         subject: subject.trimmingCharacters(in: .whitespaces),
+                         subject: examName,
                          date: date,
                          topics: topics,
-                         createdAt: existing?.createdAt ?? Date()))
+                         createdAt: existing?.createdAt ?? Date(), subjectID: subjectID,
+                         deckIDs: linkedDecks.map(\.id)))
         dismiss()
     }
 }

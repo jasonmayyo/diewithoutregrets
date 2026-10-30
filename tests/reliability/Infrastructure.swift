@@ -11,7 +11,14 @@ final class DeckStore {
         reviewWrites.append((deckID, outcomes))
     }
 }
-final class ExamStore { static let shared = ExamStore(); var nextExam: StudyExam? }
+final class ExamStore {
+    static let shared = ExamStore()
+    var exams: [StudyExam] = []
+    var nextExam: StudyExam? {
+        get { exams.filter(\.isUpcoming).min { $0.date < $1.date } }
+        set { exams = newValue.map { [$0] } ?? [] }
+    }
+}
 final class PersonaStore { static let shared = PersonaStore(); var persona = MonsterPersona.willow }
 final class StudyGuardManager {
     static let shared = StudyGuardManager()

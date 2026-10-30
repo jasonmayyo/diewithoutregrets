@@ -100,7 +100,7 @@ final class MonsterSession: ObservableObject {
         }
         self.studyCards = cards
         self.deckName = deck?.name ?? "Study round"
-        let exam = examStore.nextExam.flatMap { $0.daysUntil(from: now) >= 0 ? $0 : nil }
+        let exam = StudyMaterialLinks.nextExam(for: deck, in: examStore.exams, now: now)
 
         // Pressure → mood → dials (all app-observable signals).
         let pressure = SGContract.PressureInputs(
@@ -162,10 +162,8 @@ final class MonsterSession: ObservableObject {
             hasExam: MonsterScript.hasUpcomingExam(vars), defaults: openingDefaults)
         append(.monster(MonsterScript.openingGreeting(persona: persona, mood: dials.mood,
                                                      vars: vars, seed: opening.greeting)))
-        if persona.id == MonsterPersona.diva.id {
-            append(.monster(MonsterScript.scrollCallout(seed: nextVoiceVariant("scrollCallout")),
-                            reaction: reactionPicker.opening(persona: persona)))
-        }
+        append(.monster(MonsterScript.scrollCallout(persona: persona, seed: nextVoiceVariant("scrollCallout")),
+                        reaction: reactionPicker.opening(persona: persona)))
         append(.monster(MonsterScript.openingPrompt(persona: persona, vars: vars,
                                                    studySheet: method == .studySheet, seed: opening.prompt),
                         sources: openingSources))
@@ -205,7 +203,7 @@ final class MonsterSession: ObservableObject {
         let outstanding = method == .inChat ? queue.count + (awaitingAnswer ? 1 : 0)
             : (studyRound.map { $0.questions.count - $0.answers.count } ?? 0)
         let count = restarting || outstanding == 0 ? (method == .studySheet ? 4 : dials.questions) : outstanding
-        let exam = examStore.nextExam.flatMap { $0.daysUntil() >= 0 ? $0 : nil }
+        let exam = StudyMaterialLinks.nextExam(for: deck, in: examStore.exams)
         let toll = CardSelection.pick(from: cards, count: count, examTopics: Set(exam?.topics ?? []))
         guard !toll.isEmpty else { return false }
 
@@ -424,33 +422,14 @@ final class MonsterSession: ObservableObject {
         let reaction = grantedMinutes > 0
             ? reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count)
             : nil
-        if persona.id == MonsterPersona.diva.id {
-            let outcome = roundOutcome
-            append(.monster(MonsterScript.zazaRoundReaction(outcome: outcome, vars: vars,
-                seed: nextVoiceVariant("result.\(outcome.rawValue)"))))
-            appendZazaSendoff(reaction: reaction)
-            appendRecap()
-            if grantedMinutes > 0 {
-                append(.init(sender: .monster, kind: .grant(minutes: grantedMinutes)))
-                _ = QV2Streak.recordSuccess()
-            }
-            MonsterNudges.rescheduleAfterStudy(persona: persona)
-            isFinished = true
-            return
-        }
-        if grantedMinutes > 0 {
-            vars.minutes = grantedMinutes
-            say(.pass)
-            _ = QV2Streak.recordSuccess()
-        } else {
-            say(.fail)
-        }
-        // The snack belongs with taking the earned break, not a correct-answer
-        // verdict, exam reminder, or explanation.
-        say(.sendoff, reaction: reaction)
+        let outcome = roundOutcome
+        append(.monster(MonsterScript.roundReaction(persona: persona, outcome: outcome, vars: vars,
+            seed: nextVoiceVariant("result.\(outcome.rawValue)"))))
+        appendSendoff(reaction: reaction)
         appendRecap()
         if grantedMinutes > 0 {
             append(.init(sender: .monster, kind: .grant(minutes: grantedMinutes)))
+            _ = QV2Streak.recordSuccess()
         }
         MonsterNudges.rescheduleAfterStudy(persona: persona)
         isFinished = true
@@ -554,19 +533,12 @@ final class MonsterSession: ObservableObject {
         studySheetState = .finished
         grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: secondsPerCorrectAnswer)
         writeBackCurrentDeck()
+        let reaction = grantedMinutes > 0
+            ? reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count) : nil
+        appendSendoff(reaction: reaction)
         if grantedMinutes > 0 {
-            vars.minutes = grantedMinutes
-            let reaction = reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count)
-            if persona.id == MonsterPersona.diva.id {
-                appendZazaSendoff(reaction: reaction)
-            } else if let reaction {
-                say(reaction == .snackBreak ? .sendoff : .pass, reaction: reaction)
-            }
             append(.init(sender: .monster, kind: .grant(minutes: grantedMinutes)))
             _ = QV2Streak.recordSuccess()
-        } else {
-            if persona.id == MonsterPersona.diva.id { appendZazaSendoff() }
-            else { append(.monster("No time earned this round. Come back when you're ready to try again.")) }
         }
         MonsterNudges.rescheduleAfterStudy(persona: persona)
         isFinished = true
@@ -598,10 +570,10 @@ final class MonsterSession: ObservableObject {
         MonsterOpeningRotation.draw(personaID: persona.id, lane: lane, defaults: openingDefaults)
     }
 
-    private func appendZazaSendoff(reaction: MonsterReaction? = nil) {
+    private func appendSendoff(reaction: MonsterReaction? = nil) {
         let outcome = roundOutcome
         let lane = grantedMinutes > 0 ? outcome.rawValue : "noGrant"
-        append(.monster(MonsterScript.zazaSendoff(outcome: outcome, minutes: grantedMinutes,
+        append(.monster(MonsterScript.sendoff(persona: persona, outcome: outcome, minutes: grantedMinutes,
             seed: nextVoiceVariant("sendoff.\(lane)")), reaction: reaction))
     }
 

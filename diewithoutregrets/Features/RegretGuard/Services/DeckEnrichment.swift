@@ -117,7 +117,9 @@ final class DeckEnrichment: ObservableObject {
     static func examTopUpTopics(exam: StudyExam?, decks: [Deck], now: Date = Date(),
                                 weaknessThreshold: Double = 0.4, thinThreshold: Int = 6) -> [String] {
         guard let exam else { return [] }
-        let allCards: [Regret] = decks.flatMap { $0.cards }
+        let linked = StudyMaterialLinks.decks(for: exam, in: decks)
+        guard !linked.isEmpty else { return [] }
+        let allCards: [Regret] = linked.flatMap { $0.cards }
         struct Candidate { let topic: String; let weakness: Double; let count: Int }
         var candidates: [Candidate] = []
         for topic in exam.topics {
@@ -136,7 +138,11 @@ final class DeckEnrichment: ObservableObject {
 
     /// The deck best suited to receive cards for `topic`: the one already holding
     /// the most cards for it, else the selected deck, else the first deck.
-    func targetDeckID(forTopic topic: String) -> UUID? {
+    func targetDeckID(forTopic topic: String, exam: StudyExam? = nil) -> UUID? {
+        if let exam {
+            return StudyMaterialLinks.topUpDeck(for: topic, exam: exam, decks: deckStore.decks,
+                                               selectedID: deckStore.selectedDeck?.id)
+        }
         let byTopic = deckStore.decks
             .map { (id: $0.id, count: $0.cards.filter { $0.topic == topic }.count) }
             .filter { $0.count > 0 }

@@ -343,9 +343,9 @@ export function validateScriptRequest(body) {
 export function openAIScriptBody(c) {
   const vibe = {
     diva: 'a sassy hype-bestie who roasts with love and slays, emoji-friendly',
-    willow: 'a warm, calm, patient nurturer who is gentle and never harsh',
-    coach: 'a no-nonsense drill coach with tough-love energy',
-    gremlin: 'a chaotic, funny little menace, unhinged but playful',
+    willow: 'Willow, a calm, supportive Gen Z girl and study friend; relaxed lowercase, occasional girl, bestie, low-key or little W; reassuring without baby talk; never address the student as love, my love, pet or darling',
+    coach: 'Sarge, a direct Gen Z guy and demanding but encouraging coach; short focused sentences, occasional bro, man, lock in, reps or W; praise the work and call out gaps without insulting intelligence',
+    gremlin: 'Gnash, a chaotic, playful Gen Z guy and gaming friend; occasional bro or dude, side quests, lore, loot, respawns and brainrot jokes; tease scrolling habits, never the student\'s worth',
   }[c.persona];
   const examLine = (c.exam && c.examDays != null)
     ? `Their next exam is ${c.exam} in ${c.examDays} day(s).` : 'They have no exam set.';
@@ -412,8 +412,10 @@ export function validateTutorRequest(body) {
 
 export function openAITutorBody(body) {
   const voice = {
-    diva: 'Zaza, a playful hype-bestie', willow: 'Willow, a calm and patient tutor',
-    coach: 'Sarge, a direct and encouraging coach', gremlin: 'Gnash, a playful oddball',
+    diva: 'Zaza, a playful hype-bestie',
+    willow: 'Willow, a calm, supportive Gen Z girl and study friend; use relaxed language and occasional bestie or girl, never love, pet or darling as a form of address',
+    coach: 'Sarge, a direct, encouraging Gen Z guy and coach; occasional bro or lock in, clear explanations with no insults',
+    gremlin: 'Gnash, a playful Gen Z guy and gaming friend; occasional bro, dude or light gaming jokes without obscuring the explanation',
   }[body.persona];
   return {
     model: 'gpt-4o-mini', max_tokens: 500, temperature: 0.4, stream: false, n: 1,

@@ -12,12 +12,14 @@ struct Deck: Identifiable, Codable, Equatable {
     var name: String
     var cards: [Regret]
     var createdAt: Date
+    var subjectID: UUID?
     
-    init(id: UUID = UUID(), name: String, cards: [Regret] = [], createdAt: Date = Date()) {
+    init(id: UUID = UUID(), name: String, cards: [Regret] = [], createdAt: Date = Date(), subjectID: UUID? = nil) {
         self.id = id
         self.name = name
         self.cards = cards
         self.createdAt = createdAt
+        self.subjectID = subjectID
     }
 }
 
@@ -427,18 +429,37 @@ enum CardSelection {
 /// uses the nearest exam to drive pressure and topic weighting, and names it.
 struct StudyExam: Identifiable, Codable, Equatable {
     let id: UUID
+    /// Historical key: this is the exam's display name (for example, "Biology final").
     var subject: String
     var date: Date
     var topics: [String]
     var createdAt: Date
+    var subjectID: UUID?
+    /// Explicit links, independent of subject grouping. A deck can cover several exams.
+    var deckIDs: [UUID]
 
     init(id: UUID = UUID(), subject: String, date: Date,
-         topics: [String] = [], createdAt: Date = Date()) {
+         topics: [String] = [], createdAt: Date = Date(), subjectID: UUID? = nil, deckIDs: [UUID] = []) {
         self.id = id
         self.subject = subject
         self.date = date
         self.topics = topics
         self.createdAt = createdAt
+        self.subjectID = subjectID
+        self.deckIDs = deckIDs
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, subject, date, topics, createdAt, subjectID, deckIDs }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        subject = try values.decode(String.self, forKey: .subject)
+        date = try values.decode(Date.self, forKey: .date)
+        topics = try values.decodeIfPresent([String].self, forKey: .topics) ?? []
+        createdAt = try values.decodeIfPresent(Date.self, forKey: .createdAt) ?? date
+        subjectID = try values.decodeIfPresent(UUID.self, forKey: .subjectID)
+        deckIDs = try values.decodeIfPresent([UUID].self, forKey: .deckIDs) ?? []
     }
 
     /// Whole days from `now` until the exam (negative once it has passed).
@@ -449,6 +470,59 @@ struct StudyExam: Identifiable, Codable, Equatable {
     }
 
     var isUpcoming: Bool { daysUntil() >= 0 }
+}
+
+struct StudySubject: Identifiable, Codable, Equatable {
+    let id: UUID
+    var name: String
+
+    init(id: UUID = UUID(), name: String) { self.id = id; self.name = name }
+
+    static func cleanName(_ name: String) -> String {
+        name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    static func nameKey(_ name: String) -> String {
+        cleanName(name).folding(options: .caseInsensitive, locale: Locale(identifier: "en_US_POSIX"))
+    }
+}
+
+/// Shared by the library, chat, and exam top-ups. Names and AI topic tags never
+/// create a link: only the user's saved deck IDs determine an exam's material.
+enum StudyMaterialLinks {
+    static func decks(for exam: StudyExam, in decks: [Deck]) -> [Deck] {
+        let ids = Set(exam.deckIDs)
+        return decks.filter { ids.contains($0.id) }
+    }
+
+    static func exams(for deckID: UUID, in exams: [StudyExam]) -> [StudyExam] {
+        exams.filter { $0.deckIDs.contains(deckID) }.sorted { $0.date < $1.date }
+    }
+
+    static func nextExam(for deck: Deck?, in exams: [StudyExam], now: Date = Date()) -> StudyExam? {
+        guard let deck else { return nil }
+        return self.exams(for: deck.id, in: exams).first { $0.daysUntil(from: now) >= 0 }
+    }
+
+    static func topUpDeck(for topic: String, exam: StudyExam, decks: [Deck], selectedID: UUID?) -> UUID? {
+        let linked = self.decks(for: exam, in: decks)
+        let byTopic = linked.map { (id: $0.id, count: $0.cards.filter { $0.topic == topic }.count) }
+            .filter { $0.count > 0 }.max { $0.count < $1.count }?.id
+        return byTopic ?? linked.first(where: { $0.id == selectedID })?.id ?? linked.first?.id
+    }
+}
+
+enum StudyLibraryFilter: Hashable {
+    case all, unassigned, subject(UUID), exam(UUID)
+
+    func includes(_ deck: Deck, exams: [StudyExam]) -> Bool {
+        switch self {
+        case .all: return true
+        case .unassigned: return deck.subjectID == nil
+        case .subject(let id): return deck.subjectID == id
+        case .exam(let id): return exams.first { $0.id == id }?.deckIDs.contains(deck.id) == true
+        }
+    }
 }
 
 /// Calendar-day arithmetic keeps the grid aligned across time zones, DST,

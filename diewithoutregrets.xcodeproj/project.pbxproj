@@ -154,6 +154,7 @@
 		6BE29CFD2DB8355B00505D57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFC2DB8355B00505D57 /* AppDelegate.swift */; };
 		6BE29CFE2E0000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE29CFF2E0000000000001 /* NotificationManager.swift */; };
 		6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA08392D82DA71007C1898 /* DeckListView.swift */; };
+		A91D47E887E4431A92F9D461 /* StudyLinkingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91D47E887E4431A92F9D462 /* StudyLinkingViews.swift */; };
 		6DD4B51B6C1C305217BF2AB9 /* MonsterChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78892AA7EF27E11ABD42F054 /* MonsterChatView.swift */; };
 		6FBBE44F25B05968B47F3943 /* StudyGuardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE0F9BE7BF0FF98002CF94C /* StudyGuardEngineTests.swift */; };
 		6FDEB600CF1D71C142E2FFEA /* PersonaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96E68D9B3645BF4F24BF368 /* PersonaStore.swift */; };
@@ -470,6 +471,7 @@
 		6BE29CFF2E0000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BE29D042DB84E6400505D57 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
 		6BFA08392D82DA71007C1898 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
+		A91D47E887E4431A92F9D462 /* StudyLinkingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyLinkingViews.swift; sourceTree = "<group>"; };
 		6E206C6619486388DF2ABFBA /* monster-willow-atlas.imageset */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "monster-willow-atlas.imageset"; path = "diewithoutregrets/Assets.xcassets/monster-willow-atlas.imageset"; sourceTree = "<group>"; };
 		76612DA17BFE6F4EFF27E927 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		76E486AF46DD67CFCCA61BBD /* MonsterWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MonsterWidgetBundle.swift; sourceTree = "<group>"; };
@@ -862,6 +864,7 @@
 				6B22E8662D4910B3003A5685 /* RegretEditorSheet.swift */,
 				6B2DACD22D770543005B062D /* NewFlashcardSheet.swift */,
 				6BFA08392D82DA71007C1898 /* DeckListView.swift */,
+				A91D47E887E4431A92F9D462 /* StudyLinkingViews.swift */,
 				6B811F552D840B6B00BF9F3F /* AutoGenerateFlashcardSheet.swift */,
 				6BA42AE92DAC4A7F00BBB626 /* PracticeView.swift */,
 				AA00020100000000CHCK0001 /* OnboardingChecklistCard.swift */,
@@ -1704,6 +1707,7 @@
 				6B2B70CD2D5CFA59008D2884 /* RegretStore.swift in Sources */,
 				6B22E8522D48CDD2003A5685 /* RegretView.swift in Sources */,
 				6BFA083A2D82DA71007C1898 /* DeckListView.swift in Sources */,
+				A91D47E887E4431A92F9D461 /* StudyLinkingViews.swift in Sources */,
 				6B7CD4E42D50A7380065A0F7 /* AgeSelectView.swift in Sources */,
 				6B22E8612D490092003A5685 /* RegretGuardApps.swift in Sources */,
 				4A0BB7052FA0000000000005 /* AdsTracker.swift in Sources */,

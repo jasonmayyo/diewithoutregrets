@@ -22,7 +22,9 @@ import PackageDescription
 let package = Package(name: "StudyReliability", platforms: [.macOS(.v14)],
     targets: [.target(name: "StudyReliability"),
               .testTarget(name: "StudyReliabilityTests", dependencies: ["StudyReliability"],
-                          resources: [.copy("MonsterReactions")])])
+                          resources: [.copy("MonsterReactions")]),
+              .target(name: "StudyStorage"),
+              .testTarget(name: "StudyStorageTests", dependencies: ["StudyStorage"])])
 ''')
     for relative in [
         'diewithoutregrets/Shared/SGContract.swift',
@@ -55,7 +57,17 @@ let package = Package(name: "StudyReliability", platforms: [.macOS(.v14)],
     shutil.copyfile(root / 'tests/reliability/MonsterReactionTests.swift', tests / 'MonsterReactionTests.swift')
     shutil.copyfile(root / 'tests/reliability/MonsterOpeningTests.swift', tests / 'MonsterOpeningTests.swift')
     shutil.copyfile(root / 'tests/reliability/StudyCalendarTests.swift', tests / 'StudyCalendarTests.swift')
+    shutil.copyfile(root / 'tests/reliability/StudyLinkSessionTests.swift', tests / 'StudyLinkSessionTests.swift')
     shutil.copytree(root / 'diewithoutregrets/Resources/MonsterReactions', tests / 'MonsterReactions')
+    # Exercise the real UserDefaults stores separately from the chat's focused fakes.
+    storage = work / 'Sources' / 'StudyStorage'
+    storage_tests = work / 'Tests' / 'StudyStorageTests'
+    storage.mkdir(parents=True)
+    storage_tests.mkdir(parents=True)
+    for name in ['RegretGuardApps.swift', 'RegretStore.swift']:
+        shutil.copyfile(root / 'diewithoutregrets/Features/RegretGuard/Models' / name, storage / name)
+    shutil.copyfile(root / 'tests/storage/Infrastructure.swift', storage / 'Infrastructure.swift')
+    shutil.copyfile(root / 'tests/storage/StudyLinksTests.swift', storage_tests / 'StudyLinksTests.swift')
     env = dict(os.environ)
     # Live smoke tests are opt-in in Xcode only, never in this offline runner.
     env.pop('STUDY_GUARD_LIVE_GENERATION', None)

@@ -661,6 +661,9 @@ struct DeckPickerSheet: View {
     @EnvironmentObject var deckStore: DeckStore
     @Environment(\.dismiss) private var dismiss
     @State private var showNewDeck = false
+    @State private var filter: StudyLibraryFilter = .all
+    @ObservedObject private var subjects = StudySubjectStore.shared
+    @ObservedObject private var exams = ExamStore.shared
     var subtitle = "Choose the deck for your next monster chat or unlock quiz. Your choice stays selected until you change it."
     var activeDeckID: UUID? = nil
     var onSelect: ((Deck) -> Void)? = nil
@@ -677,10 +680,22 @@ struct DeckPickerSheet: View {
                 .padding(.top, 24)
                 .padding(.bottom, 20)
 
+                HStack {
+                    StudyDeckFilterMenu(selection: $filter)
+                    Spacer()
+                }
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.bottom, 12)
+
                 ScrollView {
                     VStack(spacing: 8) {
-                        ForEach(deckStore.decks) { deck in
+                        ForEach(deckStore.decks.filter { filter.includes($0, exams: exams.exams) }) { deck in
                             deckRow(deck)
+                        }
+                        if !deckStore.decks.isEmpty && !deckStore.decks.contains(where: { filter.includes($0, exams: exams.exams) }) {
+                            Text("No decks match this filter yet. Link decks from Study, or show all decks.")
+                                .font(SGTheme.body).foregroundStyle(SGTheme.paperSecondary).padding(.vertical, 12)
+                            Button("Show all decks") { filter = .all }.tint(SGTheme.mintDeep)
                         }
 
                         Button {
@@ -721,13 +736,23 @@ struct DeckPickerSheet: View {
             .background(SGTheme.ink)
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showNewDeck) {
-                NewDeckView()
+                NewDeckView(initialSubjectID: filterSubjectID, initialExamIDs: filterExam.map { [$0.id] } ?? [])
                     .presentationDetents([.large])
                     .sgSheetChrome()
             }
         }
         .presentationDetents([.large])
         .sgSheetChrome()
+    }
+
+    private var filterExam: StudyExam? {
+        guard case .exam(let id) = filter else { return nil }
+        return exams.exams.first { $0.id == id }
+    }
+
+    private var filterSubjectID: UUID? {
+        if case .subject(let id) = filter { return id }
+        return filterExam?.subjectID
     }
 
     private func deckRow(_ deck: Deck) -> some View {
@@ -763,6 +788,9 @@ struct DeckPickerSheet: View {
                         Text(readyCount == 0 ? "No ready cards · Edit to add questions" : "\(readyCount) card\(readyCount == 1 ? "" : "s") ready to study")
                             .font(SGTheme.caption)
                             .foregroundColor(SGTheme.paperSecondary)
+                        if let subjectName = subjects.name(for: deck.subjectID) {
+                            Text(subjectName).font(SGTheme.caption.weight(.semibold)).foregroundStyle(SGTheme.mintDeep)
+                        }
                     }
 
                     Spacer()

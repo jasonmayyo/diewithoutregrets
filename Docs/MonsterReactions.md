@@ -19,7 +19,7 @@ user trying to scroll. The other surprise, side-eye and facepalm stills stay in
 the library. Study-sheet completion reactions wait until the user claims their
 time. Attachments stay fixed when returning to an existing chat.
 
-Zaza's opening has three spoken beats: an actual exam reminder (or a greeting
+Every monster's opening has three spoken beats: an actual exam reminder (or a greeting
 when there is no upcoming exam), a scrolling call-out, and a challenge naming
 the selected deck and actual flashcard count. Each beat draws from its own
 12-line shuffle bag, persisted across app restarts. A full bag is exhausted
@@ -30,7 +30,22 @@ still counts as a miss for the tone. The reaction describes the completed round;
 the sendoff uses only the actual local time grant. Zero earned time never receives
 an invitation to scroll. Each result/sendoff pool rotates independently. Opening
 and closing copy are local and available offline; the existing best-effort AI
-still supplies individual answer reactions. Other personas keep their own voices.
+still supplies individual answer reactions. All four have twelve lines per
+opening, call-out, challenge, outcome and sendoff pool. The closing speech stays
+together above the recap and unlock badge in both study modes.
+
+Voice direction matches the monster, not an inferred student gender: Zaza and
+Willow use feminine voices; Sarge and Gnash use masculine voices. Willow is a
+calm Gen Z study friend with occasional "girl", "bestie" and "little W";
+she no longer uses "love", "pet" or "darling" as forms of address. Sarge keeps
+his direct coaching with "bro", "lock in", reps and earned wins. Gnash is the
+chaotic gaming friend with "bro", "dude", quests, lore and loot. Slang stays
+secondary to the actual study instructions. Picker samples, answer fallbacks,
+study-sheet bridges and reminder copy follow the same voices.
+
+Matching script/tutor AI voice instructions are maintained in
+`backend/src/protocol.js`; a backend deployment is required for server-side
+prompt changes to reach the live AI service.
 
 The user chooses the deck in **Profile → Study Settings → Flashcards to study**,
 the home active-deck card, or the deck selector beneath the monster's name in

@@ -289,14 +289,14 @@ struct SGChip: View {
     }
 }
 
-/// Screen header used by the main tabs: eyebrow micro-label over a big
+/// Screen header used by the main tabs: optional eyebrow micro-label over a big
 /// rounded display title, with room for one trailing action.
 struct SGScreenHeader<Trailing: View>: View {
-    let eyebrow: String
+    let eyebrow: String?
     let title: String
     @ViewBuilder var trailing: Trailing
 
-    init(eyebrow: String, title: String, @ViewBuilder trailing: () -> Trailing = { EmptyView() }) {
+    init(eyebrow: String? = nil, title: String, @ViewBuilder trailing: () -> Trailing = { EmptyView() }) {
         self.eyebrow = eyebrow
         self.title = title
         self.trailing = trailing()
@@ -305,7 +305,9 @@ struct SGScreenHeader<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 6) {
-                SGMicroLabel(text: eyebrow)
+                if let eyebrow {
+                    SGMicroLabel(text: eyebrow)
+                }
                 Text(title)
                     .font(SGTheme.display(34))
                     .foregroundColor(SGTheme.paper)
