@@ -178,6 +178,57 @@ class DeckStore: ObservableObject {
     }
 }
 
+// MARK: - Subjects
+
+final class StudySubjectStore: ObservableObject {
+    static let shared = StudySubjectStore()
+    private let defaults: UserDefaults
+    private let storeKey = "sg_studySubjects"
+    @Published private(set) var subjects: [StudySubject] {
+        didSet { if let data = try? JSONEncoder().encode(subjects) { defaults.set(data, forKey: storeKey) } }
+    }
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        subjects = defaults.data(forKey: storeKey).flatMap { try? JSONDecoder().decode([StudySubject].self, from: $0) } ?? []
+    }
+
+    var sorted: [StudySubject] { subjects.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
+    func name(for id: UUID?) -> String? { subjects.first { $0.id == id }?.name }
+
+    @discardableResult func add(name: String) -> StudySubject? {
+        let clean = StudySubject.cleanName(name)
+        guard !clean.isEmpty else { return nil }
+        if let existing = subjects.first(where: { StudySubject.nameKey($0.name) == StudySubject.nameKey(clean) }) { return existing }
+        let subject = StudySubject(name: clean)
+        subjects.append(subject)
+        return subject
+    }
+
+    @discardableResult func rename(_ subject: StudySubject, to name: String) -> Bool {
+        let clean = StudySubject.cleanName(name)
+        guard !clean.isEmpty, let index = subjects.firstIndex(where: { $0.id == subject.id }),
+              !subjects.contains(where: { $0.id != subject.id && StudySubject.nameKey($0.name) == StudySubject.nameKey(clean) }) else { return false }
+        subjects[index].name = clean
+        return true
+    }
+
+    func remove(_ subject: StudySubject, decks: DeckStore, exams: ExamStore) {
+        // Removing a grouping never removes study material or its explicit exam links.
+        decks.decks = decks.decks.map { deck in
+            var copy = deck
+            if copy.subjectID == subject.id { copy.subjectID = nil }
+            return copy
+        }
+        exams.exams = exams.exams.map { exam in
+            var copy = exam
+            if copy.subjectID == subject.id { copy.subjectID = nil }
+            return copy
+        }
+        subjects.removeAll { $0.id == subject.id }
+    }
+}
+
 // MARK: - Exam store (tutor-monster foundation)
 
 /// Stores the user's upcoming exams. Migrates the single write-only onboarding
@@ -194,7 +245,8 @@ final class ExamStore: ObservableObject {
     }
 
     init(defaults: UserDefaults = .standard,
-         sharedDefaults: UserDefaults? = SGContract.sharedDefaults) {
+         sharedDefaults: UserDefaults? = SGContract.sharedDefaults,
+         subjects: StudySubjectStore = .shared) {
         self.defaults = defaults
         self.sharedDefaults = sharedDefaults
         if let data = defaults.data(forKey: storeKey),
@@ -202,6 +254,17 @@ final class ExamStore: ObservableObject {
             exams = saved
         } else {
             exams = ExamStore.migratedFromOnboarding(defaults)
+        }
+        // Preserve existing exam names/dates. Do not guess which decks they cover.
+        if !defaults.bool(forKey: "sg_examSubjectLinks_v1") {
+            exams = exams.map { exam in
+                var copy = exam
+                if copy.subjectID == nil, copy.subject != "My exam" {
+                    copy.subjectID = subjects.add(name: copy.subject)?.id
+                }
+                return copy
+            }
+            defaults.set(true, forKey: "sg_examSubjectLinks_v1")
         }
         save()   // persist any migration + mirror the nearest exam
     }
@@ -218,6 +281,15 @@ final class ExamStore: ObservableObject {
     }
 
     func remove(_ exam: StudyExam) { exams.removeAll { $0.id == exam.id } }
+
+    func link(_ examIDs: Set<UUID>, to deckID: UUID) {
+        exams = exams.map { exam in
+            var copy = exam
+            copy.deckIDs.removeAll { $0 == deckID }
+            if examIDs.contains(exam.id) { copy.deckIDs.append(deckID) }
+            return copy
+        }
+    }
 
     private func save() {
         if let data = try? JSONEncoder().encode(exams) {
@@ -239,29 +311,6 @@ final class ExamStore: ObservableObject {
                           date: Date(timeIntervalSince1970: ts),
                           topics: subject == "My exam" ? [] : [subject])]
     }
-}
-
-// MARK: - Persona store (selected tutor monster)
-
-/// Holds the user's chosen tutor-monster persona by id. Defaults to the safe
-/// fallback until onboarding sets one.
-final class PersonaStore: ObservableObject {
-    static let shared = PersonaStore()
-    private let defaults: UserDefaults
-    private let key = "sg_selectedPersonaID"
-
-    @Published var selectedID: String {
-        didSet { defaults.set(selectedID, forKey: key) }
-    }
-
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-        selectedID = defaults.string(forKey: key) ?? MonsterPersona.fallback.id
-    }
-
-    var persona: MonsterPersona { MonsterPersona.with(id: selectedID) }
-
-    func select(_ persona: MonsterPersona) { selectedID = persona.id }
 }
 
 // MARK: - Mastery writeback (shared by the quiz and the monster chat)

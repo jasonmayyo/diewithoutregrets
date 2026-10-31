@@ -4,9 +4,8 @@
 //
 //  Custom shield appearance for Study Guard locks. Adaptive system colors
 //  keep all four shield variants readable in light and dark appearances.
-//  ONE button only ("Study to unlock") — taps are handled by the
-//  StudyGuardShieldAction extension records the tapped shield's return app
-//  before opening Study Guard.
+//  The selected monster invites the user straight into its study chat.
+//  StudyGuardShieldAction handles the cross-process handoff.
 //
 
 import ManagedSettings
@@ -17,22 +16,22 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
 
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         remember(application)
-        return studyGuardShield()
+        return studyGuardShield(applicationName: application.localizedDisplayName)
     }
 
     override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
         remember(application, category: category)
-        return studyGuardShield()
+        return studyGuardShield(applicationName: application.localizedDisplayName)
     }
 
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
         clearCategoryReturn()
-        return studyGuardShield()
+        return studyGuardShield(applicationName: webDomain.domain, fallbackName: "this website")
     }
 
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
         clearCategoryReturn()
-        return studyGuardShield()
+        return studyGuardShield(applicationName: webDomain.domain, fallbackName: "this website")
     }
 
     private func remember(_ application: Application, category: ActivityCategory? = nil) {
@@ -48,40 +47,47 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
         ShieldReturnContext.remember(tokenData: nil, bundleIdentifier: nil, in: SGContract.sharedDefaults)
     }
 
-    fileprivate func studyGuardShield(previewMinutes: Int? = nil) -> ShieldConfiguration {
-        // System colors resolve in the shield host's appearance, independently
-        // of the main app's light-only theme. Keep the red on the lock and CTA;
-        // a material over a red canvas washes it pink in light mode.
-        // SGTheme.alarmDeep, kept in UIKit for the extension target.
-        let buttonRed = UIColor(red: 0xC2 / 255.0, green: 0x27 / 255.0, blue: 0x1E / 255.0, alpha: 1)
-
-        let armedMinutes = previewMinutes
-            ?? SGContract.sharedDefaults?.integer(forKey: SGContract.Keys.armedThresholdMinutes) ?? 0
-        let subtitle = armedMinutes > 0
-            ? "Your \(armedMinutes) minutes are up.\nStudy to earn 5 min."
-            : "Study to earn 5 min."
+    fileprivate func studyGuardShield(applicationName: String? = nil,
+                                     fallbackName: String = "this app",
+                                     previewPersona: MonsterPersona? = nil) -> ShieldConfiguration {
+        let persona = previewPersona ?? MonsterPersona.selected(in: SGContract.sharedDefaults)
+        let copy = MonsterShieldCopy(persona: persona, applicationName: applicationName, fallback: fallbackName)
+        let buttonColor = UIColor(red: 0.102, green: 0.141, blue: 0.125, alpha: 1)
 
         return ShieldConfiguration(
             backgroundBlurStyle: nil,
             backgroundColor: .systemBackground,
-            icon: lockIcon(color: buttonRed),
-            title: ShieldConfiguration.Label(text: "Caught you scrolling", color: .label),
+            icon: monsterIcon(persona: persona) ?? lockIcon(color: buttonColor),
+            title: ShieldConfiguration.Label(text: copy.title, color: .label),
             subtitle: ShieldConfiguration.Label(
-                text: subtitle,
+                text: copy.subtitle,
                 color: .secondaryLabel
             ),
-            // ONE button, no escape hatch: the tap always yields a way into
-            // Study Guard (direct open when iOS honors it, otherwise the
-            // instant notification), so the copy promises the outcome, not
-            // the mechanism. A second "Close" button only diluted the single
-            // path forward.
-            primaryButtonLabel: ShieldConfiguration.Label(text: "Study to unlock", color: .white),
-            primaryButtonBackgroundColor: buttonRed
+            primaryButtonLabel: ShieldConfiguration.Label(text: copy.button, color: .white),
+            primaryButtonBackgroundColor: buttonColor
         )
     }
 
+    /// Bundle only the four original atlas folders in this extension, rather
+    /// than the main app's entire asset catalog. Rasterize the firm pose into
+    /// a small transparent icon so the returned image does not retain the atlas.
+    private func monsterIcon(persona: MonsterPersona) -> UIImage? {
+        let bundle = Bundle(for: StudyGuardShieldExtension.self)
+        guard let folder = bundle.url(forResource: persona.artworkAsset, withExtension: "imageset"),
+              let atlas = UIImage(contentsOfFile: folder.appendingPathComponent("atlas.png").path)?.cgImage else { return nil }
+        let cell = CGRect(x: CGFloat(atlas.width) / 3, y: CGFloat(atlas.height) / 2,
+                          width: CGFloat(atlas.width) / 3, height: CGFloat(atlas.height) / 2)
+        guard let crop = atlas.cropping(to: cell) else { return nil }
+        let size = CGSize(width: 128, height: 128)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIImage(cgImage: crop).draw(in: CGRect(origin: .zero, size: size))
+        }.withRenderingMode(.alwaysOriginal)
+    }
+
     /// Render in points; the renderer supplies the display scale exactly once.
-    /// Keep the lock red on a transparent canvas in either appearance.
+    /// Safe fallback if a resource is missing in an incorrectly assembled build.
     private func lockIcon(color: UIColor) -> UIImage? {
         let size = CGSize(width: 88, height: 88)
         let config = UIImage.SymbolConfiguration(pointSize: 42, weight: .semibold)
@@ -104,10 +110,11 @@ import SwiftUI
 /// icon without changing Screen Time state. Apple owns the on-device layout;
 /// this approximates its spacing and typography, not its enforcement UI.
 struct StudyGuardShieldDesignPreview: View {
-    var minutes = 15
+    var persona: MonsterPersona = .willow
+    var applicationName = "Instagram"
 
     var body: some View {
-        let configuration = StudyGuardShieldExtension().studyGuardShield(previewMinutes: minutes)
+        let configuration = StudyGuardShieldExtension().studyGuardShield(applicationName: applicationName, previewPersona: persona)
         GeometryReader { geometry in
             ZStack {
                 Color(uiColor: configuration.backgroundColor ?? .systemBackground)

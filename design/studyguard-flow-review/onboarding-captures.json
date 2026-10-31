@@ -1,0 +1,122 @@
+[
+  {
+    "screenID": 800,
+    "file": "screenshots/onboarding-01-welcome.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 813,
+    "file": "screenshots/onboarding-02-study-to-earn.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 803,
+    "file": "screenshots/onboarding-03-study-level.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 804,
+    "file": "screenshots/onboarding-04-scrolling-friction.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 805,
+    "file": "screenshots/onboarding-05-scrolling-moment.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 806,
+    "file": "screenshots/onboarding-06-flashcards-demo.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 820,
+    "file": "screenshots/onboarding-07-exam-subject.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 807,
+    "file": "screenshots/onboarding-08-exam-date.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 810,
+    "file": "screenshots/onboarding-09-phone-time.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 819,
+    "file": "screenshots/onboarding-10-age.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 818,
+    "file": "screenshots/onboarding-11-exam-time-cost.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 808,
+    "file": "screenshots/onboarding-12-reassurance.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 817,
+    "file": "screenshots/onboarding-13-the-method.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 821,
+    "file": "screenshots/onboarding-14-monster-picker.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 812,
+    "file": "screenshots/onboarding-15-study-rule.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 801,
+    "file": "screenshots/onboarding-16-study-more.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 814,
+    "file": "screenshots/onboarding-17-commitment.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 815,
+    "file": "screenshots/onboarding-18-plan-building.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 816,
+    "file": "screenshots/onboarding-19-personal-plan.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 506,
+    "file": "screenshots/onboarding-20-paywall.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 601,
+    "file": "screenshots/onboarding-21-setup-intro.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 602,
+    "file": "screenshots/onboarding-22-screen-time.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 606,
+    "file": "screenshots/onboarding-23-choose-apps.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  },
+  {
+    "screenID": 604,
+    "file": "screenshots/onboarding-24-notifications.png",
+    "capture": "native app, Debug screen jump with sample answers"
+  }
+]

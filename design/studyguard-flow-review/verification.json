@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-29",
+  "screenshots": 47,
+  "dimensions": "1206x2622",
+  "assetValidation": "All 77 local media references in index.html exist.",
+  "browserChecks": [
+    "Updated shield and direct-chat gallery rendered",
+    "38 image elements and all local assets exist",
+    "Old red locked-home screen removed from shield entry sequence",
+    "Per-answer replay renders at #reward with first/second earned totals; H.264 recording metadata loads without error (9.38 seconds)."
+  ],
+  "captureMethod": "24 onboarding captures, four personalized shield configuration previews, updated full-app direct-chat entry and eight native chat fixture states. The Willow shield is repeated in the flow.",
+  "physicalDeviceVerification": "pending user test",
+  "sourceSHA256": {
+    "StudyGuardShield/StudyGuardShieldExtension.swift": "101ce43f9f1336bc2cd0ac6dfd8941b87977c0a958df5a4f7a4bac852c195c4c",
+    "diewithoutregrets/Shared/MonsterPersona.swift": "0e18736b3dd13d58d8cc442c4cbbbe97df405b59c94e8907038a3c4049582949",
+    "diewithoutregrets/Features/TutorMonster/PersonaStore.swift": "c640afc8b1e317bc00526ecc4189c27aa4f971e575d152e0263792ff7863a2e7",
+    "diewithoutregrets/Shared/ShieldReturnContext.swift": "052bd23f0b28096d78195454786b565cfa55986067af77ecb41e09dd9c639cfa",
+    "diewithoutregrets/NavigationModel.swift": "1b0497db6f2977e73507fd5d0ad313b6f572220f2dbde3057ae9e938cc3b7356",
+    "diewithoutregrets/diewithoutregretsApp.swift": "443c8def79de799caf6f71ef75d992458eba0b5e61371b3c25d88d28e80064c2",
+    "diewithoutregrets/ContentView.swift": "1f71dc4e3b84ed6db134f9864474b330e93f7d4cb1bab3bc14b5b2f0aa1caa42",
+    "diewithoutregrets/Features/TutorMonster/MonsterChatView.swift": "79cae5746657c066a1622c2fd88d0d958c9cb60fa7184b18fc4f7e85e6182258",
+    "diewithoutregrets/Features/TutorMonster/MonsterChatComponents.swift": "6de061e4722582662c2bcaafc7d481d04d0310dd1f1793b80abb8538ef1359c8",
+    "diewithoutregrets/Features/RegretGuard/Views/QuizV2Coins.swift": "b9355673258f347a341de43c864537e931437156809919d71b754e61684d1b41",
+    "diewithoutregrets/Features/TutorMonster/MonsterMessage.swift": "8364addfdb8e553f133166553c1b2a406d34866244f6f2b58d138b5abb22408a",
+    "diewithoutregrets/Features/TutorMonster/MonsterSession.swift": "fd99ec3a67e025022eee8f9e4a5264c605f05e41dfa622ed0bc6d822ba475f60"
+  },
+  "personalizedShield": {
+    "build": "App, shield extension and XCTest target compile; isolated shield preview build passes",
+    "unitTests": "21 shield/selection/navigation tests pass; 22 study regressions pass and 2 opt-in device tests skip",
+    "coldLaunch": "A fresh DEBUG shield handoff opens Willow chat even with monster preference off and trueFocus selected; captured launch frames contain no locked-home screen",
+    "warmLaunch": "Routing helper covered by tests. Simulator URL smoke stops at iOS Open confirmation; actual warm shield handoff remains a physical-device check.",
+    "resources": "All four atlas folders in the built shield extension match source bytes",
+    "worker": "No backend change or deployment required for this iOS update"
+  },
+  "timeReward": {
+    "build": "Unsigned Debug simulator app/extensions build passes for arm64 and x86_64.",
+    "regressionTests": "25 Swift tests passed; 2 opt-in live tests skipped. New tests cover per-answer accrual before the only grant, no rewards for wrong answers or follow-ups, repeated-message deduplication, and the existing grant cap.",
+    "visualChecks": [
+      "Two independent native flocks follow correct answers, with earnings retained between questions.",
+      "Final counter reconciles to the rounded 3-minute grant without another flock.",
+      "Reduced Motion shows the pending earned total without flight.",
+      "Large-text layout retains the monster name and accumulated time."
+    ],
+    "semantics": "Animation uses local verdict occurrence IDs and the frozen session rate. Pending rewards queue; the real unlock stays at completion. Scrolling and follow-ups do not award time.",
+    "video": "animation/monster-per-answer-reward.mp4",
+    "deviceQA": "Real grants and haptic feel require physical-device testing."
+  },
+  "chatReadability": {
+    "build": "Final unsigned Debug simulator app/extensions build succeeds.",
+    "tests": "28 study tests pass; 2 opt-in live device tests skip. Progress, repeated-card attempts, follow-ups and feedback-only legacy prompts are covered.",
+    "checked": [
+      "Full app: correct multiple-choice and typed replies advance progress and earnings; the next question scrolls into view.",
+      "Full app: enter follow-up mode and return to the same answer choices.",
+      "Native fixture: all four long answers fit at standard text size; large text retains readable labels and a separate scrollable choice list."
+    ],
+    "limits": "Physical-device scrolling feel, software keyboard and actual Screen Time grants remain device checks.",
+    "sourceSHA256": {
+      "MonsterChatView.swift": "588eeca6396c7f885177a72297ccd2516e29c8acadca3986c9eaee54e90481cf",
+      "MonsterChatComponents.swift": "77404c3592cd5a2b07f92ff1b00f8fc387ec526017399e44344f80feee7c7c14",
+      "MonsterMessage.swift": "5dbb15f4411f17b8fddef3df3e529bb7abe722409f10db5cdbdf5bcdb21f22bc",
+      "MonsterSession.swift": "2a72049f017234d45baea48c85e4ff628b79b5bd551515ea40858ca25cf430c5"
+    },
+    "review": "index.html#chat"
+  },
+  "directLockEntry": {
+    "build": "Final unsigned Debug simulator app/extensions build succeeds.",
+    "tests": "32 shield/state/navigation tests pass, including automatic entry, closing without a loop, stale callbacks, shield interruption and debug reset.",
+    "checked": "Full app seeded locked launch automatically reaches Zaza chat without taps. Final recording confirms one continuous lock-click/ripple and fade into chat. Legacy monster-off / True Focus preferences do not intercept this route.",
+    "video": "animation/lock-to-chat.mp4",
+    "limits": "Screen Time is seeded in Simulator. Physical-device handoff and grants remain unverified. Final close/resume UI check was unavailable because the Mac locked; close-loop behavior is covered by navigation tests.",
+    "sourceSHA256": {
+      "diewithoutregrets/NavigationModel.swift": "fe07b9c9116fe9ee5c2893351f1b1e3929fbd5ab7770ea203cbcbb4bfced9177",
+      "diewithoutregrets/ContentView.swift": "edf10ebf3589b7222b04182b04d1f414c26196826b0323a407e42451ce51d88c",
+      "diewithoutregrets/Features/RegretGuard/Views/RegretGuard.swift": "47a7ec703e30994fe7472558525c83c1d2d7b672bdae99afdbe9d7defff56834"
+    },
+    "review": "index.html#lock-chat"
+  },
+  "compactChatAndPacing": {
+    "build": "Unsigned Debug simulator app/extensions build succeeds.",
+    "tests": "31 study regression tests pass; 2 opt-in live tests skip. Coverage includes pacing for verdict/reaction/next card, long-correction reading time, immediate user echoes and reply readiness during quiet pauses.",
+    "checked": [
+      "Full app: compact single-row progress at standard text size; accessible two-row progress remains readable at accessibility-large.",
+      "Full app: sent answer appears immediately, typing precedes verdict, reward flight follows verdict, then reaction and next question arrive separately with typing/reading beats.",
+      "Full app: answer and Ask controls disabled while the turn is being presented; next typed answer becomes available after the final question."
+    ],
+    "timing": "Typing 1.2\u20132.0 seconds for every spoken monster message, question and verdict. Quiet reading pauses scale with preceding message length up to 2.4 seconds. User echoes are immediate. This only paces presentation; grading/grants remain local.",
+    "video": "animation/chat-paced-replies.mp4",
+    "limits": "Seeded Simulator Screen Time state. Physical-device feel, real grants and live AI remain device checks.",
+    "sourceSHA256": {
+      "diewithoutregrets/Features/TutorMonster/MonsterChatView.swift": "999a925bc59fb58439e063fb69e704f242d0de8e039bb26e1ad975948cfc517e",
+      "diewithoutregrets/Features/TutorMonster/MonsterChatComponents.swift": "da2cf9229654a05a555619b1460d24b47a312eabce25ac139598f8c5b9cbaa37",
+      "diewithoutregrets/Features/TutorMonster/MonsterMessage.swift": "12bb0aa45cdd5092f646b0f0c5fb173a49826b02364235b487e5ad9fc3b8dfff"
+    },
+    "review": "index.html#chat"
+  },
+  "studySheet": {
+    "build": "Final unsigned Debug app and extensions rebuilt successfully after simulator reset, including arm64 and x86_64 simulator slices.",
+    "tests": "38 offline tests pass; 2 opt-in live tests skip. Seven new study-sheet tests cover batch scoring, exact-once claims, one follow-up, fresh/small/duplicate/invalid decks, pause/resume, typed grading and independent tutor questions.",
+    "checked": [
+      "Native study-sheet introduction, four-choice layout, per-answer earnings, pause/resume, 2/4 recap with three unseen cards, 0/3 follow-up ending in a single final 3-minute grant.",
+      "Main-app direct chat entry and Profile \u2192 Debug selector inspected.",
+      "Final rebuilt main app: explicit In chat selection shows its compact progress strip, individual question, four answer choices and Ask about this question control."
+    ],
+    "limits": "Simulator uses explicit sample decks and seeded Screen Time. Live tutor/App Attest, software-keyboard feel, haptics and real blocking/grants remain physical-device checks.",
+    "review": "index.html#study-sheet",
+    "video": "screenshots/study-sheet/per-answer-reward.mp4",
+    "sourceSHA256": {
+      "diewithoutregrets/Features/TutorMonster/MonsterStudyRound.swift": "7dd8f41eaa1d79a961b053d769d2b81262beee7258d85455ffa6b802af249d34",
+      "diewithoutregrets/Features/TutorMonster/MonsterStudySheet.swift": "71240d1ce33d43bcf16caef05d026d5e0697e110d17aec16a6f32c53bf32165f",
+      "diewithoutregrets/Features/TutorMonster/MonsterSession.swift": "82da63e09c2bed228f9bb93d4be4d14ccf1fab0a60b8ee5b4028a99b5a546af5",
+      "diewithoutregrets/Features/TutorMonster/MonsterScript.swift": "216ea2219eb7dab1d00937327b065e3f21d2173736b705fead267a2cc241d9ae",
+      "diewithoutregrets/Features/TutorMonster/MonsterMessage.swift": "174cb25de402d8cf787474b6abc1d879eb34f502a67a7e7dff8e250445166ee4",
+      "diewithoutregrets/Features/TutorMonster/MonsterChatView.swift": "aaef047b0d7434e0fadbc13cfa9c1d11dc4a9b45136aef715bb98c2d851f6edb",
+      "diewithoutregrets/Features/StudyGuard/Views/StudyGuardDebugSection.swift": "ded134cd7675f66dda515c1514d16b5d431600faafe970e3192783e813f4f7a7"
+    },
+    "comparisonCapture": "screenshots/study-sheet/09-in-chat-comparison.png"
+  },
+  "inlineMotion": {
+    "build": "Final unsigned Debug app and extensions build succeeds.",
+    "tests": "38 offline tests pass; 2 opt-in live checks skipped. Default selection and explicit sheet preference preservation covered.",
+    "checked": [
+      "Native three-card round: correct and incorrect replies, per-answer hourglass rewards, next questions and final recap/Done.",
+      "Selected answer stays highlighted and disabled through the incoming turn; all four choices fit at standard text size.",
+      "Final rebuilt app: animated question replacement and follow-up composer/choices transitions; returning to choices keeps the full current question above the panel.",
+      "Recorded frames inspected for message movement, answer replacement and the follow-up panel scroll fix."
+    ],
+    "reducedMotion": "Movement and press-scale animations disabled through the accessibility environment.",
+    "limits": "Seeded simulator Screen Time and sample deck. Physical scrolling/haptics, software keyboard, real grants and live AI remain phone checks.",
+    "review": "index.html#inline-motion",
+    "video": "screenshots/inline-motion/inline-replies-final.mp4",
+    "videoEdits": "Two excerpts at original speed; idle inspection time between them removed.",
+    "sourceSHA256": {
+      "diewithoutregrets/Features/TutorMonster/MonsterChatView.swift": "bc218e268a9ed412e8dd9ac22659c0b1215a91d3f7adcbe5a9841e202c6a7faa",
+      "diewithoutregrets/Features/TutorMonster/MonsterChatComponents.swift": "15f12cc5432c76f049337650b52e23da5ae3dc250ed583e9bd992b6cf4b3212a",
+      "diewithoutregrets/Features/TutorMonster/MonsterStudyRound.swift": "fd149e434201142e0e1fddcf984d4ecb3b2da51b14cc96717b9ac013f55ec0d9",
+      "diewithoutregrets/Features/StudyGuard/Views/StudyGuardDebugSection.swift": "e79e64fbe2f0095d31423c3f6152bc647b3e70d94fa56ac582a76c378e582e9e",
+      "tests/reliability/MonsterStudySheetTests.swift": "b936b035eb5522c7c8db555cd0c062f2dbad5f9beb9beabcc0d5efcd7ef36b0e"
+    },
+    "browser": "Refreshed gallery renders; native HTML video player loads after local server gained byte-range support (HTTP 206).",
+    "server": "python3 design/studyguard-flow-review/serve.py"
+  },
+  "visibleChat": {
+    "build": "Final unsigned Debug app and extensions build succeeds.",
+    "tests": "42 offline tests pass, 2 opt-in live checks skip. New deterministic tests cover hidden start, pause during a reading beat, queued background replies, cancelled typing resuming late, no replay, immediate user messages and waiting/ready/complete panel states.",
+    "nativeChecks": [
+      "Left the app before the first message, spent about 30 seconds in Settings, returned to an empty transcript; messages then arrived one by one.",
+      "Left during the second answer turn after the local verdict; returned with the remaining reaction and next question still unread, then watched them resume.",
+      "Final build: no messages under the lock cover; date is reserved before typing, first message fades in, four answers switch to Answer sent, next card restores choices."
+    ],
+    "semantics": "Only presentation pauses. Local grading and the once-only grant do not depend on animation. Already visible history is preserved; unread beats restart on return.",
+    "limits": "Seeded simulator Screen Time, offline sample deck and simulator app switching. Real FaceTime shielding/handoff, keyboard and physical-device motion remain device checks.",
+    "review": "index.html#visible-chat",
+    "videos": [
+      "screenshots/visible-chat/chat-lifecycle.mp4",
+      "screenshots/visible-chat/background-resume.mp4"
+    ],
+    "videoEdits": "Idle inspection/time away shortened between excerpts; original playback speed.",
+    "sourceSHA256": {
+      "diewithoutregrets/Features/TutorMonster/MonsterMessage.swift": "4d0509c4055bb38abeb57f51c4089a8cc8fa0f676fff059cd5d491dd9662a041",
+      "diewithoutregrets/Features/TutorMonster/MonsterChatView.swift": "36c2a50c3c13ed8e414f983becf5ba3d2e2074b9adac3ce9a2b3f31a7d18bf78",
+      "diewithoutregrets/Features/TutorMonster/MonsterChatComponents.swift": "139b0196d13ec15e49b2b62508c34de2e27f69f932fb0abef3c8c899684baba9",
+      "diewithoutregrets/ContentView.swift": "49c277b8714a3494907a2380b9cd8998ecfe96774d3b4c5317de63002adebed6",
+      "tests/reliability/MonsterPresentationTests.swift": "071bfcd23076e49f1e539c18bcb4a6417d79652bcd39041f3aeb42c438157e55"
+    }
+  }
+}

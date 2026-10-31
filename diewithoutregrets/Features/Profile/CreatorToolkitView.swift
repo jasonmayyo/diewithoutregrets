@@ -28,6 +28,7 @@ struct CreatorToolkitView: View {
     @State private var showResetConfirm = false
     @State private var showOnboardingConfirm = false
     @State private var engineStateExpanded = false
+    @State private var lockError: String?
 
     /// The lock/time/flow tools only make sense with the Screen Time
     /// engine live. Setup and disabled states get the hint card instead.
@@ -73,6 +74,13 @@ struct CreatorToolkitView: View {
         .onAppear {
             studyGuard.refresh()
             streak = QV2Streak.current()
+        }
+        .alert("Couldn't lock apps", isPresented: Binding(
+            get: { lockError != nil }, set: { if !$0 { lockError = nil } }
+        )) {
+            Button("OK", role: .cancel) { lockError = nil }
+        } message: {
+            Text(lockError ?? "")
         }
         .confirmationDialog("Reset the Study Guard engine?",
                             isPresented: $showResetConfirm,
@@ -166,7 +174,7 @@ struct CreatorToolkitView: View {
                 unlockNow()
             }
 
-            Text("The full sequence plays on the Guard tab: the countdown rolls to zero, the lock stamps shut and the meadow goes dark. Unlocking counts the fresh minutes back up.")
+            Text("The full sequence rolls the countdown to zero, plays the lock animation and opens your monster chat automatically. Unlocking counts the fresh minutes back up.")
                 .font(SGTheme.caption)
                 .foregroundColor(SGTheme.paperTertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -402,20 +410,20 @@ struct CreatorToolkitView: View {
 
     /// The whole show: arm the reveal for this grant, force the real lock,
     /// land on the Guard tab. The countdown rolls to zero, the lock stamps
-    /// shut and the night home fades up.
+    /// shut and the selected monster chat fades up.
     private func playLockSequence() {
+        guard forceLock() else { return }
         UserDefaults.standard.removeObject(forKey: RegretGuard.lockRevealStampKey)
-        studyGuard.debugForceLock()
         navigationModel.requestedTab = 0
     }
 
-    /// Straight to the night home: reveal marked seen and the countdown
+    /// Straight to monster chat: reveal marked seen and the countdown
     /// truth pre-settled at zero so nothing rolls on the way in.
     private func lockInstantly() {
+        guard forceLock() else { return }
         UserDefaults.standard.set(grantStamp, forKey: RegretGuard.lockRevealStampKey)
         UserDefaults.standard.set(0, forKey: CountdownReplayModel.lastShownKey)
         UserDefaults.standard.set(grantStamp, forKey: CountdownReplayModel.lastStampKey)
-        studyGuard.debugForceLock()
         navigationModel.requestedTab = 0
     }
 
@@ -431,13 +439,24 @@ struct CreatorToolkitView: View {
     /// seen so the stamp does not replay under the flow).
     private func openUnlockFlow(_ method: String) {
         if studyGuard.state != .locked {
+            guard forceLock() else { return }
             UserDefaults.standard.set(grantStamp, forKey: RegretGuard.lockRevealStampKey)
-            studyGuard.debugForceLock()
         }
         navigationModel.unlockMethodOverride = method
         navigationModel.requestedTab = 0
         navigationModel.wipeTo(.unlock) {
             navigationModel.navigate(to: .regretView)
+        }
+    }
+
+    private func forceLock() -> Bool {
+        switch studyGuard.debugForceLock() {
+        case .success:
+            navigationModel.resetAutomaticMonsterEntry()
+            return true
+        case .failure(let error):
+            lockError = error.localizedDescription
+            return false
         }
     }
 }

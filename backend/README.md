@@ -6,7 +6,14 @@ use, preserving the encrypted OpenAI key the user already installed. The
 historical “staging” suffix is only the Worker's name. No second key is required.
 The app contains this public hostname, never an OpenAI key or shared app token.
 
-Promoted deployment: 9ebd0c70-1d8e-4ef4-a132-9164716ff71a (20 September 2026).
+Latest deployment: **7c190c68-1d40-49e0-a046-3cc12672139f (29 October 2026)**,
+including generation reliability and `/v1/tutor` follow-ups. Live health returned
+200, a new enrollment challenge returned 200, and an unregistered tutor request
+was rejected with 401 `key_not_registered`. No paid provider calls were made in
+these deployment checks. The iOS changes still need physical-device QA.
+Evidence: `design/studyguard-flow-review/deployment.json`.
+
+Historical promoted deployment: 9ebd0c70-1d8e-4ef4-a132-9164716ff71a (20 September 2026).
 After deployment, Wrangler confirmed the existing OPENAI_API_KEY secret_text
 binding remains present. Live health, challenge, forged-enrollment rejection,
 and disabled-generation checks passed without any OpenAI calls.
@@ -15,10 +22,13 @@ The unused studyguard-ai Worker remains disabled and is no longer referenced by
 the app or deployment configuration. OneThing's source and service are unchanged.
 No end-user account or login has been added.
 
-**AI generation is enabled.** On 19 October 2026, the production ledger reached
-the shared 100-attempt monthly limit. The monthly limit is now configured as 300;
-the existing usage counter is preserved. The daily limits and $5 OpenAI project
-budget are unchanged. The OpenAI billing blockage described below is historical.
+**AI generation is enabled.** The deployed generation limits are 10 attempts per
+installation/day, 800 globally/day and 6000 globally/month, preserving the prior
+audit's configuration and existing usage ledger. Older notes describing 300/month
+or a $5 project budget are historical; provider-side budget settings were not
+rechecked or changed during this deployment. Request ceilings are not a dollar
+budget, especially when a document requires several model calls.
+The OpenAI billing blockage described below is historical.
 A deployed Worker and a successful build are not evidence of successful paid AI
 requests or readiness for Apple submission.
 
@@ -32,22 +42,24 @@ requests or readiness for Apple submission.
    Challenges expire after five minutes and are bound to the key and operation.
 4. A single SQLite-backed Durable Object reserves installation and global quotas
    atomically before a paid request. Replays cannot cause a second paid request.
-5. Only study text, a supported language, challenge, UUID, and action are accepted.
-   The server fixes the model to gpt-4o-mini, one completion, a 12,000 output-token
-   ceiling, and a structured 50-card JSON schema. Input is capped at 100,000 UTF-8
-   bytes, with an independent streamed-body limit.
-6. At least 20 complete, validated cards must return before the app updates its deck;
-   at most 50 are kept. Generated cards use a self-contained sentence in
+5. Each route validates an allowlist of request fields. The server fixes the
+   model and output limits. Document generation splits the source into at most
+   eight sections, with up to four concurrent provider calls; topic generation
+   uses one call. Study input is capped at 100,000 UTF-8 bytes, with an independent
+   streamed-body limit.
+6. Cards are screened and deduplicated, with request-size-specific minimums and
+   at most 50 kept. Generated cards use a self-contained sentence in
    `regretPrompt` with exactly one `___` blank, four distinct short answer choices,
    and the correct choice verbatim in `regret`. The quiz replaces the explicit
    blank in place; existing ordinary questions remain question-style cards.
-   Refusals, truncated answers, and invalid answer indexes fail without altering it.
+   Refused/truncated sections fail; a usable partial result can still be retained.
+   Individual invalid cards are dropped. Coverage metadata identifies section gaps.
 
 Current limits are 10 attempts per installation per UTC day, three
-per minute, 20 globally per UTC day, and 300 globally per UTC month. One call per
+per minute, 800 globally per UTC day, and 6000 globally per UTC month. One call per
 installation and eight globally may be in flight. Failed or timed-out upstream
 calls remain counted; paid calls are never retried automatically. These request
-ceilings supplement the $5 enforced OpenAI project budget. Review capacity before
+ceilings do not replace provider spending controls. Review capacity before
 wider rollout; do not silently raise spend or request limits.
 
 Tutor Monster content enrichment (Phase 3) extends the same hardened path.
@@ -79,7 +91,8 @@ quotas provide the backstop. Subscription/account quotas are a separate feature.
 Study text and generated cards are not stored or logged by the Worker. Storage
 contains public attestation keys, counters, short-lived challenges, and in-flight
 metadata. IP rate-limit identifiers are hashed with a daily scope. Worker logs
-and traces are disabled in the deployment configuration.
+and traces are enabled in the current deployment configuration; custom generation
+diagnostics log statuses and counts, never study text, generated cards or provider keys.
 
 ## Local checks and deployment
 
@@ -225,3 +238,26 @@ limits on. Never restore provider keys or direct OpenAI calls in the iOS app.
 OneThing was inspected as a reference. It keeps its provider key server-side,
 but its shared client token, client-selected device ID, and eventually consistent
 KV counters are weaker than this implementation. It was not changed.
+
+
+## Tutor follow-ups and reliability (deployed 29 October 2026)
+
+`POST /v1/tutor` uses the same App Attest challenge/signature flow as generation.
+Its allowlisted body is `{action: "ask_tutor", persona, card: {prompt, answer,
+explanation}, question, history: [{question, reply}], challenge, requestId}`.
+Questions are bounded to 1,000 UTF-16 code units, history to four turns, and the
+response to `{reply}` (at most 2,000 code units). It shares `scriptLimits`; callers
+cannot choose the model, supply privileged message roles, or grant time.
+
+Generation returns `{cards, coverage: {sections, completed}}`. Every section is
+submitted, but failed/invalid sections may produce a partial result. The client
+keeps valid cards and reports gaps. The provider call is never automatically
+retried after an uncertain failure. Only verification failures known to precede
+paid work can recover once in the iOS client.
+
+Run `npm test`, `npm run check`, and `node --test test/runtime.test.js`. The runtime
+test intercepts all provider traffic. Run `python3 scripts/test_study_reliability.py`
+from the repository root for the host-free Swift regressions. See `Docs/handoff.md`
+for remaining release and live-device checks.
+
+Response handling follows [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs): refusals, incomplete output and malformed JSON are handled as failures, with application-level validation after parsing.

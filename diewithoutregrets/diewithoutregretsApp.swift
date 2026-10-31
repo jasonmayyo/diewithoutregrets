@@ -14,6 +14,7 @@ struct diewithoutregretsApp: App {
         // @AppStorage and raw UserDefaults.bool(forKey:) read true until the user
         // flips the Profile toggle; the DEBUG -sg-monster-off arg still overrides.
         UserDefaults.standard.register(defaults: ["sg_monsterUnlock": true])
+        _ = PersonaStore.shared // Publish an existing selection to the shield app group.
 
         #if DEBUG
         SGPreviewHarness.applyLaunchArguments()
@@ -35,23 +36,16 @@ struct diewithoutregretsApp: App {
         else if monsterArgs.contains("-sg-monster-willow") { PersonaStore.shared.select(.willow) }
         #endif
 
-        // Cold-launched straight from the shield's "Study to unlock" button? The
-        // user tapped to get INTO the app right now, so drop the cold-start
-        // splash. The system shield already told the blocked story; the app
-        // should open directly on the first flashcard.
+        // Select chat before ContentView is constructed, so the first frame is
+        // the conversation rather than the red locked-home scene.
         if Self.launchedFromFreshShieldTap {
+            NavigationModel.shared.openMonsterFromShield(returnDestination: nil)
             _showSplash = State(initialValue: false)
         }
     }
 
-    /// True when the shield "Study to unlock" button stamped sg_shieldTapAt within
-    /// the freshness window. Peeked (not consumed) here to choose the launch
-    /// presentation; consumeShieldTapIfFresh consumes the stamp on foreground.
     private static var launchedFromFreshShieldTap: Bool {
-        guard let d = SGContract.sharedDefaults else { return false }
-        let tapAt = d.double(forKey: SGContract.Keys.shieldTapAt)
-        guard tapAt > 0 else { return false }
-        return Date().timeIntervalSince1970 - tapAt < 120
+        ShieldChatHandoff.shouldOpenChat(in: SGContract.sharedDefaults)
     }
     @StateObject private var navigationModel = NavigationModel.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -104,6 +98,7 @@ struct diewithoutregretsApp: App {
                 }
             }
             .task {
+                consumeShieldTapIfFresh()
                 guard showSplash else { return }
                 // Hold the splash artwork for a beat, then dissolve into
                 // whatever the first scene really is (onboarding, meadow
@@ -127,8 +122,7 @@ struct diewithoutregretsApp: App {
                 if url.scheme == "diewithoutregrets" && url.host == "unlock" {
                     StudyGuardManager.shared.reconcileOnForeground()
                     if StudyGuardManager.shared.state == .locked {
-                        navigationModel.unlockMethodOverride = "flashcards"
-                        navigationModel.navigate(to: .regretView)
+                        navigationModel.openMonsterFromShield(returnDestination: nil)
                     }
                 }
             }
@@ -144,6 +138,8 @@ struct diewithoutregretsApp: App {
                 
                 // When app becomes active, clear any badge
                 if newPhase == .active {
+                    // Handle the user's entry intent before reconciliation and SDK work.
+                    consumeShieldTapIfFresh()
                     Task { await SGSuperwallBilling.shared.refreshSubscriptionStatus() }
                     print("[App] ✅ App became active - clearing badge")
                     NotificationManager.shared.clearBadge()
@@ -151,7 +147,6 @@ struct diewithoutregretsApp: App {
                     // Study Guard third reliability layer: reconcile state with
                     // the extension + Screen Time system on every foreground.
                     StudyGuardManager.shared.reconcileOnForeground()
-                    consumeShieldTapIfFresh()
                     Analytics.flushStudyGuardExtensionEvents()
 
                     // Keep the always-on monster mascot alive in the Dynamic
@@ -189,32 +184,18 @@ struct diewithoutregretsApp: App {
         }
     }
 
-    /// The shield action extension stamps sg_shieldTapAt when the user taps
-    /// "Study to unlock" on the shield. If the app foregrounds shortly after
-    /// (direct open via openParentalControlsApp on iOS 26.5+, a notification
-    /// tap, or the user opening the app by hand), go straight to the first
-    /// flashcard. The system shield already supplied the blocked beat. The
-    /// stamp is consumed on first read.
+    /// Consume the cross-process request once. Warm launches route immediately;
+    /// cold launches already selected chat before the first frame.
     private func consumeShieldTapIfFresh() {
-        guard let defaults = SGContract.sharedDefaults else { return }
-        let tapAt = defaults.double(forKey: SGContract.Keys.shieldTapAt)
-        guard tapAt > 0 else { return }
-        defaults.removeObject(forKey: SGContract.Keys.shieldTapAt)
+        guard let defaults = SGContract.sharedDefaults,
+              defaults.double(forKey: SGContract.Keys.shieldTapAt) > 0 else { return }
+        let opensChat = ShieldChatHandoff.consume(in: defaults)
         let returnDestination = ShieldReturnContext.consumePending(in: defaults)
-
-        // We're open now, so the shield tap's safety-net notification is
-        // redundant — cancel it whether it's still pending (the delayed net
-        // armed behind a direct open) or already delivered. Doing this the
-        // moment we foreground is what keeps a successful direct open from ever
-        // showing a notification.
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [SGContract.lockNotificationID])
         center.removeDeliveredNotifications(withIdentifiers: [SGContract.lockNotificationID])
-
-        guard Date().timeIntervalSince1970 - tapAt < 120,
-              StudyGuardManager.shared.state == .locked else { return }
-        navigationModel.unlockReturnDestination = returnDestination
-        navigationModel.unlockMethodOverride = "flashcards"
-        navigationModel.navigate(to: .regretView)
+        guard opensChat else { return }
+        showSplash = false
+        navigationModel.openMonsterFromShield(returnDestination: returnDestination)
     }
 }

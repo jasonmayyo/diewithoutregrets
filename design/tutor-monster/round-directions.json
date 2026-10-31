@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-29",
+  "status": "Jason prefers inline chat again. In chat is the default, with the restyled answer panel and coordinated motion. Study sheet remains available in Debug; Focus round and Card packet remain prototypes.",
+  "source": "/Users/jasonmayo/.codex/visualizations/2026/10/29/01a1864b-4b3c-7121-ba0f-b28cf4ab72e3/study-round-directions.html",
+  "preview": "design/studyguard-flow-review/round-options.html",
+  "recommendation": "In chat",
+  "directions": [
+    {
+      "name": "Study sheet",
+      "idea": "A sheet over the conversation holds the complete flashcard round; dismisses back to one recap.",
+      "tradeoff": "Keeps the monster present but has less room than a full study screen."
+    },
+    {
+      "name": "Focus round",
+      "idea": "Chat hands off to a dedicated full-screen flashcard session; results return to the monster.",
+      "tradeoff": "Most room for long questions, with a more distinct change of context."
+    },
+    {
+      "name": "Card packet",
+      "idea": "One interactive card stack stays in the conversation; answers replace the card within the packet.",
+      "tradeoff": "Least navigation, but feels closest to the existing in-chat experience."
+    }
+  ],
+  "prototypeRules": "Illustrative: four opening cards; 3/4 passes; a lower score leads to one three-card follow-up using missed topics. Earned time is retained; no repeat follow-up. No AI or Screen Time API is called.",
+  "verification": [
+    "All three layouts inspected in browser at default width.",
+    "Focus and recap/packet layouts inspected at 320px product width.",
+    "4/4 path reaches a five-minute unlock offer.",
+    "2/4 path offers three distinct questions on the missed topics and retains 2m30s.",
+    "Three follow-up answers advance to 6m15s earned before the final recap.",
+    "Completing the three-card follow-up offers the final seven-minute rounded unlock, with no further practice gate."
+  ],
+  "productionChanges": true,
+  "implementation": {
+    "default": "In chat",
+    "debugSwitch": "Profile \u2192 Debug \u2192 Study Guard v2 (Screen Time) \u2192 Flashcard style; applies next session",
+    "review": "design/studyguard-flow-review/index.html#inline-motion",
+    "sheetRule": "Up to 4 distinct usable cards; 75% passes; otherwise one follow-up of up to 3 cards. Prefer unseen, missed-topic cards. Small decks label review. Explicit final claim; earnings retained."
+  }
+}

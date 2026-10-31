@@ -105,6 +105,8 @@ struct AutoGenerateFlashcardsSheet: View {
     private let dimFill = SGTheme.glaze(0.12)
     
     // Add new state variables
+    @State private var generationTask: Task<Void, Never>?
+    @State private var generationID: UUID?
     @State private var showingGenerationView = false
     @State private var generationStatus = "Preparing to generate flashcards..."
     
@@ -159,7 +161,7 @@ struct AutoGenerateFlashcardsSheet: View {
             VStack(spacing: 0) {
                 // Sheet chrome: the round close in the header replaces the
                 // old navigation-bar Cancel button.
-                SGSheetHeader(title: "AI Flashcard Generator", onClose: { dismiss() })
+                SGSheetHeader(title: "AI Flashcard Generator", onClose: { cancelGeneration(); dismiss() })
                     .padding(.horizontal)
                     .padding(.top, 16)
 
@@ -219,8 +221,9 @@ struct AutoGenerateFlashcardsSheet: View {
                 status: $generationStatus,
                 progress: $processingProgress,
                 onCancel: {
-                    showingGenerationView = false
-                    processingStep = .idle
+                    let completed = processingProgress == 1
+                    cancelGeneration()
+                    if completed { dismiss() }
                 }
             )
         }
@@ -228,7 +231,9 @@ struct AutoGenerateFlashcardsSheet: View {
             if let initial = initialSource {
                 selectedSource = initial
             }
-            resetState()
+        }
+        .onDisappear {
+            if !showingGenerationView { cancelGeneration() }
         }
     }
     
@@ -1158,163 +1163,91 @@ struct AutoGenerateFlashcardsSheet: View {
         generateFlashcards()
     }
     
+    private func cancelGeneration() {
+        generationID = nil
+        generationTask?.cancel()
+        generationTask = nil
+        showingGenerationView = false
+        processingStep = .idle
+    }
+
+    private var currentMaterialSource: FlashcardSource {
+        switch selectedSource {
+        case .pdf: return .init(kind: .pdf, title: fileName)
+        case .text: return .init(kind: .notes)
+        case .youtube: return .init(kind: .youtube, title: youtubeVideoTitle)
+        case .quizlet: return .init(kind: .quizlet)
+        }
+    }
+
     private func generateFlashcards() {
-        // Use fresh text every time
+        guard generationTask == nil else { return }
         let processingText = inputText.isEmpty ? pdfExtractedText : inputText
-
-        let analyticsSource = analyticsSourceName()
-
-        // Validate text input before proceeding
+        let source = analyticsSourceName()
+        let language = selectedLanguage
+        let targetDeckID = deck.id
+        let material = currentMaterialSource
         if let validationError = validateTextInput(processingText) {
             currentError = validationError
             errorMessage = validationError.userMessage
-            Analytics.aiGenerateFailed(
-                source: analyticsSource,
-                errorType: "\(validationError)",
-                message: validationError.userMessage
-            )
             return
         }
-
-        Analytics.aiGenerateAttempted(
-            source: analyticsSource,
-            language: selectedLanguage,
-            charCount: processingText.count
-        )
-        Telemetry.breadcrumb("AI generate attempted", category: "ai_flashcards",
-                             data: ["source": analyticsSource,
-                                    "language": selectedLanguage,
-                                    "char_count": processingText.count])
-        let generateStartedAt = Date()
-
-        // Show generation view
+        Analytics.aiGenerateAttempted(source: source, language: language, charCount: processingText.count)
+        let startedAt = Date()
+        let id = UUID()
+        generationID = id
         showingGenerationView = true
         processingStep = .generating
         processingProgress = 0
-        generationStatus = "Analyzing text content..."
-        
-        // Clear previous results
+        generationStatus = "Creating flashcards from your material…"
+        currentError = nil
         errorMessage = nil
-        
-        // Progress animation configuration
-        let totalDuration: Double = 25.0 // Total animation duration in seconds
-        let initialSteps = 94 // Steps until slow progress begins
-        let slowProgressInterval: Double = 0.5 // Update slow progress every 0.5 seconds
-        
-        func updateProgress(at step: Int) {
-            let progress = Double(step) / Double(initialSteps)
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    processingProgress = min(0.94, progress)
-                }
-                
-                // Update status messages at specific progress points
-                switch progress {
-                case 0..<0.2:
-                    generationStatus = "Analyzing text content..."
-                case 0.2..<0.4:
-                    generationStatus = "Extracting key concepts..."
-                case 0.4..<0.6:
-                    generationStatus = "Generating questions..."
-                case 0.6..<0.8:
-                    generationStatus = "Creating answer options..."
-                case 0.8..<0.95:
-                    generationStatus = "Finalizing flashcards..."
-                default:
-                    break
-                }
+        generationTask = Task { @MainActor in
+            defer {
+                if generationID == id { generationTask = nil; processingStep = .idle }
             }
-        }
-        
-        // Initial fast progress up to 94%
-        for step in 0..<initialSteps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + (totalDuration * Double(step) / Double(initialSteps))) {
-                updateProgress(at: step)
-            }
-        }
-        
-        // Start slow progress updates after 94%
-        var slowProgressTimer: Timer?
-        slowProgressTimer = Timer.scheduledTimer(withTimeInterval: slowProgressInterval, repeats: true) { timer in
-            DispatchQueue.main.async {
-                // Increment by a tiny amount (0.001) each time
-                let newProgress = min(0.99, self.processingProgress + 0.001)
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    self.processingProgress = newProgress
+            do {
+                let result = try await FlashcardAPIClient.shared.generateDeck(text: processingText, language: language)
+                try Task.checkCancellation()
+                guard generationID == id else { return }
+                // Read the latest deck after the request. Do not resurrect a deleted
+                // deck or overwrite cards edited while generation was running.
+                guard var fresh = deckStore.decks.first(where: { $0.id == targetDeckID }) else {
+                    errorMessage = "This deck was removed while generation was running. No cards were saved."
+                    showingGenerationView = false
+                    return
                 }
-            }
-        }
-        
-        // Make the API call with selected language
-        generateFlashcardsAPI(with: processingText, language: selectedLanguage) { apiResponse in
-            // Invalidate the slow progress timer
-            slowProgressTimer?.invalidate()
-            slowProgressTimer = nil
-            
-            DispatchQueue.main.async {
-                if let newFlashcards = apiResponse {
-                    if newFlashcards.isEmpty {
-                        self.currentError = .invalidResponse
-                        self.errorMessage = "No valid flashcards were generated from your text. Try providing more detailed educational content with clear concepts and facts."
-                        self.showingGenerationView = false
-                        self.processingStep = .idle
-                        Analytics.aiGenerateFailed(
-                            source: analyticsSource,
-                            errorType: "invalidResponse",
-                            message: "no_cards_parsed"
-                        )
-                    } else {
-                        // Show 100% completion
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            self.processingProgress = 1.0
-                        }
-                        self.generationStatus = "Flashcards generated successfully!"
-                        
-                        // Clear input after successful generation
-                        self.inputText = ""
-                        self.pdfExtractedText = ""
-                        self.currentPDFData = nil
-                        
-                        // Add cards to the deck
-                        self.deck.cards.append(contentsOf: newFlashcards)
-                        
-                        // Update deck store to ensure proper state synchronization
-                        self.deckStore.updateDeck(self.deck)
-
-                        Analytics.aiGenerateSucceeded(
-                            source: analyticsSource,
-                            language: self.selectedLanguage,
-                            cardCount: newFlashcards.count,
-                            durationSec: Date().timeIntervalSince(generateStartedAt)
-                        )
-
-                        // Dismiss the sheet after a short delay to show completion
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            self.dismiss()
-                        }
+                let cards = result.cards.map { card in
+                    Regret(regretPrompt: card.regretPrompt, regret: card.regret,
+                           choices: card.choices, correctAnswerIndex: card.correctAnswerIndex,
+                           backgroundExplanation: card.backgroundExplanation, topic: card.topic,
+                           source: material)
+                }
+                fresh.cards.append(contentsOf: cards)
+                deckStore.updateDeck(fresh)
+                deck = fresh
+                processingProgress = 1
+                generationStatus = "Added \(cards.count) flashcards."
+                if result.hasIncompleteCoverage, let coverage = result.coverage {
+                    generationStatus += "\n\nCards cover \(coverage.completed) of \(coverage.sections) sections. Some sections did not produce usable cards. You can generate those sections separately."
+                }
+                Analytics.aiGenerateSucceeded(source: source, language: language,
+                    cardCount: cards.count, durationSec: Date().timeIntervalSince(startedAt))
+            } catch {
+                guard !Task.isCancelled, generationID == id else { return }
+                if let serviceError = error as? FlashcardServiceError {
+                    errorMessage = serviceError.localizedDescription
+                } else if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .timedOut: errorMessage = "Generation took too long. Please try a shorter section of your notes."
+                    case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                        errorMessage = "Your connection was interrupted. Your text is still here, so you can try again when you're online."
+                    default: errorMessage = "Couldn't reach the AI service. Your text is still here. Please try again shortly."
                     }
-                } else {
-                    // generateFlashcardsAPI already classified and set a specific
-                    // currentError/errorMessage (input limit, verification, rate limit,
-                    // truncated response, real network failure, etc.). Don't clobber
-                    // it with a generic "check your internet connection" — that
-                    // misleads users when the issue isn't connectivity at all.
-                    if self.errorMessage == nil {
-                        self.currentError = .invalidResponse
-                        self.errorMessage = "We couldn't generate flashcards from this content. Please try again, or try with shorter or different text."
-                    }
-                    self.showingGenerationView = false
-                    self.processingStep = .idle
-                    let errorType: String = {
-                        if let err = self.currentError { return "\(err)" }
-                        return "unknown"
-                    }()
-                    Analytics.aiGenerateFailed(
-                        source: analyticsSource,
-                        errorType: errorType,
-                        message: self.errorMessage
-                    )
-                }
+                } else { errorMessage = FlashcardServiceError.invalidResponse.localizedDescription }
+                currentError = .networkError(errorMessage ?? "Generation failed")
+                showingGenerationView = false
+                Analytics.aiGenerateFailed(source: source, errorType: String(describing: type(of: error)), message: errorMessage)
             }
         }
     }
@@ -1347,11 +1280,11 @@ struct AutoGenerateFlashcardsSheet: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Validation Error")
+                    Text("Couldn’t generate flashcards")
                         .font(SGTheme.cardTitle)
                         .foregroundColor(SGTheme.paper)
 
-                    Text("Issues found with your content")
+                    Text("Your existing cards are safe")
                         .font(SGTheme.body)
                         .foregroundColor(SGTheme.paperSecondary)
                 }
@@ -1391,10 +1324,9 @@ struct AutoGenerateFlashcardsSheet: View {
                 Spacer()
 
                 // Try again button
-                SGButton(title: "Try Again", icon: "arrow.clockwise", variant: .mint, fullWidth: false) {
+                SGButton(title: "Review Input", icon: "pencil", variant: .mint, fullWidth: false) {
                     errorMessage = nil
                     currentError = nil
-                    resetState()
                 }
             }
         }
@@ -1511,7 +1443,12 @@ struct AutoGenerateFlashcardsSheet: View {
         
         switch result {
         case .success(let flashcards):
-            deck.cards.append(contentsOf: flashcards)
+            let imported = flashcards.map { card in
+                var card = card
+                card.source = FlashcardSource(kind: .quizlet)
+                return card
+            }
+            deck.cards.append(contentsOf: imported)
             deckStore.updateDeck(deck)
             Analytics.aiQuizletDirectImported(cardCount: flashcards.count)
             dismiss()
@@ -1730,40 +1667,6 @@ struct AutoGenerateFlashcardsSheet: View {
     
     // MARK: - Secure generation service
 
-    func generateFlashcardsAPI(with inputText: String, language: String, completion: @escaping ([Regret]?) -> Void) {
-        Task { @MainActor in
-            do {
-                let cards = try await FlashcardAPIClient.shared.generate(text: inputText, language: language)
-                completion(cards.map { card in
-                    Regret(regretPrompt: card.regretPrompt, regret: card.regret,
-                           choices: card.choices, correctAnswerIndex: card.correctAnswerIndex,
-                           backgroundExplanation: card.backgroundExplanation, topic: card.topic)
-                })
-            } catch {
-                if let serviceError = error as? FlashcardServiceError {
-                    errorMessage = serviceError.localizedDescription
-                    currentError = .networkError(serviceError.localizedDescription)
-                } else if let urlError = error as? URLError {
-                    switch urlError.code {
-                    case .timedOut:
-                        currentError = .timeout
-                        errorMessage = "Generation took too long. Please try again with shorter text."
-                    case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
-                        currentError = .networkError("No internet connection")
-                        errorMessage = "It looks like your device is offline. Please check your connection and try again."
-                    default:
-                        currentError = .networkError("Service unreachable")
-                        errorMessage = "Couldn't reach the AI service. Please try again in a moment."
-                    }
-                } else {
-                    currentError = .invalidResponse
-                    errorMessage = currentError?.userMessage
-                }
-                completion(nil)
-            }
-        }
-    }
-
     // MARK: - Text Validation Functions
     
     private func validateTextInput(_ text: String) -> FlashcardGenerationError? {
@@ -1879,22 +1782,13 @@ struct GenerationView: View {
                 MascotView(pose: .teaching, loops: nil)
                     .frame(width: 160, height: 160)
 
-                // Progress indicator
-                ZStack {
-                    Circle()
-                        .stroke(SGTheme.glaze(0.1), lineWidth: 4)
-                        .frame(width: 120, height: 120)
-
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(SGTheme.mint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .frame(width: 120, height: 120)
-                        .rotationEffect(.degrees(-90))
-
-                    Text("\(Int(progress * 100))%")
-                        .font(SGTheme.numeral(24))
-                        .monospacedDigit()
-                        .foregroundColor(SGTheme.paper)
+                if progress == 1 {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 64)).foregroundColor(SGTheme.mint)
+                } else {
+                    ProgressView().tint(SGTheme.mint).scaleEffect(1.6)
+                    Text("This can take a minute or two for longer notes.")
+                        .font(SGTheme.caption).foregroundColor(SGTheme.paperSecondary)
                 }
 
                 // Status text
@@ -1907,7 +1801,7 @@ struct GenerationView: View {
                 Spacer()
 
                 // Cancel button
-                SGButton(title: "Cancel", variant: .ghost, fullWidth: false, action: onCancel)
+                SGButton(title: progress == 1 ? "Done" : "Cancel", variant: .ghost, fullWidth: false, action: onCancel)
                     .padding(.bottom, 50)
             }
         }

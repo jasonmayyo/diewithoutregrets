@@ -23,10 +23,41 @@ enum GuardState: String, Equatable {
 }
 
 extension GuardState {
+    /// A manual route remains available if the last usage checkpoint reaches
+    /// zero before the shield transition arrives. Setup/off states are excluded.
+    func offersStudyUnlock(remainingMinutes: Int) -> Bool {
+        self == .locked || (self == .metering && remainingMinutes <= 0)
+    }
+
     static func derive(from defaults: UserDefaults) -> GuardState {
         guard defaults.bool(forKey: SGContract.Keys.setupComplete) else { return .notSetUp }
         guard defaults.bool(forKey: SGContract.Keys.guardEnabled) else { return .disabled }
         return defaults.string(forKey: SGContract.Keys.state) == SGContract.StateValue.locked ? .locked : .metering
+    }
+}
+
+/// Displayed allowance follows the lock, even when yesterday's budget is
+/// retained or a usage checkpoint is missing. Midnight never unlocks apps.
+struct GuardBudgetSnapshot {
+    let totalMinutes: Int
+    let usedMinutes: Int
+    var remainingMinutes: Int { max(0, totalMinutes - usedMinutes) }
+
+    init(from defaults: UserDefaults, state: GuardState,
+         now: Date = Date(), calendar: Calendar = .current) {
+        let interval = defaults.integer(forKey: SGContract.Keys.intervalMinutes)
+        let fallback = interval > 0 ? interval : SGContract.defaultIntervalMinutes
+        let total = defaults.double(forKey: SGContract.Keys.budgetTotalSeconds)
+        totalMinutes = total > 0 ? Int(total / 60) : fallback
+
+        if state == .locked {
+            usedMinutes = totalMinutes
+        } else {
+            let grantedAt = Date(timeIntervalSince1970: defaults.double(forKey: SGContract.Keys.budgetGrantedAt))
+            usedMinutes = calendar.isDate(grantedAt, inSameDayAs: now)
+                ? min(totalMinutes, max(0, Int(defaults.double(forKey: SGContract.Keys.budgetUsedSeconds) / 60)))
+                : 0
+        }
     }
 }
 

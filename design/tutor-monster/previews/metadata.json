@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-29",
+  "kind": "SwiftUI component snapshots",
+  "renderer": "macOS SwiftUI ImageRenderer at 2x",
+  "source": "Current MonsterPersonaList, MonsterArtwork, MonsterAvatarHeader, MonsterTextBubble, MonsterMediaBubble, and MonsterGrantBubble components",
+  "adaptations": "Asset lookup uses NSImage file loading in the isolated preview harness. Surrounding screen chrome and chat messages are sample compositions; stores and haptics are stubbed. These are not screenshots of a running iOS session.",
+  "files": ["picker.png", "picker-accessibility.png", "chat-willow.png", "chat-diva.png", "chat-coach.png", "chat-gremlin.png"],
+  "accessibility_preview": "Exercises the single-column branch at accessibility3; full iOS Dynamic Type and VoiceOver verification still require device QA.",
+  "build": "Xcode 27.1 Debug, generic iOS Simulator, arm64 and x86_64, CODE_SIGNING_ALLOWED=NO: BUILD SUCCEEDED"
+}

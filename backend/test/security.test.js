@@ -5,6 +5,7 @@ import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import cbor from 'cbor';
 import { GateStore, generationLimits, distractorLimits } from '../src/store.js';
 import { readBody, validateGeneration, openAIBody, validateCards, validKeyID, MAX_INPUT_BYTES,
+  chunkText, openAIChunkBody, screenCards, dedupeCards, finalizeChunkedCards, cardIsValid,
   validateDistractorRequest, openAIDistractorBody, validateDistractors } from '../src/protocol.js';
 import { attest, assertRequest } from '../src/attestation.js';
 
@@ -130,18 +131,23 @@ test('real cryptographic assertions reject tampering, replay and wrong app ident
   assert.throws(() => validKeyID('arbitrary-spoofed-device-id'));
 });
 
-const clozeCard = () => ({ regretPrompt: '“光” means ___.', regret: 'light', choices: ['light', 'dark', 'water', 'wind'],
+const clozeCard = (_, i = 0) => ({ regretPrompt: `Item ${i}: “光” means ___.`, regret: 'light', choices: ['light', 'dark', 'water', 'wind'],
   correctAnswerIndex: 0, backgroundExplanation: 'A "quoted" example\nwith a newline: 光 means light.', topic: 'Vocabulary' });
 
 test('structured cards preserve quotes/unicode and reject incomplete or invalid answers', () => {
   const card = clozeCard();
-  const result = { cards: Array.from({ length: 50 }, () => ({ ...card })) };
+  const result = { cards: Array.from({ length: 50 }, clozeCard) };
   assert.deepEqual(validateCards(JSON.parse(JSON.stringify(result))), result);
   assert.equal(validateCards({ cards: result.cards.slice(1) }).cards.length, 49);
   assert.equal(validateCards({ cards: [...result.cards, { ...card }] }).cards.length, 50);
   rejectsCode(() => validateCards({ cards: result.cards.slice(0, 19) }), 'invalid_response');
+  // Filter-and-keep (intentional contract change): one invalid card among many is
+  // dropped, not fatal — the rest of the deck still returns.
   result.cards[0].correctAnswerIndex = 4;
-  rejectsCode(() => validateCards(result), 'invalid_response');
+  assert.equal(validateCards(result).cards.length, 49);
+  // ...but it still fails closed when too few valid cards survive the filter.
+  const mostlyBad = { cards: Array.from({ length: 50 }, (_, i) => i < 35 ? { ...clozeCard(), correctAnswerIndex: 4 } : clozeCard()) };
+  rejectsCode(() => validateCards(mostlyBad), 'invalid_response');
 });
 
 test('generation specifies complete cloze prompts and short answer fragments', () => {
@@ -165,12 +171,12 @@ test('accepts topic mode, difficulty and count, and still requires text or topic
   rejectsCode(() => validateGeneration({ ...base, topic: 'x', count: 999 }), 'invalid_request');
   rejectsCode(() => validateGeneration({ ...base, topic: 'x', injected: 1 }), 'invalid_request');
   const topicBody = openAIBody({ ...base, topic: 'Skeletal system', difficulty: 'hard', count: 8 });
-  assert.match(topicBody.messages[0].content, /Skeletal system/);
+  assert.match(topicBody.messages[1].content, /Skeletal system/);
   assert.match(topicBody.messages[0].content, /hard/);
   assert.match(topicBody.messages[0].content, /textbook-accurate/); // topic mode grounds in facts, not a document
   // A small count relaxes the floor so an 8-card topic deck validates at 6.
   const topicCard = { ...clozeCard(), topic: 'Skeletal system' };
-  assert.equal(validateCards({ cards: Array.from({ length: 6 }, () => ({ ...topicCard })) }, 8).cards.length, 6);
+  assert.equal(validateCards({ cards: Array.from({ length: 6 }, (_, i) => ({ ...clozeCard(null, i), topic: topicCard.topic })) }, 8).cards.length, 6);
   // Every returned card must carry a topic label.
   rejectsCode(() => validateCards({ cards: Array.from({ length: 20 }, () => {
     const c = clozeCard(); delete c.topic; return c;
@@ -212,6 +218,65 @@ test('rejects missing context, placeholder prompts, multiple blanks and unusable
     cards[0] = { ...cards[0], ...change };
     rejectsCode(() => validateCards({ cards }), 'invalid_response');
   }
-  const cards = Array.from({ length: 20 }, () => ({ ...clozeCard(), regretPrompt: '光的意思是___。' }));
-  assert.equal(validateCards({ cards }).cards[0].regretPrompt, '光的意思是___。');
+  const cards = Array.from({ length: 20 }, (_, i) => ({ ...clozeCard(), regretPrompt: `第${i}项：光的意思是___。` }));
+  assert.equal(validateCards({ cards }).cards[0].regretPrompt, '第0项：光的意思是___。');
+});
+
+// --- Phase 1: chunking + per-chunk generation + screening/dedupe ---
+
+test('chunking covers the whole document within a bounded chunk count', () => {
+  assert.deepEqual(chunkText(''), []);
+  assert.deepEqual(chunkText('short note'), ['short note']);
+  const doc = Array.from({ length: 12 }, (_, i) => `Paragraph ${i}. ${'A sentence here. '.repeat(25)}`).join('\n\n');
+  const chunks = chunkText(doc, 1000, 8);
+  assert.ok(chunks.length >= 2 && chunks.length <= 8, `got ${chunks.length} chunks`);
+  const joined = chunks.join(' \n ');
+  for (let i = 0; i < 12; i++) assert.ok(joined.includes(`Paragraph ${i}.`), `missing paragraph ${i}`);
+  // No-delimiter input still splits (hard cut) and stays within the cap.
+  assert.ok(chunkText('x'.repeat(40000), 3500, 8).length <= 8);
+});
+
+test('cardIsValid enforces the structural invariant', () => {
+  const c = clozeCard();
+  assert.ok(cardIsValid(c));
+  assert.ok(!cardIsValid({ ...c, correctAnswerIndex: 4 }));      // index out of range
+  assert.ok(!cardIsValid({ ...c, regret: 'different' }));        // regret must equal the correct choice
+  assert.ok(!cardIsValid({ ...c, regretPrompt: 'No blank here.' })); // not a cloze
+});
+
+test('quality screen drops compound / ambiguous / self-answering / over-long cards', () => {
+  const base = { regret: 'mitochondria', choices: ['mitochondria', 'nucleus', 'ribosome', 'lysosome'],
+    correctAnswerIndex: 0, backgroundExplanation: 'The organelle generates ATP.', topic: 'Cell' };
+  const good = { ...base, regretPrompt: 'The powerhouse of the cell is the ___.' };
+  const leak = { ...base, regretPrompt: 'The mitochondria is the ___ of the cell.' };
+  const pronoun = { ...base, regretPrompt: 'It is the ___ of the cell.' };
+  const compound = { ...base, regretPrompt: 'The ___ makes energy and water and salt.' };
+  const longAns = { regret: 'a very long multi word explanatory answer here', correctAnswerIndex: 0,
+    choices: ['a very long multi word explanatory answer here', 'b', 'c', 'd'],
+    backgroundExplanation: 'x', topic: 'Cell', regretPrompt: 'The correct response is ___.' };
+  assert.deepEqual(screenCards([good, leak, pronoun, compound, longAns]).map(c => c.regretPrompt), [good.regretPrompt]);
+});
+
+test('dedupe removes repeated prompts; finalize screens, dedupes and keeps partial decks', () => {
+  const mk = (p, a) => ({ regretPrompt: p, regret: a, choices: [a, 'x1', 'x2', 'x3'], correctAnswerIndex: 0,
+    backgroundExplanation: 'why', topic: 'T' });
+  assert.equal(dedupeCards([mk('Water boils at ___ C.', '100'), mk('water  boils at ___ c.', '100'),
+    mk('Ice melts at ___ C.', '0')]).length, 2);
+  // 12 distinct valid cards: the chunked floor for a 50-ask is 8, so all 12 return.
+  const many = Array.from({ length: 12 }, (_, i) => mk(`Fact ${i}: the value is ___ units here.`, `v${i}`));
+  assert.equal(finalizeChunkedCards(many).cards.length, 12);
+  // Below the floor after filtering → still fails closed.
+  rejectsCode(() => finalizeChunkedCards([mk('Only ___ survives here.', 'one')]), 'invalid_response');
+});
+
+test('per-chunk generation asks for atomic cards with the shared schema', () => {
+  const body = openAIChunkBody('Mitochondria produce ATP for the cell.', { language: 'English', difficulty: 'hard', count: 6 });
+  assert.equal(body.model, 'gpt-4o-mini');
+  assert.equal(body.n, 1);
+  assert.equal(body.response_format.json_schema.name, 'flashcards');
+  assert.match(body.messages[0].content, /ONE card per fact/);
+  assert.match(body.messages[0].content, /never join two facts/);
+  assert.match(body.messages[0].content, /in English/);
+  assert.equal(body.messages[1].content, 'Mitochondria produce ATP for the cell.');
+  assert.ok(body.temperature <= 0.5);
 });

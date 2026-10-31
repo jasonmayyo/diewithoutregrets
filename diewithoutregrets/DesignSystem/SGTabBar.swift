@@ -43,7 +43,7 @@ struct SGTabBar: View {
 
     var body: some View {
         // Tabs share the width evenly so all of them fit without overflowing the
-        // screen (fixed widths overflowed once the Exams tab made it five).
+        // screen, including on compact devices.
         HStack(spacing: 10) {
             ForEach(items) { item in
                 SGTabButton(item: item,
@@ -110,7 +110,7 @@ private struct SGTabButton: View {
             VStack(spacing: 5) {
                 Group {
                     if item.icon.hasPrefix("sf:") {
-                        // Temporary SF Symbol icon (e.g. the Exams tab) until a
+                        // Optional SF Symbol icon until a
                         // proper icons8 sticker is added in the design pass.
                         Image(systemName: String(item.icon.dropFirst(3)))
                             .font(.system(size: 24, weight: .semibold))

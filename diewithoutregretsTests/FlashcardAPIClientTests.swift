@@ -1,4 +1,5 @@
 import XCTest
+import DeviceCheck
 @testable import diewithoutregrets
 
 final class FlashcardAPIClientTests: XCTestCase {
@@ -65,26 +66,26 @@ final class FlashcardAPIClientTests: XCTestCase {
     }
 
     private func response(count: Int = 50, answer: Int = 0) throws -> Data {
-        let card: [String: Any] = [
-            "regretPrompt": "What does \"光\" mean?", "regret": "A quoted example\nwith a newline",
-            "choices": ["light", "dark"], "correctAnswerIndex": answer,
-            "backgroundExplanation": "It means light.",
-        ]
-        return try JSONSerialization.data(withJSONObject: ["cards": Array(repeating: card, count: count)])
+        let cards = (0..<count).map { index -> [String: Any] in
+            ["regretPrompt": "Item \(index): the term \"光\" means ___.", "regret": "light\nenergy",
+             "choices": ["light\nenergy", "dark", "water", "wind"], "correctAnswerIndex": answer,
+             "backgroundExplanation": "It means light.", "topic": "Vocabulary"]
+        }
+        return try JSONSerialization.data(withJSONObject: ["cards": cards])
     }
 
     @MainActor func testStructuredCardsPreserveQuotesAndUnicode() throws {
         let cards = try FlashcardAPIClient.decodeCards(response())
         XCTAssertEqual(cards.count, 50)
-        XCTAssertEqual(cards.first?.regretPrompt, "What does \"光\" mean?")
+        XCTAssertEqual(cards.first?.regretPrompt, "Item 0: the term \"光\" means ___.")
         XCTAssertTrue(cards.first?.regret.contains("\n") == true)
     }
 
     @MainActor func testRejectsIncompleteDeckAndOutOfBoundsAnswer() throws {
         XCTAssertEqual(try FlashcardAPIClient.decodeCards(response(count: 49)).count, 49)
         XCTAssertEqual(try FlashcardAPIClient.decodeCards(response(count: 53)).count, 50)
-        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 19)))
-        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(answer: 2)))
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 7)))
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(answer: 4)))
         XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(Data("{\"cards\":[".utf8)))
     }
 
@@ -96,9 +97,9 @@ final class FlashcardAPIClientTests: XCTestCase {
         // A small requested count relaxes the 20-card floor for top-ups...
         XCTAssertEqual(try FlashcardAPIClient.decodeCards(response(count: 6), count: 10).count, 6)
         // ...but a response far below even the relaxed floor still fails closed.
-        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 3), count: 10))
-        // Full decks keep the original 20-card floor.
-        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 19)))
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 2), count: 10))
+        // Full decks accept partial results, but require eight usable cards.
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(response(count: 7)))
     }
 
     @MainActor func testMissingEndpointFailsBeforeAnyNetworkRequest() async {
@@ -122,7 +123,7 @@ final class FlashcardAPIClientTests: XCTestCase {
         var cards = try XCTUnwrap(payload["cards"] as? [[String: Any]])
         cards[0]["regretPrompt"] = "N/A"
         payload["cards"] = cards
-        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(JSONSerialization.data(withJSONObject: payload)))
+        XCTAssertEqual(try FlashcardAPIClient.decodeCards(JSONSerialization.data(withJSONObject: payload)).count, 49)
     }
 
     func testClozeReplacesOnlyTheBlankAndPreservesContext() {
@@ -163,5 +164,170 @@ final class FlashcardAPIClientTests: XCTestCase {
         card.regretPrompt = "Relationships require ___."
         card.answerMode = .typed
         XCTAssertEqual(card.quizPrompt.parts(revealing: "ongoing effort"), [.text("Relationships require "), .answer("ongoing effort"), .text(".")])
+    }
+}
+
+@MainActor
+private final class FakeAppAttestation: AppAttesting {
+    var isSupported = true
+    var generated = 0
+    var assertions = 0
+    var invalidAssertionOnce = false
+    func generateKey() async throws -> String { generated += 1; return "key-\(generated)" }
+    func attestKey(_ keyID: String, clientDataHash: Data) async throws -> Data { Data("attested".utf8) }
+    func generateAssertion(_ keyID: String, clientDataHash: Data) async throws -> Data {
+        assertions += 1
+        if invalidAssertionOnce {
+            invalidAssertionOnce = false
+            throw NSError(domain: DCError.errorDomain, code: DCError.invalidKey.rawValue)
+        }
+        return Data("signed".utf8)
+    }
+}
+
+final class FlashcardTransportReliabilityTests: XCTestCase {
+    @MainActor private func makeClient(attestation: FakeAppAttestation,
+        transport: @escaping (URLRequest) async throws -> (Data, URLResponse)) -> (FlashcardAPIClient, UserDefaults, String) {
+        let name = "reliability.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        return (FlashcardAPIClient(defaults: defaults, host: "studyguard.test", attestation: attestation, transport: transport), defaults, name)
+    }
+    private func response(_ request: URLRequest, _ object: [String: Any], status: Int = 200) throws -> (Data, URLResponse) {
+        (try JSONSerialization.data(withJSONObject: object), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+    }
+    private var cards: [[String: Any]] {
+        (0..<8).map { ["regretPrompt": "Fact \($0): plants absorb ___ during photosynthesis.", "regret": "light",
+            "choices": ["light", "soil", "wind", "sand"], "correctAnswerIndex": 0,
+            "backgroundExplanation": "Light provides energy.", "topic": "Plants"] }
+    }
+
+    @MainActor func testMalformedObjectsDoNotDiscardValidCardsAndCoverageSurvives() throws {
+        let data = try JSONSerialization.data(withJSONObject: ["cards": cards + [["regretPrompt": 42]],
+            "coverage": ["sections": 3, "completed": 2]])
+        let result = try FlashcardAPIClient.decodeGeneration(data)
+        XCTAssertEqual(result.cards.count, 8)
+        XCTAssertTrue(result.hasIncompleteCoverage)
+        var invalid = cards
+        invalid[0]["regret"] = "different answer"
+        invalid[1]["choices"] = ["light", "LIGHT", "wind", "sand"]
+        XCTAssertThrowsError(try FlashcardAPIClient.decodeCards(JSONSerialization.data(withJSONObject: ["cards": invalid])))
+    }
+
+    @MainActor func testInvalidDeviceKeyRecoversOnceBeforePaidWork() async throws {
+        let attest = FakeAppAttestation(); attest.invalidAssertionOnce = true
+        var paidCalls = 0
+        let (client, defaults, name) = makeClient(attestation: attest) { request in
+            if request.url!.path == "/v1/challenge" { return try self.response(request, ["challenge": UUID().uuidString, "purpose": "generate"]) }
+            paidCalls += 1
+            return try self.response(request, ["cards": self.cards])
+        }
+        defer { defaults.removePersistentDomain(forName: name) }
+        let result = try await client.generate(text: String(repeating: "notes ", count: 20), language: "English")
+        XCTAssertEqual(result.count, 8)
+        XCTAssertEqual(attest.generated, 2)
+        XCTAssertEqual(paidCalls, 1)
+    }
+
+    @MainActor func testExpiredChallengeRetriesOnceWithoutRotatingKey() async throws {
+        let attest = FakeAppAttestation()
+        var submissions = 0
+        let (client, defaults, name) = makeClient(attestation: attest) { request in
+            if request.url!.path == "/v1/challenge" { return try self.response(request, ["challenge": UUID().uuidString, "purpose": "generate"]) }
+            submissions += 1
+            if submissions == 1 { return try self.response(request, ["error": ["code": "invalid_challenge"]], status: 401) }
+            return try self.response(request, ["cards": self.cards])
+        }
+        defer { defaults.removePersistentDomain(forName: name) }
+        _ = try await client.generate(text: String(repeating: "notes ", count: 20), language: "English")
+        XCTAssertEqual(submissions, 2)
+        XCTAssertEqual(attest.generated, 1)
+    }
+
+    @MainActor func testExpiredEnrollmentCreatesOneFreshKeyBeforeGeneration() async throws {
+        let attest = FakeAppAttestation()
+        var registered = false
+        var enrollments = 0
+        var generations = 0
+        let (client, defaults, name) = makeClient(attestation: attest) { request in
+            if request.url!.path == "/v1/challenge" {
+                return try self.response(request, ["challenge": UUID().uuidString, "purpose": registered ? "generate" : "attest"])
+            }
+            if request.url!.path == "/v1/attest" {
+                enrollments += 1
+                if enrollments == 1 { return try self.response(request, ["error": ["code": "invalid_challenge"]], status: 401) }
+                registered = true
+                return try self.response(request, ["registered": true])
+            }
+            generations += 1
+            return try self.response(request, ["cards": self.cards])
+        }
+        defer { defaults.removePersistentDomain(forName: name) }
+        _ = try await client.generate(text: String(repeating: "notes ", count: 20), language: "English")
+        XCTAssertEqual(attest.generated, 2)
+        XCTAssertEqual(enrollments, 2)
+        XCTAssertEqual(generations, 1)
+    }
+
+    @MainActor func testRepeatedVerificationFailureStopsAfterOneRecovery() async {
+        let attest = FakeAppAttestation()
+        var submissions = 0
+        let (client, defaults, name) = makeClient(attestation: attest) { request in
+            if request.url!.path == "/v1/challenge" { return try self.response(request, ["challenge": UUID().uuidString, "purpose": "generate"]) }
+            submissions += 1
+            return try self.response(request, ["error": ["code": "key_not_registered"]], status: 401)
+        }
+        defer { defaults.removePersistentDomain(forName: name) }
+        do { _ = try await client.generate(text: String(repeating: "notes ", count: 20), language: "English"); XCTFail() }
+        catch { XCTAssertEqual(error as? FlashcardServiceError, .verificationFailed) }
+        XCTAssertEqual(submissions, 2)
+        XCTAssertEqual(attest.generated, 2)
+    }
+
+    @MainActor func testTimeoutAndQuotaNeverReplayPaidWorkOrRotateKeys() async {
+        for code in ["timeout", "service_limit", "service_busy", "invalid_assertion"] {
+            let attest = FakeAppAttestation()
+            var submissions = 0
+            let (client, defaults, name) = makeClient(attestation: attest) { request in
+                if request.url!.path == "/v1/challenge" { return try self.response(request, ["challenge": UUID().uuidString, "purpose": "generate"]) }
+                submissions += 1
+                if code == "timeout" { throw URLError(.timedOut) }
+                return try self.response(request, ["error": ["code": code]], status: code == "invalid_assertion" ? 401 : 429)
+            }
+            do { _ = try await client.generate(text: String(repeating: "notes ", count: 20), language: "English"); XCTFail() }
+            catch {
+                if code == "service_limit" { XCTAssertEqual(error as? FlashcardServiceError, .serviceAtCapacity) }
+                if code == "service_busy" { XCTAssertEqual(error as? FlashcardServiceError, .serviceBusy) }
+            }
+            XCTAssertEqual(submissions, 1)
+            XCTAssertEqual(attest.generated, 1)
+            defaults.removePersistentDomain(forName: name)
+        }
+    }
+
+    @MainActor func testConcurrentScriptCannotRaceGenerationAssertionsAndCancellationDoesNotSubmit() async throws {
+        let attest = FakeAppAttestation()
+        var challengeStarted = false
+        var submissions = 0
+        let (client, defaults, name) = makeClient(attestation: attest) { request in
+            if request.url!.path == "/v1/challenge" {
+                challengeStarted = true
+                try await Task.sleep(nanoseconds: 100_000_000)
+                return try self.response(request, ["challenge": UUID().uuidString, "purpose": "generate"])
+            }
+            submissions += 1
+            return try self.response(request, ["cards": self.cards])
+        }
+        defer { defaults.removePersistentDomain(forName: name) }
+        let task = Task { try await client.generate(text: String(repeating: "notes ", count: 20), language: "English") }
+        while !challengeStarted { await Task.yield() }
+        do {
+            _ = try await client.generateScript(.init(persona: "willow", mood: "chill", app: "apps", gateCount: 0,
+                exam: nil, examDays: nil, topic: nil, questions: 3, minutes: 6))
+            XCTFail("A concurrent signed request must not race the first one")
+        } catch { XCTAssertEqual(error as? FlashcardServiceError, .alreadyGenerating) }
+        task.cancel()
+        do { _ = try await task.value; XCTFail() } catch { }
+        XCTAssertEqual(submissions, 0)
+        XCTAssertEqual(attest.assertions, 0)
     }
 }
