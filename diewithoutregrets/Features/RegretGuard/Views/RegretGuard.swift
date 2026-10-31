@@ -605,18 +605,18 @@ struct RegretGuard: View {
         UserDefaults.standard.double(forKey: Self.lockRevealStampKey) == currentGrantStamp
     }
 
-    /// The zero countdown leads into the root-owned animation. The selected
-    /// monster is revealed beneath its fade, with no intervening lock screen.
+    /// The zero countdown leads straight into the unlock chat. The padlock
+    /// "lock reveal" stamp (LockMomentOverlay) was removed because it
+    /// stuttered on entry, so the monster chat is presented directly, with
+    /// no covering animation and no intervening lock screen.
     private func scheduleLockRevealIfNeeded(settledMinutes: Int) {
         guard settledMinutes == 0, guardManager.state == .locked,
               lockEntryTask == nil else { return }
         let stamp = currentGrantStamp
-        let animated = !lockRevealShownForCurrentGrant
         lockEntryTask = Task { @MainActor in
-            if animated { try? await Task.sleep(nanoseconds: 600_000_000) }
             guard !Task.isCancelled, guardManager.state == .locked,
                   currentGrantStamp == stamp else { return }
-            if NavigationModel.shared.beginMonsterLockEntry(grantStamp: stamp, animated: animated) {
+            if NavigationModel.shared.beginMonsterLockEntry(grantStamp: stamp, animated: false) {
                 UserDefaults.standard.set(stamp, forKey: Self.lockRevealStampKey)
             }
             lockEntryTask = nil
