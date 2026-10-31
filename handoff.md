@@ -1,0 +1,83 @@
+# Tutor Monster: Handoff
+
+Last updated 2026-10-29. Branch `tutor-monster`, in sync with origin at `adcd3ee`. PR #2 ("Tutor Monster: conversational unlock") is **merged into `studyguard`**.
+
+## What this is
+Replaces the bare flashcard unlock with a conversational tutor monster: a persona you pick quizzes you with weakness and exam weighted flashcards, reacts to each answer, then grants your screen time back. The unlock gate stays 100% local and offline safe: grading and the time grant never touch the network. Live AI only drives the talking, with a scripted fallback. Full design in `Docs/TutorMonsterPlan.md`.
+
+## What shipped (committed and merged)
+- **Phase 0, foundations** (`b600617`): Leitner mastery, `topic` on `Regret`, per topic weakness aggregation, weighted `CardSelection`, `StudyExam` / `ExamStore`, `MonsterPersona` / `PersonaStore`, pressure to mood engine, gate encounter counters.
+- **Phase 1, scripted offline chat** (`edabd57`): `MonsterChatView` + `MonsterSession` state machine over the existing grading and `grantEarnedBudget`; four scripted persona voices; mood drives questions, time back, and the pass bar.
+- **Phase 2, live AI + calendar + nudges** (`5d5d2b1`, `440bd7a`, `544f9ec`): one personalized `/v1/script` bundle per unlock (scripted banks on any failure), a dedicated exam calendar tab, proactive persona nudges.
+- **Phase 3, content enrichment** (`a2e3abe`, `be7c6ce`): topic targeted generation (`/v1/flashcards` gains `topic` / `difficulty` / `count`, and every card is now tagged with a topic, which is what lights up weakness and exam targeting); a prompted "Top up {topic}" + MC distractor backfill via the new `/v1/distractors`; persona reaction stickers; an instant scripted opener.
+- **Persona picker + toggle** (`9cfbbb4`, `83eb6e2`): choose your monster in onboarding and in settings; a Profile "Monster unlock" toggle that is on by default; an even width 5 tab bar; a debug entry point for on device testing.
+- **Meadow chat styling** (`adcd3ee`): light "Meadow Study Buddy" palette for the chat (direction A from the design pass).
+
+## Backend
+Extends the hardened Cloudflare Worker (App Attest + atomic reservations). The latest generation and tutor reliability changes were deployed at Jason's request on 29 October 2026, version `7c190c68-1d40-49e0-a046-3cc12672139f`. Live health and challenge checks passed; the new tutor endpoint rejects unregistered keys. No paid provider call was made during deployment checks. Generation caps are 10/device/day, 800 globally/day and 6000 globally/month; request ceilings are not a dollar-spend guarantee. Tutor and script calls share their existing limits. See `Docs/handoff.md` for the full deployment and validation record.
+
+## Still needs completion
+
+- Visible-only chat pacing (29 October, latest): opening messages wait for an active, on-screen chat after the lock/wipe cover clears. Backgrounding, inactive app switching, a covering offer or the Study sheet pauses the presentation cursor. Returning restarts the unread message’s typing/reading beat; visible history stays intact and buffered messages never flush at once. A generation token prevents a late cancelled timer from revealing messages or clearing a newer timer. Session grading/grants stay independent of presentation.
+- Between flashcards, old answer buttons are replaced by a dedicated Answer sent/waiting panel; the next inputs appear only when their question and the incoming turn are fully revealed. The normal four-choice footprint remains stable while waiting. Row fades are separated from the single scroll animation, and the timestamp is reserved before the first typing bubble to avoid a first-message layout shift.
+- Validation: final app/extensions build succeeds; 42 offline tests pass and 2 opt-in live checks skip. Added deterministic tests for hidden start, background pause, buffered replies, cancellation races, no replay and reply-panel readiness. Native Simulator testing covers leaving before the introduction and leaving during a reply. Real FaceTime shielding/handoff and physical-device animation feel remain phone checks. Review: `design/studyguard-flow-review/index.html#visible-chat`.
+
+- Inline motion validation: final unsigned Debug app/extensions build passes; 38 offline study tests pass with 2 opt-in live checks skipped. Native review covers correct/incorrect replies, selected choices, earnings, question changes, completion and opening/closing the follow-up composer. Recording review caught and fixed the taller-panel scroll occlusion. Review: `design/studyguard-flow-review/index.html#inline-motion`. Real device scrolling/keyboard/haptics and Screen Time remain phone checks.
+
+- Inline chat preferred again (29 October, latest): In chat is now the default; an explicit Debug Study sheet preference is preserved. The bottom answer panel uses a roomy 2×2 A–D layout, subtle rounded surface, press feedback and a retained selected answer while the monster replies. New bubbles and transcript scrolling share a smooth 0.38-second curve; question/composer/Done replacements use a 0.30-second fade and slide. Ordinary questions scroll to the bottom; oversized questions retain their first line. Reply-panel changes explicitly refresh the scroll so returning from a follow-up cannot hide the question. Reading history suspends automatic following. Reduced Motion removes these movements.
+- Study sheet implemented (29 October; retained as a Debug alternative): this flow introduces up to four usable, distinct cards in chat, opens a resumable native sheet for local answers/feedback, then returns to one score recap and paced monster response. Fewer than 75% correct triggers exactly one follow-up of up to three cards; selection prefers unseen cards and missed topics, with honestly labelled review when the deck is small. Prior earnings are retained; no endless retry loop. The final Unlock action grants locally once and records outcomes. Per-correct-answer hourglasses fly into the sheet counter; chat carries the same pending balance.
+- Debug → Study Guard v2 (Screen Time) → Flashcard style switches Study sheet / In chat for the next session; the chosen method is frozen during a round. In chat retains the previous paced per-question flow. Sheet questions and recap cards retain explicit AI follow-up questions, separate from grading. Sheet introductions and recaps are local persona scripts; they do not require a reaction-bundle call or network access.
+- Validation: final unsigned Debug app/extensions build succeeds; 38 offline tests pass with 2 opt-in live checks skipped. New coverage includes 3/4 versus 2/4, one fresh follow-up, duplicate/stale submissions, typed answers, small/invalid/duplicate decks, pause/resume, tutor independence and exactly one explicit grant. Native Simulator review shows the sheet, four visible choices, retained answers/earnings on pause, 2/4 → three new cards → 0/3 → final three-minute grant. Real Screen Time and signed-device AI remain physical-device checks. Review: `design/studyguard-flow-review/index.html#study-sheet`.
+
+**Visual (approved, integrated 2026-10-29):**
+- Jason locked the designs and expressions for Willow, Zaza, Sarge, and Gnash and requested their integration into the picker and chat (2026-10-29). Canonical sheets: `design/tutor-monster/character-sheets/{willow,zaza,sarge,gnash}-v1.png`.
+- Bundled transparent character atlases now live in `Assets.xcassets/monster-{willow,zaza,sarge,gnash}-atlas.imageset`. Each contains welcome, thinking, correct, retry, firm, and celebrating poses. `MonsterArtwork` displays the poses without modifying the source alpha. Production prompts: `design/tutor-monster/production-prompts.txt`.
+- The shared onboarding/settings picker uses illustrated character cards and a selected-persona sample line. All artwork is bundled and available offline.
+- Chat was redesigned again at Jason's request to feel like a real conversation. Mobbin references: Dot, Grok, ChatGPT, and a messaging contact header (links in `design/tutor-monster/chat-redesign.json`). It now uses a stable circular face portrait, grouped text bubbles, typing dots, questions as messages, and a pinned answer composer with quick replies. The opening illustration and repeated reaction-image messages were removed. Quick replies scroll at large text sizes and hide while typing.
+- Replies bind to a unique question-message occurrence, so a repeated card or an unrevealed question cannot receive an old reply. Grading and grants remain local; the composer answers study questions and does not add unrestricted AI chat.
+- Verification: Xcode Debug simulator build succeeded (unsigned, arm64 and x86_64); seven reply-readiness/repeated-card checks passed. `design/tutor-monster/previews/chat-v2/` contains screenshots of the actual presentation components in an isolated iOS simulator app with fixture data, plus a portrait component render. Earlier previews show the superseded layout. Full app, live AI, keyboard interaction, and device QA remain.
+- The design was approved. The reliability pass is implemented locally: immediate offline session start, bounded live follow-ups, cancellation, safe verification recovery, and generation coverage fixes. See `Docs/handoff.md` for implementation, tests and remaining release checks.
+- Meadow styling for the exam calendar / Exams tab remains pending. Still plain system styling, hardcoded teal, and a temp SF Symbol icon.
+
+**Reliability (2026-10-29):**
+- `Ask about this card` is separate from answering. The authenticated `/v1/tutor` endpoint receives the chosen card and bounded follow-up history. It has no grading or unlock authority and shares existing script quotas.
+- Study starts without waiting for the network. Tutor replies fall back to saved explanations on error or after 20 seconds; cancelled/late replies are ignored. Settlement copy uses actual locally granted minutes.
+- Generation retains trailing source sections, keeps individually valid cards, reports coverage, preserves input on failure and prevents cancelled requests from saving late. Existing saved decks are not purged.
+- Backend and Swift regression suites pass; app and XCTest compilation pass. The Worker is deployed; the iOS changes remain local. Live provider quality, production App Attest and physical-device QA still need verification.
+- Screen-by-screen review: `design/studyguard-flow-review/index.html`, with 24 current onboarding screenshots, four monster shields and 10 unlock/chat states and a device quality checklist. Full-app captures and native fixture previews are explicitly labelled.
+
+- Per-answer chat reward update (29 October): the hourglass animation now runs after every correct answer. `Time earned` grows beside the monster's name during the round; the actual rounded allowance appears at completion. Wrong answers and follow-up questions earn nothing. The final grant remains local and once-only. Native replay and updated captures: `design/studyguard-flow-review/index.html#reward`.
+
+**Non visual:**
+- Compact chat / pacing (29 October, latest): a slim count/bar/“Finish to unlock” row replaces the tall progress block, and the visible label above the hourglass counter is removed. Each monster reply, verdict and question now has 1.2–2 seconds of typing and a separate reading pause before the next message. User replies remain immediate; controls remain disabled through the whole incoming turn. App/extensions build passes; 31 study tests pass with 2 live checks skipped. Full-app replay and current screenshots: `design/studyguard-flow-review/index.html#chat`.
+- Direct lock entry (29 October, latest): the “Caught you scrolling” screen and “Study to unlock” button are removed. The existing lock-click/ripple animation now reveals the chosen monster's chat automatically. Closing chat leaves Home usable, with chat-resume and emergency-unlock controls; a new allowance re-arms automatic entry. Shield taps remain direct. App/extensions build and 32 shield/state/navigation tests pass. Full-app Simulator launch reaches Zaza's chat without a tap. Review: `design/studyguard-flow-review/index.html#lock-chat`; physical-device testing remains.
+- Chat refinement after phone feedback (29 October): numbered/tinted questions, explicit local verdicts, round progress, padded instruction text and larger non-scrolling four-choice controls at normal text size. Reply controls stay stable while messages arrive; scroll requests are coalesced and entrances avoid row-height animation. Legacy feedback-only prompts are recovered or skipped without rewriting saved decks. Final app build passes; 28 study tests pass with 2 live checks skipped. See `Docs/handoff.md` and the review board's `#chat` section for screenshots, recording and device-QA limits.
+- Debug lock fix (29 October): force-lock now completes valid Screen Time setup before shielding and reports failures instead of claiming success. Locked allowances stay at zero across midnight/missing checkpoints, fixing the normal-home screen getting stuck during a lock. The debug chat shortcut uses the direct monster route. 27 state/shield tests and the app build pass; the overnight-lock → locked home → Willow chat path was checked in Simulator. Rebuild the physical-device app before retrying; real shield/foreground behavior still needs device QA. Details in `Docs/handoff.md`.
+- Shield flow update (29 October): the selected monster now appears on the shield with the blocked app's name and an “Ask [name] for permission” CTA. The persona is shared through the app group; approved art is bundled into the configuration extension. Cold and warm shield entries route directly to chat. Normal locked Home entry now uses the automatic animation-to-chat flow above. See `Docs/handoff.md` and the refreshed review board for validation and device checks.
+- Return to the blocked app after unlock is out of scope per Jason (2026-10-29). Current `returnHome` behavior is acceptable for this work.
+- On-device QA remains. The full app launched successfully in the dedicated iOS 26 simulator on 29 October; the earlier FamilyControls host crash is no longer a blanket simulator limitation. Real App Attest and Screen Time grants still require a physical device.
+
+**Optional / housekeeping:**
+- Rotate `~/.gstack/openai.json` so a future `/design-shotgun` can generate AI mockups. The current key is revoked; the last pass fell back to hand built HTML.
+- gstack upgrade (1.58 to 1.91).
+
+## Heads up: separate uncommitted work in the tree
+The working tree has uncommitted changes that are **not** part of Tutor Monster. They belong to the Flashcard Generation Audit (plan in `Docs/FlashcardGenerationAudit.md`, currently untracked):
+- `backend/src/protocol.js`, `index.js`, tests, `wrangler.jsonc`: document mode chunking (`CHUNK_TARGET_CHARS`, `MAX_CHUNKS`, `MAX_CARDS_PER_CHUNK`), generation temperature lowered from 0.7 to 0.4, a shared `CARD_SCHEMA`.
+- `FlashcardAPIClient.swift`: client side support for the above.
+- `QuizletImportService.swift`: a bug fix so imported cards set `regret = choices[correctAnswerIndex]` (the grader invariant).
+
+Jason explicitly moved this task onto generation and chat reliability. These changes have now been extended and tested together, and remain uncommitted. Preserve the full working tree when reviewing or shipping.
+
+## Guardrails (do not break)
+- The unlock gate must never depend on the network. Grading and `grantEarnedBudget` are always local.
+- Do not silently raise spend or request limits. Earlier notes describe $5/month and 20/day, 300/month; the prior audit changed flashcard caps to 800/day and 6000/month. Those caps were preserved in the 29 October deployment. Review capacity and provider spend before wider rollout; see `Docs/handoff.md`.
+- Never put the OpenAI key in iOS or source. Wrangler secret only.
+- The "Clema" name, theme, and colors are off limits (inspiration only).
+- No em dashes anywhere (Meadow and gstack voice).
+- Deploy (`npm run deploy`) uses the existing saved Wrangler credentials and macOS Keychain. Deployment succeeded with Jason's explicit authorization on 29 October.
+
+## Build and run notes
+- Xcode project objectVersion 56, no synchronized groups. New files need `scripts/add_files.rb` (xcodeproj gem), and sometimes a manual pbxproj path fix.
+- Scheme `diewithoutregrets`. Build without `-quiet` to get a real BUILD SUCCEEDED / FAILED.
+- Simulator screenshot review succeeded on 29 October using the existing Debug onboarding/monster preview arguments. Use the debug monster chat button on a physical device for live service and real unlock testing.

@@ -1,0 +1,47 @@
+[
+  {
+    "state": "shield",
+    "file": "screenshots/unlock-01-shield.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "correct",
+    "file": "screenshots/unlock-04-correct.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "wrong",
+    "file": "screenshots/unlock-05-correction.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "ask",
+    "file": "screenshots/unlock-06-ask.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "waiting",
+    "file": "screenshots/unlock-07-waiting.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "reply",
+    "file": "screenshots/unlock-08-followup.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "resume",
+    "file": "screenshots/unlock-09-resume.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "complete",
+    "file": "screenshots/unlock-10-complete.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  },
+  {
+    "state": "offline",
+    "file": "screenshots/unlock-11-offline.png",
+    "capture": "native production presentation components with fixture data; no live AI or grant"
+  }
+]

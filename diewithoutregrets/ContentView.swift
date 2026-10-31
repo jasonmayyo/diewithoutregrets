@@ -11,11 +11,13 @@ import RevenueCatUI
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    @ObservedObject private var guardManager = StudyGuardManager.shared
+    @State private var showingEmergencyUnlock = false
     @EnvironmentObject var navigationModel: NavigationModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
-    /// Tutor Monster (Phase 1) QA flag: route the flashcard unlock through the
-    /// monster chat instead of QuizV2View. Opt-in; off by default.
+    /// Normal study entries respect this preference. A personalized shield tap
+    /// explicitly requests its monster and overrides the legacy quiz preference.
     @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
 
     init() {
@@ -24,7 +26,7 @@ struct ContentView: View {
         let args = ProcessInfo.processInfo.arguments
         if let idx = args.firstIndex(of: "-sg-preview-tab"), idx + 1 < args.count,
            let tab = Int(args[idx + 1]) {
-            _selectedTab = State(initialValue: tab)
+            _selectedTab = State(initialValue: tab == 4 ? 1 : tab)
         }
         #endif
     }
@@ -35,7 +37,6 @@ struct ContentView: View {
             SGTabItem(id: 1, title: "Study", icon: "nav-study"),
             SGTabItem(id: 2, title: "Blocks", icon: "nav-blocks"),
             SGTabItem(id: 3, title: "Profile", icon: "nav-profile"),
-            SGTabItem(id: 4, title: "Exams", icon: "sf:calendar"),
         ]
     }
 
@@ -62,7 +63,12 @@ struct ContentView: View {
     @State private var sceneFadeCovering = false
 
     private var mainContent: some View {
-        rootSwitch
+        // A real container keeps the overlay's identity stable. Applying it
+        // directly to the root Group recreates it when Home becomes chat.
+        ZStack {
+            rootSwitch
+                .accessibilityHidden(navigationModel.isLockStampPlaying)
+        }
             // The scene-crossing fade rides ABOVE the root switch: a scrim
             // in the DESTINATION's canvas color fades up, the root swaps
             // while covered, and the scrim fades off the new scene — so the
@@ -77,6 +83,23 @@ struct ContentView: View {
             }
             .onChange(of: navigationModel.activeWipe != nil) { _, active in
                 if active { runSceneFade() }
+            }
+            .overlay {
+                if let animationID = navigationModel.monsterLockAnimationID {
+                    LockMomentOverlay(
+                        onCovered: {
+                            guard StudyGuardManager.shared.state == .locked else {
+                                navigationModel.resetAutomaticMonsterEntry()
+                                return
+                            }
+                            navigationModel.revealMonsterAfterLock(animationID: animationID)
+                        },
+                        onFinished: {
+                            navigationModel.finishMonsterLockAnimation(animationID: animationID)
+                        }
+                    )
+                    .id(animationID)
+                }
             }
     }
 
@@ -95,6 +118,36 @@ struct ContentView: View {
         }
     }
 
+    private var homeUnlockBar: some View {
+        HStack(spacing: 12) {
+            SGButton(title: "Unlock apps", icon: "lock.open.fill", variant: .alarm) {
+                NavigationModel.shared.openMonsterFromHome()
+            }
+            .accessibilityHint("Ask your monster for permission by answering flashcards")
+            if guardManager.state == .locked {
+                Button {
+                    guardManager.refresh()
+                    showingEmergencyUnlock = true
+                } label: {
+                    Text("⚠️")
+                        .font(.system(size: 28))
+                        .frame(width: 54, height: 54)
+                        .background(Color(hex: 0xFF9933), in: Circle())
+                        .compositingGroup()
+                        .shadow(color: Color(hex: 0xC66A13), radius: 0, y: 6)
+                }
+                .buttonStyle(SGPressStyle())
+                .accessibilityLabel("Emergency unlock")
+                .accessibilityValue("\(guardManager.emergencyUnlocksRemaining) left this week")
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 14)
+        .sheet(isPresented: $showingEmergencyUnlock) {
+            EmergencyUnlockSheet { navigationModel.returnHome() }
+        }
+    }
+
     private var rootSwitch: some View {
         Group {
             if navigationModel.currentDestination == .regretView {
@@ -106,10 +159,14 @@ struct ContentView: View {
                             NavigationModel.shared.returnHome()
                         }
                     )
-                } else if monsterUnlockEnabled, !(DeckStore.shared.selectedDeck?.cards.isEmpty ?? true) {
-                    // Tutor Monster (Phase 1), behind the QA flag. Needs a non-empty
-                    // deck; otherwise fall through to the quiz's empty-deck rescue.
-                    MonsterChatView(session: MonsterSession())
+                } else if navigationModel.unlockMethodOverride == "monster"
+                            || monsterUnlockEnabled {
+                    // Chat also handles an empty deck with local guidance.
+                    // Missing study material must not silently select the old flow.
+                    MonsterChatView(session: MonsterSession(),
+                        isUncovered: !navigationModel.isLockStampPlaying
+                            && navigationModel.activeWipe == nil
+                            && !navigationModel.showBuyBackOffer)
                 } else {
                     // The redesigned quiz. It gates itself: legacy engine,
                     // empty-deck rescue and already-unlocked entries fall
@@ -128,13 +185,11 @@ struct ContentView: View {
                     }
                     .tag(0)
 
-                    // Second Tab - Decks
-                    NavigationStack {
-                        DeckListView()
-                            .environmentObject(DeckStore.shared)
-                            .toolbar(.hidden, for: .tabBar)
-                    }
-                    .tag(1)
+                    // Study combines the exam calendar with the deck library.
+                    DeckListView()
+                        .environmentObject(DeckStore.shared)
+                        .toolbar(.hidden, for: .tabBar)
+                        .tag(1)
 
                     // Third Tab - Blocks
                     NavigationStack {
@@ -152,33 +207,28 @@ struct ContentView: View {
                     }
                     .tag(3)
 
-                    // Fifth Tab - Exams (Tutor Monster Phase 2)
-                    NavigationStack {
-                        ExamCalendarView()
-                            .toolbar(.hidden, for: .tabBar)
-                    }
-                    .tag(4)
                 }
                 .tint(SGTheme.mint)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    // Hidden while the Guard home's lock stamp plays so the
-                    // overlay owns the whole screen. Night styling while the
-                    // locked home is on screen (Guard tab only).
-                    SGTabBar(selection: $selectedTab, items: tabItems,
-                             style: selectedTab == 0
-                                ? (navigationModel.isLockedHomeShowing ? .night : .meadow)
-                                : .light)
-                        .opacity(navigationModel.isLockStampPlaying
-                                 || (selectedTab == 0 && navigationModel.isLockedHomeShowing) ? 0 : 1)
-                        .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockStampPlaying)
-                        .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockedHomeShowing)
+                    // The root lock animation owns the whole screen until chat
+                    // is revealed beneath it.
+                    VStack(spacing: 0) {
+                        if selectedTab == 0, guardManager.state.offersStudyUnlock(
+                            remainingMinutes: max(0, guardManager.totalMinutes - guardManager.usedMinutes)) {
+                            homeUnlockBar
+                        }
+                        SGTabBar(selection: $selectedTab, items: tabItems,
+                                 style: selectedTab == 0 ? .meadow : .light)
+                    }
+                    .opacity(navigationModel.isLockStampPlaying ? 0 : 1)
+                    .animation(.easeInOut(duration: 0.25), value: navigationModel.isLockStampPlaying)
                 }
                 .background(SGTheme.ink.ignoresSafeArea())
                 // One-shot tab-switch requests (Creator Toolkit lands the
                 // user on the Guard tab so staged moments play on camera).
                 .onChange(of: navigationModel.requestedTab) { _, tab in
                     if let tab {
-                        selectedTab = tab
+                        selectedTab = tab == 4 ? 1 : tab
                         navigationModel.requestedTab = nil
                     }
                 }
@@ -191,7 +241,6 @@ struct ContentView: View {
                     case 1: tabName = "study"
                     case 2: tabName = "blocks"
                     case 3: tabName = "profile"
-                    case 4: tabName = "exams"
                     default: tabName = "unknown"
                     }
                     Analytics.tabSelected(tabName)

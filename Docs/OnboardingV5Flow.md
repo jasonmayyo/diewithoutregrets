@@ -8,7 +8,9 @@ Copied from `/Users/jasonmayo/Desktop/OneThing` on 20 October 2026, including it
 
 The active order is:
 
-`800 → 813 → 803 → 804 → 805 → 806 → 820 → 807 → 810 → 819 → 818 → 808 → 817 → 812 → 801 → 814 → 815 → 816 → 506 → 601 → 602 → 606 → 604`
+`800 → 813 → 803 → 804 → 805 → 806 → 820 → 807 → 810 → 819 → 818 → 808 → 817 → 821 → 812 → 801 → 814 → 815 → 816 → 506 → 601 → 602 → 606 → 604`
+
+The current 24-step flow includes the monster picker (`821`) after the method and before the study rule. It offers the approved Willow, Zaza, Sarge and Gnash artwork. The numbered descriptions in the historical Round 1 section below predate this insertion. Fresh 29 October screenshots, including the picker and new monster unlock states, are in `design/studyguard-flow-review/index.html`.
 
 Round 1 replaces the original priority question with separate study-level and exam-subject screens, and the habit question with the next exam date. The age question remains; screen 18 now uses a three-chapter illustrated student journey. The phone-time projection uses the exam horizon. Screen 14 sets the actual flashcard earning rate.
 

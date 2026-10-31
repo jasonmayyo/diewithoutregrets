@@ -8,7 +8,7 @@
   "compatibility_date": "2026-09-20",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
-  "observability": { "enabled": false },
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "durable_objects": {
     "bindings": [{ "name": "GATE", "class_name": "StudyGuardGate" }]
   },
@@ -19,8 +19,8 @@
     "ALLOW_DEVELOPMENT_ATTESTATION": "false",
     "AI_ENABLED": "true",
     "DEVICE_DAILY_LIMIT": "10",
-    "GLOBAL_DAILY_LIMIT": "20",
-    "GLOBAL_MONTHLY_LIMIT": "300"
+    "GLOBAL_DAILY_LIMIT": "800",
+    "GLOBAL_MONTHLY_LIMIT": "6000"
   }
   // OPENAI_API_KEY is set with `wrangler secret put`, never in this file.
   // The existing restricted key is already set; rotate it in the Worker secrets.

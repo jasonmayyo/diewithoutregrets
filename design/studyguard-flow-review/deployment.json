@@ -1,0 +1,30 @@
+{
+  "service": "https://studyguard-ai-staging.jason-749.workers.dev",
+  "version": "7c190c68-1d40-49e0-a046-3cc12672139f",
+  "checkedAt": "2026-10-29T09:16:26.374975+00:00",
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "response": {
+        "service": "studyguard-ai",
+        "enabled": true
+      }
+    },
+    {
+      "check": "new installation challenge",
+      "status": 200,
+      "purpose": "attest"
+    },
+    {
+      "check": "tutor endpoint rejects unregistered key",
+      "status": 401,
+      "response": {
+        "error": {
+          "code": "key_not_registered"
+        }
+      }
+    }
+  ],
+  "paidProviderCalls": 0
+}

@@ -6,8 +6,14 @@ import SwiftUI
 struct ShieldPreviewApp: App {
     var body: some Scene {
         WindowGroup {
-            StudyGuardShieldDesignPreview(minutes: 15)
+            StudyGuardShieldDesignPreview(persona: selectedPersona)
                 .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--dark") ? .dark : .light)
         }
+    }
+
+    private var selectedPersona: MonsterPersona {
+        let args = ProcessInfo.processInfo.arguments
+        return MonsterPersona.with(id: args.first(where: { $0.hasPrefix("--persona=") })?
+            .replacingOccurrences(of: "--persona=", with: ""))
     }
 }

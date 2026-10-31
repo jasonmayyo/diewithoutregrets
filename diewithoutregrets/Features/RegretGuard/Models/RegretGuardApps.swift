@@ -12,12 +12,14 @@ struct Deck: Identifiable, Codable, Equatable {
     var name: String
     var cards: [Regret]
     var createdAt: Date
+    var subjectID: UUID?
     
-    init(id: UUID = UUID(), name: String, cards: [Regret] = [], createdAt: Date = Date()) {
+    init(id: UUID = UUID(), name: String, cards: [Regret] = [], createdAt: Date = Date(), subjectID: UUID? = nil) {
         self.id = id
         self.name = name
         self.cards = cards
         self.createdAt = createdAt
+        self.subjectID = subjectID
     }
 }
 
@@ -29,6 +31,16 @@ enum AnswerMode: String, Codable, Equatable {
     /// its single choice, so every legacy surface still finds it at
     /// `choices[correctAnswerIndex]`.
     case typed
+}
+
+/// Provenance saved with each imported card, including decks with mixed sources.
+/// Keep only the kind and title; the original notes and file paths are not stored.
+struct FlashcardSource: Codable, Hashable {
+    enum Kind: String, Codable { case pdf, notes, youtube, quizlet }
+    let kind: Kind
+    var title: String? = nil
+
+
 }
 
 struct Regret: Identifiable, Codable, Equatable {
@@ -56,22 +68,35 @@ struct Regret: Identifiable, Codable, Equatable {
     var nextDueAt: Date?
     /// Subject/topic tag, used for weakness aggregation and exam weighting.
     var topic: String?
+    var source: FlashcardSource?
 
     /// The canonical correct answer text, valid for both modes.
     var correctAnswer: String {
         choices.indices.contains(correctAnswerIndex) ? choices[correctAnswerIndex] : ""
     }
 
+    /// Conservatively skip unanswerable saved cards without deleting or rewriting
+    /// the user's deck. Imported ordinary questions and typed cards remain valid.
+    var isUsableForStudy: Bool {
+        guard !correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !FlashcardPrompt.isPlaceholder(quizPrompt.text),
+              quizPrompt.text != "Choose the correct answer." else { return false }
+        if answerMode == .typed { return true }
+        let options = choices.map { AnswerGrading.normalize($0) }
+        return options.count >= 2 && options.allSatisfy { !$0.isEmpty }
+            && Set(options).count == options.count
+    }
+
     /// Older generated decks may store the question in `regret` and
     /// left the prompt as N/A. Recover only recognizable questions here:
     /// `regret` also stores answers, so using it blindly would reveal them.
     var quizPrompt: FlashcardPrompt {
-        if !FlashcardPrompt.isPlaceholder(regretPrompt) {
+        if !FlashcardPrompt.isPlaceholder(regretPrompt), !FlashcardPrompt.isLegacyFeedback(regretPrompt) {
             return FlashcardPrompt(regretPrompt)
         }
         let legacy = FlashcardPrompt(regret)
         let isAnswer = choices.contains { AnswerGrading.matches(regret, $0) }
-        if !FlashcardPrompt.isPlaceholder(regret), !isAnswer,
+        if !FlashcardPrompt.isPlaceholder(regret), !FlashcardPrompt.isLegacyFeedback(regret), !isAnswer,
            legacy.hasBlank || legacy.text.last.map({ "?？؟".contains($0) }) == true {
             return legacy
         }
@@ -141,7 +166,8 @@ struct Regret: Identifiable, Codable, Equatable {
          timesCorrect: Int = 0,
          lastReviewedAt: Date? = nil,
          nextDueAt: Date? = nil,
-         topic: String? = nil) {
+         topic: String? = nil,
+         source: FlashcardSource? = nil) {
         self.id = id
         self.regretPrompt = regretPrompt
         self.regret = regret
@@ -156,6 +182,7 @@ struct Regret: Identifiable, Codable, Equatable {
         self.lastReviewedAt = lastReviewedAt
         self.nextDueAt = nextDueAt
         self.topic = topic
+        self.source = source
     }
 
     // Cards persisted before answerMode existed decode as .choices.
@@ -176,6 +203,8 @@ struct Regret: Identifiable, Codable, Equatable {
         lastReviewedAt = try c.decodeIfPresent(Date.self, forKey: .lastReviewedAt)
         nextDueAt = try c.decodeIfPresent(Date.self, forKey: .nextDueAt)
         topic = try c.decodeIfPresent(String.self, forKey: .topic)
+        // Old cards, or future source kinds unknown to this app, remain usable.
+        source = try? c.decodeIfPresent(FlashcardSource.self, forKey: .source)
     }
 }
 
@@ -219,6 +248,18 @@ struct FlashcardPrompt {
     static func isPlaceholder(_ value: String) -> Bool {
         let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return normalized.isEmpty || ["n/a", "n / a", "not applicable", "null", "undefined"].contains(normalized)
+    }
+
+    /// Early decks used this field for a wrong-answer reaction. Recover a
+    /// recognizable question from the legacy field, or skip it without changing
+    /// the saved card. Never present feedback alone as the question to answer.
+    static func isLegacyFeedback(_ value: String) -> Bool {
+        let normalized = value.lowercased()
+            .replacingOccurrences(of: "’", with: "'")
+            .components(separatedBy: .punctuationCharacters).joined()
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return ["wrong", "incorrect", "thats not right", "thats incorrect",
+                "close but not right", "not quite", "try again"].contains(normalized)
     }
 }
 
@@ -388,18 +429,37 @@ enum CardSelection {
 /// uses the nearest exam to drive pressure and topic weighting, and names it.
 struct StudyExam: Identifiable, Codable, Equatable {
     let id: UUID
+    /// Historical key: this is the exam's display name (for example, "Biology final").
     var subject: String
     var date: Date
     var topics: [String]
     var createdAt: Date
+    var subjectID: UUID?
+    /// Explicit links, independent of subject grouping. A deck can cover several exams.
+    var deckIDs: [UUID]
 
     init(id: UUID = UUID(), subject: String, date: Date,
-         topics: [String] = [], createdAt: Date = Date()) {
+         topics: [String] = [], createdAt: Date = Date(), subjectID: UUID? = nil, deckIDs: [UUID] = []) {
         self.id = id
         self.subject = subject
         self.date = date
         self.topics = topics
         self.createdAt = createdAt
+        self.subjectID = subjectID
+        self.deckIDs = deckIDs
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, subject, date, topics, createdAt, subjectID, deckIDs }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        subject = try values.decode(String.self, forKey: .subject)
+        date = try values.decode(Date.self, forKey: .date)
+        topics = try values.decodeIfPresent([String].self, forKey: .topics) ?? []
+        createdAt = try values.decodeIfPresent(Date.self, forKey: .createdAt) ?? date
+        subjectID = try values.decodeIfPresent(UUID.self, forKey: .subjectID)
+        deckIDs = try values.decodeIfPresent([UUID].self, forKey: .deckIDs) ?? []
     }
 
     /// Whole days from `now` until the exam (negative once it has passed).
@@ -412,27 +472,76 @@ struct StudyExam: Identifiable, Codable, Equatable {
     var isUpcoming: Bool { daysUntil() >= 0 }
 }
 
-// MARK: - Monster personas (selectable tutor personalities)
+struct StudySubject: Identifiable, Codable, Equatable {
+    let id: UUID
+    var name: String
 
-/// A selectable tutor-monster personality — tone/voice only, never a real-world
-/// demographic caricature. Referenced everywhere by `id`, so renaming is cheap.
-struct MonsterPersona: Identifiable, Equatable {
-    let id: String          // stable key; display names can change freely
-    let name: String
-    let tagline: String
-    let accentHex: String   // per-persona accent color
+    init(id: UUID = UUID(), name: String) { self.id = id; self.name = name }
 
-    static let diva    = MonsterPersona(id: "diva",    name: "Zaza",   tagline: "sassy hype bestie", accentHex: "#FF2D95")
-    static let willow  = MonsterPersona(id: "willow",  name: "Willow", tagline: "warm and calm",     accentHex: "#8FBF9F")
-    static let coach   = MonsterPersona(id: "coach",   name: "Sarge",  tagline: "tough-love drill",  accentHex: "#2F6BFF")
-    static let gremlin = MonsterPersona(id: "gremlin", name: "Gnash",  tagline: "chaotic menace",    accentHex: "#A6FF2D")
+    static func cleanName(_ name: String) -> String {
+        name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
 
-    /// Onboarding order (gentle first so it reads as the safe pick).
-    static let all: [MonsterPersona] = [willow, diva, coach, gremlin]
-    /// Safe default if onboarding is skipped.
-    static let fallback = willow
+    static func nameKey(_ name: String) -> String {
+        cleanName(name).folding(options: .caseInsensitive, locale: Locale(identifier: "en_US_POSIX"))
+    }
+}
 
-    static func with(id: String?) -> MonsterPersona {
-        all.first { $0.id == id } ?? fallback
+/// Shared by the library, chat, and exam top-ups. Names and AI topic tags never
+/// create a link: only the user's saved deck IDs determine an exam's material.
+enum StudyMaterialLinks {
+    static func decks(for exam: StudyExam, in decks: [Deck]) -> [Deck] {
+        let ids = Set(exam.deckIDs)
+        return decks.filter { ids.contains($0.id) }
+    }
+
+    static func exams(for deckID: UUID, in exams: [StudyExam]) -> [StudyExam] {
+        exams.filter { $0.deckIDs.contains(deckID) }.sorted { $0.date < $1.date }
+    }
+
+    static func nextExam(for deck: Deck?, in exams: [StudyExam], now: Date = Date()) -> StudyExam? {
+        guard let deck else { return nil }
+        return self.exams(for: deck.id, in: exams).first { $0.daysUntil(from: now) >= 0 }
+    }
+
+    static func topUpDeck(for topic: String, exam: StudyExam, decks: [Deck], selectedID: UUID?) -> UUID? {
+        let linked = self.decks(for: exam, in: decks)
+        let byTopic = linked.map { (id: $0.id, count: $0.cards.filter { $0.topic == topic }.count) }
+            .filter { $0.count > 0 }.max { $0.count < $1.count }?.id
+        return byTopic ?? linked.first(where: { $0.id == selectedID })?.id ?? linked.first?.id
+    }
+}
+
+enum StudyLibraryFilter: Hashable {
+    case all, unassigned, subject(UUID), exam(UUID)
+
+    func includes(_ deck: Deck, exams: [StudyExam]) -> Bool {
+        switch self {
+        case .all: return true
+        case .unassigned: return deck.subjectID == nil
+        case .subject(let id): return deck.subjectID == id
+        case .exam(let id): return exams.first { $0.id == id }?.deckIDs.contains(deck.id) == true
+        }
+    }
+}
+
+/// Calendar-day arithmetic keeps the grid aligned across time zones, DST,
+/// leap years, and the user's preferred first weekday.
+struct StudyCalendarMonth {
+    let start: Date
+    let days: [Date?]
+    let weekdaySymbols: [String]
+
+    init(containing date: Date, calendar: Calendar = .current) {
+        let start = calendar.dateInterval(of: .month, for: date)?.start ?? calendar.startOfDay(for: date)
+        self.start = start
+        let offset = (calendar.component(.weekday, from: start) - calendar.firstWeekday + 7) % 7
+        let count = calendar.range(of: .day, in: .month, for: start)?.count ?? 0
+        var cells = Array<Date?>(repeating: nil, count: offset)
+        cells += (0..<count).map { calendar.date(byAdding: .day, value: $0, to: start) }
+        cells += Array<Date?>(repeating: nil, count: (7 - cells.count % 7) % 7)
+        days = cells
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        weekdaySymbols = (0..<7).map { symbols[($0 + calendar.firstWeekday - 1) % 7] }
     }
 }

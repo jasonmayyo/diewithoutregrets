@@ -7,17 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B67EBCBDC83D39A6430A5A8 /* monster-sarge-atlas.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 2C9BD2C5785AD73A5384622B /* monster-sarge-atlas.imageset */; };
 		1221310CAC1C84878EA75354 /* SGContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8FF41A1F64989385A534F0 /* SGContract.swift */; };
+		144A8D149B7895CFB2147E50 /* monster-zaza-atlas.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 77C1EAF75ABC1B4AB77C620A /* monster-zaza-atlas.imageset */; };
+		17BCF9577A964BE5B18408D2 /* MonsterPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F44FCA991702CF211CA664B /* MonsterPersona.swift */; };
 		1C6E02E959F45ADE72029FD2 /* ShieldReturnContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F3E3E7D1A338C463574600 /* ShieldReturnContext.swift */; };
 		6777D0209F0636BB7C577AB3 /* ShieldPreviewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFEC9471D1BBFE56BA3301C /* ShieldPreviewApp.swift */; };
 		6E2C6A18F1A94258BD98625D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C61D60E5E800F437FE87A5C6 /* Foundation.framework */; };
+		752CA798C0AB75819CA50A88 /* monster-gnash-atlas.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 3245985435DF2D9256F861FC /* monster-gnash-atlas.imageset */; };
+		A0F0C68009A5C7A3579FE904 /* monster-willow-atlas.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 28A38A109E44F1A270BF76B6 /* monster-willow-atlas.imageset */; };
 		CE1BF512BFD7FB9E0B56E417 /* StudyGuardShieldExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13A67A85C2F64D3AB160C50 /* StudyGuardShieldExtension.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1F44FCA991702CF211CA664B /* MonsterPersona.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MonsterPersona.swift; path = ../../diewithoutregrets/Shared/MonsterPersona.swift; sourceTree = "<group>"; };
+		28A38A109E44F1A270BF76B6 /* monster-willow-atlas.imageset */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "monster-willow-atlas.imageset"; path = "../../diewithoutregrets/Assets.xcassets/monster-willow-atlas.imageset"; sourceTree = "<group>"; };
+		2C9BD2C5785AD73A5384622B /* monster-sarge-atlas.imageset */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "monster-sarge-atlas.imageset"; path = "../../diewithoutregrets/Assets.xcassets/monster-sarge-atlas.imageset"; sourceTree = "<group>"; };
+		3245985435DF2D9256F861FC /* monster-gnash-atlas.imageset */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "monster-gnash-atlas.imageset"; path = "../../diewithoutregrets/Assets.xcassets/monster-gnash-atlas.imageset"; sourceTree = "<group>"; };
 		4A2BA9018213241B29C25608 /* ShieldPreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShieldPreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D8FF41A1F64989385A534F0 /* SGContract.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SGContract.swift; path = ../../diewithoutregrets/Shared/SGContract.swift; sourceTree = "<group>"; };
 		4FFEC9471D1BBFE56BA3301C /* ShieldPreviewApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShieldPreviewApp.swift; sourceTree = "<group>"; };
+		77C1EAF75ABC1B4AB77C620A /* monster-zaza-atlas.imageset */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "monster-zaza-atlas.imageset"; path = "../../diewithoutregrets/Assets.xcassets/monster-zaza-atlas.imageset"; sourceTree = "<group>"; };
 		88F3E3E7D1A338C463574600 /* ShieldReturnContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShieldReturnContext.swift; path = ../../diewithoutregrets/Shared/ShieldReturnContext.swift; sourceTree = "<group>"; };
 		C61D60E5E800F437FE87A5C6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E13A67A85C2F64D3AB160C50 /* StudyGuardShieldExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StudyGuardShieldExtension.swift; path = ../../StudyGuardShield/StudyGuardShieldExtension.swift; sourceTree = "<group>"; };
@@ -60,6 +70,11 @@
 				E13A67A85C2F64D3AB160C50 /* StudyGuardShieldExtension.swift */,
 				4D8FF41A1F64989385A534F0 /* SGContract.swift */,
 				88F3E3E7D1A338C463574600 /* ShieldReturnContext.swift */,
+				1F44FCA991702CF211CA664B /* MonsterPersona.swift */,
+				28A38A109E44F1A270BF76B6 /* monster-willow-atlas.imageset */,
+				77C1EAF75ABC1B4AB77C620A /* monster-zaza-atlas.imageset */,
+				2C9BD2C5785AD73A5384622B /* monster-sarge-atlas.imageset */,
+				3245985435DF2D9256F861FC /* monster-gnash-atlas.imageset */,
 			);
 			sourceTree = "<group>";
 		};
@@ -125,6 +140,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0F0C68009A5C7A3579FE904 /* monster-willow-atlas.imageset in Resources */,
+				144A8D149B7895CFB2147E50 /* monster-zaza-atlas.imageset in Resources */,
+				0B67EBCBDC83D39A6430A5A8 /* monster-sarge-atlas.imageset in Resources */,
+				752CA798C0AB75819CA50A88 /* monster-gnash-atlas.imageset in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +158,7 @@
 				CE1BF512BFD7FB9E0B56E417 /* StudyGuardShieldExtension.swift in Sources */,
 				1221310CAC1C84878EA75354 /* SGContract.swift in Sources */,
 				1C6E02E959F45ADE72029FD2 /* ShieldReturnContext.swift in Sources */,
+				17BCF9577A964BE5B18408D2 /* MonsterPersona.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

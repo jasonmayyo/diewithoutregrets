@@ -1,5 +1,28 @@
 import Foundation
 
+/// A shield tap is a one-use, short-lived request to open the monster directly.
+/// Peek during cold-launch setup; consume on activation. Neither path grants time.
+enum ShieldChatHandoff {
+    static func isFresh(in defaults: UserDefaults?, now: Date = Date()) -> Bool {
+        let stamp = defaults?.double(forKey: SGContract.Keys.shieldTapAt) ?? 0
+        let age = now.timeIntervalSince1970 - stamp
+        return stamp > 0 && age >= 0 && age < 120
+    }
+
+    static func shouldOpenChat(in defaults: UserDefaults?, now: Date = Date()) -> Bool {
+        isFresh(in: defaults, now: now)
+            && defaults?.bool(forKey: SGContract.Keys.guardEnabled) == true
+            && defaults?.string(forKey: SGContract.Keys.state) == SGContract.StateValue.locked
+    }
+
+    static func consume(in defaults: UserDefaults?, now: Date = Date()) -> Bool {
+        let opensChat = shouldOpenChat(in: defaults, now: now)
+        defaults?.removeObject(forKey: SGContract.Keys.shieldTapAt)
+        defaults?.synchronize()
+        return opensChat
+    }
+}
+
 /// A known app launch link, never a guessed URL or a fallback to a different app.
 struct ShieldReturnDestination: Codable, Equatable {
     let bundleIdentifier: String

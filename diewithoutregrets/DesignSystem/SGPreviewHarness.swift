@@ -42,12 +42,33 @@ enum SGPreviewHarness {
     static func applyLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
         guard args.contains(where: { $0.hasPrefix("-sg-preview") }) else { return }
+        #if targetEnvironment(simulator)
+        if args.contains("-sg-preview-sheet-deck") { seedSheetReviewDeck() }
+        #endif
 
         if args.contains("-sg-preview-metering") {
             seed(.metering)
         }
+        #if targetEnvironment(simulator)
+        // Review the checkpoint race: the readout is zero before a lock arrives.
+        if args.contains("-sg-preview-metering-zero") {
+            seed(.metering)
+            SGContract.sharedDefaults?.set(900.0, forKey: SGContract.Keys.budgetUsedSeconds)
+            StudyGuardManager.shared.refresh()
+        }
+        #endif
         if args.contains("-sg-preview-locked") {
             seed(.locked)
+        }
+        if args.contains("-sg-preview-locked-yesterday") {
+            seed(.locked)
+            SGContract.sharedDefaults?.set(Date().timeIntervalSince1970 - 86_400,
+                                          forKey: SGContract.Keys.budgetGrantedAt)
+            StudyGuardManager.shared.refresh()
+        }
+        if args.contains("-sg-preview-shield-chat") {
+            seed(.locked)
+            SGContract.sharedDefaults?.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.shieldTapAt)
         }
         if args.contains("-sg-preview-quiz") {
             seed(.locked)
@@ -105,6 +126,32 @@ enum SGPreviewHarness {
         d.set(usedSeconds, forKey: SGContract.Keys.budgetUsedSeconds)
         d.set(false, forKey: SGContract.Keys.needsReauth)
     }
+
+    #if targetEnvironment(simulator)
+    /// An explicitly requested review deck; never replaces any saved material.
+    private static func seedSheetReviewDeck() {
+        let name = "Biology · Sheet review"
+        if let existing = DeckStore.shared.decks.first(where: { $0.name == name }) {
+            DeckStore.shared.selectDeck(existing)
+            return
+        }
+        let rows: [(String, [String], String)] = [
+            ("Which organelle produces most of a cell's ATP?", ["Mitochondria", "Nucleus", "Ribosome", "Golgi apparatus"], "Mitochondria release energy from nutrients to produce ATP."),
+            ("Which process converts light into chemical energy?", ["Photosynthesis", "Osmosis", "Fermentation", "Respiration"], "Photosynthesis stores light energy in glucose."),
+            ("Which molecule stores genetic instructions?", ["DNA", "Protein", "Lipid", "Glucose"], "DNA carries the genetic instructions for cells."),
+            ("What is the basic structural unit of living organisms?", ["The cell", "An organ", "A tissue", "A molecule"], "Cells are the smallest units of life."),
+            ("Which structure controls what enters and leaves a cell?", ["Cell membrane", "Cell wall", "Ribosome", "Nucleolus"], "The cell membrane is selectively permeable."),
+            ("Where are proteins assembled in a cell?", ["Ribosomes", "Lysosomes", "Vacuoles", "Chloroplasts"], "Ribosomes join amino acids to build proteins."),
+            ("Which gas do plants release during photosynthesis?", ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], "Splitting water during photosynthesis releases oxygen.")
+        ]
+        let deck = Deck(name: name, cards: rows.map { row in
+            Regret(regretPrompt: row.0, regret: row.1[0], choices: row.1,
+                   correctAnswerIndex: 0, backgroundExplanation: row.2, topic: "Cell biology")
+        })
+        DeckStore.shared.addDeck(deck)
+        DeckStore.shared.selectDeck(deck)
+    }
+    #endif
 
     private static func seedDeckIfNeeded() {
         guard DeckStore.shared.decks.isEmpty else { return }

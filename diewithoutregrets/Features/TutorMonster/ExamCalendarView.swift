@@ -2,14 +2,222 @@
 //  ExamCalendarView.swift
 //  diewithoutregrets
 //
-//  Tutor Monster (Phase 2): the dedicated exam surface. A prominent next-exam
-//  countdown, the list of exams with readiness + a cram badge, and add/edit.
-//  The nearest exam feeds the monster's pressure + topic weighting via ExamStore.
-//  Styling is light/functional; adopt the Meadow design system in a design pass.
-//  See Docs/TutorMonsterPlan.md §6d, Appendix D.
+//  The Study tab's calendar and its full exam-management destination.
+//  Both use the same ExamStore that provides the monster's study context.
 //
 
 import SwiftUI
+
+struct StudyExamCalendarSection: View {
+    @Environment(\.calendar) private var calendar
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var store = ExamStore.shared
+    @ObservedObject private var decks = DeckStore.shared
+    @State private var displayedMonth = Date()
+    @State private var selectedDay: Date?
+    @State private var showingAdd = false
+    @State private var editing: StudyExam?
+    let onShowAllExams: () -> Void
+    var onShowDecks: (StudyExam) -> Void = { _ in }
+
+    private var month: StudyCalendarMonth {
+        StudyCalendarMonth(containing: displayedMonth, calendar: calendar)
+    }
+
+    private var visibleExams: [StudyExam] {
+        if let selectedDay {
+            return exams(on: selectedDay)
+        }
+        return store.nextExam.map { [$0] } ?? []
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            monthHeader
+            calendarGrid
+            Divider().overlay(SGTheme.hairline)
+            examSummary
+        }
+        .padding(14)
+        .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: SGTheme.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: SGTheme.cardRadius).strokeBorder(SGTheme.hairline))
+        .sheet(isPresented: $showingAdd) {
+            ExamEditSheet(initialDate: selectedDay, accent: SGTheme.mintDeep) { store.add($0) }
+        }
+        .sheet(item: $editing) { exam in
+            ExamEditSheet(exam: exam, accent: SGTheme.mintDeep,
+                          onSave: { store.update($0) }, onDelete: { store.remove($0) })
+        }
+    }
+
+    private var monthHeader: some View {
+        HStack(spacing: 0) {
+            Text(displayedMonth.formatted(.dateTime.month(.wide).year()))
+                .font(SGTheme.cardTitle).foregroundStyle(SGTheme.paper)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
+            Button {
+                updateCalendar {
+                    displayedMonth = Date()
+                    selectedDay = calendar.startOfDay(for: Date())
+                }
+            } label: {
+                Text("Today").font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(SGTheme.mintDeep)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel("Show today")
+            monthButton("chevron.left", label: "Previous month", offset: -1)
+            monthButton("chevron.right", label: "Next month", offset: 1)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func monthButton(_ icon: String, label: String, offset: Int) -> some View {
+        Button {
+            guard let next = calendar.date(byAdding: .month, value: offset, to: month.start) else { return }
+            updateCalendar { displayedMonth = next; selectedDay = nil }
+        } label: {
+            Image(systemName: icon).font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(SGTheme.paper)
+                .frame(width: 44, height: 44)
+        }
+        .accessibilityLabel(label)
+    }
+
+    private var calendarGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 0) {
+            ForEach(0..<7, id: \.self) { index in
+                Text(month.weekdaySymbols[index])
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(SGTheme.paperSecondary)
+                    .frame(height: 24)
+                    .accessibilityHidden(true)
+            }
+            ForEach(Array(month.days.enumerated()), id: \.offset) { _, day in
+                if let day {
+                    dayButton(day)
+                } else {
+                    Color.clear.frame(height: 44).accessibilityHidden(true)
+                }
+            }
+        }
+    }
+
+    private func dayButton(_ day: Date) -> some View {
+        let isSelected = selectedDay.map { calendar.isDate(day, inSameDayAs: $0) } ?? false
+        let isToday = calendar.isDateInToday(day)
+        let dayExams = exams(on: day)
+        return Button {
+            updateCalendar { selectedDay = isSelected ? nil : day }
+        } label: {
+            VStack(spacing: 3) {
+                Text("\(calendar.component(.day, from: day))")
+                    .font(.system(size: 15, weight: isSelected || isToday ? .bold : .medium, design: .rounded))
+                Circle()
+                    .fill(isSelected ? SGTheme.ink : SGTheme.mintDeep)
+                    .frame(width: 4, height: 4)
+                    .opacity(dayExams.isEmpty ? 0 : 1)
+            }
+            .foregroundStyle(isSelected ? SGTheme.ink : SGTheme.paper)
+            .frame(maxWidth: .infinity).frame(height: 44)
+            .background {
+                Circle().fill(isSelected ? SGTheme.mintDeep : isToday ? SGTheme.mintTint : .clear)
+                    .frame(width: 38, height: 38)
+            }
+            .overlay {
+                if isToday && !isSelected {
+                    Circle().strokeBorder(SGTheme.mint.opacity(0.6), lineWidth: 1).frame(width: 38, height: 38)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(day.formatted(date: .complete, time: .omitted))
+        .accessibilityValue(dayExams.isEmpty ? "No exams" : dayExams.map(\.subject).joined(separator: ", "))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var examSummary: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(selectedDay.map { $0.formatted(.dateTime.month(.abbreviated).day()) } ?? "Up next")
+                    .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
+                Spacer()
+                Button("All exams", action: onShowAllExams)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(SGTheme.mintDeep)
+                    .frame(minHeight: 44)
+                    .padding(.trailing, 8)
+                    .buttonStyle(.plain)
+                Button { showingAdd = true } label: {
+                    Label("Add exam", systemImage: "plus")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(SGTheme.mintDeep)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+            }
+            if visibleExams.isEmpty {
+                Text(selectedDay == nil ? "Add an exam to plan your study." : "No exams on this day.")
+                    .font(SGTheme.body).foregroundStyle(SGTheme.paperSecondary)
+                    .padding(.bottom, 8)
+            } else {
+                ForEach(visibleExams) { exam in
+                    Button { editing = exam } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(exam.subject).font(SGTheme.cardTitle)
+                                Text(exam.date.formatted(date: .abbreviated, time: .omitted))
+                                    .font(SGTheme.caption).foregroundStyle(SGTheme.paperSecondary)
+                            }
+                            Spacer(minLength: 8)
+                            Text(countdown(exam)).font(SGTheme.buttonSmall)
+                                .foregroundStyle(SGTheme.mintDeep)
+                                .padding(.horizontal, 10).padding(.vertical, 7)
+                                .background(SGTheme.mintTint, in: Capsule())
+                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(SGTheme.paperSecondary)
+                        }
+                        .foregroundStyle(SGTheme.paper)
+                        .frame(minHeight: 44).padding(.bottom, 4)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Edit exam")
+                    Button {
+                        if StudyMaterialLinks.decks(for: exam, in: decks.decks).isEmpty { editing = exam }
+                        else { onShowDecks(exam) }
+                    } label: {
+                        let linked = StudyMaterialLinks.decks(for: exam, in: decks.decks)
+                        Label(linked.isEmpty ? "Link flashcard decks" : "View \(linked.count) linked \(linked.count == 1 ? "deck" : "decks")",
+                              systemImage: "rectangle.on.rectangle")
+                            .font(SGTheme.caption.weight(.semibold)).foregroundStyle(SGTheme.mintDeep)
+                            .frame(minHeight: 36)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func exams(on day: Date) -> [StudyExam] {
+        store.exams.filter { calendar.isDate($0.date, inSameDayAs: day) }.sorted { $0.date < $1.date }
+    }
+
+    private func countdown(_ exam: StudyExam) -> String {
+        switch exam.daysUntil(calendar: calendar) {
+        case ..<0: return "Past"
+        case 0: return "Today"
+        case 1: return "Tomorrow"
+        case let days: return "In \(days) days"
+        }
+    }
+
+    private func updateCalendar(_ change: () -> Void) {
+        SGV5Haptics.play(.selection)
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18), change)
+    }
+}
 
 struct ExamCalendarView: View {
     @ObservedObject private var store = ExamStore.shared
@@ -34,6 +242,7 @@ struct ExamCalendarView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Exams")
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showingAdd = true } label: { Image(systemName: "plus") }
@@ -97,6 +306,9 @@ struct ExamCalendarView: View {
                 Text(exam.subject).font(.system(size: 16, weight: .semibold)).foregroundStyle(.primary)
                 Text(exam.date.formatted(date: .abbreviated, time: .omitted))
                     .font(.caption).foregroundStyle(.secondary)
+                let linked = StudyMaterialLinks.decks(for: exam, in: deckStore.decks)
+                Text(linked.isEmpty ? "No decks linked" : "\(linked.count) decks · \(linked.reduce(0) { $0 + $1.cards.count }) flashcards")
+                    .font(.caption).foregroundStyle(accent)
                 if !exam.topics.isEmpty {
                     Text(exam.topics.joined(separator: ", "))
                         .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -114,12 +326,10 @@ struct ExamCalendarView: View {
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    /// Fraction mastered across the cards tagged with this exam's topics, nil
-    /// when no topics are linked or no cards match yet.
+    /// Readiness covers the same linked material the user chose for the exam.
     private func readiness(_ exam: StudyExam) -> Double? {
-        let topics = Set(exam.topics)
-        guard !topics.isEmpty else { return nil }
-        let cards = deckStore.decks.flatMap(\.cards).filter { ($0.topic.map(topics.contains)) ?? false }
+        let cards = StudyMaterialLinks.decks(for: exam, in: deckStore.decks).flatMap(\.cards)
+            .filter(\.isUsableForStudy)
         guard !cards.isEmpty else { return nil }
         return Double(cards.filter { !$0.isWeak }.count) / Double(cards.count)
     }
@@ -164,8 +374,8 @@ struct ExamCalendarView: View {
     }
 
     private func runTopUp(_ topic: String) async {
-        guard let deckID = enrichment.targetDeckID(forTopic: topic) else {
-            topUpResult = "Create a deck first, then top up."
+        guard let exam = store.nextExam, let deckID = enrichment.targetDeckID(forTopic: topic, exam: exam) else {
+            topUpResult = "Link a deck to this exam first, then top up."
             return
         }
         pendingTopic = topic
@@ -186,12 +396,19 @@ struct ExamEditSheet: View {
     @State private var subject: String
     @State private var date: Date
     @State private var topicsText: String
+    @State private var subjectID: UUID?
+    @State private var deckIDs: Set<UUID>
+    @State private var showingDeckPicker = false
+    @ObservedObject private var decks = DeckStore.shared
+    @ObservedObject private var subjects = StudySubjectStore.shared
     private let existing: StudyExam?
     private let accent: Color
     private let onSave: (StudyExam) -> Void
     private let onDelete: ((StudyExam) -> Void)?
 
     init(exam: StudyExam? = nil,
+         initialDate: Date? = nil,
+         initialSubjectID: UUID? = nil,
          accent: Color,
          onSave: @escaping (StudyExam) -> Void,
          onDelete: ((StudyExam) -> Void)? = nil) {
@@ -200,23 +417,48 @@ struct ExamEditSheet: View {
         self.onSave = onSave
         self.onDelete = onDelete
         _subject = State(initialValue: exam?.subject ?? "")
-        _date = State(initialValue: exam?.date ?? Date().addingTimeInterval(7 * 86_400))
+        _date = State(initialValue: exam?.date ?? initialDate ?? Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date())
         _topicsText = State(initialValue: exam?.topics.joined(separator: ", ") ?? "")
+        _subjectID = State(initialValue: exam?.subjectID ?? initialSubjectID)
+        _deckIDs = State(initialValue: Set(exam?.deckIDs ?? []))
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Exam") {
-                    TextField("Subject (e.g. Anatomy)", text: $subject)
+                    TextField("Exam name (e.g. Biology final)", text: $subject)
+                        .accessibilityLabel("Exam name")
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                 }
+                Section {
+                    StudySubjectField(selection: $subjectID)
+                } footer: { Text("You can use the subject name, or give this exam its own name.") }
+                Section {
+                    Button { showingDeckPicker = true } label: {
+                        HStack {
+                            Label("Choose decks", systemImage: "rectangle.on.rectangle")
+                            Spacer()
+                            Text("\(linkedDecks.count)").foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption)
+                        }
+                        .frame(minHeight: 36)
+                    }
+                    ForEach(linkedDecks) { deck in
+                        HStack {
+                            Text(deck.name)
+                            Spacer()
+                            Text("\(deck.cards.count) cards").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } header: { Text("Flashcard decks") }
+                footer: { Text("Link the decks this exam covers. The monster will use this exam's countdown only when you study a linked deck.") }
                 Section {
                     TextField("Comma-separated (e.g. skeletal, cardiac)", text: $topicsText)
                 } header: {
                     Text("Topics")
                 } footer: {
-                    Text("The monster weights these topics as this exam nears.")
+                    Text("Optional. Prioritise these topics within the linked decks as this exam nears.")
                 }
                 if let existing, let onDelete {
                     Section {
@@ -227,14 +469,22 @@ struct ExamEditSheet: View {
                 }
             }
             .navigationTitle(existing == nil ? "Add Exam" : "Edit Exam")
+            .tint(accent)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
-                        .disabled(subject.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(examName.isEmpty)
                 }
             }
+            .sheet(isPresented: $showingDeckPicker) { StudyExamDeckPicker(selection: $deckIDs, subjectID: subjectID) }
         }
+    }
+
+    private var linkedDecks: [Deck] { decks.decks.filter { deckIDs.contains($0.id) } }
+    private var examName: String {
+        let name = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? (subjects.name(for: subjectID) ?? "") : name
     }
 
     private func save() {
@@ -243,10 +493,11 @@ struct ExamEditSheet: View {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         onSave(StudyExam(id: existing?.id ?? UUID(),
-                         subject: subject.trimmingCharacters(in: .whitespaces),
+                         subject: examName,
                          date: date,
                          topics: topics,
-                         createdAt: existing?.createdAt ?? Date()))
+                         createdAt: existing?.createdAt ?? Date(), subjectID: subjectID,
+                         deckIDs: linkedDecks.map(\.id)))
         dismiss()
     }
 }

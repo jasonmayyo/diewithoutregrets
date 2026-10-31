@@ -1,0 +1,427 @@
+{
+  "captured": "2026-10-29",
+  "onboarding": [
+    {
+      "screenID": 800,
+      "file": "screenshots/onboarding-01-welcome.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Welcome",
+      "note": "The opening video and Get Started.",
+      "kind": "App capture",
+      "number": "01"
+    },
+    {
+      "screenID": 813,
+      "file": "screenshots/onboarding-02-study-to-earn.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Study to earn",
+      "note": "The flashcard-to-screen-time demo, shown in its earned state.",
+      "kind": "App capture",
+      "number": "02"
+    },
+    {
+      "screenID": 803,
+      "file": "screenshots/onboarding-03-study-level.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Study level",
+      "note": "Choose the level of study.",
+      "kind": "App capture",
+      "number": "03"
+    },
+    {
+      "screenID": 804,
+      "file": "screenshots/onboarding-04-scrolling-friction.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Scrolling friction",
+      "note": "Identify what scrolling is getting in the way of.",
+      "kind": "App capture",
+      "number": "04"
+    },
+    {
+      "screenID": 805,
+      "file": "screenshots/onboarding-05-scrolling-moment.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Scrolling moment",
+      "note": "Choose when scrolling usually takes over.",
+      "kind": "App capture",
+      "number": "05"
+    },
+    {
+      "screenID": 806,
+      "file": "screenshots/onboarding-06-flashcards-demo.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Flashcard demo",
+      "note": "The finished demo card. This onboarding animation does not generate a real deck.",
+      "kind": "App capture",
+      "number": "06"
+    },
+    {
+      "screenID": 820,
+      "file": "screenshots/onboarding-07-exam-subject.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Exam subject",
+      "note": "Enter the subject for the upcoming exam.",
+      "kind": "App capture",
+      "number": "07"
+    },
+    {
+      "screenID": 807,
+      "file": "screenshots/onboarding-08-exam-date.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Exam date",
+      "note": "Select the date for that subject.",
+      "kind": "App capture",
+      "number": "08"
+    },
+    {
+      "screenID": 810,
+      "file": "screenshots/onboarding-09-phone-time.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Daily phone time",
+      "note": "Choose the current scrolling baseline.",
+      "kind": "App capture",
+      "number": "09"
+    },
+    {
+      "screenID": 819,
+      "file": "screenshots/onboarding-10-age.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Age",
+      "note": "Select an age range.",
+      "kind": "App capture",
+      "number": "10"
+    },
+    {
+      "screenID": 818,
+      "file": "screenshots/onboarding-11-exam-time-cost.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Time before the exam",
+      "note": "The completed exam-time projection.",
+      "kind": "App capture",
+      "number": "11"
+    },
+    {
+      "screenID": 808,
+      "file": "screenshots/onboarding-12-reassurance.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Reassurance",
+      "note": "Opening headline of the tap-through reassurance sequence.",
+      "kind": "App capture",
+      "number": "12"
+    },
+    {
+      "screenID": 817,
+      "file": "screenshots/onboarding-13-the-method.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "The method",
+      "note": "Explain the study-to-unlock loop.",
+      "kind": "App capture",
+      "number": "13"
+    },
+    {
+      "screenID": 821,
+      "file": "screenshots/onboarding-14-monster-picker.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Choose your monster",
+      "note": "Willow, Zaza, Sarge and Gnash. Willow is selected here.",
+      "kind": "App capture",
+      "number": "14"
+    },
+    {
+      "screenID": 812,
+      "file": "screenshots/onboarding-15-study-rule.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Set the study rule",
+      "note": "Choose how many correct cards earn five minutes.",
+      "kind": "App capture",
+      "number": "15"
+    },
+    {
+      "screenID": 801,
+      "file": "screenshots/onboarding-16-study-more.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Study more",
+      "note": "Study benefits and App Store review excerpts.",
+      "kind": "App capture",
+      "number": "16"
+    },
+    {
+      "screenID": 814,
+      "file": "screenshots/onboarding-17-commitment.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Make the commitment",
+      "note": "Tap the mascot to confirm the selected rule.",
+      "kind": "App capture",
+      "number": "17"
+    },
+    {
+      "screenID": 815,
+      "file": "screenshots/onboarding-18-plan-building.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Build the plan",
+      "note": "The checklist while the personalized plan is being assembled.",
+      "kind": "App capture",
+      "number": "18"
+    },
+    {
+      "screenID": 816,
+      "file": "screenshots/onboarding-19-personal-plan.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Your personal plan",
+      "note": "The first chapter of the three-part plan.",
+      "kind": "App capture",
+      "number": "19"
+    },
+    {
+      "screenID": 506,
+      "file": "screenshots/onboarding-20-paywall.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Paywall introduction",
+      "note": "Fresh capture of the hosted offer introduction. Purchase pages and StoreKit confirmation still need device review.",
+      "kind": "App capture",
+      "number": "20"
+    },
+    {
+      "screenID": 601,
+      "file": "screenshots/onboarding-21-setup-intro.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Setup introduction",
+      "note": "Begin setting up app protection.",
+      "kind": "App capture",
+      "number": "21"
+    },
+    {
+      "screenID": 602,
+      "file": "screenshots/onboarding-22-screen-time.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Screen Time access",
+      "note": "The app\u2019s authorization introduction, before the iOS permission dialog.",
+      "kind": "App capture",
+      "number": "22"
+    },
+    {
+      "screenID": 606,
+      "file": "screenshots/onboarding-23-choose-apps.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Choose guarded apps",
+      "note": "The app-selection introduction, before Apple\u2019s picker.",
+      "kind": "App capture",
+      "number": "23"
+    },
+    {
+      "screenID": 604,
+      "file": "screenshots/onboarding-24-notifications.png",
+      "capture": "native app, Debug screen jump with sample answers",
+      "title": "Notifications",
+      "note": "The app\u2019s notification introduction, before the system prompt.",
+      "kind": "App capture",
+      "number": "24"
+    }
+  ],
+  "unlock": [
+    {
+      "file": "screenshots/shield-willow.png",
+      "number": "01",
+      "title": "Willow locks Instagram",
+      "note": "The selected monster appears on the shield. Tap Ask Willow for permission to open the study conversation.",
+      "kind": "Shield preview"
+    },
+    {
+      "file": "screenshots/unlock-02-direct-chat.png",
+      "number": "02",
+      "title": "Straight into monster chat",
+      "note": "Fresh full-app capture through the shield handoff. Chat is selected before the first frame, skipping the red Caught you scrolling screen.",
+      "kind": "App capture"
+    },
+    {
+      "file": "screenshots/unlock-04-correct.png",
+      "number": "03",
+      "title": "Correct answer \u2192 next card",
+      "note": "The answer appears as your message, Willow reacts, and the next card\u2019s quick replies appear.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-05-correction.png",
+      "number": "04",
+      "title": "Incorrect-answer branch",
+      "note": "The correction includes the saved explanation, followed by the next question. This is an alternative branch.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-06-ask.png",
+      "number": "05",
+      "title": "Ask about this card",
+      "note": "A separate question composer opens with the chosen card as context.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-07-waiting.png",
+      "number": "06",
+      "title": "Follow-up sent",
+      "note": "The question is your chat bubble; typing dots show that the tutor reply is pending.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-08-followup.png",
+      "number": "07",
+      "title": "Tutor explains",
+      "note": "Example response showing the follow-up layout. This text is a fixture, not a live AI result.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-09-resume.png",
+      "number": "08",
+      "title": "Return to answering",
+      "note": "Use Answer card, submit the answer, and continue the study round.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-10-complete.png",
+      "number": "09",
+      "title": "Time earned",
+      "note": "Example completion with a grant and recap. Actual minutes depend on the local result; Done closes the chat.",
+      "kind": "Native fixture"
+    },
+    {
+      "file": "screenshots/unlock-11-offline.png",
+      "number": "10",
+      "title": "Offline / unavailable branch",
+      "note": "The saved explanation appears when a live reply is unavailable. The study round can continue.",
+      "kind": "Native fixture"
+    }
+  ],
+  "shields": [
+    {
+      "number": "01",
+      "file": "screenshots/shield-willow.png",
+      "title": "Willow \u00b7 Instagram",
+      "note": "Ask Willow for permission opens Willow\u2019s chat. Instagram is the example app for this preview.",
+      "kind": "Shield preview"
+    },
+    {
+      "number": "02",
+      "file": "screenshots/shield-zaza.png",
+      "title": "Zaza \u00b7 Instagram",
+      "note": "Ask Zaza for permission opens Zaza\u2019s chat. Instagram is the example app for this preview.",
+      "kind": "Shield preview"
+    },
+    {
+      "number": "03",
+      "file": "screenshots/shield-sarge.png",
+      "title": "Sarge \u00b7 Instagram",
+      "note": "Ask Sarge for permission opens Sarge\u2019s chat. Instagram is the example app for this preview.",
+      "kind": "Shield preview"
+    },
+    {
+      "number": "04",
+      "file": "screenshots/shield-gnash.png",
+      "title": "Gnash \u00b7 Instagram",
+      "note": "Ask Gnash for permission opens Gnash\u2019s chat. Instagram is the example app for this preview.",
+      "kind": "Shield preview"
+    }
+  ],
+  "updated": "2026-10-29 \u00b7 personalized shield and direct chat entry",
+  "timeReward": {
+    "video": "animation/monster-per-answer-reward.mp4",
+    "firstAnswer": "animation/per-answer-first-total.png",
+    "secondAnswer": "animation/per-answer-second-total.png",
+    "finalGrant": "animation/per-answer-final.png",
+    "capture": "Native production presentation with two correct-answer fixtures at 75 seconds each. Final fixture grant rounds 150 seconds to 3 minutes; real device grant QA pending."
+  },
+  "studySheet": [
+    {
+      "file": "screenshots/study-sheet/01-intro.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/02-typed.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/03-choices.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/04-correct.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/05-follow-up-recap.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/06-final-recap.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/07-unlocked.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/08-debug.png",
+      "capture": "Native SwiftUI in Simulator; local sample deck and seeded Screen Time",
+      "kind": "Native app capture"
+    },
+    {
+      "file": "screenshots/study-sheet/09-in-chat-comparison.png",
+      "capture": "Final rebuilt native app; In chat selected; local sample cards",
+      "kind": "Native app capture"
+    }
+  ],
+  "studySheetRewardVideo": "screenshots/study-sheet/per-answer-reward.mp4",
+  "inlineMotion": [
+    {
+      "file": "screenshots/inline-motion/01-answer-panel.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    },
+    {
+      "file": "screenshots/inline-motion/02-selected-reply.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    },
+    {
+      "file": "screenshots/inline-motion/03-follow-up.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    },
+    {
+      "file": "screenshots/inline-motion/04-next-question.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    },
+    {
+      "file": "screenshots/inline-motion/05-complete.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    },
+    {
+      "file": "screenshots/inline-motion/06-return-to-choices.png",
+      "capture": "native app with sample deck and seeded Screen Time"
+    }
+  ],
+  "visibleChat": [
+    {
+      "file": "screenshots/visible-chat/01-return.png",
+      "title": "Wait until chat is visible",
+      "capture": "final native app, local sample deck"
+    },
+    {
+      "file": "screenshots/visible-chat/02-first-message.png",
+      "title": "One message at a time",
+      "capture": "final native app, local sample deck"
+    },
+    {
+      "file": "screenshots/visible-chat/04-answer-sent.png",
+      "title": "A clear state between cards",
+      "capture": "final native app, local sample deck"
+    },
+    {
+      "file": "screenshots/visible-chat/05-next-card.png",
+      "title": "Fresh choices with the next card",
+      "capture": "final native app, local sample deck"
+    }
+  ]
+}

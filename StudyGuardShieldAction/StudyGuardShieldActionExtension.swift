@@ -2,9 +2,9 @@
 //  StudyGuardShieldActionExtension.swift
 //  StudyGuardShieldAction
 //
-//  Handles taps on the shield's "Study to unlock" button. Deliberately MINIMAL:
+//  Handles taps on the shield's "Ask [monster] for permission" button. Deliberately MINIMAL:
 //  on tap it records the matching return-app context and stamps sg_shieldTapAt
-//  (so the app lands straight on the flashcards when it foregrounds), then
+//  (so the app lands straight in monster chat when it foregrounds), then
 //  directly opens Study Guard via PrivateAppLauncher,
 //  then returns .none. NOTHING else runs here — no notifications, no safety
 //  net, no analytics, no logging.
@@ -45,7 +45,7 @@ final class StudyGuardShieldActionExtension: ShieldActionDelegate {
             } else {
                 ShieldReturnContext.prepareReturn(for: applicationTokenData, in: defaults)
             }
-            // Stamp the tap so the app opens straight to the flashcards.
+            // Stamp the tap so the app opens directly in the chosen monster's chat.
             defaults?.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.shieldTapAt)
             // Count this as a gate encounter — the tutor-monster pressure signal.
             // Pure UserDefaults increment; adds no measurable delay to the hot path.

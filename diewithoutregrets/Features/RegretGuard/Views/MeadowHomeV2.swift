@@ -134,7 +134,9 @@ struct MeadowHomeV2: View {
                                 .padding(.top, 16)
                         }
 
-                        Color.clear.frame(height: SGTheme.tabBarClearance + 12)
+                        Color.clear.frame(height: SGTheme.tabBarClearance + 12 +
+                            (guardManager.state.offersStudyUnlock(remainingMinutes:
+                                max(0, guardManager.totalMinutes - guardManager.usedMinutes)) ? 80 : 0))
                     }
                 }
                 #if DEBUG
