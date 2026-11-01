@@ -111,7 +111,7 @@ final class StudyGuardManager: ObservableObject {
     /// Completes Screen Time setup. Flips the legacy-Shortcuts kill switch
     /// (`sg_setupComplete`) ONLY after monitoring verifiably started — if it
     /// fails, the legacy path stays alive and the caller shows an error.
-    func completeSetup() -> Result<Void, SetupError> {
+    func completeSetup(startLocked: Bool = false) -> Result<Void, SetupError> {
         guard let d = defaults else { return .failure(.monitoringFailed) }
         guard AuthorizationCenter.shared.authorizationStatus == .approved else { return .failure(.notAuthorized) }
         guard !SGContract.isSelectionEmpty(selection) else { return .failure(.emptySelection) }
@@ -134,6 +134,12 @@ final class StudyGuardManager: ObservableObject {
         // Verified live — now (and only now) flip the kill switch.
         d.set(true, forKey: SGContract.Keys.guardEnabled)
         d.set(true, forKey: SGContract.Keys.setupComplete)
+        if startLocked {
+            d.set(SGContract.StateValue.locked, forKey: SGContract.Keys.state)
+            d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.lockedAt)
+            d.set(d.double(forKey: SGContract.Keys.budgetTotalSeconds), forKey: SGContract.Keys.budgetUsedSeconds)
+            applyShieldsFromStoredSelection()
+        }
         d.synchronize()
         refresh()
         return .success(())

@@ -32,6 +32,20 @@ struct SGV5RootView: View {
     @StateObject private var purchaseModel = OnboardingViewModel()
 
     var body: some View {
+        #if DEBUG && targetEnvironment(simulator)
+        if let phase = BuddyOnboardingCaptureView.requestedPhase {
+            BuddyOnboardingCaptureView(phase: phase)
+        } else if let screen = BuddyOnboardingScreenCaptureView.requestedScreen {
+            BuddyOnboardingScreenCaptureView(screen: screen)
+        } else {
+            onboarding
+        }
+        #else
+        onboarding
+        #endif
+    }
+
+    private var onboarding: some View {
         ZStack {
             SGTheme.ink.ignoresSafeArea()
             if SGV5PostPurchaseStyle.screenIDs.contains(model.currentPageIndex) {
@@ -44,7 +58,7 @@ struct SGV5RootView: View {
                     HardPaywallView()
                         .environmentObject(purchaseModel)
                 } else {
-                    SGV5SetupView(viewModel: model)
+                    BuddyOnboardingChatView(viewModel: model)
                 }
             }
             .id(model.currentPageIndex)
@@ -78,7 +92,12 @@ struct SGV5RootView: View {
             get: { model.completionError != nil },
             set: { if !$0 { model.completionError = nil } }
         )) {
-            Button("Retry") { Task { await model.finishSetup() } }
+            Button("Retry") {
+                Task {
+                    if model.buddy.phase == .notifications { await model.finishSetup() }
+                    else { _ = await model.verifyBuddyAccess() }
+                }
+            }
             Button("Not now", role: .cancel) { model.completionError = nil }
         } message: {
             Text(model.completionError ?? "")

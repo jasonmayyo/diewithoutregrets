@@ -24,6 +24,7 @@ struct MonsterStudyAnswer: Identifiable, Equatable {
     let correct: Bool
     let text: String
     let choiceIndex: Int?
+    var reaction: MonsterReaction? = nil
 }
 
 /// A finite, locally graded batch. Advancing requires an explicit Next tap.

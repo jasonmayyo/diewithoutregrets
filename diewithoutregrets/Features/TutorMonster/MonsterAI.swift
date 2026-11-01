@@ -12,6 +12,53 @@
 
 import Foundation
 
+/// Explicit preferences, shared by onboarding, Profile and live tutor requests.
+/// No gender is inferred from a name, pronoun choice or selected monster.
+struct BuddyIdentity: Equatable {
+    static let nameKey = "sg_buddyName"
+    static let pronounsKey = "sg_buddyPronouns"
+    static let genderKey = "sg_buddyGender"
+    static let ruleKey = "sg_buddyRuleConfirmed"
+    var name = ""
+    var pronouns = "Just my name"
+    var gender: String? = nil
+
+    static func load(from defaults: UserDefaults = .standard) -> Self {
+        Self(name: defaults.string(forKey: nameKey) ?? "",
+             pronouns: defaults.string(forKey: pronounsKey) ?? "Just my name",
+             gender: defaults.string(forKey: genderKey))
+    }
+
+    func save(in defaults: UserDefaults = .standard) {
+        defaults.set(Self.clean(name, limit: 30), forKey: Self.nameKey)
+        defaults.set(Self.clean(pronouns, limit: 40), forKey: Self.pronounsKey)
+        if let gender { defaults.set(Self.clean(gender, limit: 40), forKey: Self.genderKey) }
+        else { defaults.removeObject(forKey: Self.genderKey) }
+    }
+
+    static func clean(_ text: String, limit: Int) -> String {
+        String(text.split(whereSeparator: \.isWhitespace).joined(separator: " ").prefix(limit))
+    }
+
+    /// Uses the existing request contract so deployed tutor servers need no migration.
+    /// This is user preference data alongside the question, not system authority.
+    func tutorQuestion(_ question: String) -> String {
+        guard !name.isEmpty else { return question }
+        let genderContext = gender.map { " My gender is \(Self.clean($0, limit: 40))." } ?? ""
+        let context = "My preferred name is \(Self.clean(name, limit: 30)); my preference for how to refer to me is \(Self.clean(pronouns, limit: 40)).\(genderContext) Avoid gendered nicknames. My study question: "
+        var result = context + question
+        while result.utf16.count > 1000 { result.removeLast() }
+        return result
+    }
+
+    /// Only scripted banter passes here; saved card content is never rewritten.
+    func addressBanter(_ text: String) -> String {
+        guard !name.isEmpty else { return text }
+        return text.replacingOccurrences(of: "\\b(girl|sister|bro|dude|man)\\b", with: "friend",
+            options: [.regularExpression, .caseInsensitive])
+    }
+}
+
 /// A personalized set of persona lines for one unlock session, from the Worker.
 struct MonsterScriptBundle: Decodable {
     let greeting: String

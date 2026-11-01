@@ -62,6 +62,9 @@ final class MonsterSession: ObservableObject {
     private var studyCards: [Regret]
     private var openingSources: [MonsterStudySource]
     private let openingDefaults: UserDefaults?
+    private let creatorDefaults: UserDefaults
+    private let buddyIdentity: BuddyIdentity
+    private let configuredQuestionCount: Int?
     private var sheetQuestionContexts: [UUID: Regret] = [:]
     private var stopped = false
 
@@ -70,6 +73,7 @@ final class MonsterSession: ObservableObject {
          personaStore: PersonaStore = .shared,
          studyGuard: StudyGuardManager = .shared,
          sharedDefaults: UserDefaults? = SGContract.sharedDefaults,
+         creatorDefaults: UserDefaults = .standard,
          now: Date = Date(),
          method: MonsterStudyMethod? = nil,
          loadBundle: ((MonsterPersona, SGContract.MonsterMood, MonsterScriptVars) async -> MonsterScriptBundle?)? = nil,
@@ -80,6 +84,11 @@ final class MonsterSession: ObservableObject {
         self.examStore = examStore
         self.studyGuard = studyGuard
         self.openingDefaults = sharedDefaults
+        self.creatorDefaults = creatorDefaults
+        self.buddyIdentity = BuddyIdentity.load(from: creatorDefaults)
+        let configuredCount = creatorDefaults.integer(forKey: "flashcardCount")
+        let hasBuddyRule = creatorDefaults.bool(forKey: BuddyIdentity.ruleKey) && [5, 10, 20].contains(configuredCount)
+        self.configuredQuestionCount = hasBuddyRule ? configuredCount : nil
         self.reactionPicker = MonsterReactionPicker(seed: reactionSeed, defaults: sharedDefaults)
         self.loadBundle = loadBundle ?? { await MonsterAI.fetchBundle(persona: $0, mood: $1, vars: $2) }
         self.tutorReply = tutorReply ?? { try await FlashcardAPIClient.shared.askTutor(persona: $0, card: $1, question: $2, history: $3) }
@@ -112,11 +121,11 @@ final class MonsterSession: ObservableObject {
         )
         let dials = SGContract.dials(for: pressure)
         self.dials = dials
-        self.secondsPerCorrectAnswer = SGContract.perCardSeconds(for: dials)
+        self.secondsPerCorrectAnswer = hasBuddyRule ? 300 / configuredCount : SGContract.perCardSeconds(for: dials)
 
         // Toll: weakness + exam-topic weighted draw.
         let toll = CardSelection.pick(from: cards,
-                                      count: method == .studySheet ? 4 : dials.questions,
+                                      count: method == .studySheet ? 4 : (hasBuddyRule ? configuredCount : dials.questions),
                                       examTopics: Set(exam?.topics ?? []),
                                       now: now)
         self.queue = toll
@@ -134,7 +143,7 @@ final class MonsterSession: ObservableObject {
             topic: Self.dominantTopic(of: toll),
             deck: deck?.name,
             questions: toll.count,
-            minutes: SGContract.earnedMinutes(cardCount: toll.count, perCardSeconds: SGContract.perCardSeconds(for: dials))
+            minutes: SGContract.earnedMinutes(cardCount: toll.count, perCardSeconds: self.secondsPerCorrectAnswer)
         )
     }
 
@@ -160,10 +169,12 @@ final class MonsterSession: ObservableObject {
         lineSeed += 1
         let opening = MonsterOpeningRotation.next(personaID: persona.id,
             hasExam: MonsterScript.hasUpcomingExam(vars), defaults: openingDefaults)
-        append(.monster(MonsterScript.openingGreeting(persona: persona, mood: dials.mood,
-                                                     vars: vars, seed: opening.greeting)))
-        append(.monster(MonsterScript.scrollCallout(persona: persona, seed: nextVoiceVariant("scrollCallout")),
-                        reaction: reactionPicker.opening(persona: persona)))
+        let greeting = MonsterScript.openingGreeting(persona: persona, mood: dials.mood,
+                                                     vars: vars, seed: opening.greeting)
+        append(.monster((buddyIdentity.name.isEmpty ? "" : "\(buddyIdentity.name), ") + buddyIdentity.addressBanter(greeting),
+                        reaction: reactionPicker.opening(persona: persona, guaranteed:
+                            creatorDefaults.bool(forKey: MonsterReactionPicker.alwaysOpeningPreferenceKey))))
+        append(.monster(buddyIdentity.addressBanter(MonsterScript.scrollCallout(persona: persona, seed: nextVoiceVariant("scrollCallout")))))
         append(.monster(MonsterScript.openingPrompt(persona: persona, vars: vars,
                                                    studySheet: method == .studySheet, seed: opening.prompt),
                         sources: openingSources))
@@ -202,7 +213,7 @@ final class MonsterSession: ObservableObject {
         let restarting = isFinished
         let outstanding = method == .inChat ? queue.count + (awaitingAnswer ? 1 : 0)
             : (studyRound.map { $0.questions.count - $0.answers.count } ?? 0)
-        let count = restarting || outstanding == 0 ? (method == .studySheet ? 4 : dials.questions) : outstanding
+        let count = restarting || outstanding == 0 ? (method == .studySheet ? 4 : (configuredQuestionCount ?? dials.questions)) : outstanding
         let exam = StudyMaterialLinks.nextExam(for: deck, in: examStore.exams)
         let toll = CardSelection.pick(from: cards, count: count, examTopics: Set(exam?.topics ?? []))
         guard !toll.isEmpty else { return false }
@@ -398,7 +409,7 @@ final class MonsterSession: ObservableObject {
                                             answer: card.correctAnswer,
                                             why: correct ? nil : why)))
         vars.score = "\(correctCount)/\(vars.questions)"
-        say(correct ? .correct : .wrong)
+        say(correct ? .correct : .wrong, reaction: reactionPicker.answer(correct: correct))
 
         // Harder pass bar at higher moods: annoyed and up re-queue misses, so you
         // must actually get them right. Chill/nudgy let a miss slide (earn less).
@@ -423,8 +434,8 @@ final class MonsterSession: ObservableObject {
             ? reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count)
             : nil
         let outcome = roundOutcome
-        append(.monster(MonsterScript.roundReaction(persona: persona, outcome: outcome, vars: vars,
-            seed: nextVoiceVariant("result.\(outcome.rawValue)"))))
+        append(.monster(buddyIdentity.addressBanter(MonsterScript.roundReaction(persona: persona, outcome: outcome, vars: vars,
+            seed: nextVoiceVariant("result.\(outcome.rawValue)")))))
         appendSendoff(reaction: reaction)
         appendRecap()
         if grantedMinutes > 0 {
@@ -474,7 +485,8 @@ final class MonsterSession: ObservableObject {
         guard method == .studySheet, !stopped, !isThinking, studySheetState == .active,
               var round = studyRound, let question = round.currentQuestion,
               question.id == questionID, round.currentAnswer == nil else { return }
-        round.answers.append(MonsterStudyAnswer(id: questionID, correct: correct, text: text, choiceIndex: choiceIndex))
+        round.answers.append(MonsterStudyAnswer(id: questionID, correct: correct, text: text,
+            choiceIndex: choiceIndex, reaction: reactionPicker.answer(correct: correct)))
         results.append(correct)
         if correct { correctCount += 1 }
         if correct || outcomes[question.card.id] == nil { outcomes[question.card.id] = correct }
@@ -573,8 +585,8 @@ final class MonsterSession: ObservableObject {
     private func appendSendoff(reaction: MonsterReaction? = nil) {
         let outcome = roundOutcome
         let lane = grantedMinutes > 0 ? outcome.rawValue : "noGrant"
-        append(.monster(MonsterScript.sendoff(persona: persona, outcome: outcome, minutes: grantedMinutes,
-            seed: nextVoiceVariant("sendoff.\(lane)")), reaction: reaction))
+        append(.monster(buddyIdentity.addressBanter(MonsterScript.sendoff(persona: persona, outcome: outcome, minutes: grantedMinutes,
+            seed: nextVoiceVariant("sendoff.\(lane)"))), reaction: reaction))
     }
 
     private func say(_ context: MonsterContext, reaction: MonsterReaction? = nil) {
@@ -584,7 +596,7 @@ final class MonsterSession: ObservableObject {
                                                              context: context,
                                                              vars: vars,
                                                              seed: lineSeed)
-        append(.monster(line, reaction: reaction))
+        append(.monster(buddyIdentity.addressBanter(line), reaction: reaction))
     }
 
     /// A line from the AI bundle for this context, if one was fetched.

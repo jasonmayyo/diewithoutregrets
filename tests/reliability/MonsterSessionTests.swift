@@ -2,6 +2,31 @@ import XCTest
 @testable import StudyReliability
 
 final class MonsterSessionTests: XCTestCase {
+    @MainActor func testConfirmedBuddyRuleControlsRealRoundAndGrant() {
+        let suite = "BuddyEarnRule.\(UUID().uuidString)"
+        let preferences = UserDefaults(suiteName: suite)!
+        defer { preferences.removePersistentDomain(forName: suite) }
+        preferences.set(true, forKey: BuddyIdentity.ruleKey)
+        preferences.set(5, forKey: "flashcardCount")
+        BuddyIdentity(name: "Alex", pronouns: "They / them").save(in: preferences)
+        let store = DeckStore()
+        store.selectedDeck = Deck(name: "Biology", cards: (0..<8).map { _ in card() })
+        let manager = StudyGuardManager()
+        let session = MonsterSession(deckStore: store, studyGuard: manager, sharedDefaults: nil,
+            creatorDefaults: preferences, method: .inChat, loadBundle: { _, _, _ in nil })
+        XCTAssertEqual(session.totalQuestions, 5)
+        XCTAssertEqual(session.secondsPerCorrectAnswer, 60)
+        session.start()
+        XCTAssertTrue(session.messages.first?.text?.hasPrefix("Alex, ") == true)
+        for _ in 0..<5 { session.answer(choiceIndex: 0) }
+        XCTAssertTrue(session.isFinished)
+        XCTAssertEqual(session.grantedMinutes, 5)
+        XCTAssertEqual(manager.grants, 1)
+        session.answer(choiceIndex: 0)
+        XCTAssertEqual(manager.grants, 1)
+        session.stop()
+    }
+
     func testAnswerTurnShowsTypingBeforeEveryMonsterReply() {
         let answer = MonsterMessage.user("light")
         let verdict = MonsterMessage(sender: .monster, kind: .reveal(correct: true, answer: "light", why: nil))

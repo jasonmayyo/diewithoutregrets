@@ -6,7 +6,15 @@ import RevenueCat
 @MainActor
 final class SGV5FlowModel: ObservableObject {
     static let profileKey = "studyguard.onboarding.v5.profile"
-    @Published var currentPageIndex = 800
+    @Published var currentPageIndex = 800 {
+        didSet { defaults.set(currentPageIndex, forKey: "sg_buddyOnboardingPage") }
+    }
+    @Published var buddy: BuddyOnboardingState {
+        didSet {
+            if let data = try? JSONEncoder().encode(buddy) { defaults.set(data, forKey: BuddyOnboardingState.key) }
+        }
+    }
+    @Published var accessVerified = false
     @Published var v5Profile: SGV5V5OnboardingProfile {
         didSet { persist() }
     }
@@ -31,12 +39,21 @@ final class SGV5FlowModel: ObservableObject {
     init(defaults: UserDefaults = .standard, sharedDefaults: UserDefaults? = SGContract.sharedDefaults) {
         self.defaults = defaults
         self.sharedDefaults = sharedDefaults
+        buddy = defaults.data(forKey: BuddyOnboardingState.key)
+            .flatMap { try? JSONDecoder().decode(BuddyOnboardingState.self, from: $0) } ?? BuddyOnboardingState()
         if let data = defaults.data(forKey: Self.profileKey),
            var saved = try? JSONDecoder().decode(SGV5V5OnboardingProfile.self, from: data) {
             saved.clearRetiredPriority()
             v5Profile = saved
         } else {
             v5Profile = SGV5V5OnboardingProfile()
+        }
+        let savedPage = defaults.integer(forKey: "sg_buddyOnboardingPage")
+        if savedPage == SGV5V5OnboardingStep.howEarn.rawValue {
+            // The former third explanation page is now part of study-to-unlock.
+            currentPageIndex = SGV5V5OnboardingStep.howStudy.rawValue
+        } else if activeFlowOrder.contains(savedPage) {
+            currentPageIndex = savedPage
         }
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
@@ -54,8 +71,8 @@ final class SGV5FlowModel: ObservableObject {
             v5Profile.baseline = .twoToFour
             v5Profile.ageBracket = .age25to34
             let cardsArgument = arguments.firstIndex(of: "-sg-v5-rule-cards")
-            let demoCards = cardsArgument.flatMap { arguments.indices.contains($0 + 1) ? Int(arguments[$0 + 1]) : nil } ?? 10
-            v5Profile.studyRule = SGV5V5OnboardingProfile.StudyRule(rawValue: demoCards) ?? .ten
+            let demoCards = cardsArgument.flatMap { arguments.indices.contains($0 + 1) ? Int(arguments[$0 + 1]) : nil } ?? 5
+            v5Profile.studyRule = SGV5V5OnboardingProfile.StudyRule(rawValue: demoCards) ?? .five
             currentPageIndex = id
         }
         #endif
@@ -84,7 +101,7 @@ final class SGV5FlowModel: ObservableObject {
         if let step = SGV5V5OnboardingStep(rawValue: currentPageIndex),
            !v5Profile.canContinue(from: step) { return }
         // The paywall can only be left by a verified purchase/restore callback.
-        guard currentPageIndex != 506,
+        guard currentPageIndex != 506, currentPageIndex != 823,
               let index = activeFlowOrder.firstIndex(of: currentPageIndex),
               index + 1 < activeFlowOrder.count else { return }
         lastAdvance = Date()
@@ -104,7 +121,13 @@ final class SGV5FlowModel: ObservableObject {
     }
 
     func startSetupAfterPurchase() {
+        accessVerified = true
         syncV5Profile()
+        guard buddy.phase.rawValue >= BuddyOnboardingPhase.offer.rawValue else {
+            currentPageIndex = 822
+            return
+        }
+        if buddy.phase == .offer { buddyMove(to: .permission) }
         currentPageIndex = 601
         lastAdvance = .distantPast
         SGV5Haptics.play(.success)
@@ -118,6 +141,10 @@ final class SGV5FlowModel: ObservableObject {
             defaults.set(examDate.timeIntervalSince1970, forKey: "examDate")
             defaults.set(true, forKey: "hasExams")
             sharedDefaults?.set(examDate.timeIntervalSince1970, forKey: SGContract.Keys.onboardingExamDate)
+        } else if v5Profile.noExamYet == true {
+            defaults.removeObject(forKey: "examDate")
+            defaults.set(false, forKey: "hasExams")
+            sharedDefaults?.removeObject(forKey: SGContract.Keys.onboardingExamDate)
         }
         if let rule = v5Profile.studyRule {
             sharedDefaults?.set(rule.secondsPerCard, forKey: SGContract.Keys.perCardSeconds)
@@ -125,8 +152,14 @@ final class SGV5FlowModel: ObservableObject {
             // decks still use all available cards and earn for correct answers.
             defaults.set(rule.rawValue, forKey: "flashcardCount")
             defaults.set(false, forKey: "useAllCards")
+            defaults.set(true, forKey: BuddyIdentity.ruleKey)
         }
         if let age = v5Profile.ageBracket { defaults.set(age.title, forKey: "selectedAge") }
+        if let gender = v5Profile.gender {
+            var identity = buddyIdentity
+            identity.gender = gender == .preferNotToSay ? nil : gender.title
+            saveBuddyIdentity(identity)
+        }
         if let baseline = v5Profile.baseline { defaults.set(baseline.title, forKey: "screenTime") }
         if let moment = v5Profile.moment { defaults.set(moment.title, forKey: "peakScrollTime") }
     }
@@ -148,7 +181,7 @@ final class SGV5FlowModel: ObservableObject {
 
     /// Setup uses the selected flashcard rate and the existing guard services.
     func finishSetup() async {
-        guard !isFinishing else { return }
+        guard !isFinishing, buddy.phase == .notifications else { return }
         isFinishing = true
         defer { isFinishing = false }
         do {
@@ -158,15 +191,16 @@ final class SGV5FlowModel: ObservableObject {
                 return
             }
             syncV5Profile()
-            let result = StudyGuardManager.shared.completeSetup()
-            switch result {
-            case .success:
+            // Completing onboarding must never replace a reward just earned in chat.
+            let manager = StudyGuardManager.shared
+            manager.refresh()
+            if buddy.guardConfigured && manager.isSetupComplete && manager.authorizationStatus == .approved {
                 trackScreenAction(screenId: 604, action: "guard_setup_completed")
-            case .failure(let reason):
+            } else {
                 // The existing Guard checklist repairs denied access, no selection
                 // or a failed monitor. Never mark shielding successful on failure.
                 trackScreenAction(screenId: 604, action: "guard_setup_deferred",
-                                  properties: ["reason": String(describing: reason)])
+                                  properties: ["reason": "setup_pending"])
             }
             Analytics.capture("onboarding_completed", properties: [
                 "flow_version": "sg_v5",
@@ -178,12 +212,31 @@ final class SGV5FlowModel: ObservableObject {
             ])
             AdsTracker.trackCompleteRegistration()
             defaults.set(true, forKey: "hasCompletedOnboarding")
+            defaults.removeObject(forKey: "sg_buddyOnboardingPage")
             SGV5Haptics.play(.success)
         } catch {
             completionError = "Couldn't verify your subscription. Check your connection and try again."
             SGV5Haptics.play(.error)
         }
     }
+
+    func verifyBuddyAccess() async -> Bool {
+        do {
+            let customer = try await Purchases.shared.customerInfo()
+            accessVerified = SGSuperwallBilling.hasActiveAccess(customer)
+            if !accessVerified { currentPageIndex = 506 }
+        } catch {
+            accessVerified = false
+            completionError = "Couldn't verify your subscription. Check your connection and try again."
+        }
+        return accessVerified
+    }
+
+    func saveBuddyIdentity(_ identity: BuddyIdentity) {
+        identity.save(in: defaults)
+    }
+
+    var buddyIdentity: BuddyIdentity { BuddyIdentity.load(from: defaults) }
 
     private func persist() {
         guard let data = try? JSONEncoder().encode(v5Profile) else { return }

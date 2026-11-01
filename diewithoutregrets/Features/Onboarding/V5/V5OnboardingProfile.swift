@@ -20,16 +20,20 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
     // Placed after `.method` in the funnel: pick your tutor monster right after
     // learning how study-to-unlock works.
     case persona
+    case personalize, buddyChat
+    case howGuard, howStudy, howEarn, phoneTimeCost
+    case gender
 
     // Keep IDs stable when moving screens or retiring one from the active funnel.
     // `reflection` and `founders` are retired. The exam-time projection leads into
     // reassurance, the method, then the user's study-to-scroll rule.
     static let prePaywallSteps: [Self] = [
-        .welcome, .demo, .goal, .pain, .moment, .activities, .subject, .habit,
-        .baseline, .age, .lifeCost, .empathy, .method, .persona, .timeBack,
-        .moreLife, .commitment, .assembly, .plan
+        .welcome, .howGuard, .howStudy, .personalize, .gender, .age,
+        .baseline, .phoneTimeCost, .persona, .buddyChat
     ]
-    static let flowOrder = prePaywallSteps.map(\.rawValue) + [506, 601, 602, 606, 604]
+    static let flowOrder = prePaywallSteps.map(\.rawValue) + [506, 601]
+    static var preChatScreenCount: Int { prePaywallSteps.firstIndex(of: .buddyChat) ?? 0 }
+    static var progressCount: Int { preChatScreenCount + BuddyOnboardingPhase.activePhases.count }
 
     static var isPreviewEnabled: Bool {
         #if DEBUG
@@ -40,7 +44,7 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
     }
 
     var progress: Double {
-        Double(Self.prePaywallSteps.firstIndex(of: self) ?? 0) / Double(Self.prePaywallSteps.count - 1)
+        Double((Self.prePaywallSteps.firstIndex(of: self) ?? 0) + 1) / Double(Self.progressCount)
     }
 
     var name: String {
@@ -58,11 +62,18 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
         case .founders: return "Founder Story"
         case .baseline: return "Your Starting Point"
         case .age: return "Your Age"
+        case .gender: return "Your Gender"
         case .reflection: return "Your Pattern"
         case .lifeCost: return "Time Before Your Exam"
         case .timeBack: return "Your Extra Study Time"
         case .method: return "One Thing Method"
         case .persona: return "Your Tutor Monster"
+        case .personalize: return "Meet Your Study Buddy"
+        case .buddyChat: return "Personalize With Your Buddy"
+        case .howGuard: return "Guard Your Apps"
+        case .howStudy: return "Study to Unlock"
+        case .howEarn: return "Earn Your Break"
+        case .phoneTimeCost: return "Your Phone Time Adds Up"
         case .demo: return "Try Your One Thing"
         case .commitment: return "Start Small"
         case .assembly: return "Build Your Plan"
@@ -72,10 +83,10 @@ enum SGV5V5OnboardingStep: Int, CaseIterable {
 
     var phase: String {
         switch self {
-        case .welcome, .demo, .stoppingPoint: return "Value"
-        case .goal, .subject, .pain, .moment, .activities, .habit: return "Personalize"
+        case .welcome, .demo, .stoppingPoint, .howGuard, .howStudy, .howEarn: return "Value"
+        case .goal, .subject, .pain, .moment, .activities, .habit, .personalize, .buddyChat, .gender: return "Personalize"
         case .founders: return "Trust"
-        case .baseline, .age, .reflection, .lifeCost, .empathy, .timeBack, .method, .persona: return "Time Back"
+        case .baseline, .age, .reflection, .lifeCost, .empathy, .timeBack, .method, .persona, .phoneTimeCost: return "Time Back"
         case .moreLife, .commitment, .assembly, .plan: return "Your Plan"
         }
     }
@@ -97,7 +108,8 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
     var studyLevel: StudyLevel? = nil
     var subject: String? = nil
     var examDate: Date? = nil
-    /// Missing in earlier drafts; the displayed default is ten correct cards.
+    var noExamYet: Bool? = nil
+    /// Missing in earlier drafts; new onboarding uses one minute per correct card.
     var studyRule: StudyRule? = nil
     var goal: Goal?
     var pain: Pain?
@@ -106,6 +118,7 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
     var baseline: Baseline?
     /// Retained answer, independent of the exam-time projection.
     var ageBracket: AgeBracket? = nil
+    var gender: Gender? = nil
     var dailyReductionMinutes = 30
     var startSmaller = false
     /// Daily screen-time goal (minutes) chosen on the time-back slider. Optional so
@@ -121,6 +134,18 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
     /// projections. A mid estimate stands in when the user wasn't sure. These are
     /// the user's own estimate, never presented as measured Screen Time.
     var estimatedDailyHours: Int { baseline?.estimatedHours ?? 4 }
+    var yearlyPhoneHours: Int { estimatedDailyHours * 365 }
+    var yearlyPhoneDays: Double { Double(yearlyPhoneHours) / 24 }
+    var phoneEstimateIsExample: Bool { baseline == nil || baseline == .unsure }
+    var phoneEstimateExplanation: String {
+        switch baseline {
+        case .underTwo: return "Using 1 hour a day within your ‘less than 2 hours’ estimate."
+        case .twoToFour: return "Using 3 hours a day, the middle of your 2–4 hour estimate."
+        case .fourToSix: return "Using 5 hours a day, the middle of your 4–6 hour estimate."
+        case .sixPlus: return "Using 6 hours a day, the lower end of your estimate."
+        case .unsure, .none: return "An example using 4 hours a day. This is not measured Screen Time."
+        }
+    }
     /// Match the self-reported estimate; never reclaim more time than that estimate.
     var estimatedDailyMinutes: Int { max(30, estimatedDailyHours * 60) }
     var studySubject: String { (subject ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -169,10 +194,13 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
         let minutes = habit == .journal ? 5 : 10
         return startSmaller ? max(2, minutes / 2) : minutes
     }
-    var selectedStudyRule: StudyRule { studyRule ?? .ten }
+    var selectedStudyRule: StudyRule { studyRule ?? .five }
     var studyCardCount: Int { selectedStudyRule.rawValue }
     var studyPerCardSeconds: Int { selectedStudyRule.secondsPerCard }
     var studyRuleSummary: String { "\(studyCardCount) correct flashcards → 5 minutes" }
+    var studyRewardSummary: String {
+        studyPerCardSeconds == 60 ? "1 minute per correct card" : "\(studyPerCardSeconds) seconds per correct card"
+    }
     var habitAction: String { "Review \(studyCardCount) \(subjectLabel) flashcards" }
 
     /// A scenario, not a measured saving: each study/scroll cycle replaces time
@@ -214,6 +242,7 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
         case .habit: return hasUpcomingExam()
         case .baseline: return baseline != nil
         case .age: return ageBracket != nil
+        case .gender: return gender != nil
         case .assembly, .plan: return isReady
         default: return true
         }
@@ -426,6 +455,20 @@ struct SGV5V5OnboardingProfile: Codable, Equatable {
         var estimatedHours: Int? {
             switch self { case .underTwo: return 1; case .twoToFour: return 3; case .fourToSix: return 5; case .sixPlus: return 6; case .unsure: return nil }
         }
+    }
+
+    enum Gender: String, Codable, SGV5V5OnboardingChoice {
+        case female, male, nonBinary, preferNotToSay
+        var title: String {
+            switch self {
+            case .female: return "Female"
+            case .male: return "Male"
+            case .nonBinary: return "Non-binary"
+            case .preferNotToSay: return "Prefer not to say"
+            }
+        }
+        var detail: String { "" }
+        var symbol: String { "person" }
     }
 
     enum AgeBracket: String, Codable, SGV5V5OnboardingChoice {

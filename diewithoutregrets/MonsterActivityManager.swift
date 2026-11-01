@@ -40,18 +40,27 @@ final class MonsterActivityManager: ObservableObject {
     private let switchInterval: TimeInterval = 4.0
 
     private static let lastMonsterKey = "lastMonsterImageName"
+    static let enabledKey = "sg_monsterLiveActivityEnabled"
 
     @Published private(set) var currentMonster: String
+    @Published private(set) var isEnabled: Bool
 
+    private let defaults: UserDefaults
     private var currentActivity: Activity<MonsterLiveActivityAttributes>?
     private var switchTimer: Timer?
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    private var teardownTask: Task<Void, Never>?
+    private var restartAfterTeardown = false
 
     private init() {
+        let defaults = UserDefaults.standard
+        self.defaults = defaults
+        // Show the mascot only after the user explicitly enables it in Profile.
+        self.isEnabled = defaults.object(forKey: Self.enabledKey) as? Bool ?? false
         // Resume from the last shown frame (validated against the current set),
         // defaulting to the first image. The first tick corrects it to the
         // real mood immediately.
-        let saved = UserDefaults.standard.string(forKey: Self.lastMonsterKey)
+        let saved = defaults.string(forKey: Self.lastMonsterKey)
         self.currentMonster = saved.flatMap { Self.allMonsters.contains($0) ? $0 : nil }
             ?? Self.allMonsters[0]
     }
@@ -86,12 +95,34 @@ final class MonsterActivityManager: ObservableObject {
 
     // MARK: - Lifecycle
 
+    func setEnabled(_ enabled: Bool) {
+        guard enabled != isEnabled else { return }
+        defaults.set(enabled, forKey: Self.enabledKey)
+        isEnabled = enabled
+        if enabled {
+            ensureMonsterRunning()
+        } else {
+            stopMonster()
+        }
+    }
+
     /// Ensure the monster Live Activity is running and (re)start the frame
     /// rotation. Safe to call on every app foreground.
     func ensureMonsterRunning() {
         endBackgroundTask() // back in the foreground — no longer need the bg window
 
+        guard isEnabled else {
+            stopMonster()
+            return
+        }
+        // A quick off → on must not reattach to an activity still being ended.
+        // Finish dismissal first, then honor the latest preference.
+        guard teardownTask == nil else {
+            restartAfterTeardown = true
+            return
+        }
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            pauseSwitching()
             print("👹 Live Activities are disabled — cannot show monster")
             return
         }
@@ -124,7 +155,7 @@ final class MonsterActivityManager: ObservableObject {
     /// (Truly continuous background switching would require ActivityKit push
     /// updates from a server.)
     func continueSwitchingInBackground() {
-        guard switchTimer != nil else { return }
+        guard isEnabled, switchTimer != nil else { return }
         beginBackgroundTask()
     }
 
@@ -135,16 +166,25 @@ final class MonsterActivityManager: ObservableObject {
         endBackgroundTask()
     }
 
-    /// Fully tear down the monster (e.g. for a debug toggle or sign-out).
+    /// Fully tear down the monster, including activities from a previous launch.
     func stopMonster() {
+        restartAfterTeardown = false
         pauseSwitching()
+        currentActivity = nil
+        guard teardownTask == nil else { return }
         let activities = Activity<MonsterLiveActivityAttributes>.activities
-        Task {
+        guard !activities.isEmpty else { return }
+        teardownTask = Task {
             for activity in activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }
+            teardownTask = nil
+            let shouldRestart = restartAfterTeardown && isEnabled
+            restartAfterTeardown = false
+            if shouldRestart, UIApplication.shared.applicationState == .active {
+                ensureMonsterRunning()
+            }
         }
-        currentActivity = nil
     }
 
     // MARK: - Private
@@ -154,6 +194,7 @@ final class MonsterActivityManager: ObservableObject {
     }
 
     private func startMonsterActivity() {
+        guard isEnabled, teardownTask == nil else { return }
         let attributes = MonsterLiveActivityAttributes()
         do {
             currentActivity = try Activity.request(
@@ -195,14 +236,16 @@ final class MonsterActivityManager: ObservableObject {
     /// Timer tick: re-derive the mood and push it only when it changed
     /// (Activity.update is rate-limited; identical frames would waste it).
     private func refreshMood() {
+        guard isEnabled else { return }
         let mood = moodFrame()
         guard mood != currentMonster else { return }
         currentMonster = mood
-        UserDefaults.standard.set(currentMonster, forKey: Self.lastMonsterKey)
+        defaults.set(currentMonster, forKey: Self.lastMonsterKey)
         updateRunningActivity()
     }
 
     private func updateRunningActivity() {
+        guard isEnabled, teardownTask == nil else { return }
         guard let activity = currentActivity, activity.activityState == .active else {
             // Activity was dismissed/ended — restart it so the monster is always present.
             currentActivity = nil
@@ -211,6 +254,7 @@ final class MonsterActivityManager: ObservableObject {
         }
         let content = ActivityContent(state: makeState(), staleDate: nil)
         Task {
+            guard isEnabled, currentActivity?.id == activity.id else { return }
             await activity.update(content)
         }
     }

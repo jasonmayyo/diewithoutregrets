@@ -21,27 +21,50 @@
 //
 
 import SwiftUI
+import Observation
 
 @MainActor
-final class CountdownReplayModel: ObservableObject {
-    @Published var displayMinutes: Int = 0
+@Observable
+final class CountdownReplayModel {
+    private(set) var displayMinutes: Int = 0
     /// Floating "+N min"/"−N min" label; new identity per event.
-    @Published var delta: DeltaEvent?
+    private(set) var delta: DeltaEvent?
     /// True while a roll is playing — readouts swell slightly for drama.
-    @Published var isRolling = false
+    private(set) var isRolling = false
 
     struct DeltaEvent: Identifiable, Equatable {
         let id: Double
         let amount: Int
     }
 
-    /// Fired once per sync when the readout settles on its final value —
+    /// Fired when the readout settles on its final value —
     /// immediately when nothing rolls, or after the last tick of a roll.
     /// The Guard home uses this to chain the lock stamp after a roll to 0.
     /// Never fired for syncs that are skipped while the readout is hidden.
-    var onSettled: ((Int) -> Void)?
+    /// An identical sync during a roll leaves its existing completion intact.
+    @ObservationIgnored var onSettled: ((Int) -> Void)?
 
-    private var pendingTicks: [DispatchWorkItem] = []
+    @ObservationIgnored private var pendingTicks: [DispatchWorkItem] = []
+    @ObservationIgnored private var activeRollID: UUID?
+    @ObservationIgnored private var activeTarget: Target?
+    private let defaults: UserDefaults
+    private let reduceMotion: () -> Bool
+    private let schedule: (TimeInterval, DispatchWorkItem) -> Void
+
+    private struct Target: Equatable {
+        let minutes: Int
+        let grantStamp: Double
+    }
+
+    init(defaults: UserDefaults = .standard,
+         reduceMotion: @escaping () -> Bool = { UIAccessibility.isReduceMotionEnabled },
+         schedule: @escaping (TimeInterval, DispatchWorkItem) -> Void = { delay, work in
+             DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+         }) {
+        self.defaults = defaults
+        self.reduceMotion = reduceMotion
+        self.schedule = schedule
+    }
     /// Persisted "last value we SHOWED" pair. Static so the Creator Toolkit
     /// can pre-settle the story (an instant staged lock writes 0 + the
     /// grant stamp here so no roll plays on the next home visit).
@@ -52,7 +75,7 @@ final class CountdownReplayModel: ObservableObject {
     /// actually on screen. While hidden, sync() is a no-op — the truth keys
     /// stay unconsumed, so the story plays when the user next lands on Home
     /// (the home view re-syncs on every appear).
-    private var isVisible = false
+    @ObservationIgnored private var isVisible = false
 
     func setVisible(_ visible: Bool) {
         isVisible = visible
@@ -63,9 +86,15 @@ final class CountdownReplayModel: ObservableObject {
     /// decide what story to play.
     func sync(remainingMinutes: Int, grantStamp: Double) {
         guard isVisible else { return }
+        let target = Target(minutes: remainingMinutes, grantStamp: grantStamp)
+        let shouldReduceMotion = reduceMotion()
+        // onAppear and the guard's separate state/budget callbacks can deliver
+        // the same target together. Do not cancel a roll that already owns it.
+        if isRolling, activeTarget == target, !shouldReduceMotion { return }
+        let interruptedDisplay = isRolling && activeTarget?.grantStamp == grantStamp
+            ? displayMinutes : nil
         cancelTicks()
 
-        let defaults = UserDefaults.standard
         let lastShown = defaults.integer(forKey: Self.lastShownKey)
         let lastStamp = defaults.double(forKey: Self.lastStampKey)
 
@@ -73,12 +102,13 @@ final class CountdownReplayModel: ObservableObject {
         defaults.set(remainingMinutes, forKey: Self.lastShownKey)
         defaults.set(grantStamp, forKey: Self.lastStampKey)
 
-        guard !UIAccessibility.isReduceMotionEnabled else {
+        guard !shouldReduceMotion else {
             displayMinutes = remainingMinutes
             onSettled?(remainingMinutes)
             return
         }
 
+        activeTarget = target
         if grantStamp != lastStamp {
             // Fresh budget (grant or day rollover): count up from zero.
             if remainingMinutes > 0 {
@@ -88,16 +118,22 @@ final class CountdownReplayModel: ObservableObject {
                 displayMinutes = remainingMinutes
                 onSettled?(remainingMinutes)
             }
-        } else if remainingMinutes < lastShown {
-            // Same budget, usage arrived: roll down (≤10 visual ticks).
-            delta = DeltaEvent(id: Date.timeIntervalSinceReferenceDate + Double(remainingMinutes),
-                               amount: remainingMinutes - lastShown)
-            playRoll(from: min(lastShown, remainingMinutes + 10), to: remainingMinutes, gain: false)
-        } else if remainingMinutes > lastShown {
-            playRoll(from: lastShown, to: remainingMinutes, gain: true)
         } else {
-            displayMinutes = remainingMinutes
-            onSettled?(remainingMinutes)
+            if remainingMinutes < lastShown {
+                delta = DeltaEvent(id: Date.timeIntervalSinceReferenceDate + Double(remainingMinutes),
+                                   amount: remainingMinutes - lastShown)
+            }
+            // The persisted value is the target, not necessarily the current
+            // frame. A newer checkpoint continues from the visible number.
+            let start = interruptedDisplay ?? lastShown
+            if remainingMinutes < start {
+                playRoll(from: min(start, remainingMinutes + 10), to: remainingMinutes, gain: false)
+            } else if remainingMinutes > start {
+                playRoll(from: start, to: remainingMinutes, gain: true)
+            } else {
+                displayMinutes = remainingMinutes
+                onSettled?(remainingMinutes)
+            }
         }
     }
 
@@ -107,6 +143,8 @@ final class CountdownReplayModel: ObservableObject {
         displayMinutes = start
         let steps = abs(end - start)
         guard steps > 0 else { return }
+        let rollID = UUID()
+        activeRollID = rollID
 
         withAnimation(SGTheme.spring) { isRolling = true }
 
@@ -126,27 +164,32 @@ final class CountdownReplayModel: ObservableObject {
 
             let value = gain ? start + i : start - i
             let work = DispatchWorkItem { [weak self] in
-                guard let self else { return }
+                guard let self, self.activeRollID == rollID else { return }
                 withAnimation(.easeInOut(duration: min(stepDelay, 0.45))) {
                     self.displayMinutes = value
                 }
                 if gain { SGTheme.tickUpHaptic() } else { SGTheme.tickDownHaptic(progress: completed) }
             }
             pendingTicks.append(work)
-            DispatchQueue.main.asyncAfter(deadline: .now() + accumulated, execute: work)
+            schedule(accumulated, work)
         }
 
         // Settle the swell shortly after the last tick lands.
         let settle = DispatchWorkItem { [weak self] in
-            guard let self else { return }
+            guard let self, self.activeRollID == rollID else { return }
+            self.activeRollID = nil
+            self.activeTarget = nil
+            self.pendingTicks.removeAll()
             withAnimation(SGTheme.spring) { self.isRolling = false }
             self.onSettled?(end)
         }
         pendingTicks.append(settle)
-        DispatchQueue.main.asyncAfter(deadline: .now() + accumulated + 0.4, execute: settle)
+        schedule(accumulated + 0.4, settle)
     }
 
     private func cancelTicks() {
+        activeRollID = nil
+        activeTarget = nil
         pendingTicks.forEach { $0.cancel() }
         pendingTicks.removeAll()
         if isRolling { withAnimation(SGTheme.spring) { isRolling = false } }
@@ -154,7 +197,7 @@ final class CountdownReplayModel: ObservableObject {
 }
 
 struct CountdownReadout: View {
-    @ObservedObject var model: CountdownReplayModel
+    let model: CountdownReplayModel
     var caption: String = "of scroll time left"
 
     var body: some View {

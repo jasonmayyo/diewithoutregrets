@@ -29,8 +29,10 @@ struct ProfileView: View {
     @State private var showingLockedEditAlert = false
     @State private var showingCreatorToolkit = false
     @State private var showingPersonaPicker = false
+    @State private var showingBuddyDetails = false
     @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
     @ObservedObject private var personaStore = PersonaStore.shared
+    @ObservedObject private var monsterActivity = MonsterActivityManager.shared
     #if DEBUG
     @State private var showingDebug = false
     #endif
@@ -206,6 +208,9 @@ struct ProfileView: View {
                 // Tutor Monster Section
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeader(title: "Tutor Monster")
+                    SGListRow(title: "Your name & pronouns", subtitle: "How your buddy refers to you") {
+                        showingBuddyDetails = true
+                    }
 
                     // On by default: get past your monster to unlock apps.
                     HStack(spacing: 12) {
@@ -216,6 +221,25 @@ struct ProfileView: View {
                         }
                         Spacer(minLength: 0)
                         Toggle("", isOn: $monsterUnlockEnabled).labelsHidden().tint(SGTheme.mint)
+                    }
+                    .padding(16)
+                    .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
+
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dynamic Island monster")
+                                .font(SGTheme.rowLabel).foregroundColor(SGTheme.paper)
+                            Text("Show your monster in the Dynamic Island and on the Lock Screen")
+                                .font(SGTheme.caption).foregroundColor(SGTheme.paperSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                        Toggle("Dynamic Island monster", isOn: Binding(
+                            get: { monsterActivity.isEnabled },
+                            set: { monsterActivity.setEnabled($0) }
+                        ))
+                        .labelsHidden()
+                        .tint(SGTheme.mint)
                     }
                     .padding(16)
                     .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: SGTheme.tileRadius, style: .continuous))
@@ -286,6 +310,7 @@ struct ProfileView: View {
         .navigationDestination(isPresented: $showingCreatorToolkit) {
             CreatorToolkitView()
         }
+        .sheet(isPresented: $showingBuddyDetails) { BuddyProfileEditor() }
         .navigationDestination(isPresented: $showingPersonaPicker) {
             MonsterPersonaPickerScreen()
         }

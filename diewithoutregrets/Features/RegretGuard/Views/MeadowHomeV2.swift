@@ -46,7 +46,7 @@ struct MeadowHomeV2: View {
     /// RegretGuard's countdown replay model — the same engine the legacy
     /// home used: syncs to the guard's remaining minutes, rolls the readout
     /// when a checkpoint replays, and fires the lock reveal on settle.
-    @ObservedObject var countdown: CountdownReplayModel
+    let countdown: CountdownReplayModel
     @ObservedObject private var deckStore = DeckStore.shared
 
     // Taps route into RegretGuard's existing sheet/alert stack (deck
@@ -61,20 +61,6 @@ struct MeadowHomeV2: View {
     /// current() reads 0 once a missed day breaks the chain; computed per
     /// render so returning from a winning quiz always shows the new count.
     private var streak: Int { QV2Streak.current() }
-
-    /// "1h 5m" / "47m" — the minutes the guard actually has on the clock.
-    /// Minutes are the app's real currency (flashcards buy 10-15m grants),
-    /// so the hero shows time, not a percentage.
-    private var timeLeftText: String {
-        let left = max(0, countdown.displayMinutes)
-        return left >= 60 ? "\(left / 60)h \(left % 60)m" : "\(left)m"
-    }
-
-    /// Fraction of the granted budget still unspent, for the progress bar.
-    private var timeLeftFraction: Double {
-        guard guardManager.totalMinutes > 0 else { return 1 }
-        return max(0, min(1, Double(countdown.displayMinutes) / Double(guardManager.totalMinutes)))
-    }
 
     private var screenTimeText: String {
         let used = max(0, guardManager.usedMinutes)
@@ -110,11 +96,8 @@ struct MeadowHomeV2: View {
                         // he stays put while the content scrolls under him.
                         Color.clear.frame(height: mascotReserve)
 
-                        percentBlock
-
-                        progressBar
-                            .padding(.horizontal, SGTheme.screenPadding)
-                            .padding(.top, 16)
+                        MeadowCountdown(countdown: countdown,
+                                        totalMinutes: guardManager.totalMinutes)
 
                         statCards
                             .padding(.horizontal, SGTheme.screenPadding)
@@ -150,7 +133,8 @@ struct MeadowHomeV2: View {
                 // position instead of sliding through the mascot.
                 .mask(scrollFade)
                 .overlay(alignment: .top) {
-                    mascot
+                    MeadowMascot(countdown: countdown,
+                                 totalMinutes: guardManager.totalMinutes)
                         .padding(.top, 36)
                         .allowsHitTesting(false)
                 }
@@ -233,90 +217,6 @@ struct MeadowHomeV2: View {
                 }
             }
         }
-    }
-
-    // MARK: Mascot
-
-    /// Under 60% of the budget left, he's caught doomscrolling — the
-    /// looking-down-at-phone loop replaces the content idle bounce.
-    private var isDoomscrolling: Bool {
-        timeLeftFraction < 0.6
-    }
-
-    private var mascot: some View {
-        // The stacked white shadows trace the character's silhouette into
-        // the same sticker outline the icon set wears, lifting him off the
-        // busy meadow. Each pose is split into char + shadow Lotties (the
-        // outline would trace a baked ground shadow into a white puddle),
-        // so the ground shadow renders untouched underneath.
-        ZStack {
-            LottieAnimationRepresentable(
-                animationName: isDoomscrolling ? "2_Looking down_shadow" : "1_idle_shadow",
-                loopMode: .loop,
-                speed: 1.0
-            )
-            .frame(width: 165, height: 165)
-            // Dropped so the ground shadow peeks out below his feet
-            // instead of hiding entirely behind the body.
-            .offset(y: 10)
-            .id("mascot-shadow-\(isDoomscrolling)")
-
-            LottieAnimationRepresentable(
-                animationName: isDoomscrolling ? "2_Looking down_char" : "1_idle_char",
-                loopMode: .loop,
-                speed: 1.0
-            )
-            .frame(width: 165, height: 165)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .white, radius: 0.8)
-            .shadow(color: .black.opacity(0.15), radius: 12, y: 5)
-            .id("mascot-char-\(isDoomscrolling)")
-        }
-        .animation(.easeInOut(duration: 0.25), value: isDoomscrolling)
-    }
-
-    // MARK: Percent + progress
-
-    private var percentBlock: some View {
-        VStack(spacing: 2) {
-            ZStack(alignment: .topTrailing) {
-                OutlinedText(text: timeLeftText, size: 72, fill: .white, outline: .clear)
-                    .scaleEffect(countdown.isRolling ? 1.06 : 1)
-                    .animation(SGTheme.springFast, value: countdown.isRolling)
-
-                // "−5" / "+15" drifting off the readout on budget events.
-                if let delta = countdown.delta {
-                    CountdownDeltaLabel(event: delta)
-                        .offset(x: 54, y: -20)
-                        .id(delta.id)
-                }
-            }
-
-            Text("screen time left")
-                .font(MH.font(14, .bold))
-                .foregroundColor(.white.opacity(0.9))
-        }
-    }
-
-    private var progressBar: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule(style: .continuous)
-                    .fill(MH.track)
-                Capsule(style: .continuous)
-                    .fill(MH.fill)
-                    .frame(width: max(14, proxy.size.width * timeLeftFraction))
-                    .padding(2)
-            }
-            .animation(SGTheme.spring, value: timeLeftFraction)
-        }
-        .frame(height: 16)
     }
 
     // MARK: Stat cards
@@ -538,6 +438,138 @@ struct MeadowHomeV2: View {
             devices: .init([.iPhone])
         )
     }
+}
+
+// Countdown observation stays in these small views: ticking the readout must
+// not rebuild the home layout, token labels, or DeviceActivityReport.
+private struct MeadowCountdown: View {
+    let countdown: CountdownReplayModel
+    let totalMinutes: Int
+
+    /// "1h 5m" / "47m" — the minutes the guard actually has on the clock.
+    /// Minutes are the app's real currency (flashcards buy 10-15m grants),
+    /// so the hero shows time, not a percentage.
+    private var timeLeftText: String {
+        let left = max(0, countdown.displayMinutes)
+        return left >= 60 ? "\(left / 60)h \(left % 60)m" : "\(left)m"
+    }
+
+    /// Fraction of the granted budget still unspent, for the progress bar.
+    private var timeLeftFraction: Double {
+        guard totalMinutes > 0 else { return 1 }
+        return max(0, min(1, Double(countdown.displayMinutes) / Double(totalMinutes)))
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            percentBlock
+            progressBar
+                .padding(.horizontal, SGTheme.screenPadding)
+                .padding(.top, 16)
+        }
+    }
+
+    private var percentBlock: some View {
+        VStack(spacing: 2) {
+            ZStack(alignment: .topTrailing) {
+                Text(timeLeftText)
+                    .font(MH.font(72, .black))
+                    .monospacedDigit()
+                    .foregroundColor(.white)
+                    .contentTransition(.numericText(countsDown: true))
+                    .scaleEffect(countdown.isRolling ? 1.06 : 1)
+                    .animation(SGTheme.springFast, value: countdown.isRolling)
+
+                // "−5" / "+15" drifting off the readout on budget events.
+                if let delta = countdown.delta {
+                    CountdownDeltaLabel(event: delta)
+                        .offset(x: 54, y: -20)
+                        .id(delta.id)
+                }
+            }
+
+            Text("screen time left")
+                .font(MH.font(14, .bold))
+                .foregroundColor(.white.opacity(0.9))
+        }
+    }
+
+    private var progressBar: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule(style: .continuous)
+                    .fill(MH.track)
+                Capsule(style: .continuous)
+                    .fill(MH.fill)
+                    .frame(width: max(14, proxy.size.width * timeLeftFraction))
+                    .padding(2)
+            }
+            .animation(SGTheme.spring, value: timeLeftFraction)
+        }
+        .frame(height: 16)
+    }
+
+}
+
+private struct MeadowMascot: View {
+    let countdown: CountdownReplayModel
+    let totalMinutes: Int
+
+    /// Under 60% of the budget left, he's caught doomscrolling — the
+    /// looking-down-at-phone loop replaces the content idle bounce.
+    private var isDoomscrolling: Bool {
+        totalMinutes > 0 && Double(countdown.displayMinutes) / Double(totalMinutes) < 0.6
+    }
+
+    var body: some View {
+        MeadowMascotArtwork(isDoomscrolling: isDoomscrolling)
+            .equatable()
+    }
+}
+
+// Keep both Lottie views and their sticker treatment out of per-minute updates.
+// Only the existing 60% pose transition changes this subtree.
+private struct MeadowMascotArtwork: View, Equatable {
+    let isDoomscrolling: Bool
+
+    var body: some View {
+        // The stacked white shadows trace the character's silhouette into
+        // the same sticker outline the icon set wears, lifting him off the
+        // busy meadow. Each pose is split into char + shadow Lotties (the
+        // outline would trace a baked ground shadow into a white puddle),
+        // so the ground shadow renders untouched underneath.
+        ZStack {
+            LottieAnimationRepresentable(
+                animationName: isDoomscrolling ? "2_Looking down_shadow" : "1_idle_shadow",
+                loopMode: .loop,
+                speed: 1.0
+            )
+            .frame(width: 165, height: 165)
+            // Dropped so the ground shadow peeks out below his feet
+            // instead of hiding entirely behind the body.
+            .offset(y: 10)
+            .id("mascot-shadow-\(isDoomscrolling)")
+
+            LottieAnimationRepresentable(
+                animationName: isDoomscrolling ? "2_Looking down_char" : "1_idle_char",
+                loopMode: .loop,
+                speed: 1.0
+            )
+            .frame(width: 165, height: 165)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .white, radius: 0.8)
+            .shadow(color: .black.opacity(0.15), radius: 12, y: 5)
+            .id("mascot-char-\(isDoomscrolling)")
+        }
+        .animation(.easeInOut(duration: 0.25), value: isDoomscrolling)
+    }
+
 }
 
 // MARK: - Outlined display text

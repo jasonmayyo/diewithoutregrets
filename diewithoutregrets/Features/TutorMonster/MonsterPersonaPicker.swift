@@ -28,7 +28,7 @@ struct MonsterPersonaList: View {
                     card(persona)
                 }
             }
-            Text("“\(MonsterScript.line(persona: store.persona, mood: .chill, context: .greeting, seed: 0))”")
+            Text("“\(BuddyOnboardingCopy.greeting(store.persona))”")
                 .font(.subheadline)
                 .foregroundStyle(SGTheme.paper)
                 .multilineTextAlignment(.center)
@@ -37,7 +37,7 @@ struct MonsterPersonaList: View {
                 .padding(16)
                 .background(MonsterPalette.accent(store.persona).opacity(0.09),
                             in: RoundedRectangle(cornerRadius: 20))
-                .accessibilityLabel("\(store.persona.name) says: \(MonsterScript.line(persona: store.persona, mood: .chill, context: .greeting, seed: 0))")
+                .accessibilityLabel("\(store.persona.name) says: \(BuddyOnboardingCopy.greeting(store.persona))")
         }
     }
 
@@ -95,13 +95,12 @@ struct SGV5PersonaPickerView: View {
         SGV5QuizScreenContainer(progress: SGV5V5OnboardingStep.persona.progress,
                                 onBack: { viewModel.previousPage() }) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    Text("Who's keeping you honest?").font(SGTheme.stepTitle)
-                    Text("Pick your tutor monster. It quizzes you to unlock your apps, in its own voice. You can switch any time.")
-                        .font(.system(size: 15)).foregroundStyle(SGTheme.paperSecondary)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Pick your buddy")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                     MonsterPersonaList()
                 }
-                .padding(.horizontal, 24).padding(.vertical, 22)
+                .padding(.horizontal, 24).padding(.vertical, 16)
             }
             SGV5QuizContinueButton(isEnabled: true) {
                 viewModel.trackUserInput(screenId: SGV5V5OnboardingStep.persona.rawValue,

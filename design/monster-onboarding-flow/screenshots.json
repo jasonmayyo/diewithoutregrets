@@ -1,0 +1,212 @@
+[
+  {
+    "id": "welcome",
+    "number": 1,
+    "title": "Welcome + unlock recording",
+    "section": "intro",
+    "note": "Existing recording placeholder.",
+    "file": "screenshots/01-welcome.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:42:20.449117+00:00"
+  },
+  {
+    "id": "how-guard",
+    "number": 2,
+    "title": "Block the scroll",
+    "section": "intro",
+    "note": "Original phone animation + real app icons.",
+    "file": "screenshots/02-how-guard.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:42:27.432692+00:00"
+  },
+  {
+    "id": "how-study",
+    "number": 3,
+    "title": "Get past your study buddy",
+    "section": "intro",
+    "note": "Meme first \u2192 exam reminder \u2192 3 questions before scrolling.",
+    "file": "screenshots/03-how-study.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:42:41.747260+00:00"
+  },
+  {
+    "id": "personalize",
+    "number": 4,
+    "title": "Let\u2019s personalize Study Guard",
+    "section": "intro",
+    "note": "Your study buddy that never rests.",
+    "file": "screenshots/04-personalize.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:42:48.934868+00:00"
+  },
+  {
+    "id": "gender",
+    "number": 5,
+    "title": "Your gender",
+    "section": "intro",
+    "note": "Regular selection screen. Includes \u201cPrefer not to say\u201d.",
+    "file": "screenshots/05-gender.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:42:56.004484+00:00"
+  },
+  {
+    "id": "age",
+    "number": 6,
+    "title": "How old are you?",
+    "section": "intro",
+    "note": "Choose an age range before chat.",
+    "file": "screenshots/06-age.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:04.736338+00:00"
+  },
+  {
+    "id": "phone-hours",
+    "number": 7,
+    "title": "Daily phone time",
+    "section": "intro",
+    "note": "Choose an estimated daily range.",
+    "file": "screenshots/07-phone-hours.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:11.937226+00:00"
+  },
+  {
+    "id": "phone-cost",
+    "number": 8,
+    "title": "What that adds up to",
+    "section": "intro",
+    "note": "3 hours/day \u2192 1,095 hours/year.",
+    "file": "screenshots/08-phone-cost.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:18.886870+00:00"
+  },
+  {
+    "id": "monster",
+    "number": 9,
+    "title": "Pick your buddy",
+    "section": "intro",
+    "note": "Willow, Zaza, Sarge or Gnash.",
+    "file": "screenshots/09-monster.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:25.950375+00:00"
+  },
+  {
+    "id": "name",
+    "number": 10,
+    "title": "Hello, meme + your name",
+    "section": "chat",
+    "note": "First name or nickname.",
+    "file": "screenshots/10-name.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:33.001519+00:00"
+  },
+  {
+    "id": "level",
+    "number": 11,
+    "title": "Your study level",
+    "section": "chat",
+    "note": "School, university or professional exams.",
+    "file": "screenshots/11-level.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:40.246954+00:00"
+  },
+  {
+    "id": "materials",
+    "number": 12,
+    "title": "Bring your study material",
+    "section": "chat",
+    "note": "Upload a PDF (main option), a Quizlet export or a YouTube lecture. The subject is detected from the notes.",
+    "file": "screenshots/12-materials.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:47.269253+00:00"
+  },
+  {
+    "id": "exam",
+    "number": 13,
+    "title": "Upcoming test or exam?",
+    "section": "chat",
+    "note": "An optional date, asked after the upload and tied to the detected subject.",
+    "file": "screenshots/13-exam.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:43:54.231296+00:00"
+  },
+  {
+    "id": "practice",
+    "number": 14,
+    "title": "Try one card together",
+    "section": "chat",
+    "note": "A practice answer, before setup.",
+    "file": "screenshots/14-practice.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:01.317876+00:00"
+  },
+  {
+    "id": "practiceReview",
+    "number": 15,
+    "title": "The aha moment",
+    "section": "chat",
+    "note": "Get feedback or ask for an explanation.",
+    "file": "screenshots/15-practiceReview.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:08.418027+00:00"
+  },
+  {
+    "id": "offer",
+    "number": 16,
+    "title": "Your plan is ready",
+    "section": "chat",
+    "note": "1 minute per correct card. Continue to subscription options.",
+    "file": "screenshots/16-offer.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:15.377474+00:00"
+  },
+  {
+    "id": "paywall",
+    "number": 17,
+    "title": "Subscription",
+    "section": "purchase",
+    "note": "Existing paywall; purchase or restore to continue.",
+    "file": "screenshots/17-paywall.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:26.716163+00:00"
+  },
+  {
+    "id": "permission",
+    "number": 18,
+    "title": "Screen Time permission",
+    "section": "setup",
+    "note": "Allow access, or set up later.",
+    "file": "screenshots/18-permission.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:33.739756+00:00"
+  },
+  {
+    "id": "apps",
+    "number": 19,
+    "title": "Choose apps to guard",
+    "section": "setup",
+    "note": "Native picker \u2192 confirm and start guarding.",
+    "file": "screenshots/19-apps.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:40.729806+00:00"
+  },
+  {
+    "id": "firstRound",
+    "number": 20,
+    "title": "Earn your first break",
+    "section": "setup",
+    "note": "Opens a real study round with the saved cards.",
+    "file": "screenshots/20-firstRound.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:47.697437+00:00"
+  },
+  {
+    "id": "notifications",
+    "number": 21,
+    "title": "Optional reminders \u2192 Home",
+    "section": "setup",
+    "note": "Enable reminders or continue to Home.",
+    "file": "screenshots/21-notifications.png",
+    "fixture": true,
+    "capturedAt": "2026-11-01T09:44:54.683793+00:00"
+  }
+]

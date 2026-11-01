@@ -10,6 +10,18 @@
 import Foundation
 import Combine
 
+/// Presentation-only punctuation, shared by live replies and restored history.
+/// Keep the source text intact for saved cards, submitted answers and grading.
+enum MonsterDisplayCopy {
+    static func text(_ source: String) -> String {
+        guard source.contains("\u{2014}") else { return source }
+        let withoutLeadingDash = source.replacingOccurrences(
+            of: "(?m)^[\\t ]*\u{2014}[\\t ]*", with: "", options: .regularExpression)
+        return withoutLeadingDash.replacingOccurrences(
+            of: "[\\t ]*\u{2014}[\\t ]*", with: ", ", options: .regularExpression)
+    }
+}
+
 /// Presentation owns a cursor, not the session. Hiding chat cancels the current
 /// beat; returning restarts that beat rather than consuming time spent away.
 @MainActor

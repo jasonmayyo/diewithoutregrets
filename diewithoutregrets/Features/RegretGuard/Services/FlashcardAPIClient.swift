@@ -175,9 +175,10 @@ final class FlashcardAPIClient {
 
     func askTutor(persona: String, card: MonsterTutorCard, question: String,
                   history: [MonsterTutorTurn]) async throws -> String {
+        let personalizedQuestion = BuddyIdentity.load().tutorQuestion(question)
         let data = try await authenticatedPost("v1/tutor", timeout: 18) { challenge, requestID in
             try JSONEncoder().encode(TutorPayload(action: "ask_tutor", persona: persona, card: card,
-                question: question, history: Array(history.suffix(4)), challenge: challenge, requestId: requestID))
+                question: personalizedQuestion, history: Array(history.suffix(4)), challenge: challenge, requestId: requestID))
         }
         guard let result = try? JSONDecoder().decode(TutorResponse.self, from: data),
               !result.reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,

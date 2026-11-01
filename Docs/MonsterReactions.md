@@ -4,20 +4,42 @@ The monster can attach one local reaction beneath a spoken message. Attachments
 use a 136-point width, preserve the original aspect ratio, and have 6-point
 corners. They arrive with the message's existing animation and single haptic.
 
-`MonsterReactionPicker` can attach an occasional double-take loop to Zaza's
-opening scrolling call-out. Otherwise it considers celebration media after a
-completed round with at least 75% correct answers and an earned time grant.
-It sends at most one attachment per session; an opening loop replaces the
-completion reaction. At least three successful rounds separate attachments.
-The shared gap is saved across sessions; the initial offset and later gaps vary.
+`MonsterReactionPicker` gives every monster a 60% chance of attaching a GIF or
+sticker directly beneath the first spoken message in a new study chat. Each
+persona has a small pool of suitable opening reactions, and its last displayed
+reaction is saved so consecutive attachments do not repeat across app restarts.
+**Profile → Creator Toolkit → Monster chat** has an **Always send an
+opening GIF or sticker** toggle. It is off by default; turning it on guarantees
+media after the first message for every monster in either study mode. The choice
+persists across launches and applies to new chats, including a fresh round after
+finishing the previous chat. Turning it off restores the 60% chance.
 
-Exam reminders, deck prompts, questions, individual answer feedback,
-corrections, tutor explanations and study-sheet recaps have no automatic media.
-The rainbow and delighted laugh celebrate completion; the snack loop accompanies
-the sendoff to an earned break. The double-take accompanies Zaza catching the
-user trying to scroll. The other surprise, side-eye and facepalm stills stay in
-the library. Study-sheet completion reactions wait until the user claims their
-time. Attachments stay fixed when returning to an existing chat.
+This probability is independent of the completion cooldown. Otherwise the
+picker considers celebration media after a completed round with at least 75%
+correct answers and an earned time grant. An opening attachment replaces the
+completion reaction. At least three eligible strong rounds separate completion
+celebrations. That gap is saved across sessions; it does not restrict openings.
+
+Four consecutive wrong answers always send the animated double-take reaction,
+even when the opening already included media. Continued misses trigger again at
+eight, twelve, and so on; a correct answer resets the count. This is tracked
+locally across pausing, ongoing deck changes and study-sheet follow-ups, and resets
+for a fresh chat. Only accepted, graded answers count. Invalid or duplicate
+sheet submissions and tutor questions do not affect it. In chat the GIF follows
+the wrong-answer feedback; in the study sheet it appears below that question's
+answer feedback and stays attached when resuming. It never changes earned time.
+
+Deck prompts, questions, other individual answer feedback, tutor explanations
+and study-sheet recaps have no automatic media.
+The rainbow, delighted laugh and grinning dog celebrate completion; the snack loop accompanies
+the sendoff to an earned break. Opening pools mix double-take/laugh loops with
+surprise, side-eye, awkward-smile or facepalm stickers suited to each monster.
+The ten additional photo stickers also rotate through persona-appropriate opening
+pools: softer awkward/thinking reactions for Willow, dry skeptical reactions for
+Sarge, playful chaos for Gnash and expressive side-eye reactions for Zaza.
+Study-sheet completion reactions wait until the user claims their time.
+Attachments stay fixed when returning to an existing chat; reopening it neither
+rerolls the 60% decision nor attaches another reaction.
 
 Every monster's opening has three spoken beats: an actual exam reminder (or a greeting
 when there is no upcoming exam), a scrolling call-out, and a challenge naming
@@ -72,6 +94,16 @@ only with the main app. There are no remote URLs or media-service requests.
 | delighted-laugh.mp4 | ScreenRecording_10-30-2026 10-01-51_1.mov |
 | double-take.mp4 | ScreenRecording_10-30-2026 10-03-39_1.mov |
 | snack-break.mp4 | ScreenRecording_10-30-2026 10-04-20_1.mov |
+| stunned-driver.jpg | IMG_0071.jpg |
+| awkward-wave.jpg | IMG_0070.jpg |
+| raised-finger-cat.jpg | IMG_0068.jpg |
+| unimpressed-dog.jpg | IMG_0067.jpg |
+| space-dog-shrug.jpg | IMG_0066.jpg |
+| thinking-monkey.jpg | IMG_0065.jpg |
+| grinning-dog.jpg | IMG_0064.jpg |
+| side-eye-sip.jpg | IMG_0063.jpg |
+| sleepy-dog.jpg | IMG_0062.jpg |
+| holding-it-in.jpg | IMG_0061.jpg |
 
 The stills are original copies. The recordings were exported locally through
 AVFoundation's medium-quality MP4 preset, keeping only the video track; each has

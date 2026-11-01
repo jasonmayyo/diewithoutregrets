@@ -18,6 +18,7 @@ struct MonsterStudySheet: View {
     @State private var rewardTarget = 0
     @State private var chipFrame: CGRect = .zero
     @State private var answerFrame: CGRect = .zero
+    @State private var viewportHeight: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,37 +29,47 @@ struct MonsterStudySheet: View {
                     .padding(.horizontal, 24).padding(.bottom, 16)
                     .accessibilityLabel("Flashcards answered")
                     .accessibilityValue("\(round.answers.count) of \(round.questions.count)")
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        HStack {
-                            Text(question.card.topic ?? round.title).lineLimit(2)
-                            Spacer(minLength: 8)
-                            Text("\(round.index + 1) of \(round.questions.count)").monospacedDigit().fixedSize()
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            HStack {
+                                Text(MonsterDisplayCopy.text(question.card.topic ?? round.title)).lineLimit(2)
+                                Spacer(minLength: 8)
+                                Text("\(round.index + 1) of \(round.questions.count)").monospacedDigit().fixedSize()
+                            }
+                            .font(.caption.weight(.medium)).foregroundStyle(MonsterPalette.textDim)
+                            Text(MonsterDisplayCopy.text(question.card.quizPrompt.text))
+                                .font(.title2.weight(.semibold))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityAddTraits(.isHeader)
+                            if question.card.answerMode == .choices {
+                                choices(question: question, answer: round.currentAnswer)
+                            } else if let answer = round.currentAnswer {
+                                Text(MonsterDisplayCopy.text(answer.text)).font(.body).padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 16))
+                            } else {
+                                MonsterReplyComposer(draft: $draft, enabled: !session.isThinking,
+                                    placeholder: "Your answer…", onSend: {
+                                        session.answerStudyTyped(questionID: question.id, text: draft)
+                                    })
+                            }
+                            feedback(question: question, answer: round.currentAnswer)
+                                .background(QV2GlobalFrameReader { answerFrame = $0 })
                         }
-                        .font(.caption.weight(.medium)).foregroundStyle(MonsterPalette.textDim)
-                        Text(question.card.quizPrompt.text)
-                            .font(.title2.weight(.semibold))
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityAddTraits(.isHeader)
-                        if question.card.answerMode == .choices {
-                            choices(question: question, answer: round.currentAnswer)
-                        } else if let answer = round.currentAnswer {
-                            Text(answer.text).font(.body).padding(16)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 16))
-                        } else {
-                            MonsterReplyComposer(draft: $draft, enabled: !session.isThinking,
-                                placeholder: "Your answer…", onSend: {
-                                    session.answerStudyTyped(questionID: question.id, text: draft)
-                                })
-                        }
-                        feedback(question: question, answer: round.currentAnswer)
-                            .background(QV2GlobalFrameReader { answerFrame = $0 })
+                        .padding(.horizontal, 24).padding(.bottom, 20)
+                        .id(question.id)
                     }
-                    .padding(.horizontal, 24).padding(.bottom, 20)
-                    .id(question.id)
+                    .coordinateSpace(name: "monsterTranscript")
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
+                    .scrollDismissesKeyboard(.interactively)
+                    .onChange(of: round.currentAnswer?.id) { _, id in
+                        guard id != nil, round.currentAnswer?.reaction != nil else { return }
+                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) {
+                            proxy.scrollTo("answerReaction", anchor: .bottom)
+                        }
+                    }
                 }
-                .scrollDismissesKeyboard(.interactively)
                 footer(round: round, question: question)
             }
         }
@@ -120,7 +131,7 @@ struct MonsterStudySheet: View {
                             if right || wrong { Image(systemName: right ? "checkmark.circle.fill" : "xmark.circle") }
                         }
                         .font(.caption.weight(.semibold))
-                        Text(question.card.choices[index]).font(.body)
+                        Text(MonsterDisplayCopy.text(question.card.choices[index])).font(.body)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading)
@@ -132,7 +143,7 @@ struct MonsterStudySheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(answer != nil || session.isThinking)
-                .accessibilityLabel("\(question.card.choices[index])\(right ? ", correct answer" : wrong ? ", your answer, incorrect" : "")")
+                .accessibilityLabel(MonsterDisplayCopy.text("\(question.card.choices[index])\(right ? ", correct answer" : wrong ? ", your answer, incorrect" : "")"))
             }
         }
     }
@@ -144,13 +155,17 @@ struct MonsterStudySheet: View {
                       systemImage: answer.correct ? "checkmark.circle.fill" : "arrow.counterclockwise")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(answer.correct ? MonsterPalette.successText : MonsterPalette.text)
-                if !answer.correct { Text("Answer: \(question.card.correctAnswer)").font(.subheadline.weight(.medium)) }
+                if !answer.correct { Text(MonsterDisplayCopy.text("Answer: \(question.card.correctAnswer)")).font(.subheadline.weight(.medium)) }
                 if !question.card.backgroundExplanation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(question.card.backgroundExplanation).font(.subheadline).foregroundStyle(MonsterPalette.textDim)
+                    Text(MonsterDisplayCopy.text(question.card.backgroundExplanation)).font(.subheadline).foregroundStyle(MonsterPalette.textDim)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
+            if let reaction = answer.reaction {
+                MonsterReactionView(reaction: reaction, playbackEnabled: true, viewportHeight: viewportHeight)
+                    .id("answerReaction")
+            }
         } else {
             Text(question.card.answerMode == .choices ? "Choose one answer. Take your time." : "Try recalling it in your own words.")
                 .font(.caption).foregroundStyle(MonsterPalette.textDim)
@@ -199,7 +214,7 @@ struct MonsterStudyButton: View {
     var body: some View {
         Button(action: action) {
             HStack {
-                Text(title).font(.body.weight(.semibold))
+                Text(MonsterDisplayCopy.text(title)).font(.body.weight(.semibold))
                 Spacer()
                 Image(systemName: "arrow.right").font(.subheadline.weight(.semibold))
             }
@@ -222,7 +237,7 @@ struct MonsterStudyInvitation: View {
                     .frame(width: 42, height: 42).background(MonsterPalette.successBg, in: RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(round.isFollowUp ? "Your follow-up round" : "A quick study round").font(.headline)
-                    Text("\(round.title) · \(round.cardDescription)").font(.caption).foregroundStyle(MonsterPalette.textDim)
+                    Text(MonsterDisplayCopy.text("\(round.title) · \(round.cardDescription)")).font(.caption).foregroundStyle(MonsterPalette.textDim)
                 }
             }
             Text(round.isFollowUp

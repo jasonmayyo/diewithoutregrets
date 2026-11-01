@@ -23,6 +23,8 @@ struct CreatorToolkitView: View {
     @ObservedObject private var navigationModel = NavigationModel.shared
     @AppStorage("sgHomeBackdrop") private var homeBackdrop: String = "dots"
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage(MonsterReactionPicker.alwaysOpeningPreferenceKey)
+    private var alwaysOpeningReaction = false
 
     @State private var streak = QV2Streak.current()
     @State private var showResetConfirm = false
@@ -59,6 +61,7 @@ struct CreatorToolkitView: View {
                             setupHintCard
                         }
 
+                        monsterSection
                         streakSection
                         scenerySection
                         engineSection
@@ -265,6 +268,27 @@ struct CreatorToolkitView: View {
                 .font(SGTheme.caption)
                 .foregroundColor(SGTheme.paperTertiary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Monster chat
+
+    private var monsterSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Monster chat")
+
+            SGCard(shadowed: false) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Always send an opening GIF or sticker", isOn: $alwaysOpeningReaction)
+                        .font(SGTheme.body)
+                        .foregroundColor(SGTheme.paper)
+                        .tint(SGTheme.mint)
+                    Text("Every new chat sends one after the first message. Turn off to return to the usual 60% chance.")
+                        .font(SGTheme.caption)
+                        .foregroundColor(SGTheme.paperTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 

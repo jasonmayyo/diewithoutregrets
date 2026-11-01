@@ -149,8 +149,7 @@ struct diewithoutregretsApp: App {
                     StudyGuardManager.shared.reconcileOnForeground()
                     Analytics.flushStudyGuardExtensionEvents()
 
-                    // Keep the always-on monster mascot alive in the Dynamic
-                    // Island and resume the frame rotation.
+                    // Resume the Dynamic Island mascot when enabled in Profile.
                     MonsterActivityManager.shared.ensureMonsterRunning()
 
                     // Tutor Monster: ensure a persona-voiced study nudge is queued

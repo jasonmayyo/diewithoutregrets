@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Show Study Guard in action, choose a monster, then personalize and set up the app through a guided conversation.">
+  <title>Study Guard · Monster onboarding flow</title>
+  <style>
+    :root { color-scheme: light; --ink:#18392f; --muted:#66766d; --line:#dce4dd; --paper:#f7f8f3; --green:#d8f4bd; --soft:#edf4e9; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; line-height:1.45; }
+    main { max-width:1360px; margin:auto; padding:46px 48px 30px; }
+    .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.14em; font-weight:650; color:var(--muted); }
+    header { padding-bottom:28px; border-bottom:1px solid var(--line); }
+    h1 { font-size:clamp(28px,3.5vw,42px); line-height:1.12; letter-spacing:-.045em; margin:12px 0; font-weight:650; }
+    header p { margin:0; color:var(--muted); font-size:15px; }
+    .phase { padding-top:28px; }
+    .phase-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+    h2 { font-size:17px; font-weight:650; margin:0; letter-spacing:-.025em; }
+    .phase-head p { margin:0; color:var(--muted); font-size:12px; }
+    .flow { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; list-style:none; padding:0; margin:0; }
+    .step { position:relative; background:#fff; border:1px solid var(--line); border-radius:14px; padding:17px; min-width:0; }
+    .step:not(:last-child)::after { content:'→'; position:absolute; right:-17px; top:49px; color:#7b8d7e; font-size:18px; }
+    .meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:13px; }
+    .number { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
+    .tag { font-size:10px; text-transform:uppercase; letter-spacing:.055em; color:var(--muted); background:#f2f5f0; padding:3px 7px; border-radius:5px; font-weight:600; }
+    .tag.new { background:var(--green); color:var(--ink); }
+    h3 { font-size:16px; line-height:1.3; letter-spacing:-.025em; margin:0 0 8px; font-weight:650; }
+    .step p { margin:0; color:var(--muted); font-size:12px; }
+    .step .quote { color:var(--ink); font-size:13px; overflow-wrap:anywhere; }
+    .small { font-size:11px; color:var(--muted); }
+    .micro { margin-top:10px !important; font-size:11px !important; }
+    label { font-size:12px; display:block; margin:10px 0 5px; }
+    input { display:block; width:100%; padding:10px 11px; border:1px solid #b6c6b9; border-radius:7px; background:var(--paper); font:inherit; color:var(--ink); }
+    input:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible { outline:3px solid #739d5e; outline-offset:3px; }
+    .personas, .pronouns { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+    .pronouns button { font-size:11px; padding:8px; }
+    .product-demo { display:grid; gap:5px; margin:12px 0 0; }
+    .product-demo span { display:block; background:var(--soft); border-radius:6px; padding:8px 10px; font-size:12px; }
+    .product-demo span:last-child { background:var(--green); }
+    .reply { border-left:2px solid #a6c590; padding-left:9px; margin-top:12px !important; }
+    button { color:var(--ink); border:1px solid var(--line); background:var(--paper); border-radius:7px; font:inherit; text-align:left; padding:9px; cursor:pointer; }
+    button strong { display:block; font-size:12px; font-weight:600; }
+    button span { display:block; font-size:10px; color:var(--muted); }
+    button[aria-pressed="true"] { background:var(--green); border-color:#6f995c; }
+    .chat { background:var(--soft); border-radius:10px 10px 10px 2px; padding:11px; }
+    .meme { display:flex; align-items:center; gap:10px; margin:10px 0 0; }
+    .meme img { width:72px; height:72px; object-fit:cover; border-radius:6px; }
+    .meme figcaption { color:var(--muted); font-size:11px; max-width:120px; }
+    .actions { display:flex; flex-wrap:wrap; gap:5px; margin-top:12px; }
+    .pill { display:inline-block; background:var(--soft); color:var(--ink); font-size:11px; padding:5px 8px; border-radius:5px; }
+    .aha { background:var(--green); border-color:#a6c590; }
+    .aha .tag { background:var(--ink); color:#fff; }
+    .aha p { color:#3b5b45; }
+    .example { border-left:2px solid #709e55; padding-left:10px; margin:12px 0; font-size:12px; }
+    .example span { display:block; color:#45613f; font-size:11px; margin-bottom:4px; }
+    .break { text-align:center; font-size:18px; color:#799176; height:0; position:relative; top:4px; }
+    .after { margin-top:30px; border-top:1px solid var(--line); padding-top:24px; }
+    .loop { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); list-style:none; padding:0; margin:17px 0 12px; gap:22px; }
+    .loop li { position:relative; padding-top:12px; border-top:2px solid #aec4a2; min-width:0; }
+    .loop li:not(:last-child)::after { content:'→'; position:absolute; right:-18px; top:12px; color:#7b8d7e; }
+    .loop strong { font-size:13px; display:block; margin-bottom:3px; font-weight:600; }
+    .loop span { font-size:12px; color:var(--muted); display:block; }
+    .footer-line { display:flex; flex-wrap:wrap; gap:6px 20px; color:var(--muted); font-size:12px; }
+    details { margin-top:24px; padding-top:15px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
+    summary { cursor:pointer; width:fit-content; color:var(--ink); }
+    .notes { display:grid; grid-template-columns:1fr 1fr; gap:14px 30px; padding-top:14px; }
+    .notes p { margin:0; }
+    .notes strong { color:var(--ink); }
+    footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin-top:26px; color:var(--muted); font-size:11px; }
+    a { color:var(--ink); text-underline-offset:3px; }
+    @media(max-width:1050px) { main { padding:30px 26px; } .flow { gap:16px; } .step { padding:13px; } .step:not(:last-child)::after { right:-15px; } }
+    @media(max-width:800px) { .flow { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; } .step { padding:17px; } .step:nth-child(2)::after { display:none; } .loop { grid-template-columns:1fr; gap:15px; } .loop li { padding:0 0 0 14px; border-top:0; border-left:2px solid #aec4a2; } .loop li:not(:last-child)::after { display:none; } }
+    @media(max-width:480px) { main { padding:26px 18px; } .flow { grid-template-columns:1fr; gap:21px; } .step:not(:last-child)::after, .step:nth-child(2)::after { display:block; content:'↓'; top:auto; bottom:-22px; left:50%; right:auto; } .phase-head { gap:4px; display:block; } .phase-head p { margin-top:4px; } .notes { grid-template-columns:1fr; } input { font-size:16px; } .personas button { min-height:48px; } .meme img { width:90px; height:90px; } }
+    @media print { body { background:white; } main { padding:0; } .step { break-inside:avoid; } .phase { break-inside:avoid; } details, footer a { display:none; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Study Guard · Proposed flow · 30 October 2026</div>
+    <h1>Show the product. Let the monster do the rest.</h1>
+    <p>Welcome recording → 2 simple animated screens → phone-time reality check → personalize in chat.</p>
+  </header>
+
+  <section class="phase" aria-labelledby="intro-title">
+    <div class="phase-head"><h2 id="intro-title">01 / See the product. See the time.</h2><p>Welcome → two visual steps → personalize → gender → age → phone time.</p></div>
+    <ol class="flow">
+      <li class="step">
+        <div class="meta"><span class="number">01</span><span class="tag">Welcome</span></div>
+        <h3>“Scroll less. Study more.”</h3>
+        <p>Looping screen recording of the unlock flow.</p>
+        <p class="micro">Existing recording used as a placeholder. Get Started is always available.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">02</span><span class="tag">Guard your apps</span></div>
+        <h3>Block the scroll.</h3><p>Choose the apps that distract you.</p><p class="micro">Original phone animation · Instagram, TikTok and YouTube icons.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">03</span><span class="tag">Study to unlock</span></div>
+        <h3>Get past your study buddy to scroll.</h3><p>Answer flashcards before you scroll.</p><p class="micro">Your uploaded meme → “Well well well.” → bio exam in 3 days → answer 3 questions.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">04</span><span class="tag">Personalize</span></div>
+        <h3>“Let’s personalize Study Guard for you.”</h3><p>Your study buddy that never rests.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">05</span><span class="tag">Normal screen</span></div>
+        <h3>“What’s your gender?”</h3><p>Female · Male · Non-binary · Prefer not to say.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">06</span><span class="tag">Normal screen</span></div>
+        <h3>“How old are you?”</h3><p>Choose an age range.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">07</span><span class="tag">Normal screen</span></div>
+        <h3>“How much time do you spend on your phone?”</h3><p>Less than 2 · 2–4 · 4–6 · 6+ hours a day · Not sure.</p>
+      </li>
+      <li class="step aha">
+        <div class="meta"><span class="number">08</span><span class="tag">Time estimate</span></div>
+        <h3>“That time adds up.”</h3><p>Count up the hours. Fill a year of dots.</p>
+        <div class="example"><span>Example: 3 hours/day</span>1,095 hours = 45.6 full days a year.</div>
+        <p class="micro">Based on their estimate. “Not sure” uses a labeled example.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="phase" aria-labelledby="meet-title">
+    <div class="phase-head"><h2 id="meet-title">02 / Meet the buddy</h2><p>Choose a character → chat about what’s left.</p></div>
+    <ol class="flow">
+      <li class="step">
+        <div class="meta"><span class="number">09</span><span class="tag">Visual picker</span></div>
+        <h3>“Pick your buddy”</h3>
+        <div class="personas" role="group" aria-label="Preview a monster personality">
+          <button type="button" data-persona="willow" aria-pressed="false"><strong>Willow</strong><span>Calm bestie</span></button>
+          <button type="button" data-persona="zaza" aria-pressed="true"><strong>Zaza</strong><span>Sassy hype</span></button>
+          <button type="button" data-persona="sarge" aria-pressed="false"><strong>Sarge</strong><span>Tough love</span></button>
+          <button type="button" data-persona="gnash" aria-pressed="false"><strong>Gnash</strong><span>Chaotic menace</span></button>
+        </div>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">10</span><span class="tag new">Chat begins</span></div>
+        <h3><span data-monster>Zaza</span> says hi</h3>
+        <div class="chat"><p class="quote" id="greeting" aria-live="polite">I’m Zaza. Your screen time has main-character energy. Your notes deserve a cameo.</p></div>
+        <figure class="meme"><img src="assets/side-eye.jpg" alt="Side-eye reaction meme" width="72" height="72"><figcaption>Then a meme.<br>“Just one more video.”<br>47 videos ago</figcaption></figure>
+        <p class="micro">Always after the first message. Shared chat arrival and typing animations.</p>
+      </li>
+    </ol>
+  </section>
+  <div class="break" aria-hidden="true">↓</div>
+
+  <section class="phase" aria-labelledby="aha-title">
+    <div class="phase-head"><h2 id="aha-title">03 / The monster gets to know them</h2><p>One question at a time. Quick replies, pickers and a little banter.</p></div>
+    <ol class="flow" start="10">
+      <li class="step">
+        <div class="meta"><span class="number">10</span><span class="tag new">In chat · About you</span></div>
+        <h3>“What should I call you?”</h3>
+        <label for="first-name">First name or nickname</label>
+        <input id="first-name" type="text" value="Alex" maxlength="30" autocomplete="off" spellcheck="false">
+        <p class="micro">Gender, age and phone time are already saved. Ask only unanswered questions.</p>
+        <p class="quote reply" id="name-reply" aria-live="polite">“Alex it is. Name remembered. Doomscrolling privileges under review.”</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">11–13</span><span class="tag new">In chat</span></div>
+        <h3>“Which module or topic should we start with?”</h3>
+        <p>Study level → first module or topic → optional test / exam date.</p>
+        <div class="actions"><span class="pill">College</span><span class="pill">COS 210</span><span class="pill">Add test / exam date</span></div>
+        <p class="quote reply" id="study-line">“Got a test or exam coming up for COS 210? Add the date if you know it.”</p>
+        <p class="micro">Skip any saved study answers. “No date yet” is an option.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">14</span><span class="tag">In chat · Add cards</span></div>
+        <h3>“Let’s use your notes.”</h3>
+        <p class="quote" id="upload-line">“Drop your notes, Alex. Let’s turn that academic jump scare into flashcards.”</p>
+        <div class="actions"><span class="pill">Import cards</span><span class="pill">Turn notes into cards</span></div>
+        <p class="micro">Nothing handy? Try a sample deck.<br>Upload sheet → straight back to chat.</p>
+      </li>
+      <li class="step aha">
+        <div class="meta"><span class="number">15–16</span><span class="tag">Aha moment</span></div>
+        <h3>One card. Real conversation.</h3>
+        <p>Answer → monster reacts → ask “why?”</p>
+        <div class="example"><span>Example · sample Biology deck</span>“What does the mitochondrion do?”</div>
+        <p class="quote" id="feedback-line">“Correct. The cell has a powerhouse. Now so do your study habits.”</p>
+        <p class="micro">Before the paywall. Practice only.</p>
+      </li>
+    </ol>
+  </section>
+  <div class="break" aria-hidden="true">↓</div>
+
+  <section class="phase" aria-labelledby="setup-title">
+    <div class="phase-head"><h2 id="setup-title">04 / Make it their everyday routine</h2><p>One minute per correct card → purchase → finish setup with the same monster.</p></div>
+    <ol class="flow" start="14">
+      <li class="step">
+        <div class="meta"><span class="number">17–18</span><span class="tag">Your plan</span></div>
+        <h3>“Your plan is ready.”</h3>
+        <div class="actions"><span class="pill">1 correct card → 1 minute</span></div>
+        <p class="micro">Practice → your plan → existing paywall. No rate-selection question.<br>Purchase / restore → resume this chat.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">19–20</span><span class="tag">Guided setup</span></div>
+        <h3>“Let me guard your apps.”</h3>
+        <p>Explain → allow Screen Time → choose apps.</p>
+        <p class="quote" id="apps-line">“Which apps are stealing the spotlight, Alex?”</p>
+        <div class="actions"><span class="pill">Confirm &amp; start guarding</span></div>
+        <p class="micro">Native permission + app picker sheets.<br>Return to <span data-monster>Zaza</span> after each.</p>
+      </li>
+      <li class="step aha">
+        <div class="meta"><span class="number">21</span><span class="tag">First real win</span></div>
+        <h3>Earn the first break</h3>
+        <p><span data-monster>Zaza</span> starts a real round with their saved deck, earning one minute per correct card.</p>
+        <div class="actions"><span class="pill">Study → earn time → unlock</span></div>
+        <p class="micro">Show only the time actually earned.</p>
+      </li>
+      <li class="step">
+        <div class="meta"><span class="number">22</span><span class="tag">Updated home</span></div>
+        <h3>Land with everything ready</h3>
+        <p>Chosen monster. Active deck. Guarded apps. Earned-time balance.</p>
+        <p class="micro">Optional reminders after the win.<br>Resume unfinished setup here.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="after" aria-labelledby="after-title">
+    <div class="phase-head"><h2 id="after-title">After onboarding / The everyday loop</h2><p>The same character and deck. One minute per correct card.</p></div>
+    <ol class="loop">
+      <li><strong>Open a blocked app</strong><span>Their monster guards it.</span></li>
+      <li><strong>Ask permission</strong><span>Return to monster chat.</span></li>
+      <li><strong>Study together</strong><span>Name, banter, cards, help.</span></li>
+      <li><strong>Enjoy earned time</strong><span>A real unlock + countdown.</span></li>
+      <li><strong>Time runs out ↻</strong><span>Apps block. Next round.</span></li>
+    </ol>
+    <div class="footer-line"><span>Also enter from Home → Unlock apps.</span><span>Keep the deck and setup progress across visits.</span></div>
+  </section>
+
+  <details>
+    <summary>What changes + fallback paths</summary>
+    <div class="notes">
+      <p><strong>Show the product first.</strong> Welcome recording and two animated explanations lead into personalization, gender, age, screen time, the annual projection and the monster picker. Keep the name question inside the first conversation.</p>
+      <p><strong>Move useful questions into chat.</strong> Ask only unanswered questions: name, study level, first module or topic, and optional test / exam date. Gender, age and phone time are already saved. The module question sets the first deck’s focus; it does not ask for the whole degree.</p>
+      <p><strong>Keep the conversation easy.</strong> One question per message, quick replies where possible, editable answers and visible progress. The monster adds personality; the setup follows a clear sequence. Users can type too.</p>
+      <p><strong>Keep identity explicit.</strong> Gender includes “Prefer not to say.” Use their name unless they have set a pronoun preference in Profile. Never infer pronouns from gender.</p>
+      <p><strong>Keep the plan simple.</strong> Use one minute per correct card by default. Practice leads straight to the plan, with no rate-selection question.</p>
+      <p><strong>Keep moving.</strong> Upload fails → retry or use a sample. Wrong answer → kind correction and retry. Permission denied / no apps chosen → return to setup later; no unlock claim.</p>
+      <p><strong>Keep continuity.</strong> Save the name, preferred forms of address, monster, study context, deck, rule and setup position. Cancelled purchase → offer; restore → resume. Incomplete setup gets one next action on Home.</p>
+      <p><strong>Keep the joke in character.</strong> The greeting and examples above change with the monster. Guarantee one curated opening meme in onboarding; ordinary chats keep their existing reaction cadence.</p>
+      <p><strong>Keep the first win honest.</strong> The pre-purchase card is practice. Start earning only in the real round after setup; never count the practice answer twice. Sample users can add their own notes afterward.</p>
+    </div>
+  </details>
+  <footer><span>Flow proposal v2 · Example copy and deck · Try the name, pronouns and monster controls</span><a href="../studyguard-flow-review/index.html">View current flow screenshots ↗</a></footer>
+</main>
+<script>
+  (() => {
+    const input = document.getElementById('first-name');
+    const choices = [...document.querySelectorAll('[data-persona]')];
+    const copy = {
+      willow: {
+        name: 'Willow',
+        greeting: 'Hey, I’m Willow. Let’s give your notes the attention your For You page gets.',
+        introduction: n => `${n}, nice to meet you. Tiny steps. Suspiciously good memes. We’ve got this.`,
+        study: n => `“Got a test or exam coming up for COS 210, ${n}? Add the date if you know it.”`,
+        upload: n => `“Send your notes, ${n}. Messy is fine. My filing system is also a pile.”`,
+        feedback: '“Exactly. One little W for you. One tiny defeat for the doomscroll.”',
+        apps: n => `“Which apps need a little timeout, ${n}?”`
+      },
+      zaza: {
+        name: 'Zaza',
+        greeting: 'I’m Zaza. Your screen time has main-character energy. Your notes deserve a cameo.',
+        introduction: n => `${n} it is. Name remembered. Doomscrolling privileges under review.`,
+        study: n => `“Got a test or exam coming up for COS 210, ${n}? Add the date if you know it.”`,
+        upload: n => `“Drop your notes, ${n}. Let’s turn that academic jump scare into flashcards.”`,
+        feedback: '“Correct. The cell has a powerhouse. Now so do your study habits.”',
+        apps: n => `“Which apps are stealing the spotlight, ${n}?”`
+      },
+      sarge: {
+        name: 'Sarge',
+        greeting: 'Sarge reporting for duty. Your thumb has trained enough. Time for your brain.',
+        introduction: n => `${n}. Welcome to the squad. Your thumb’s retirement party starts now.`,
+        study: n => `“Got a test or exam coming up for COS 210, ${n}? Add the date if you know it.”`,
+        upload: n => `“Notes on the table, ${n}. Screenshots count. The syllabus won’t lift itself.”`,
+        feedback: '“Correct. One brain rep done. Your thumb is officially on leave.”',
+        apps: n => `“Name the distractions, ${n}. I’ll handle perimeter duty.”`
+      },
+      gnash: {
+        name: 'Gnash',
+        greeting: 'I’m Gnash. I eat procrastination. Your phone is an all-you-can-eat buffet.',
+        introduction: n => `${n}. Excellent. I’ve added you to my extremely legal goblin records.`,
+        study: n => `“Got a test or exam coming up for COS 210, ${n}? Add the date if you know it.”`,
+        upload: n => `“Feed me your notes, ${n}. I promise to chew academically.”`,
+        feedback: '“CORRECT. Brain loot acquired. The mitochondrion approves this side quest.”',
+        apps: n => `“Which apps go in goblin jail, ${n}?”`
+      }
+    };
+    let selected = 'zaza';
+    function render() {
+      const name = input.value.trim() || 'friend';
+      const persona = copy[selected];
+      document.getElementById('greeting').textContent = persona.greeting;
+      document.getElementById('name-reply').textContent = `“${persona.introduction(name)}”`;
+      document.getElementById('study-line').textContent = persona.study(name);
+      document.getElementById('upload-line').textContent = persona.upload(name);
+      document.getElementById('feedback-line').textContent = persona.feedback;
+      document.getElementById('apps-line').textContent = persona.apps(name);
+      document.querySelectorAll('[data-monster]').forEach(el => { el.textContent = persona.name; });
+      choices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.persona === selected)));
+    }
+    input.addEventListener('input', render);
+    choices.forEach(button => button.addEventListener('click', () => { selected = button.dataset.persona; render(); }));
+    render();
+  })();
+</script>
+</body>
+</html>

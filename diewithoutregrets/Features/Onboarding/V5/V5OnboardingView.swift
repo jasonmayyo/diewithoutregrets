@@ -14,6 +14,10 @@ struct SGV5V5OnboardingView: View {
     var body: some View {
         switch step {
         case .welcome: SGV5WelcomeView(viewModel: viewModel)
+        case .personalize: BuddyPersonalizationIntro(viewModel: viewModel)
+        case .buddyChat: BuddyOnboardingChatView(viewModel: viewModel)
+        case .howGuard, .howStudy, .howEarn: BuddyHowItWorksView(viewModel: viewModel, step: step)
+        case .phoneTimeCost: BuddyPhoneTimeCostView(viewModel: viewModel)
         case .moreLife: SGV5V4FightingBackView(viewModel: viewModel, showsReviews: true)
         case .stoppingPoint: SGV5RetiredView(viewModel: viewModel)
         case .goal:
@@ -38,6 +42,9 @@ struct SGV5V5OnboardingView: View {
         case .age:
             question("How old are you?",
                      choices: SGV5V5OnboardingProfile.AgeBracket.allCases, selection: $viewModel.v5Profile.ageBracket)
+        case .gender:
+            question("What’s your gender?",
+                     choices: SGV5V5OnboardingProfile.Gender.allCases, selection: $viewModel.v5Profile.gender)
         case .reflection: SGV5V5PatternView(viewModel: viewModel)
         case .lifeCost: SGV5ExamCostView(viewModel: viewModel)
         case .timeBack: SGV5StudyRuleView(viewModel: viewModel)
@@ -71,7 +78,18 @@ private struct SGV5V5QuestionView<Choice: SGV5V5OnboardingChoice>: View {
         SGV5QuizScreenContainer(progress: step.progress, onBack: { viewModel.previousPage() }) {
             VStack(spacing: 24) {
                 Spacer().frame(height: 4)
-                SGV5QuizGhostSpeechBubble(question: title)
+                Group {
+                    if step == .gender || step == .age || step == .baseline {
+                        Text(title)
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(SGTheme.paper)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 24)
+                    } else {
+                        SGV5QuizGhostSpeechBubble(question: title)
+                    }
+                }
                     .padding(.horizontal, SGV5Theme.horizontalPadding)
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)

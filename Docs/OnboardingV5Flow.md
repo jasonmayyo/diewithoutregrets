@@ -6,11 +6,17 @@ The app entry point now uses `SGV5RootView`. The previous container is retained 
 
 Copied from `/Users/jasonmayo/Desktop/OneThing` on 20 October 2026, including its uncommitted V5 profile, V5 screens, and personalized-plan changes. The baseline commit is `f287864`. `design/onboarding-v5/source-manifest.json` records the hashes of those working files; the native module's `source-map.json` maps imported files.
 
-The active order is:
+## Current flow — 31 October 2026
+
+The active order is now `800 → 824 → 825 → 822 → 828 → 819 → 810 → 827 → 821 → 823 → 506 → 601`: welcome recording, two short animated explanations, personalization, regular gender and age screens, daily phone-time estimate and annual projection, buddy picker, unanswered chat questions, existing paywall, and setup in the same chat. See [BuddyOnboardingFlow.md](BuddyOnboardingFlow.md) for the implemented sequence and validation. The sections below record earlier iterations; their retired screens remain in source but are absent from the active sequence.
+
+## Previous sequence — 29 October 2026
+
+The previous order was:
 
 `800 → 813 → 803 → 804 → 805 → 806 → 820 → 807 → 810 → 819 → 818 → 808 → 817 → 821 → 812 → 801 → 814 → 815 → 816 → 506 → 601 → 602 → 606 → 604`
 
-The current 24-step flow includes the monster picker (`821`) after the method and before the study rule. It offers the approved Willow, Zaza, Sarge and Gnash artwork. The numbered descriptions in the historical Round 1 section below predate this insertion. Fresh 29 October screenshots, including the picker and new monster unlock states, are in `design/studyguard-flow-review/index.html`.
+That 24-step flow included the monster picker (`821`) after the method and before the study rule. It offered the approved Willow, Zaza, Sarge and Gnash artwork. The numbered descriptions in the historical Round 1 section below predate this insertion. The 29 October screenshots, including the picker and monster unlock states, are in `design/studyguard-flow-review/index.html`.
 
 Round 1 replaces the original priority question with separate study-level and exam-subject screens, and the habit question with the next exam date. The age question remains; screen 18 now uses a three-chapter illustrated student journey. The phone-time projection uses the exam horizon. Screen 14 sets the actual flashcard earning rate.
 

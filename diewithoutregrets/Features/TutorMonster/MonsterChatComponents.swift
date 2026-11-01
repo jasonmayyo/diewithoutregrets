@@ -110,7 +110,7 @@ struct MonsterAvatarHeader: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(persona.name).font(.headline).foregroundStyle(MonsterPalette.text)
                         HStack(spacing: 4) {
-                            Text(deckName ?? "Choose flashcards").lineLimit(1).truncationMode(.tail)
+                            Text(MonsterDisplayCopy.text(deckName ?? "Choose flashcards")).lineLimit(1).truncationMode(.tail)
                             Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
                         }
                         .font(.caption)
@@ -121,7 +121,7 @@ struct MonsterAvatarHeader: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Change flashcards")
-                .accessibilityValue(deckName ?? "No deck selected")
+                .accessibilityValue(MonsterDisplayCopy.text(deckName ?? "No deck selected"))
             } else {
                 Text(persona.name)
                     .font(.headline)
@@ -204,13 +204,13 @@ struct MonsterSourcesIndicator: View {
     }
 
     var body: some View {
-        Text(label)
+        Text(MonsterDisplayCopy.text(label))
             .font(.caption2)
             .foregroundStyle(MonsterPalette.textDim)
             .lineLimit(1)
             .truncationMode(.middle)
             .padding(.leading, 2)
-            .accessibilityLabel("Study sources: \(sources.map(\.title).joined(separator: ", "))")
+            .accessibilityLabel(MonsterDisplayCopy.text("Study sources: \(sources.map(\.title).joined(separator: ", "))"))
     }
 }
 
@@ -223,7 +223,7 @@ struct MonsterTextBubble: View {
 
     var body: some View {
         if sender == .system {
-            Text(text)
+            Text(MonsterDisplayCopy.text(text))
                 .font(.caption)
                 .foregroundStyle(MonsterPalette.textDim)
                 .multilineTextAlignment(.center)
@@ -233,7 +233,7 @@ struct MonsterTextBubble: View {
         } else {
             HStack(spacing: 0) {
                 if isUser { Spacer(minLength: 44) }
-                Text(text)
+                Text(MonsterDisplayCopy.text(text))
                     .font(.body)
                     .foregroundStyle(isUser ? .white : MonsterPalette.text)
                     .fixedSize(horizontal: false, vertical: true)
@@ -271,7 +271,7 @@ struct MonsterQuestionBubble: View {
             .font(.caption2.weight(.bold))
             .tracking(0.6)
             .foregroundStyle(MonsterPalette.textDim)
-            Text(text)
+            Text(MonsterDisplayCopy.text(text))
                 .font(.body.weight(.medium))
                 .foregroundStyle(MonsterPalette.text)
                 .lineSpacing(3)
@@ -371,7 +371,7 @@ struct MonsterQuickReplies: View {
                         if choices.indices.contains(index) {
                             let selected = selectedIndex == index
                             Button { onChoice(index) } label: {
-                                Text(choices[index])
+                                Text(MonsterDisplayCopy.text(choices[index]))
                                     .font(.subheadline)
                                     .multilineTextAlignment(.leading)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -386,7 +386,7 @@ struct MonsterQuickReplies: View {
                                     .opacity(enabled || selected ? 1 : 0.62)
                             }
                             .buttonStyle(MonsterReplyPressStyle())
-                            .accessibilityLabel("Reply: \(choices[index])")
+                            .accessibilityLabel(MonsterDisplayCopy.text("Reply: \(choices[index])"))
                             .accessibilityAddTraits(selected ? .isSelected : [])
                             .modifier(MonsterMessageArrival(delay: Double(index) * 0.035))
                         } else {
@@ -415,17 +415,18 @@ enum MonsterChatMotion {
 struct MonsterMessageArrival: ViewModifier {
     var isUser = false
     var delay: Double = 0
+    var animated = true
     @State private var arrived = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .opacity(arrived || reduceMotion ? 1 : 0)
-            .scaleEffect(arrived || reduceMotion ? 1 : 0.97,
+            .opacity(arrived || reduceMotion || !animated ? 1 : 0)
+            .scaleEffect(arrived || reduceMotion || !animated ? 1 : 0.97,
                          anchor: isUser ? .bottomTrailing : .bottomLeading)
-            .offset(y: arrived || reduceMotion ? 0 : 14)
+            .offset(y: arrived || reduceMotion || !animated ? 0 : 14)
             .task {
-                guard !arrived else { return }
+                guard !arrived, animated else { return }
                 // Commit the initial frame before animating. An onAppear
                 // mutation can be coalesced with insertion and skip the fade.
                 if !reduceMotion {

@@ -19,16 +19,19 @@ struct MonsterChatView: View {
 
     private let onClose: () -> Void
     private let isUncovered: Bool
+    private let onboardingHistory: [MonsterMessage]
 
     init(session: MonsterSession,
          isUncovered: Bool = true,
+         onboardingHistory: [MonsterMessage] = [],
          onClose: @escaping () -> Void = { NavigationModel.shared.returnHome() }) {
         _session = StateObject(wrappedValue: session)
         self.isUncovered = isUncovered
+        self.onboardingHistory = onboardingHistory
         self.onClose = onClose
     }
 
-    private var revealed: Int { presenter.revealed }
+    private var revealed: Int { max(0, presenter.revealed - onboardingHistory.count) }
     private var canPresent: Bool {
         isOnScreen && scenePhase == .active && isUncovered && !showStudySheet && !showDeckPicker
     }
@@ -43,7 +46,7 @@ struct MonsterChatView: View {
     var body: some View {
         MonsterConversationView(
             persona: session.persona,
-            messages: Array(session.messages.prefix(revealed)),
+            messages: Array((onboardingHistory + session.messages).prefix(presenter.revealed)),
             isTyping: canPresent && (presenter.isTyping || session.isThinking),
             replyTarget: replyTarget,
             isFinished: session.isFinished && revealed >= session.messages.count,
@@ -93,7 +96,7 @@ struct MonsterChatView: View {
                 onSelect: { _ in
                     let historyIDs = Set(session.isFinished ? [] : session.messages.map(\.id))
                     if session.switchToSelectedDeck() {
-                        presenter.restoreHistory(session.messages.filter { historyIDs.contains($0.id) })
+                        presenter.restoreHistory(onboardingHistory + session.messages.filter { historyIDs.contains($0.id) })
                         sheetInquiry = nil
                     }
                     showDeckPicker = false
@@ -109,6 +112,7 @@ struct MonsterChatView: View {
                 .presentationBackground(MonsterPalette.bg)
         }
         .onAppear {
+            if presenter.revealed == 0, !onboardingHistory.isEmpty { presenter.restoreHistory(onboardingHistory) }
             isOnScreen = true
             updatePresentation()
         }
@@ -125,7 +129,7 @@ struct MonsterChatView: View {
         // onAppear also runs under the lock cover. Scene activity alone isn't
         // visibility, and backgrounding does not necessarily call onDisappear.
         if canPresent { session.start() }
-        presenter.update(messages: session.messages, isVisible: canPresent)
+        presenter.update(messages: onboardingHistory + session.messages, isVisible: canPresent)
     }
 }
 
@@ -506,7 +510,7 @@ struct MonsterConversationView: View {
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Ask \(persona.name)").font(.caption.weight(.semibold))
-                            Text(inquiry.card.quizPrompt.text).font(.caption).lineLimit(2)
+                            Text(MonsterDisplayCopy.text(inquiry.card.quizPrompt.text)).font(.caption).lineLimit(2)
                         }
                         .foregroundStyle(MonsterPalette.textDim)
                         Spacer(minLength: 0)

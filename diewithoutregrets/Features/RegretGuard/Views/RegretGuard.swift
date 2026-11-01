@@ -17,7 +17,7 @@ struct RegretGuard: View {
     @EnvironmentObject var deckStore: DeckStore
     @ObservedObject private var guardManager = StudyGuardManager.shared
     @ObservedObject private var personaStore = PersonaStore.shared
-    @StateObject private var countdown = CountdownReplayModel()
+    @State private var countdown = CountdownReplayModel()
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
 
@@ -77,6 +77,7 @@ struct RegretGuard: View {
             }
             .onDisappear {
                 countdown.setVisible(false)
+                countdown.onSettled = nil
                 lockEntryTask?.cancel()
                 lockEntryTask = nil
             }
