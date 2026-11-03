@@ -71,7 +71,7 @@ struct RegretGuard: View {
                 countdown.setVisible(true)
                 guardManager.refresh()
                 if guardManager.state == .locked, lockRevealShownForCurrentGrant {
-                    NavigationModel.shared.beginMonsterLockEntry(grantStamp: currentGrantStamp, animated: false)
+                    NavigationModel.shared.beginAutomaticUnlockEntry(grantStamp: currentGrantStamp, animated: false)
                 }
                 syncCountdown()
             }
@@ -87,7 +87,7 @@ struct RegretGuard: View {
                 if newState != .locked {
                     lockEntryTask?.cancel()
                     lockEntryTask = nil
-                    NavigationModel.shared.resetAutomaticMonsterEntry()
+                    NavigationModel.shared.resetAutomaticUnlockEntry()
                 }
                 syncCountdown()
             }
@@ -606,9 +606,9 @@ struct RegretGuard: View {
         UserDefaults.standard.double(forKey: Self.lockRevealStampKey) == currentGrantStamp
     }
 
-    /// The zero countdown leads straight into the unlock chat. The padlock
+    /// The zero countdown leads straight into the selected unlock flow. The padlock
     /// "lock reveal" stamp (LockMomentOverlay) was removed because it
-    /// stuttered on entry, so the monster chat is presented directly, with
+    /// stuttered on entry, so the unlock flow is presented directly, with
     /// no covering animation and no intervening lock screen.
     private func scheduleLockRevealIfNeeded(settledMinutes: Int) {
         guard settledMinutes == 0, guardManager.state == .locked,
@@ -617,7 +617,7 @@ struct RegretGuard: View {
         lockEntryTask = Task { @MainActor in
             guard !Task.isCancelled, guardManager.state == .locked,
                   currentGrantStamp == stamp else { return }
-            if NavigationModel.shared.beginMonsterLockEntry(grantStamp: stamp, animated: false) {
+            if NavigationModel.shared.beginAutomaticUnlockEntry(grantStamp: stamp, animated: false) {
                 UserDefaults.standard.set(stamp, forKey: Self.lockRevealStampKey)
             }
             lockEntryTask = nil

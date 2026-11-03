@@ -36,10 +36,9 @@ struct diewithoutregretsApp: App {
         else if monsterArgs.contains("-sg-monster-willow") { PersonaStore.shared.select(.willow) }
         #endif
 
-        // Select chat before ContentView is constructed, so the first frame is
-        // the conversation rather than the red locked-home scene.
+        // Select the preferred unlock flow before ContentView is constructed.
         if Self.launchedFromFreshShieldTap {
-            NavigationModel.shared.openMonsterFromShield(returnDestination: nil)
+            NavigationModel.shared.openUnlockFromShield(returnDestination: nil)
             _showSplash = State(initialValue: false)
         }
     }
@@ -122,7 +121,7 @@ struct diewithoutregretsApp: App {
                 if url.scheme == "diewithoutregrets" && url.host == "unlock" {
                     StudyGuardManager.shared.reconcileOnForeground()
                     if StudyGuardManager.shared.state == .locked {
-                        navigationModel.openMonsterFromShield(returnDestination: nil)
+                        navigationModel.openUnlockFromShield(returnDestination: nil)
                     }
                 }
             }
@@ -184,17 +183,17 @@ struct diewithoutregretsApp: App {
     }
 
     /// Consume the cross-process request once. Warm launches route immediately;
-    /// cold launches already selected chat before the first frame.
+    /// cold launches already selected the preferred unlock flow before the first frame.
     private func consumeShieldTapIfFresh() {
         guard let defaults = SGContract.sharedDefaults,
               defaults.double(forKey: SGContract.Keys.shieldTapAt) > 0 else { return }
-        let opensChat = ShieldChatHandoff.consume(in: defaults)
+        let opensUnlock = ShieldChatHandoff.consume(in: defaults)
         let returnDestination = ShieldReturnContext.consumePending(in: defaults)
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [SGContract.lockNotificationID])
         center.removeDeliveredNotifications(withIdentifiers: [SGContract.lockNotificationID])
-        guard opensChat else { return }
+        guard opensUnlock else { return }
         showSplash = false
-        navigationModel.openMonsterFromShield(returnDestination: returnDestination)
+        navigationModel.openUnlockFromShield(returnDestination: returnDestination)
     }
 }

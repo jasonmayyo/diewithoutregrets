@@ -88,7 +88,7 @@ final class MonsterPresentationTests: XCTestCase {
         let messages: [MonsterMessage] = [
             .monster("Ready?"), .init(sender: .monster, kind: .card(card)),
             .user("light"), .init(sender: .monster, kind: .reveal(correct: true, answer: "light", why: nil)),
-            .monster("Exactly!", reaction: .delightedLaugh), .init(sender: .monster, kind: .grant(minutes: 1)),
+            .monster("Exactly!"), .init(sender: .monster, kind: .grant(minutes: 1)),
             .system("Round complete")
         ]
         presenter.update(messages: messages, isVisible: true)

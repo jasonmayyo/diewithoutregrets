@@ -1,0 +1,33 @@
+Test Suite 'StudyLinksTests' passed at 2026-11-02 10:58:25.330.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.050 (0.052) seconds
+Test Suite 'StudyStorageTests.xctest' passed at 2026-11-02 10:58:25.330.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.050 (0.053) seconds
+Test Suite 'All tests' passed at 2026-11-02 10:58:25.330.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.050 (0.057) seconds
+Test Suite 'FlashcardAPIClientTests' passed at 2026-11-02 10:58:26.110.
+	 Executed 13 tests, with 4 tests skipped and 0 failures (0 unexpected) in 0.202 (0.205) seconds
+Test Suite 'FlashcardTransportReliabilityTests' passed at 2026-11-02 10:58:26.479.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.366 (0.369) seconds
+Test Suite 'MonsterChatDeckSwitchTests' passed at 2026-11-02 10:58:26.489.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Suite 'MonsterDeckSelectionTests' passed at 2026-11-02 10:58:26.490.
+Test Suite 'MonsterOpeningTests' passed at 2026-11-02 10:58:26.722.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.231 (0.232) seconds
+Test Suite 'MonsterPeerVoiceTests' passed at 2026-11-02 10:58:26.918.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.195 (0.196) seconds
+Test Suite 'MonsterPresentationTests' passed at 2026-11-02 10:58:26.948.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.030 (0.031) seconds
+Test Suite 'MonsterReactionTests' passed at 2026-11-02 10:58:27.893.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.942 (0.944) seconds
+Test Suite 'MonsterSessionTests' passed at 2026-11-02 10:58:28.035.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.139 (0.142) seconds
+Test Suite 'MonsterStudySheetTests' passed at 2026-11-02 10:58:28.098.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.062 (0.063) seconds
+Test Suite 'StudyCalendarTests' passed at 2026-11-02 10:58:28.130.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.031 (0.033) seconds
+Test Suite 'StudyLinkSessionTests' passed at 2026-11-02 10:58:28.167.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.036 (0.037) seconds
+Test Suite 'StudyReliabilityTests.xctest' passed at 2026-11-02 10:58:28.167.
+	 Executed 99 tests, with 4 tests skipped and 0 failures (0 unexpected) in 2.243 (2.262) seconds
+Test Suite 'All tests' passed at 2026-11-02 10:58:28.167.
+	 Executed 99 tests, with 4 tests skipped and 0 failures (0 unexpected) in 2.243 (2.266) seconds

@@ -1,0 +1,8 @@
+{
+  "candidate": "2.0.7 (2)",
+  "ipa": "build/StudyGuard-2.0.7-2-export/diewithoutregrets.ipa",
+  "sha256": "164826d42807a1a41c1bac62d2f78bb84a4799824e89358254ad94adf2f17b43",
+  "appSourceChangedDuringFollowup": false,
+  "archiveVersionMediaPrivateAPIAndClientSecretRecheck": "passed",
+  "uploadPerformed": false
+}

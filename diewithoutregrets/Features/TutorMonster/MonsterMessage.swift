@@ -232,8 +232,8 @@ enum MonsterExpression: Int, CaseIterable {
 }
 
 /// The material behind this round, shown separately from spoken messages.
-struct MonsterStudySource: Identifiable, Equatable {
-    enum Kind: String { case pdf, notes, youtube, quizlet, deck }
+struct MonsterStudySource: Identifiable, Equatable, Codable {
+    enum Kind: String, Codable { case pdf, notes, youtube, quizlet, deck }
     let kind: Kind
     let title: String
     var id: String { kind.rawValue + ":" + title.lowercased() }
@@ -282,10 +282,10 @@ struct MonsterStudySource: Identifiable, Equatable {
 }
 
 /// One entry in the monster-chat transcript.
-struct MonsterMessage: Identifiable, Equatable {
-    enum Sender: Equatable { case monster, user, system }
+struct MonsterMessage: Identifiable, Equatable, Codable {
+    enum Sender: Equatable, Codable { case monster, user, system }
 
-    enum Kind: Equatable {
+    enum Kind: Equatable, Codable {
         /// A spoken line (monster, user echo, or a system note).
         case text(String)
         /// A flashcard the user must answer, rendered inline in the chat.
@@ -302,28 +302,24 @@ struct MonsterMessage: Identifiable, Equatable {
     let sender: Sender
     var kind: Kind
     let createdAt: Date
-    let reaction: MonsterReaction?
     let sources: [MonsterStudySource]
 
     init(id: UUID = UUID(), sender: Sender, kind: Kind, createdAt: Date = Date(),
-         reaction: MonsterReaction? = nil, sources: [MonsterStudySource] = []) {
+         sources: [MonsterStudySource] = []) {
         self.id = id
         self.sender = sender
         self.kind = kind
         self.createdAt = createdAt
         if sender == .monster, case .text = kind {
-            self.reaction = reaction
             self.sources = sources
         } else {
-            self.reaction = nil
             self.sources = []
         }
     }
 
     // Convenience builders for the common text lines.
-    static func monster(_ text: String, reaction: MonsterReaction? = nil,
-                        sources: [MonsterStudySource] = []) -> MonsterMessage {
-        .init(sender: .monster, kind: .text(text), reaction: reaction, sources: sources)
+    static func monster(_ text: String, sources: [MonsterStudySource] = []) -> MonsterMessage {
+        .init(sender: .monster, kind: .text(text), sources: sources)
     }
     static func user(_ text: String) -> MonsterMessage { .init(sender: .user, kind: .text(text)) }
     static func system(_ text: String) -> MonsterMessage { .init(sender: .system, kind: .text(text)) }

@@ -58,7 +58,7 @@ struct BuddyOnboardingCaptureView: View {
 
         switch phase {
         case .name:
-            model.buddySay(BuddyOnboardingCopy.greeting(model.buddyPersona), reaction: .awkwardWave)
+            model.buddySay(BuddyOnboardingCopy.greeting(model.buddyPersona))
         case .pronouns:
             reply("Alex")
             model.buddySay(BuddyOnboardingCopy.welcome(name: "Alex", persona: model.buddyPersona))

@@ -8,6 +8,13 @@ public enum NavigationDestination {
 
 public final class NavigationModel: ObservableObject {
     public static let shared = NavigationModel()
+    private let defaults: UserDefaults
+
+    /// Read at every entry so changing the Profile toggle takes effect without
+    /// restarting the app. Nil leaves the saved flashcard/True Focus choice in charge.
+    private var unlockEntryOverride: String? {
+        (defaults.object(forKey: "sg_monsterUnlock") as? Bool ?? true) ? "monster" : nil
+    }
 
     @Published public var currentDestination: NavigationDestination?
     @Published public var showBuyBackOffer: Bool = false
@@ -27,7 +34,7 @@ public final class NavigationModel: ObservableObject {
     /// ContentView owns the overlay so it survives the swap into chat.
     @Published public var isLockStampPlaying: Bool = false
     @Published private(set) var monsterLockAnimationID: UUID?
-    private var automaticallyOpenedMonsterGrant: Double?
+    private var automaticallyOpenedUnlockGrant: Double?
     /// One-shot tab-switch request (the Creator Toolkit uses it to land on
     /// the Guard tab so a staged lock or refill plays on camera).
     /// ContentView applies it to its tab selection and clears it.
@@ -81,44 +88,44 @@ public final class NavigationModel: ObservableObject {
     }
 
     /// Called before the first frame on cold launch and immediately on a warm
-    /// shield return. Bypass the locked-home reveal and any pending scene wipe.
-    func openMonsterFromShield(returnDestination: ShieldReturnDestination?, grantStamp: Double? = nil) {
+    /// shield return. Open the selected unlock flow without a pending scene wipe.
+    func openUnlockFromShield(returnDestination: ShieldReturnDestination?, grantStamp: Double? = nil) {
         activeWipe = nil
         wipeMidAction = nil
         monsterLockAnimationID = nil
         isLockStampPlaying = false
-        automaticallyOpenedMonsterGrant = grantStamp ?? SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt)
+        automaticallyOpenedUnlockGrant = grantStamp ?? SGContract.sharedDefaults?.double(forKey: SGContract.Keys.budgetGrantedAt)
         unlockReturnDestination = returnDestination
-        unlockMethodOverride = "monster"
+        unlockMethodOverride = unlockEntryOverride
         setDestination(.regretView)
     }
 
-    /// Manual home entry shares the guarded chat route without requiring a
-    /// shield tap or carrying a stale return-to-app destination into this chat.
-    func openMonsterFromHome() {
-        openMonsterFromShield(returnDestination: nil)
+    /// Manual home entry respects the same preference and clears any stale
+    /// return-to-app destination left over from a shield tap.
+    func openUnlockFromHome() {
+        openUnlockFromShield(returnDestination: nil)
     }
 
-    /// Enter once per allowance. Closing chat keeps Home usable instead of
+    /// Enter once per allowance. Closing the unlock flow keeps Home usable instead of
     /// immediately reopening it; a new allowance arms the next automatic entry.
     @discardableResult
-    func beginMonsterLockEntry(grantStamp: Double, animated: Bool) -> Bool {
+    func beginAutomaticUnlockEntry(grantStamp: Double, animated: Bool) -> Bool {
         guard currentDestination == nil, activeWipe == nil, !isLockStampPlaying,
-              automaticallyOpenedMonsterGrant != grantStamp else { return false }
-        automaticallyOpenedMonsterGrant = grantStamp
+              automaticallyOpenedUnlockGrant != grantStamp else { return false }
+        automaticallyOpenedUnlockGrant = grantStamp
         if animated {
             monsterLockAnimationID = UUID()
             isLockStampPlaying = true
         } else {
-            openMonsterFromShield(returnDestination: nil, grantStamp: grantStamp)
+            openUnlockFromShield(returnDestination: nil, grantStamp: grantStamp)
         }
         return true
     }
 
-    func revealMonsterAfterLock(animationID: UUID) {
+    func revealUnlockAfterLock(animationID: UUID) {
         guard monsterLockAnimationID == animationID, isLockStampPlaying else { return }
         unlockReturnDestination = nil
-        unlockMethodOverride = "monster"
+        unlockMethodOverride = unlockEntryOverride
         setDestination(.regretView)
     }
 
@@ -129,13 +136,14 @@ public final class NavigationModel: ObservableObject {
     }
 
     /// Debug replay or a guard reset can explicitly arm the same allowance.
-    func resetAutomaticMonsterEntry() {
-        automaticallyOpenedMonsterGrant = nil
+    func resetAutomaticUnlockEntry() {
+        automaticallyOpenedUnlockGrant = nil
         monsterLockAnimationID = nil
         isLockStampPlaying = false
     }
     
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         print("[NavigationModel] Initialized")
     }
     

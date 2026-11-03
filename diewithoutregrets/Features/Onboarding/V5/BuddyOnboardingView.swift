@@ -37,6 +37,8 @@ struct BuddyOnboardingChatView: View {
     @State private var draft = ""
     @State private var busy = false
     @State private var showUpload = false
+    @State private var showAIPrivacy = false
+    @State private var pendingTutorQuestion: String?
     @State private var inputSource: InputSource = .pdf
     @State private var showDeckPicker = false
     @State private var showDate = false
@@ -83,6 +85,12 @@ struct BuddyOnboardingChatView: View {
                     canSubmit: canReply, maximumLength: phase == .name ? 30 : phase == .pronouns ? 40 : phase == .practice ? 4000 : 500,
                     accessibilityName: placeholder)
                     .padding(.horizontal, 18).padding(.vertical, 10).background(MonsterPalette.bg)
+            }
+        }
+        .sheet(isPresented: $showAIPrivacy) {
+            TutorPrivacySheet {
+                if let question = pendingTutorQuestion { askTutor(question) }
+                pendingTutorQuestion = nil
             }
         }
         .sheet(isPresented: $showUpload, onDismiss: acceptUploadedDeck) { uploadSheet }
@@ -150,13 +158,7 @@ struct BuddyOnboardingChatView: View {
                 // Measured rows prevent height estimates from jumping during arrival.
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(Array(messages.prefix(presenter.revealed))) { message in
-                        VStack(alignment: .leading, spacing: 8) {
-                            MonsterTextBubble(text: message.text ?? "", sender: message.sender)
-                            if let reaction = message.reaction {
-                                MonsterReactionView(reaction: reaction, playbackEnabled: unobscured, viewportHeight: 900)
-                                    .padding(.leading, 4)
-                            }
-                        }
+                        MonsterTextBubble(text: message.text ?? "", sender: message.sender)
                         .modifier(MonsterMessageArrival(isUser: message.sender == .user,
                                                        animated: !restoredMessageIDs.contains(message.id)))
                         .id(message.id)
@@ -330,6 +332,11 @@ struct BuddyOnboardingChatView: View {
 
     private func askTutor(_ question: String) {
         guard canReply, let card = viewModel.buddy.practiceCard else { return }
+        guard TutorPrivacy.isAllowed() else {
+            pendingTutorQuestion = question
+            showAIPrivacy = true
+            return
+        }
         busy = true
         viewModel.buddySay(question, isUser: true)
         tutorTask = Task { @MainActor in
@@ -341,7 +348,7 @@ struct BuddyOnboardingChatView: View {
                 viewModel.buddySay(reply)
             } catch {
                 guard !Task.isCancelled else { return }
-                viewModel.buddySay("I can’t reach the live tutor right now. Here’s the saved explanation: \(card.backgroundExplanation.isEmpty ? card.correctAnswer : card.backgroundExplanation)")
+                viewModel.buddySay(MonsterSession.fallbackReply(for: card, error: error))
             }
         }
     }
@@ -390,7 +397,7 @@ struct BuddyOnboardingChatView: View {
             return
         }
         decks.selectDeck(deck)
-        if session == nil { session = MonsterSession(method: .inChat) }
+        if session == nil { session = MonsterSession(persistsProgress: true, method: .inChat) }
         showRound = true
     }
 

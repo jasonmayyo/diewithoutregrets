@@ -8,6 +8,7 @@ import { GateStore, generationLimits, scriptLimits, distractorLimits } from './s
 import { attest, assertRequest } from './attestation.js';
 
 import { callModel, generateFlashcards } from './generation.js';
+import { requireSafeText, requireRespectfulReply, responseText } from './safety.js';
 
 const paths = new Set(['/v1/challenge', '/v1/attest', '/v1/flashcards', '/v1/script', '/v1/distractors', '/v1/tutor']);
 
@@ -94,9 +95,12 @@ export class StudyGuardGate extends DurableObject {
     try {
       let result;
       if (isTutor) {
+        await requireSafeText(this.env, [body.card.prompt, body.card.answer, body.card.explanation,
+          body.question, ...(body.history || []).flatMap(turn => [turn.question, turn.reply])]);
         const { parsed } = await callModel(this.env, openAITutorBody(body), 15_000, 'tutor');
         result = validateTutorReply(parsed);
       } else if (isScript) {
+        await requireSafeText(this.env, JSON.stringify(body.context));
         const { parsed } = await callModel(this.env, openAIScriptBody(body.context), 30_000, 'script');
         console.log(JSON.stringify({ event: 'script_parsed' }));
         result = validateScript(parsed);
@@ -107,6 +111,12 @@ export class StudyGuardGate extends DurableObject {
       } else {
         // Document mode chunks + generates in parallel; topic mode is a single call.
         result = await generateFlashcards(this.env, body);
+      }
+      if (isTutor || isScript) {
+        const text = responseText(result);
+        text.forEach(requireRespectfulReply);
+        await requireSafeText(this.env, text);
+        result.safetyChecked = true;
       }
       return json(result);
     } catch (error) {

@@ -1,0 +1,100 @@
+Audit date: 2026-11-02 (Africa/Johannesburg)
+Source commit: 353e9c4
+No production application or backend source changed.
+
+Swift study and storage suites
+Test Suite 'All tests' started at 2026-11-02 09:15:28.098.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.111 (0.113) seconds
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.111 (0.113) seconds
+Test Suite 'All tests' passed at 2026-11-02 09:15:28.228.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.111 (0.130) seconds
+Test Suite 'All tests' started at 2026-11-02 09:15:28.965.
+	 Executed 11 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.101 (0.103) seconds
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.053 (0.055) seconds
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.802 (0.805) seconds
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.482 (0.482) seconds
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.085 (0.086) seconds
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.893 (0.896) seconds
+	 Executed 17 tests, with 0 failures (0 unexpected) in 0.051 (0.053) seconds
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.012 (0.012) seconds
+	 Executed 89 tests, with 2 tests skipped and 0 failures (0 unexpected) in 2.520 (2.537) seconds
+Test Suite 'All tests' passed at 2026-11-02 09:15:31.503.
+	 Executed 89 tests, with 2 tests skipped and 0 failures (0 unexpected) in 2.520 (2.538) seconds
+
+Shield suite
+Test Suite 'All tests' started at 2026-11-02 09:15:57.696.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.091 (0.097) seconds
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.046 (0.047) seconds
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.137 (0.144) seconds
+Test Suite 'All tests' passed at 2026-11-02 09:15:57.843.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.137 (0.147) seconds
+
+Countdown suite
+Test Suite 'All tests' started at 2026-11-02 09:14:01.682.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.065 (0.066) seconds
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.065 (0.066) seconds
+Test Suite 'All tests' passed at 2026-11-02 09:14:01.751.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.065 (0.070) seconds
+
+Backend integration
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+ℹ skipped 0
+
+Audit characterization probes
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.022 (0.022) seconds
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.022 (0.022) seconds
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.022 (0.023) seconds
+
+iOS simulator suite
+Client secret check passed: public endpoint configured; no OpenAI key found.
+Test Suite 'All tests' started at 2026-11-02 09:19:50.014.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.061 (0.067) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.052 (0.053) seconds
+	 Executed 11 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.113 (0.117) seconds
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.060 (0.063) seconds
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.088 (0.096) seconds
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.020 (0.024) seconds
+	 Executed 31 tests, with 0 failures (0 unexpected) in 2.422 (2.470) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.016 (0.017) seconds
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.135 (0.154) seconds
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.068 (0.106) seconds
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.014 (0.016) seconds
+/Users/jasonmayo/Desktop/diewithoutregrets/diewithoutregretsTests/StudyGuardEngineTests.swift:430: error: -[diewithoutregretsTests.TutorMonsterFoundationTests testPersonaStoreDefaultsToFallbackAndPersists] : XCTAssertEqual failed: ("diva") is not equal to ("willow")
+	 Executed 20 tests, with 1 failure (0 unexpected) in 0.102 (0.108) seconds
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.080 (0.084) seconds
+	 Executed 175 tests, with 2 tests skipped and 1 failure (0 unexpected) in 3.231 (3.379) seconds
+Test Suite 'All tests' failed at 2026-11-02 09:19:53.394.
+	 Executed 175 tests, with 2 tests skipped and 1 failure (0 unexpected) in 3.231 (3.380) seconds
+** TEST FAILED **
+
+Unsigned Release build
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+warning: The CFBundleVersion of an app extension ('66') must match that of its containing parent app ('1').
+Client secret check passed: public endpoint configured; no OpenAI key found.
+** BUILD SUCCEEDED **
+
+Built Release bundle versions
+diewithoutregrets.app: 2.0.7 (1)
+MonsterWidgetExtension.appex: 2.0.6 (66)
+StudyGuardShieldAction.appex: 2.0.6 (66)
+StudyGuardShield.appex: 2.0.6 (66)
+StudyGuardMonitor.appex: 2.0.6 (66)
+
+Backend unit/security tests: 26 passed; 0 failed.
+Live GET /health: HTTP 200, {"service":"studyguard-ai","enabled":true}. No provider call.
+Public privacy policy: HTTP 200; no mention of OpenAI or tutor-specific sharing in retrieved text.
+Response-safety probe: {"tutorAcceptsDemeaningReply":true,"scriptAcceptsDemeaningReaction":true}
+
+The temporary unsigned build directory was removed after verification to reclaim disk space.

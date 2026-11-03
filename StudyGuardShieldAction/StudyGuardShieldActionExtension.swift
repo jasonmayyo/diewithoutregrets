@@ -2,20 +2,8 @@
 //  StudyGuardShieldActionExtension.swift
 //  StudyGuardShieldAction
 //
-//  Handles taps on the shield's "Ask [monster] for permission" button. Deliberately MINIMAL:
-//  on tap it records the matching return-app context and stamps sg_shieldTapAt
-//  (so the app lands straight in monster chat when it foregrounds), then
-//  directly opens Study Guard via PrivateAppLauncher,
-//  then returns .none. NOTHING else runs here — no notifications, no safety
-//  net, no analytics, no logging.
-//
-//  Why so bare: any work before completionHandler delays it, and the system
-//  holds the app's foreground until the handler returns. In particular,
-//  touching UNUserNotificationCenter from this restricted sandbox can block for
-//  ~10s while it sets up its XPC connection — which stalled the open. Keeping
-//  the hot path to stamp + launch + completionHandler makes the open as fast
-//  as this mechanism allows.
-//
+// Records the handoff before asking iOS to open Study Guard. Older iOS
+// versions close the blocked app; shield copy explains the manual route.
 
 import Foundation
 import ManagedSettings
@@ -52,22 +40,11 @@ final class StudyGuardShieldActionExtension: ShieldActionDelegate {
             SGContract.recordGateEncounter(defaults)
             defaults?.synchronize()
 
-            // Fire the open on a background thread, then hand the response back
-            // immediately. The private open is a SYNCHRONOUS XPC round-trip to
-            // LaunchServices that can park its thread for seconds; run inline it
-            // would gate completionHandler and the system would hold the app's
-            // foreground until it returned — the ~10s stall (the launch parks
-            // until it trips the 10s extension watchdog). Dispatching it
-            // off-thread BEFORE returning lets the launch fly while the system
-            // foregrounds the app without waiting on lsd.
-            //
-            // `.none`, not `.close`: `.close` means "close the current app / go
-            // home" and would bounce us; `.none` issues no competing navigation,
-            // so the launch is the sole focus directive and the app stays put.
-            DispatchQueue.global(qos: .userInitiated).async {
-                PrivateAppLauncher.launch(bundleID: SGContract.hostBundleID)
+            if #available(iOS 26.5, *) {
+                completionHandler(.openParentalControlsApp)
+            } else {
+                completionHandler(.close)
             }
-            completionHandler(.none)
 
         case .secondaryButtonPressed:
             completionHandler(.close)

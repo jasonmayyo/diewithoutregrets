@@ -16,8 +16,7 @@ struct ContentView: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @AppStorage("unlockMethod") private var unlockMethod: String = "flashcards"
     @AppStorage("focusDuration") private var focusDuration: Int = 5
-    /// Normal study entries respect this preference. A personalized shield tap
-    /// explicitly requests its monster and overrides the legacy quiz preference.
+    /// All unlock entries respect the Profile preference, including shield taps.
     @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
 
     init() {
@@ -67,6 +66,16 @@ struct ContentView: View {
         // directly to the root Group recreates it when Home becomes chat.
         ZStack {
             rootSwitch
+                .safeAreaInset(edge: .top) {
+                    if guardManager.pendingGrantMinutes > 0 {
+                        VStack(spacing: 6) {
+                            Text("Your earned time is saved. Apps stay locked until Screen Time monitoring starts.").font(.caption)
+                            Button("Retry saved time (\(guardManager.pendingGrantMinutes) min)") {
+                                _ = guardManager.retryPendingGrant()
+                            }.font(.callout.weight(.semibold))
+                        }.padding().frame(maxWidth: .infinity).background(.regularMaterial)
+                    }
+                }
                 .accessibilityHidden(navigationModel.isLockStampPlaying)
         }
             // The scene-crossing fade rides ABOVE the root switch: a scrim
@@ -89,10 +98,10 @@ struct ContentView: View {
                     LockMomentOverlay(
                         onCovered: {
                             guard StudyGuardManager.shared.state == .locked else {
-                                navigationModel.resetAutomaticMonsterEntry()
+                                navigationModel.resetAutomaticUnlockEntry()
                                 return
                             }
-                            navigationModel.revealMonsterAfterLock(animationID: animationID)
+                            navigationModel.revealUnlockAfterLock(animationID: animationID)
                         },
                         onFinished: {
                             navigationModel.finishMonsterLockAnimation(animationID: animationID)
@@ -121,9 +130,13 @@ struct ContentView: View {
     private var homeUnlockBar: some View {
         HStack(spacing: 12) {
             SGButton(title: "Unlock apps", icon: "lock.open.fill", variant: .alarm) {
-                NavigationModel.shared.openMonsterFromHome()
+                navigationModel.openUnlockFromHome()
             }
-            .accessibilityHint("Ask your monster for permission by answering flashcards")
+            .accessibilityHint(monsterUnlockEnabled
+                ? "Ask your monster for permission by answering flashcards"
+                : unlockMethod == "trueFocus"
+                    ? "Complete a focus session to unlock your apps"
+                    : "Answer flashcards to unlock your apps")
             if guardManager.state == .locked {
                 Button {
                     guardManager.refresh()
@@ -159,11 +172,10 @@ struct ContentView: View {
                             NavigationModel.shared.returnHome()
                         }
                     )
-                } else if navigationModel.unlockMethodOverride == "monster"
-                            || monsterUnlockEnabled {
+                } else if monsterUnlockEnabled {
                     // Chat also handles an empty deck with local guidance.
                     // Missing study material must not silently select the old flow.
-                    MonsterChatView(session: MonsterSession(),
+                    MonsterChatView(session: MonsterSession(persistsProgress: true),
                         isUncovered: !navigationModel.isLockStampPlaying
                             && navigationModel.activeWipe == nil
                             && !navigationModel.showBuyBackOffer)

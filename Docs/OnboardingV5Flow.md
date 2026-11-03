@@ -22,7 +22,7 @@ Round 1 replaces the original priority question with separate study-level and ex
 
 ## Round 1 — 20 October 2026
 
-- **01 / 800:** “Scroll Less. Study More.” uses the original bundled `mockupvideo.mp4` from Study Guard's earlier onboarding. The video loops silently and pauses when inactive or Reduce Motion is enabled.
+- **01 / 800:** “Scroll Less. Study More.” uses a text-only introduction to choosing apps, answering flashcards and earning screen time. The legacy recording and its asset-catalog copy are removed.
 - **02 / 813:** Biology (10 correct flashcards) earns 5 minutes; Criminal Law (20 correct flashcards) earns 10. Rewards use `SGContract.defaultPerCardSeconds`, currently 30 seconds per correct card. The 22 October pacing update shortens the pause between the two count animations from 1.9 seconds to 0.3 seconds and keeps their shared headline visible during the handoff.
 - **03 / 803:** Required study level (high school, college/university, postgraduate, professional exams).
 - **06 / 806:** An automatic visual demo inspired by the earlier Study Guard onboarding (`AIFlashcardDemo`, commit `7a2e2b6`): a scanning note sheet → animated card stack → automatic answer flip. Copy is reduced to “Your notes. Instant flashcards.” and “Less prep. More studying.” Continue is always available and advances immediately. The loop pauses when inactive, cancels on navigation, and shows a static finished card with Reduce Motion. It does not call the generation service or create a real deck.

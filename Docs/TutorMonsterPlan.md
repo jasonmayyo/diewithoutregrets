@@ -49,7 +49,7 @@ Four things make this more than a reskin of the quiz:
   no floor). The grant is `StudyGuardManager.grantFreshBudget(...)`, the only exit from
   `.locked`. The monster **wraps** this; we do not rebuild it.
 - **Unlock routing.** Shield "Study to unlock" → `StudyGuardShieldActionExtension` →
-  `PrivateAppLauncher` opens the host → `diewithoutregretsApp.consumeShieldTapIfFresh()`
+  the public `.openParentalControlsApp` response opens the host on iOS 26.5+ (older systems explain a manual Home Screen handoff) → `diewithoutregretsApp.consumeShieldTapIfFresh()`
   navigates to `.regretView` with `unlockMethodOverride = "flashcards"`. Deep link
   `diewithoutregrets://unlock` and the lock notification converge on the same screen.
   120s honor window. We land the monster chat on these existing rails.
@@ -108,7 +108,7 @@ counter the app owns to drive the monster's mood (see §6g).
 
 ```
 [Blocked app tapped]
-     → Shield "Study to unlock"  (existing ShieldAction + PrivateAppLauncher)
+     → Shield "Study to unlock"  (ShieldAction public handoff on iOS 26.5+, manual handoff on older iOS)
      → Host opens on MonsterChatView  (replaces bare QuizV2View at the .regretView route)
 
 1. GREET / INTERROGATE  (live AI, scripted fallback)
@@ -345,7 +345,7 @@ Still open / next:
 - Economy / grant: `Shared/SGContract.swift`, `Features/StudyGuard/Services/StudyGuardManager.swift`.
 - Card / deck / mastery + topic: `Features/RegretGuard/Models/RegretGuardApps.swift`, `.../RegretStore.swift`.
 - Current quiz (what the monster wraps): `Features/RegretGuard/Views/QuizV2View.swift` (+ `QuizV2Kit`, `QuizV2Coins`, `QuizV2StreakView`).
-- Unlock routing / landing: `diewithoutregretsApp.swift`, `StudyGuardShieldAction/StudyGuardShieldActionExtension.swift` + `PrivateAppLauncher.swift`, `Shared/ShieldReturnContext.swift`, `DesignSystem/UnlockAppReturn.swift`.
+- Unlock routing / landing: `diewithoutregretsApp.swift`, `StudyGuardShieldAction/StudyGuardShieldActionExtension.swift`, `Shared/ShieldReturnContext.swift`, `DesignSystem/UnlockAppReturn.swift`.
 - Gate-encounter counters: `StudyGuardShield/StudyGuardShieldExtension.swift`, `StudyGuardShieldAction/…`, keyed via `SGContract`.
 - Exam model today: `Features/Onboarding/V5/V5OnboardingProfile.swift`, `.../SGV5FlowModel.swift` (`sg_onbExamDate`).
 - Mascot / poses / mood: `DesignSystem/MascotView.swift`, `MonsterActivityManager.swift`, `mascot-animations/`, `Assets.xcassets`.

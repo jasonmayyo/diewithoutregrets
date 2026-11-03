@@ -1,6 +1,6 @@
 import Foundation
 
-/// A shield tap is a one-use, short-lived request to open the monster directly.
+/// A shield tap is a one-use, short-lived request to open the selected unlock flow.
 /// Peek during cold-launch setup; consume on activation. Neither path grants time.
 enum ShieldChatHandoff {
     static func isFresh(in defaults: UserDefaults?, now: Date = Date()) -> Bool {

@@ -1,0 +1,5 @@
+Test Case '-[diewithoutregretsTests.FlashcardAPIClientTests testLiveProductionTutorSafetyMatrix]' passed (18.852 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.852 (18.853) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.852 (18.854) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 18.852 (18.855) seconds
+** TEST EXECUTE SUCCEEDED **

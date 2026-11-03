@@ -15,6 +15,8 @@ struct MonsterChatView: View {
     @State private var isOnScreen = false
     @State private var showStudySheet = false
     @State private var showDeckPicker = false
+    @State private var showAIPrivacy = false
+    @State private var pendingTutorQuestion: (UUID, String)?
     @State private var sheetInquiry: MonsterReplyTarget?
 
     private let onClose: () -> Void
@@ -33,7 +35,7 @@ struct MonsterChatView: View {
 
     private var revealed: Int { max(0, presenter.revealed - onboardingHistory.count) }
     private var canPresent: Bool {
-        isOnScreen && scenePhase == .active && isUncovered && !showStudySheet && !showDeckPicker
+        isOnScreen && scenePhase == .active && isUncovered && !showStudySheet && !showDeckPicker && !showAIPrivacy
     }
 
     private var replyTarget: MonsterReplyTarget? {
@@ -67,8 +69,10 @@ struct MonsterChatView: View {
                 session.answer(typed: text)
             },
             isResponding: revealed < session.messages.count || session.isThinking,
-            mediaPlaybackEnabled: canPresent,
-            onAsk: { messageID, text in session.ask(text, about: messageID) },
+            onAsk: { messageID, text in
+                if TutorPrivacy.isAllowed() { session.ask(text, about: messageID) }
+                else { pendingTutorQuestion = (messageID, text); showAIPrivacy = true }
+            },
             studyRound: session.studyRound,
             canClaimStudyTime: session.studySheetState == .readyToUnlock || session.studySheetState == .finished,
             projectedStudyMinutes: session.studyProjectedMinutes,
@@ -88,6 +92,13 @@ struct MonsterChatView: View {
             onChooseDeck: { showDeckPicker = true }
         )
         .id(session.roundID)
+        .sheet(isPresented: $showAIPrivacy, onDismiss: { pendingTutorQuestion = nil }) {
+            TutorPrivacySheet {
+                if let pending = pendingTutorQuestion { session.ask(pending.1, about: pending.0) }
+                pendingTutorQuestion = nil
+            }
+            .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showDeckPicker, onDismiss: { updatePresentation() }) {
             DeckPickerSheet(
                 subtitle: session.isFinished ? "Choose a deck to start a new round here."
@@ -152,7 +163,6 @@ struct MonsterConversationView: View {
     let onTyped: (UUID, String) -> Void
     /// Includes the quiet reading beat between typing bubbles.
     var isResponding = false
-    var mediaPlaybackEnabled = true
     var onAsk: (UUID, String) -> Void = { _, _ in }
     var studyRound: MonsterStudyRound? = nil
     var canClaimStudyTime = false
@@ -168,19 +178,9 @@ struct MonsterConversationView: View {
     @State private var draft = ""
     @State private var inquiryTarget: MonsterReplyTarget?
     @State private var showAnswerChoices = true
-    @State private var displayedAllowance = 0
-    @State private var coinsBanked = 0
-    @State private var flyingCoins: [QV2CoinModel] = []
-    @State private var landedCoinIDs: Set<Int> = []
-    @State private var rewardSerial = 0
-    @State private var handledRewardIDs: Set<UUID> = []
-    @State private var pendingRewards: [MonsterAnswerReward] = []
-    @State private var rewardTask: Task<Void, Never>?
-    @State private var rewardStart = 0
-    @State private var rewardTarget = 0
-    @State private var chipFrame: CGRect = .zero
-    @State private var answerFrame: CGRect = .zero
-    @State private var flightOrigin: CGRect = .zero
+    private var displayedAllowance: Int {
+        hasSettled ? max(0, allowanceSeconds) : (pendingStudySeconds ?? answerRewards.last?.totalSeconds ?? 0)
+    }
     @State private var scrollTask: Task<Void, Never>?
     @State private var followingLatest = true
     @State private var draggingTranscript = false
@@ -198,15 +198,7 @@ struct MonsterConversationView: View {
         isFinished || messages.contains(where: { if case .grant = $0.kind { return true }; return false })
     }
 
-    private var isCelebrating: Bool {
-        rewardTask != nil || !pendingRewards.isEmpty || !flyingCoins.isEmpty
-    }
-
-    private var showingEarnings: Bool { !hasSettled || isCelebrating }
-
-    private var latestUserMessageID: UUID? {
-        messages.last(where: { $0.sender == .user })?.id
-    }
+    private var showingEarnings: Bool { !hasSettled }
 
     /// Keep the question identity for context, independently of whether
     /// its answer controls are still available.
@@ -222,18 +214,6 @@ struct MonsterConversationView: View {
         }
         .background(MonsterPalette.bg.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) { replyBar }
-        .overlay {
-            QV2CoinFlightOverlay(coins: flyingCoins, spawnFrame: flightOrigin,
-                                 targetFrame: chipFrame, onLand: bankCoin)
-                .accessibilityHidden(true)
-        }
-        .onAppear {
-            // Restore a transcript's earnings without replaying old answers.
-            handledRewardIDs = Set(answerRewards.map(\.id))
-            settleReward()
-        }
-        .onChange(of: answerRewards) { _, rewards in celebrateAnswers(rewards) }
-        .onChange(of: pendingStudySeconds) { _, _ in reconcileCounterIfIdle() }
         .onChange(of: requestedInquiry?.messageID) { _, _ in
             inquiryTarget = requestedInquiry
             draft = ""
@@ -243,17 +223,7 @@ struct MonsterConversationView: View {
             inquiryTarget = nil
             showAnswerChoices = true
         }
-        .onChange(of: hasSettled) { _, _ in reconcileCounterIfIdle() }
-        .onChange(of: allowanceSeconds) { _, _ in
-            reconcileCounterIfIdle()
-        }
-        .onChange(of: reduceMotion) { _, reduced in
-            if reduced { settleReward() }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            if phase != .active { settleReward() }
-        }
-        .onDisappear { settleReward(); scrollTask?.cancel() }
+        .onDisappear { scrollTask?.cancel() }
         .onChange(of: presentedQuestion?.messageID) { oldID, _ in
             // Keep a draft started during the introduction for the first typed
             // question. Later questions must not inherit a previous answer.
@@ -275,8 +245,7 @@ struct MonsterConversationView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Close chat")
             MonsterAvatarHeader(persona: persona, deckName: deckName, onChooseDeck: onChooseDeck)
-            MonsterAllowanceChip(seconds: displayedAllowance, bump: coinsBanked, isEarning: showingEarnings)
-                .background(QV2GlobalFrameReader { chipFrame = $0 })
+            MonsterAllowanceChip(seconds: displayedAllowance, isEarning: showingEarnings)
                 .layoutPriority(1)
         }
         // Keep the compact contact header readable; the transcript and reply
@@ -299,9 +268,6 @@ struct MonsterConversationView: View {
                         row(message, endsGroup: endsGroup(at: index),
                             sources: index > 0 ? messages[index - 1].sources : [])
                             .background {
-                                if message.id == latestUserMessageID {
-                                    QV2GlobalFrameReader { answerFrame = $0 }
-                                }
                                 if message.id == messages.last?.id {
                                     GeometryReader { geometry in
                                         Color.clear.preference(key: MonsterLatestRowHeight.self,
@@ -394,13 +360,7 @@ struct MonsterConversationView: View {
                      sources: [MonsterStudySource]) -> some View {
         switch message.kind {
         case let .text(text):
-            VStack(alignment: .leading, spacing: 8) {
-                MonsterTextBubble(text: text, sender: message.sender, endsGroup: endsGroup)
-                if let reaction = message.reaction {
-                    MonsterReactionView(reaction: reaction, playbackEnabled: mediaPlaybackEnabled,
-                                        viewportHeight: transcriptHeight)
-                }
-            }
+            MonsterTextBubble(text: text, sender: message.sender, endsGroup: endsGroup)
         case let .card(card):
             let priorCards = messages.prefix(while: { $0.id != message.id }).compactMap(\.card)
             let uniqueIDs = priorCards.reduce(into: [UUID]()) { ids, card in
@@ -613,71 +573,7 @@ struct MonsterConversationView: View {
         }
     }
 
-    /// Each newly visible correct verdict earns one flock. Queue fast answers so
-    /// a later answer cannot cancel an earlier flight or lose its displayed time.
-    private func celebrateAnswers(_ rewards: [MonsterAnswerReward]) {
-        for reward in rewards where handledRewardIDs.insert(reward.id).inserted {
-            pendingRewards.append(reward)
-        }
-        guard !reduceMotion, scenePhase == .active else {
-            settleReward()
-            return
-        }
-        startNextReward()
-    }
 
-    private func startNextReward() {
-        guard rewardTask == nil, flyingCoins.isEmpty else { return }
-        guard !pendingRewards.isEmpty else { reconcileCounterIfIdle(); return }
-        let reward = pendingRewards.removeFirst()
-        rewardTask = Task { @MainActor in
-            // Let the user's answer bubble lay out and scroll into view first.
-            try? await Task.sleep(nanoseconds: 180_000_000)
-            guard !Task.isCancelled else { return }
-            rewardStart = displayedAllowance
-            rewardTarget = reward.totalSeconds
-            flightOrigin = answerFrame
-            rewardSerial += 1
-            landedCoinIDs = []
-            flyingCoins = QV2CoinModel.flock(of: 6, serial: rewardSerial)
-            rewardTask = nil
-        }
-    }
-
-    private func bankCoin(_ coin: QV2CoinModel) {
-        guard flyingCoins.contains(where: { $0.id == coin.id }),
-              landedCoinIDs.insert(coin.id).inserted else { return }
-        let landed = landedCoinIDs.count
-        QuizHaptics.coinLand(progress: Double(landed) / Double(coin.flockSize))
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-            // Retain fractional slices on the final coin so every correct
-            // answer contributes exactly the session's frozen per-card rate.
-            displayedAllowance = rewardStart + (rewardTarget - rewardStart) * landed / coin.flockSize
-            coinsBanked += 1
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            flyingCoins.removeAll { $0.id == coin.id }
-            if flyingCoins.isEmpty { startNextReward() }
-        }
-    }
-
-    private func reconcileCounterIfIdle() {
-        guard !isCelebrating else { return }
-        // The final grant replaces the pending total, including minute rounding.
-        // It never spawns another flock or adds the same earnings a second time.
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
-            displayedAllowance = hasSettled ? max(0, allowanceSeconds) : (pendingStudySeconds ?? answerRewards.last?.totalSeconds ?? 0)
-        }
-    }
-
-    private func settleReward() {
-        rewardTask?.cancel()
-        rewardTask = nil
-        flyingCoins = []
-        pendingRewards = []
-        landedCoinIDs = []
-        displayedAllowance = hasSettled ? max(0, allowanceSeconds) : (pendingStudySeconds ?? answerRewards.last?.totalSeconds ?? 0)
-    }
 }
 
 private struct MonsterTranscriptScrollRequest: Equatable {

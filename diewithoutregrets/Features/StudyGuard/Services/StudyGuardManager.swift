@@ -36,6 +36,7 @@ final class StudyGuardManager: ObservableObject {
     @Published private(set) var emergencyUnlocksRemaining: Int = SGContract.emergencyUnlocksPerWeek
     @Published private(set) var nextEmergencyUnlockDate: Date?
     @Published private(set) var needsReauth: Bool = false
+    @Published private(set) var pendingGrantMinutes: Int = 0
 
     var isSetupComplete: Bool { state != .notSetUp }
 
@@ -71,6 +72,7 @@ final class StudyGuardManager: ObservableObject {
         emergencyUnlocksRemaining = EmergencyLedger.remaining(ledger)
         nextEmergencyUnlockDate = EmergencyLedger.nextAvailableDate(ledger)
         needsReauth = d.bool(forKey: SGContract.Keys.needsReauth)
+        pendingGrantMinutes = BudgetGrantLedger.pending(in: d).reduce(0) { $0 + $1.minutes }
     }
 
     // MARK: - Authorization
@@ -155,43 +157,77 @@ final class StudyGuardManager: ObservableObject {
     /// every non-quiz grant (focus, emergency, re-enable, setup, debug).
     /// Quiz unlocks go through `grantEarnedBudget`, which computes the
     /// per-card earned amount and passes it here.
-    func grantFreshBudget(reason: GrantReason, minutes: Int? = nil, analyticsContext: [String: String] = [:]) {
-        guard let d = defaults else { return }
-        let granted = minutes ?? effectiveInterval(d)
-        writeFreshBudgetKeys(d, minutes: granted)
-        // Publish the grant before removing the shield. A monitor callback in
-        // between these operations must see the new budget, not reapply the
-        // old lock just as the user tries to return to their app.
-        d.synchronize()
-        let notifications = UNUserNotificationCenter.current()
-        notifications.removePendingNotificationRequests(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
-        notifications.removeDeliveredNotifications(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
-        store.clearAllSettings()
-        _ = restartMonitoring(thresholdMinutes: granted)
-        var properties = [
-            "source": reason.rawValue,
-            "interval_minutes": String(effectiveInterval(d)),
-            "granted_minutes": String(granted),
-        ]
-        analyticsContext.forEach { properties[$0.key] = $0.value }
-        SGContract.enqueueAnalyticsEvent(d, name: "budget_granted", properties: properties)
-        d.synchronize()
+    @discardableResult
+    func grantFreshBudget(reason: GrantReason, minutes: Int? = nil, analyticsContext: [String: String] = [:],
+                          grantID: UUID = UUID()) -> Bool {
+        guard let d = defaults else { return false }
+        // The budget commit marker is persisted before shields are removed.
+        // If the app died before acknowledging its pending reward, recover the
+        // existing budget without resetting usage or spending another emergency.
+        if d.string(forKey: "sg_committedBudgetGrantID") == grantID.uuidString {
+            reconcileOnForeground()
+            BudgetGrantLedger.acknowledge(grantID, defaults: d)
+            refresh()
+            return true
+        }
+        let granted = min(SGContract.maxEarnedMinutes, max(1, minutes ?? effectiveInterval(d)))
+        let reward = PendingBudgetGrant(id: grantID, minutes: granted, reason: reason)
+        let success = BudgetGrantLedger.attempt(reward, defaults: d, start: {
+            guard AuthorizationCenter.shared.authorizationStatus == .approved else { return false }
+            // Keep shields in place until registration succeeds. Budget fields
+            // are published before registration so callbacks see this reward.
+            writeFreshBudgetKeys(d, minutes: granted, pending: true)
+            d.synchronize()
+            return restartMonitoring(thresholdMinutes: granted)
+        }, commit: {
+            d.set(SGContract.StateValue.metering, forKey: SGContract.Keys.state)
+            d.removeObject(forKey: SGContract.Keys.lockedAt)
+            if reason == .emergency {
+                var ledger = EmergencyLedger.prune(EmergencyLedger.load(from: d))
+                ledger.append(Date().timeIntervalSince1970)
+                EmergencyLedger.save(ledger, to: d)
+            }
+            var properties = ["source": reason.rawValue,
+                "interval_minutes": String(effectiveInterval(d)), "granted_minutes": String(granted)]
+            analyticsContext.forEach { properties[$0.key] = $0.value }
+            SGContract.enqueueAnalyticsEvent(d, name: "budget_granted", properties: properties)
+            d.set(grantID.uuidString, forKey: "sg_committedBudgetGrantID")
+            d.synchronize()
+            store.clearAllSettings()
+            let notifications = UNUserNotificationCenter.current()
+            notifications.removePendingNotificationRequests(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
+            notifications.removeDeliveredNotifications(withIdentifiers: [SGContract.warningNotificationID, SGContract.lockNotificationID])
+        }, fail: {
+            SGContract.beginMonitoringGeneration(d)
+            d.set(SGContract.StateValue.locked, forKey: SGContract.Keys.state)
+            d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.lockedAt)
+            d.set(d.double(forKey: SGContract.Keys.budgetTotalSeconds), forKey: SGContract.Keys.budgetUsedSeconds)
+            d.synchronize()
+            applyShieldsFromStoredSelection()
+        })
         refresh()
+        return success
+    }
+
+    @discardableResult
+    func retryPendingGrant() -> Bool {
+        guard let d = defaults, let reward = BudgetGrantLedger.pending(in: d).first else { return false }
+        return grantFreshBudget(reason: reward.reason, minutes: reward.minutes, grantID: reward.id)
     }
 
     /// A completed quiz grants time for every correct answer, rounded up to
     /// whole minutes. Zero earnings and unfinished quizzes never clear shields.
     /// Returns the granted minutes so callers can show the real number.
     @discardableResult
-    func grantEarnedBudget(results: [Bool?], perCardSeconds rate: Int) -> Int {
+    func grantEarnedBudget(results: [Bool?], perCardSeconds rate: Int, grantID: UUID = UUID()) -> Int {
         let minutes = SGContract.completedQuizMinutes(results: results, perCardSeconds: rate)
         guard minutes > 0, defaults != nil else { return 0 }
-        grantFreshBudget(reason: .quiz, minutes: minutes, analyticsContext: [
+        let granted = grantFreshBudget(reason: .quiz, minutes: minutes, analyticsContext: [
             "card_count": String(results.count),
             "correct_count": String(results.filter { $0 == true }.count),
             "per_card_seconds": String(rate),
-        ])
-        return minutes
+        ], grantID: grantID)
+        return granted ? minutes : 0
     }
 
     /// Per-card earn rate for display (the quiz chip, settings copy).
@@ -206,20 +242,16 @@ final class StudyGuardManager: ObservableObject {
     @discardableResult
     func useEmergencyUnlock() -> Bool {
         guard let d = defaults else { return false }
-        var ledger = EmergencyLedger.prune(EmergencyLedger.load(from: d))
+        let ledger = EmergencyLedger.prune(EmergencyLedger.load(from: d))
+        if let pending = BudgetGrantLedger.pending(in: d).first(where: { $0.reason == .emergency }) {
+            return grantFreshBudget(reason: .emergency, minutes: pending.minutes, grantID: pending.id)
+        }
         guard ledger.count < SGContract.emergencyUnlocksPerWeek else {
             SGContract.enqueueAnalyticsEvent(d, name: "emergency_unlock_blocked", properties: ["reason": "exhausted"])
             refresh()
             return false
         }
-        ledger.append(Date().timeIntervalSince1970)
-        EmergencyLedger.save(ledger, to: d)
-        SGContract.enqueueAnalyticsEvent(d, name: "emergency_unlock_used", properties: [
-            "used_this_week": String(ledger.count),
-            "remaining_after": String(SGContract.emergencyUnlocksPerWeek - ledger.count),
-        ])
-        grantFreshBudget(reason: .emergency)
-        return true
+        return grantFreshBudget(reason: .emergency)
     }
 
     // MARK: - Settings
@@ -241,8 +273,7 @@ final class StudyGuardManager: ObservableObject {
             return true
         } else {
             d.set(true, forKey: SGContract.Keys.guardEnabled)
-            grantFreshBudget(reason: .enabled)
-            return true
+            return grantFreshBudget(reason: .enabled)
         }
     }
 
@@ -423,7 +454,7 @@ final class StudyGuardManager: ObservableObject {
         return n > 0 ? n : SGContract.defaultIntervalMinutes
     }
 
-    private func writeFreshBudgetKeys(_ d: UserDefaults, minutes n: Int) {
+    private func writeFreshBudgetKeys(_ d: UserDefaults, minutes n: Int, pending: Bool = false) {
         // Invalidate queued events before changing any budget fields.
         SGContract.beginMonitoringGeneration(d)
         d.synchronize()
@@ -433,7 +464,7 @@ final class StudyGuardManager: ObservableObject {
         d.set(false, forKey: SGContract.Keys.warnedThisBudget)
         d.removeObject(forKey: SGContract.Keys.lockedAt)
         // Publish the metering state only after its allowance is populated.
-        d.set(SGContract.StateValue.metering, forKey: SGContract.Keys.state)
+        d.set(pending ? SGContract.StateValue.locked : SGContract.StateValue.metering, forKey: SGContract.Keys.state)
     }
 
     /// Stop + start with fresh events (the only reliable threshold reset).
@@ -459,6 +490,14 @@ final class StudyGuardManager: ObservableObject {
             )
             return true
         } catch {
+            // This also protects selection edits and foreground recovery, whose
+            // previous registration has already been stopped.
+            SGContract.beginMonitoringGeneration(d)
+            d.set(SGContract.StateValue.locked, forKey: SGContract.Keys.state)
+            d.set(Date().timeIntervalSince1970, forKey: SGContract.Keys.lockedAt)
+            d.set(d.double(forKey: SGContract.Keys.budgetTotalSeconds), forKey: SGContract.Keys.budgetUsedSeconds)
+            d.synchronize()
+            applyShieldsFromStoredSelection()
             Telemetry.capture(error, context: ["threshold_minutes": thresholdMinutes],
                               tags: ["feature": "study_guard", "operation": "start_monitoring"])
             return false

@@ -426,15 +426,37 @@ final class TutorMonsterFoundationTests: XCTestCase {
 
     func testPersonaStoreDefaultsToFallbackAndPersists() {
         let d = freshDefaults()
-        let store = PersonaStore(defaults: d)
+        let store = PersonaStore(defaults: d, sharedDefaults: nil)
         XCTAssertEqual(store.persona.id, MonsterPersona.fallback.id)
         store.select(.diva)
-        XCTAssertEqual(PersonaStore(defaults: d).persona.name, "Zaza")
+        XCTAssertEqual(PersonaStore(defaults: d, sharedDefaults: nil).persona.name, "Zaza")
     }
 
     func testPersonaLookupFallsBack() {
         XCTAssertEqual(MonsterPersona.with(id: "nope").id, MonsterPersona.fallback.id)
         XCTAssertEqual(MonsterPersona.with(id: nil).id, MonsterPersona.fallback.id)
         XCTAssertEqual(MonsterPersona.all.count, 4)
+    }
+}
+
+
+extension StudyGuardEngineTests {
+    func testFailedMonitoringRetainsRewardAndRetryCommitsExactlyOnce() throws {
+        let suite = "GrantFailure.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let reward = PendingBudgetGrant(id: UUID(), minutes: 5, reason: .quiz)
+        var starts = 0, unlocks = 0, locks = 0
+        XCTAssertFalse(BudgetGrantLedger.attempt(reward, defaults: defaults,
+            start: { starts += 1; return false }, commit: { unlocks += 1 }, fail: { locks += 1 }))
+        XCTAssertEqual(unlocks, 0); XCTAssertEqual(locks, 1)
+        let reopened = try XCTUnwrap(UserDefaults(suiteName: suite))
+        XCTAssertEqual(BudgetGrantLedger.pending(in: reopened).first?.minutes, 5)
+        for _ in 0..<2 {
+            XCTAssertTrue(BudgetGrantLedger.attempt(reward, defaults: reopened,
+                start: { starts += 1; return true }, commit: { unlocks += 1 }, fail: { locks += 1 }))
+        }
+        XCTAssertEqual(starts, 2); XCTAssertEqual(unlocks, 1)
+        XCTAssertTrue(BudgetGrantLedger.pending(in: reopened).isEmpty)
     }
 }

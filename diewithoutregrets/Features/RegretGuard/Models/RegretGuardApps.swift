@@ -81,7 +81,7 @@ struct Regret: Identifiable, Codable, Equatable {
         guard !correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !FlashcardPrompt.isPlaceholder(quizPrompt.text),
               quizPrompt.text != "Choose the correct answer." else { return false }
-        if answerMode == .typed { return true }
+        if answerMode == .typed { return AnswerGrading.matches(correctAnswer, correctAnswer) }
         let options = choices.map { AnswerGrading.normalize($0) }
         return options.count >= 2 && options.allSatisfy { !$0.isEmpty }
             && Set(options).count == options.count
@@ -283,7 +283,10 @@ enum AnswerGrading {
             .filter { !$0.isEmpty }
             .joined(separator: " ")
         // A single trailing sentence mark never fails a card.
-        while let last = t.last, ".?!".contains(last) {
+        // Preserve answers that consist of punctuation (for example, a grammar
+        // card asking for "?"). A usable answer must always match itself.
+        let hasWords = t.rangeOfCharacter(from: .alphanumerics) != nil
+        while hasWords, let last = t.last, ".?!".contains(last) {
             t.removeLast()
         }
         return t.trimmingCharacters(in: .whitespaces)

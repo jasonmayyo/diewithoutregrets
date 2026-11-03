@@ -29,6 +29,7 @@ struct ProfileView: View {
     @State private var showingLockedEditAlert = false
     @State private var showingCreatorToolkit = false
     @State private var showingPersonaPicker = false
+    @State private var showingAIPrivacy = false
     @State private var showingBuddyDetails = false
     @AppStorage("sg_monsterUnlock") private var monsterUnlockEnabled = true
     @ObservedObject private var personaStore = PersonaStore.shared
@@ -272,6 +273,7 @@ struct ProfileView: View {
                         LinkMenuItem(icon: "sticker-question", title: "FAQs", url: "https://studyguard.framer.website/")
                         LinkMenuItem(icon: "sticker-error", title: "Report an Error", url: "https://studyguard.framer.website/support")
                         LinkMenuItem(icon: "sticker-document", title: "Terms of Use", url: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+                        Button("AI tutoring & privacy") { showingAIPrivacy = true }
                         LinkMenuItem(icon: "sticker-shield", title: "Privacy Policy", url: "https://studyguard.framer.website/legal/privacy-policy")
                     }
                 }
@@ -310,6 +312,7 @@ struct ProfileView: View {
         .navigationDestination(isPresented: $showingCreatorToolkit) {
             CreatorToolkitView()
         }
+        .sheet(isPresented: $showingAIPrivacy) { TutorPrivacySheet() }
         .sheet(isPresented: $showingBuddyDetails) { BuddyProfileEditor() }
         .navigationDestination(isPresented: $showingPersonaPicker) {
             MonsterPersonaPickerScreen()

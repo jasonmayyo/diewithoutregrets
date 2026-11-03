@@ -17,8 +17,6 @@ def read(path):
 
 model = read('diewithoutregrets/Shared/MonsterPersona.swift')
 messages = read('diewithoutregrets/Features/TutorMonster/MonsterMessage.swift')
-reactions = read('diewithoutregrets/Features/TutorMonster/MonsterReaction.swift')
-reaction_views = read('diewithoutregrets/Features/TutorMonster/MonsterReactionView.swift')
 script = read('diewithoutregrets/Features/TutorMonster/MonsterScript.swift')
 source_model = 'struct FlashcardSource' + read('diewithoutregrets/Features/RegretGuard/Models/RegretGuardApps.swift').split('struct FlashcardSource', 1)[1].split('struct Regret:', 1)[0]
 components = read('diewithoutregrets/Features/TutorMonster/MonsterChatComponents.swift')
@@ -52,8 +50,12 @@ enum QV2 {
     static func font(_ size: CGFloat, _ weight: Font.Weight) -> Font { .system(size: size, weight: weight) }
 }
 enum QuizHaptics { static func coinLand(progress: Double) {} }
-struct Regret: Equatable {
-    enum Mode { case choices, typed }
+enum TutorPrivacy {
+    static let consentKey = "preview-unused-tutor-consent"
+    static let version = 1
+}
+struct Regret: Equatable, Codable {
+    enum Mode: Codable { case choices, typed }
     struct Prompt { let text: String }
     let id: UUID
     let question: String
@@ -102,15 +104,6 @@ enum CaptureFixture {
                 : [.init(kind: .pdf, title: "Cell Biology — Chapter 4.pdf"), .init(kind: .notes, title: "Pasted notes")]
             return [.monster(MonsterScript.openingGreeting(persona: .diva, mood: .chill, vars: vars, seed: index)),
                     .monster(MonsterScript.openingPrompt(persona: .diva, vars: vars, seed: index), sources: sources), cardMessage]
-        case "reactions":
-            return [.monster("wait you actually ate that 💅", reaction: .delightedLaugh), cardMessage]
-        case "snack-break":
-            return [m(.monster, .grant(minutes: 3)),
-                    .monster("you earned your break. go enjoy it 💅", reaction: .snackBreak)]
-        case "reaction-still":
-            return [.monster("that's my clever one 💅", reaction: .rainbowRide), cardMessage]
-        case "reaction-library":
-            return MonsterReaction.allCases.map { .monster($0.rawValue, reaction: $0) }
         case "typed":
             return [.monster("One quick question."), m(.monster, .card(cell))]
         case "between":
@@ -226,13 +219,13 @@ struct ReviewRoot: View {
         guard live else { return }
         liveRows += [.user(text),
                      .init(sender: .monster, kind: .reveal(correct: true, answer: text, why: nil)),
-                     .monster("Exactly! Let's do another.", reaction: .delightedLaugh),
+                     .monster("Exactly! Let's do another."),
                      .init(sender: .monster, kind: .card(CaptureFixture.next))]
         presenter.update(messages: liveRows, isVisible: true)
     }
 }
 '''
-source = stubs + source_model + model + study_model + script + reactions + messages + coins + components + reaction_views + study_components + view + shield_source + fixture
+source = stubs + source_model + model + study_model + script + messages + coins + components + study_components + view + shield_source + fixture
 # This system environment value is read-only. In this isolated fixture, force
 # the same production branch for a repeatable reduced-motion capture.
 source = source.replace('@Environment(\\.accessibilityReduceMotion) private var reduceMotion',
@@ -240,7 +233,6 @@ source = source.replace('@Environment(\\.accessibilityReduceMotion) private var 
 (OUT / 'IOSPreview.swift').write_text(source)
 app = OUT / 'ChatPreview.app'
 app.mkdir(exist_ok=True)
-shutil.copytree(ROOT / 'diewithoutregrets/Resources/MonsterReactions', app / 'MonsterReactions', dirs_exist_ok=True)
 info = {'CFBundleExecutable': 'ChatPreview', 'CFBundleIdentifier': 'com.studyguard.chatpreview',
         'CFBundleName': 'Chat Preview', 'CFBundlePackageType': 'APPL',
         'CFBundleShortVersionString': '1.0', 'CFBundleVersion': '1',

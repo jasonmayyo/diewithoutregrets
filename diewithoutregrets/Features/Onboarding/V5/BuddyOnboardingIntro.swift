@@ -36,7 +36,7 @@ struct BuddyHowItWorksView: View {
                         }
                         .multilineTextAlignment(.center)
                         if !isGuard {
-                            BuddyUnlockChatDemo(viewportHeight: geometry.size.height)
+                            BuddyUnlockChatDemo()
                                 .frame(maxWidth: 380)
                         }
                         Spacer(minLength: 24)
@@ -78,7 +78,6 @@ struct BuddyHowItWorksView: View {
 
 /// Scripted product preview only; never starts a session or grants screen time.
 private struct BuddyUnlockChatDemo: View {
-    let viewportHeight: CGFloat
     @StateObject private var presenter = MonsterTranscriptPresenter()
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -93,12 +92,6 @@ private struct BuddyUnlockChatDemo: View {
             MonsterAvatarHeader(persona: .diva)
             Rectangle().fill(MonsterPalette.hairline).frame(height: 1)
             VStack(alignment: .leading, spacing: 10) {
-                // The user's uploaded JPG is already bundled as this reaction.
-                // Show it first, with no GIF badge or fabricated animation.
-                MonsterReactionView(reaction: .holdingItIn,
-                                    playbackEnabled: scenePhase == .active,
-                                    viewportHeight: viewportHeight)
-                    .modifier(MonsterMessageArrival())
                 ForEach(messages.prefix(presenter.revealed)) { message in
                     if let text = message.text {
                         MonsterTextBubble(text: text, sender: message.sender)

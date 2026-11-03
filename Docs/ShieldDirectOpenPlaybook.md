@@ -1,3 +1,5 @@
+> Historical reference only. Study Guard 2.0.7 removes the private launcher. Production uses `ShieldActionResponse.openParentalControlsApp` on iOS 26.5+ and `.close` with explicit Home Screen instructions on older iOS. Do not restore the private-API implementation below.
+
 # Opening Your App Directly From a Screen Time Shield — Implementation Playbook
 
 **What this achieves:** the user taps a button on the iOS Screen Time *shield*

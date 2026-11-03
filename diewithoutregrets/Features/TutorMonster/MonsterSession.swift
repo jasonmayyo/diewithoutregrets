@@ -24,12 +24,12 @@ final class MonsterSession: ObservableObject {
     @Published private(set) var studySheetState: MonsterStudySheetState = .offered
 
     // MARK: Session config (persona and earn rate stay fixed while switching decks)
-    let persona: MonsterPersona
-    let dials: SGContract.MoodDials
+    private(set) var persona: MonsterPersona
+    private(set) var dials: SGContract.MoodDials
     @Published private(set) var totalQuestions: Int
     @Published private(set) var deckName: String
     @Published private(set) var roundID = UUID()
-    let method: MonsterStudyMethod
+    private(set) var method: MonsterStudyMethod
 
     // MARK: Dependencies
     private let deckStore: DeckStore
@@ -42,7 +42,7 @@ final class MonsterSession: ObservableObject {
     // MARK: Flow state
     private(set) var deckID: UUID?
     /// Frozen earn rate shared by grading, the per-answer counter and settlement.
-    let secondsPerCorrectAnswer: Int
+    private(set) var secondsPerCorrectAnswer: Int
     private var queue: [Regret]
     private var currentCard: Regret?
     private var results: [Bool?] = []
@@ -57,7 +57,6 @@ final class MonsterSession: ObservableObject {
     private var tutorHistory: [UUID: [MonsterTutorTurn]] = [:]
     private var correctCount = 0
     private var lineSeed = 0
-    private var reactionPicker: MonsterReactionPicker
     private var vars: MonsterScriptVars
     private var studyCards: [Regret]
     private var openingSources: [MonsterStudySource]
@@ -67,6 +66,67 @@ final class MonsterSession: ObservableObject {
     private let configuredQuestionCount: Int?
     private var sheetQuestionContexts: [UUID: Regret] = [:]
     private var stopped = false
+    private var retryCounts: [UUID: Int] = [:]
+    private let persistsProgress: Bool
+    static let progressKey = "sg_monsterRound.v1"
+
+    private struct Progress: Codable {
+        let persona: MonsterPersona
+        let dials: SGContract.MoodDials
+        let method: MonsterStudyMethod
+        let secondsPerCorrectAnswer: Int
+        let roundID: UUID
+        let deckID: UUID?
+        let deckName: String
+        let totalQuestions: Int
+        let messages: [MonsterMessage]
+        let queue: [Regret]
+        let currentCard: Regret?
+        let awaitingAnswer: Bool
+        let results: [Bool?]
+        let outcomes: [UUID: Bool]
+        let presented: [UUID: Regret]
+        let correctCount: Int
+        let vars: MonsterScriptVars
+        let studyRound: MonsterStudyRound?
+        let studySheetState: MonsterStudySheetState
+        let studyCards: [Regret]
+        let sheetQuestionContexts: [UUID: Regret]
+        let retryCounts: [UUID: Int]
+    }
+
+    private func saveProgress() {
+        guard persistsProgress else { return }
+        guard !isFinished, !messages.isEmpty else {
+            creatorDefaults.removeObject(forKey: Self.progressKey)
+            return
+        }
+        let value = Progress(persona: persona, dials: dials, method: method,
+            secondsPerCorrectAnswer: secondsPerCorrectAnswer, roundID: roundID,
+            deckID: deckID, deckName: deckName, totalQuestions: totalQuestions,
+            messages: messages, queue: queue, currentCard: currentCard, awaitingAnswer: awaitingAnswer,
+            results: results, outcomes: outcomes, presented: presented, correctCount: correctCount,
+            vars: vars, studyRound: studyRound, studySheetState: studySheetState,
+            studyCards: studyCards, sheetQuestionContexts: sheetQuestionContexts, retryCounts: retryCounts)
+        if let data = try? JSONEncoder().encode(value) {
+            creatorDefaults.set(data, forKey: Self.progressKey)
+            creatorDefaults.synchronize()
+        }
+    }
+
+    private func restoreProgress() {
+        guard persistsProgress, let data = creatorDefaults.data(forKey: Self.progressKey),
+              let p = try? JSONDecoder().decode(Progress.self, from: data) else { return }
+        persona = p.persona; dials = p.dials; method = p.method
+        secondsPerCorrectAnswer = p.secondsPerCorrectAnswer; roundID = p.roundID
+        deckID = p.deckID; deckName = p.deckName; totalQuestions = p.totalQuestions
+        messages = p.messages; queue = p.queue; currentCard = p.currentCard
+        awaitingAnswer = p.awaitingAnswer; results = p.results; outcomes = p.outcomes
+        presented = p.presented; correctCount = p.correctCount; vars = p.vars
+        studyRound = p.studyRound; studySheetState = p.studySheetState
+        studyCards = p.studyCards; sheetQuestionContexts = p.sheetQuestionContexts
+        retryCounts = p.retryCounts
+    }
 
     init(deckStore: DeckStore = .shared,
          examStore: ExamStore = .shared,
@@ -75,11 +135,12 @@ final class MonsterSession: ObservableObject {
          sharedDefaults: UserDefaults? = SGContract.sharedDefaults,
          creatorDefaults: UserDefaults = .standard,
          now: Date = Date(),
+         persistsProgress: Bool = false,
          method: MonsterStudyMethod? = nil,
          loadBundle: ((MonsterPersona, SGContract.MonsterMood, MonsterScriptVars) async -> MonsterScriptBundle?)? = nil,
          tutorReply: ((String, MonsterTutorCard, String, [MonsterTutorTurn]) async throws -> String)? = nil,
-         tutorTimeout: UInt64 = 20_000_000_000,
-         reactionSeed: Int = Int.random(in: 0..<10_000)) {
+         tutorTimeout: UInt64 = 20_000_000_000) {
+        self.persistsProgress = persistsProgress
         self.deckStore = deckStore
         self.examStore = examStore
         self.studyGuard = studyGuard
@@ -89,7 +150,6 @@ final class MonsterSession: ObservableObject {
         let configuredCount = creatorDefaults.integer(forKey: "flashcardCount")
         let hasBuddyRule = creatorDefaults.bool(forKey: BuddyIdentity.ruleKey) && [5, 10, 20].contains(configuredCount)
         self.configuredQuestionCount = hasBuddyRule ? configuredCount : nil
-        self.reactionPicker = MonsterReactionPicker(seed: reactionSeed, defaults: sharedDefaults)
         self.loadBundle = loadBundle ?? { await MonsterAI.fetchBundle(persona: $0, mood: $1, vars: $2) }
         self.tutorReply = tutorReply ?? { try await FlashcardAPIClient.shared.askTutor(persona: $0, card: $1, question: $2, history: $3) }
         self.tutorTimeout = tutorTimeout
@@ -145,6 +205,7 @@ final class MonsterSession: ObservableObject {
             questions: toll.count,
             minutes: SGContract.earnedMinutes(cardCount: toll.count, perCardSeconds: self.secondsPerCorrectAnswer)
         )
+        restoreProgress()
     }
 
     /// True when there is a toll to run. An empty/absent deck receives local
@@ -160,7 +221,11 @@ final class MonsterSession: ObservableObject {
     /// never delays the first question, grading, or the time grant.
     func start() {
         stopped = false
-        guard messages.isEmpty else { return }
+        defer { saveProgress() }
+        guard messages.isEmpty else {
+            if method == .inChat, !isFinished, !awaitingAnswer, queue.isEmpty { finish() }
+            return
+        }
         guard canRun else {
             append(.monster("Add or check the flashcards in your selected deck, then come back and study with me."))
             isFinished = true
@@ -171,9 +236,7 @@ final class MonsterSession: ObservableObject {
             hasExam: MonsterScript.hasUpcomingExam(vars), defaults: openingDefaults)
         let greeting = MonsterScript.openingGreeting(persona: persona, mood: dials.mood,
                                                      vars: vars, seed: opening.greeting)
-        append(.monster((buddyIdentity.name.isEmpty ? "" : "\(buddyIdentity.name), ") + buddyIdentity.addressBanter(greeting),
-                        reaction: reactionPicker.opening(persona: persona, guaranteed:
-                            creatorDefaults.bool(forKey: MonsterReactionPicker.alwaysOpeningPreferenceKey))))
+        append(.monster((buddyIdentity.name.isEmpty ? "" : "\(buddyIdentity.name), ") + buddyIdentity.addressBanter(greeting)))
         append(.monster(buddyIdentity.addressBanter(MonsterScript.scrollCallout(persona: persona, seed: nextVoiceVariant("scrollCallout")))))
         append(.monster(MonsterScript.openingPrompt(persona: persona, vars: vars,
                                                    studySheet: method == .studySheet, seed: opening.prompt),
@@ -201,6 +264,7 @@ final class MonsterSession: ObservableObject {
     /// A completed/empty chat starts a fresh round without paying the old one again.
     @discardableResult
     func switchToSelectedDeck() -> Bool {
+        defer { saveProgress() }
         guard let deck = deckStore.selectedDeck, deck.id != deckID || isFinished else { return false }
         var ids: Set<UUID> = []
         var prompts: Set<String> = []
@@ -240,13 +304,13 @@ final class MonsterSession: ObservableObject {
             messages = []
             results = []
             outcomes = [:]
+            retryCounts = [:]
             presented = [:]
             tutorHistory = [:]
             sheetQuestionContexts = [:]
             correctCount = 0
             grantedMinutes = 0
             isFinished = false
-            reactionPicker = MonsterReactionPicker(defaults: openingDefaults)
             roundID = UUID()
         }
         deckID = deck.id
@@ -344,6 +408,8 @@ final class MonsterSession: ObservableObject {
     static func fallbackReply(for card: Regret, error: Error) -> String {
         let opening: String
         switch error as? FlashcardServiceError {
+        case .unsafeContent, .safetyUnavailable, .consentRequired:
+            return "I couldn’t provide a checked live reply. You can continue with your cards, or report a concern from AI & Privacy."
         case .dailyLimit, .serviceAtCapacity: opening = "Live tutor replies have reached their limit for now."
         case .alreadyGenerating, .rateLimited, .serviceBusy: opening = "I'm waiting for the AI service. Try your question again shortly."
         default: opening = "I can't reach the live tutor right now."
@@ -354,6 +420,7 @@ final class MonsterSession: ObservableObject {
     }
 
     func stop() {
+        defer { saveProgress() }
         stopped = true
         scriptTask?.cancel()
         scriptTask = nil
@@ -368,6 +435,7 @@ final class MonsterSession: ObservableObject {
 
     /// Answer a multiple-choice card by option index.
     func answer(choiceIndex: Int) {
+        defer { saveProgress() }
         guard method == .inChat, !stopped, !isThinking, awaitingAnswer, let card = currentCard, card.answerMode == .choices,
               card.choices.indices.contains(choiceIndex) else { return }
         let echo = card.choices.indices.contains(choiceIndex) ? card.choices[choiceIndex] : ""
@@ -377,6 +445,7 @@ final class MonsterSession: ObservableObject {
 
     /// Answer a typed card.
     func answer(typed: String) {
+        defer { saveProgress() }
         guard method == .inChat, !stopped, !isThinking, awaitingAnswer, let card = currentCard,
               !typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         append(.user(typed.trimmingCharacters(in: .whitespacesAndNewlines)))
@@ -409,13 +478,15 @@ final class MonsterSession: ObservableObject {
                                             answer: card.correctAnswer,
                                             why: correct ? nil : why)))
         vars.score = "\(correctCount)/\(vars.questions)"
-        say(correct ? .correct : .wrong, reaction: reactionPicker.answer(correct: correct))
+        say(correct ? .correct : .wrong)
 
-        // Harder pass bar at higher moods: annoyed and up re-queue misses, so you
-        // must actually get them right. Chill/nudgy let a miss slide (earn less).
-        if !correct, dials.mood >= .annoyed {
+        // One review retry per card. A difficult or faulty card must never
+        // trap someone in an unbounded gate; correct answers still earn time.
+        if !correct, dials.mood >= .annoyed, retryCounts[card.id, default: 0] < 1 {
+            retryCounts[card.id, default: 0] += 1
             queue.append(card)
         }
+        writeBackCurrentDeck()
         presentNextCard()
     }
 
@@ -426,23 +497,25 @@ final class MonsterSession: ObservableObject {
 
         // The real unlock: the existing economy validates completion and pays for
         // correct answers at the mood's per-card rate (this clears the shields).
-        grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: secondsPerCorrectAnswer)
+        saveProgress()
+        grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: secondsPerCorrectAnswer, grantID: roundID)
+        if grantedMinutes == 0, correctCount > 0 {
+            append(.system("Your earned time is saved. Screen Time monitoring couldn’t start. Use Retry saved time to unlock after monitoring recovers."))
+        }
 
         writeBackCurrentDeck()
 
-        let reaction = grantedMinutes > 0
-            ? reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count)
-            : nil
         let outcome = roundOutcome
         append(.monster(buddyIdentity.addressBanter(MonsterScript.roundReaction(persona: persona, outcome: outcome, vars: vars,
             seed: nextVoiceVariant("result.\(outcome.rawValue)")))))
-        appendSendoff(reaction: reaction)
+        appendSendoff()
         appendRecap()
         if grantedMinutes > 0 {
             append(.init(sender: .monster, kind: .grant(minutes: grantedMinutes)))
             _ = QV2Streak.recordSuccess()
         }
         MonsterNudges.rescheduleAfterStudy(persona: persona)
+        studySheetState = .finished
         isFinished = true
     }
 
@@ -458,6 +531,7 @@ final class MonsterSession: ObservableObject {
 
     @discardableResult
     func beginStudyRound() -> Bool {
+        defer { saveProgress() }
         guard method == .studySheet, !stopped, !isThinking, !isFinished,
               studySheetState == .offered || studySheetState == .active,
               let round = studyRound, let question = round.currentQuestion else { return false }
@@ -467,6 +541,7 @@ final class MonsterSession: ObservableObject {
     }
 
     func answerStudyChoice(questionID: UUID, index: Int) {
+        defer { saveProgress() }
         guard let question = studyRound?.currentQuestion, question.id == questionID,
               question.card.answerMode == .choices, question.card.choices.indices.contains(index) else { return }
         recordStudyAnswer(questionID: questionID, correct: index == question.card.correctAnswerIndex,
@@ -474,6 +549,7 @@ final class MonsterSession: ObservableObject {
     }
 
     func answerStudyTyped(questionID: UUID, text: String) {
+        defer { saveProgress() }
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, let question = studyRound?.currentQuestion, question.id == questionID,
               question.card.answerMode == .typed else { return }
@@ -486,18 +562,20 @@ final class MonsterSession: ObservableObject {
               var round = studyRound, let question = round.currentQuestion,
               question.id == questionID, round.currentAnswer == nil else { return }
         round.answers.append(MonsterStudyAnswer(id: questionID, correct: correct, text: text,
-            choiceIndex: choiceIndex, reaction: reactionPicker.answer(correct: correct)))
+            choiceIndex: choiceIndex))
         results.append(correct)
         if correct { correctCount += 1 }
         if correct || outcomes[question.card.id] == nil { outcomes[question.card.id] = correct }
         if correct || unrecordedOutcomes[question.card.id] == nil { unrecordedOutcomes[question.card.id] = correct }
         presented[question.card.id] = question.card
         studyRound = round
+        writeBackCurrentDeck()
     }
 
     /// Returns true only when the completed sheet should dismiss back to chat.
     @discardableResult
     func advanceStudyRound(questionID: UUID) -> Bool {
+        defer { saveProgress() }
         guard method == .studySheet, !stopped, !isThinking, studySheetState == .active,
               var round = studyRound, round.currentQuestion?.id == questionID,
               round.currentAnswer != nil else { return false }
@@ -540,19 +618,22 @@ final class MonsterSession: ObservableObject {
     }
 
     func claimStudyTime() {
+        defer { saveProgress() }
         guard method == .studySheet, !stopped, !isThinking, !isFinished,
               studySheetState == .readyToUnlock, studyRound?.isComplete == true else { return }
-        studySheetState = .finished
-        grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: secondsPerCorrectAnswer)
+        saveProgress()
+        grantedMinutes = studyGuard.grantEarnedBudget(results: results, perCardSeconds: secondsPerCorrectAnswer, grantID: roundID)
+        if grantedMinutes == 0, correctCount > 0 {
+            append(.system("Your earned time is saved. Screen Time monitoring couldn’t start. Use Retry saved time to unlock after monitoring recovers."))
+        }
         writeBackCurrentDeck()
-        let reaction = grantedMinutes > 0
-            ? reactionPicker.completedRound(correctAnswers: correctCount, totalAnswers: results.count) : nil
-        appendSendoff(reaction: reaction)
+        appendSendoff()
         if grantedMinutes > 0 {
             append(.init(sender: .monster, kind: .grant(minutes: grantedMinutes)))
             _ = QV2Streak.recordSuccess()
         }
         MonsterNudges.rescheduleAfterStudy(persona: persona)
+        studySheetState = .finished
         isFinished = true
     }
 
@@ -582,21 +663,21 @@ final class MonsterSession: ObservableObject {
         MonsterOpeningRotation.draw(personaID: persona.id, lane: lane, defaults: openingDefaults)
     }
 
-    private func appendSendoff(reaction: MonsterReaction? = nil) {
+    private func appendSendoff() {
         let outcome = roundOutcome
         let lane = grantedMinutes > 0 ? outcome.rawValue : "noGrant"
         append(.monster(buddyIdentity.addressBanter(MonsterScript.sendoff(persona: persona, outcome: outcome, minutes: grantedMinutes,
-            seed: nextVoiceVariant("sendoff.\(lane)"))), reaction: reaction))
+            seed: nextVoiceVariant("sendoff.\(lane)")))))
     }
 
-    private func say(_ context: MonsterContext, reaction: MonsterReaction? = nil) {
+    private func say(_ context: MonsterContext) {
         lineSeed += 1
         let line = bundleLine(context) ?? MonsterScript.line(persona: persona,
                                                              mood: dials.mood,
                                                              context: context,
                                                              vars: vars,
                                                              seed: lineSeed)
-        append(.monster(buddyIdentity.addressBanter(line), reaction: reaction))
+        append(.monster(buddyIdentity.addressBanter(line)))
     }
 
     /// A line from the AI bundle for this context, if one was fetched.

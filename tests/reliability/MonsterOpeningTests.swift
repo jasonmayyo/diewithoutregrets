@@ -218,7 +218,7 @@ final class MonsterOpeningTests: XCTestCase {
             let persona = PersonaStore(); persona.persona = .diva
             let session = MonsterSession(deckStore: store, examStore: ExamStore(), personaStore: persona,
                 studyGuard: manager, sharedDefaults: defaults, now: now, method: .inChat,
-                loadBundle: { _, _, _ in nil }, reactionSeed: 1)
+                loadBundle: { _, _, _ in nil })
             session.start()
             XCTAssertEqual(session.totalQuestions, 3)
             for index in 0..<3 { session.answer(choiceIndex: index < hits ? 0 : 1) }
@@ -334,7 +334,7 @@ final class MonsterPeerVoiceTests: XCTestCase {
                 let manager = StudyGuardManager()
                 let session = MonsterSession(deckStore: store, examStore: ExamStore(), personaStore: personaStore,
                     studyGuard: manager, sharedDefaults: nil, method: .inChat,
-                    loadBundle: { _, _, _ in nil }, reactionSeed: 1)
+                    loadBundle: { _, _, _ in nil })
                 session.start()
                 XCTAssertEqual(session.messages.count, 4)
                 XCTAssertTrue(session.messages[2].text?.contains("3 flashcards from your Biology deck") == true)
@@ -395,7 +395,7 @@ final class MonsterPeerVoiceTests: XCTestCase {
                 let personaStore = PersonaStore(); personaStore.persona = persona
                 let manager = StudyGuardManager()
                 let session = MonsterSession(deckStore: store, examStore: ExamStore(), personaStore: personaStore,
-                    studyGuard: manager, sharedDefaults: nil, method: .studySheet, reactionSeed: 1)
+                    studyGuard: manager, sharedDefaults: nil, method: .studySheet)
                 session.start()
                 var totalCorrect = 0, totalAnswers = 0
                 for roundIndex in 0..<2 where session.studySheetState == .offered {

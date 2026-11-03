@@ -7,7 +7,7 @@ final class DeckStore {
     var recorded: [UUID: Bool] = [:]
     var reviewWrites: [(deckID: UUID, outcomes: [UUID: Bool])] = []
     func recordOutcomes(_ outcomes: [UUID: Bool], deckID: UUID) {
-        recorded = outcomes
+        recorded.merge(outcomes) { _, new in new }
         reviewWrites.append((deckID, outcomes))
     }
 }
@@ -23,7 +23,7 @@ final class PersonaStore { static let shared = PersonaStore(); var persona = Mon
 final class StudyGuardManager {
     static let shared = StudyGuardManager()
     var grants = 0
-    func grantEarnedBudget(results: [Bool?], perCardSeconds: Int) -> Int {
+    func grantEarnedBudget(results: [Bool?], perCardSeconds: Int, grantID: UUID = UUID()) -> Int {
         grants += 1
         return SGContract.completedQuizMinutes(results: results, perCardSeconds: perCardSeconds)
     }

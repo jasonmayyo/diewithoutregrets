@@ -60,6 +60,11 @@ struct EmergencyUnlockSheet: View {
                         .padding(.horizontal, 10)
                 }
 
+                if manager.pendingGrantMinutes > 0, !hasUnlocked {
+                    Text("Monitoring couldn’t start. Your unlock is saved and has not been spent. Try again, or return after restoring Screen Time access.")
+                        .font(SGTheme.body).foregroundColor(SGTheme.paperSecondary)
+                        .multilineTextAlignment(.center)
+                }
                 VStack(spacing: 12) {
                     if !exhausted {
                         SGButton(title: hasUnlocked ? "Return to app" : "Unlock my apps",

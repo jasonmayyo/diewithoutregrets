@@ -1,0 +1,8 @@
+Test Suite 'MonsterShieldTests' passed at 2026-11-02 11:51:57.104.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.055 (0.057) seconds
+Test Suite 'ShieldReturnContextTests' passed at 2026-11-02 11:51:57.133.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.027 (0.029) seconds
+Test Suite 'MonsterShieldTests.xctest' passed at 2026-11-02 11:51:57.133.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.082 (0.085) seconds
+Test Suite 'All tests' passed at 2026-11-02 11:51:57.133.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.082 (0.087) seconds

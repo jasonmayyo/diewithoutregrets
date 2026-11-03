@@ -123,7 +123,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ///
     /// Sample-rate decisions, bundled here for one-stop tweaking:
     ///   • sessionReplay.sessionSampleRate = 0   — never replay random sessions
-    ///   • sessionReplay.onErrorSampleRate = 1   — always replay around errors
+    ///   • sessionReplay.onErrorSampleRate = 0   — no conversation recordings
     ///   • tracesSampleRate                = 0   — Performance disabled for now
     ///   • sendDefaultPii                  = false — no IP / UA harvesting
     ///   • beforeSend                      → drops every event in DEBUG so
@@ -141,26 +141,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             options.dist = build
 
             // --- Error monitoring ---
-            // attachScreenshot + attachViewHierarchy give us "what was on
-            // screen at the moment of crash" for triage. Worth the bandwidth.
-            options.attachScreenshot = true
-            options.attachViewHierarchy = true
+            // Study cards and tutor conversations can contain private content.
+            // Keep crash diagnostics, but never capture screens or view text.
+            options.attachScreenshot = false
+            options.attachViewHierarchy = false
             options.enableAppHangTracking = true
             options.enableWatchdogTerminationTracking = true
 
             // --- Session Replay ---
-            // 0 random session sampling (cost control), 100 % on error (the
-            // highest-value debug signal Sentry produces).
+            // No replay recording, including error sessions containing study text.
             options.sessionReplay.sessionSampleRate = 0.0
-            options.sessionReplay.onErrorSampleRate = 1.0
-            // Sentry-cocoa 8.58+ refuses to enable Session Replay on iOS 26+
-            // unless `UIDesignRequiresCompatibility` is set in Info.plist
-            // (which would freeze the app to the legacy appearance). Study
-            // Guard's SwiftUI views use the rendering path Sentry's masking
-            // logic has always supported, so we override the check rather
-            // than commit to a design-language decision here. Revisit if/when
-            // we adopt the iOS 26 Liquid Glass redesign.
-            options.experimental.enableSessionReplayInUnreliableEnvironment = true
+            options.sessionReplay.onErrorSampleRate = 0.0
+            options.experimental.enableSessionReplayInUnreliableEnvironment = false
 
             // --- Performance: explicitly off for now ---
             // We'll enable Tracing/Profiling separately once we see what the

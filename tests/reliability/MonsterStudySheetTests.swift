@@ -29,6 +29,40 @@ final class MonsterStudySheetTests: XCTestCase {
         }
     }
 
+    @MainActor func testSheetRestoresQuestionIDsAnswersAndEarnedTime() throws {
+        let suite = "SheetResume.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = DeckStore(); store.selectedDeck = Deck(name: "Biology", cards: cards(6))
+        let manager = StudyGuardManager()
+        func makeSession() -> MonsterSession {
+            MonsterSession(deckStore: store, examStore: ExamStore(), studyGuard: manager,
+                sharedDefaults: nil, creatorDefaults: defaults, persistsProgress: true,
+                method: .studySheet, loadBundle: { _, _, _ in nil })
+        }
+        let first = makeSession(); first.start(); XCTAssertTrue(first.beginStudyRound())
+        let question = try XCTUnwrap(first.studyRound?.currentQuestion)
+        first.answerStudyChoice(questionID: question.id, index: 0)
+        let earned = first.studyEarnedSeconds
+        first.stop()
+        let restored = makeSession(); restored.start()
+        XCTAssertEqual(restored.studyRound, first.studyRound)
+        XCTAssertEqual(restored.studyEarnedSeconds, earned)
+        XCTAssertTrue(restored.beginStudyRound())
+        restored.answerStudyChoice(questionID: question.id, index: 0)
+        XCTAssertEqual(restored.studyEarnedSeconds, earned, "A restored answer must not earn twice")
+        _ = restored.advanceStudyRound(questionID: question.id)
+        for _ in 0..<3 {
+            let next = try XCTUnwrap(restored.studyRound?.currentQuestion)
+            restored.answerStudyChoice(questionID: next.id, index: 0)
+            _ = restored.advanceStudyRound(questionID: next.id)
+        }
+        XCTAssertEqual(restored.studySheetState, .readyToUnlock)
+        restored.claimStudyTime()
+        XCTAssertEqual(manager.grants, 1)
+        XCTAssertNil(defaults.data(forKey: MonsterSession.progressKey))
+    }
+
     func testInlineIsTheDefaultAndExplicitSheetPreferenceIsPreserved() {
         let suite = "MonsterStudySheetTests.\(UUID())"
         let defaults = UserDefaults(suiteName: suite)!

@@ -10,6 +10,8 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
   const appID = '5BFXSF2PS6.com.jasonmayo.diewithoutregrets';
   let calls = 0;
   let tutorCalls = 0;
+  let safetyMode = 'safe';
+  let moderationCalls = 0;
   // Distinct cards so the pipeline's dedupe keeps all 50 (identical cards would
   // collapse to one). Card content is irrelevant to the auth/replay/reservation checks.
   const mkCard = i => ({ regretPrompt: `Section fact ${i}: plants capture light energy via the ___ route here.`, regret: `route${i}`,
@@ -25,6 +27,21 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
       DEVICE_DAILY_LIMIT: '20', GLOBAL_DAILY_LIMIT: '2', GLOBAL_MONTHLY_LIMIT: '20', SCRIPT_GLOBAL_DAILY_LIMIT: '1' },
     outboundService: async request => {
       // ALL outbound traffic is intercepted. Tests cannot reach/pay OpenAI.
+      if (request.url === 'https://api.openai.com/v1/moderations') {
+        const body = await request.json();
+        moderationCalls++;
+        if (safetyMode === 'unavailable') return new WorkerResponse('', { status: 401 });
+        if (safetyMode === 'forbidden_input' || (safetyMode === 'forbidden_output' && moderationCalls === 2)) {
+          return new WorkerResponse(JSON.stringify({ error: { message: 'Access denied.', type: 'invalid_request_error', code: null } }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } });
+        }
+        if (safetyMode === 'input' || (safetyMode === 'output' && moderationCalls % 2 === 0)) {
+          return new WorkerResponse(JSON.stringify({ results: body.input.map(() => ({ flagged: true, categories: { harassment: true } })) }), { headers: { 'Content-Type': 'application/json' } });
+        }
+        assert.equal(body.model, 'omni-moderation-latest');
+        return new WorkerResponse(JSON.stringify({ results: body.input.map(() => ({ flagged: false, categories: { harassment: false } })) }),
+          { headers: { 'Content-Type': 'application/json' } });
+      }
       assert.equal(request.url, 'https://api.openai.com/v1/chat/completions');
       assert.equal(request.headers.get('authorization'), 'Bearer local-test-only');
       const body = await request.json();
@@ -96,7 +113,7 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
     assert.ok(Buffer.byteLength(followup.raw) > 32_768, 'bounded Unicode context exceeds the small script body limit');
     const tutorResponse = await post('/v1/tutor', followup.raw, followup.headers);
     assert.equal(tutorResponse.status, 200);
-    assert.deepEqual(await tutorResponse.json(), { reply: 'Light supplies energy for photosynthesis.' });
+    assert.deepEqual(await tutorResponse.json(), { reply: 'Light supplies energy for photosynthesis.', safetyChecked: true });
     assert.equal(tutorCalls, 1);
     assert.equal((await post('/v1/tutor', followup.raw, followup.headers)).status, 401);
     const secondTutor = await signedRequest(tutor);
@@ -106,5 +123,26 @@ test('Worker runtime verifies signed requests, blocks replay/tampering and reser
     } });
     assert.equal((await post('/v1/script', script.raw, script.headers)).status, 429, 'tutor shares the script ceiling');
     assert.equal(tutorCalls, 1);
+    // Only this local test runtime exposes a storage admin API.
+    for (const mode of ['input', 'output', 'unavailable', 'forbidden_input', 'forbidden_output']) {
+      await storage.exec('DELETE FROM counters');
+      safetyMode = mode;
+      moderationCalls = 0;
+      const before = tutorCalls;
+      const signed = await signedRequest(tutor);
+      const blocked = await post('/v1/tutor', signed.raw, signed.headers);
+      const unavailable = mode === 'unavailable' || mode.startsWith('forbidden_');
+      const outputFailure = mode === 'output' || mode === 'forbidden_output';
+      assert.equal(blocked.status, unavailable ? 503 : 422);
+      assert.deepEqual(await blocked.json(), { error: { code: unavailable ? 'safety_unavailable' : 'unsafe_content' } },
+        'A failed screen must never expose generated text');
+      assert.equal(tutorCalls, before + (outputFailure ? 1 : 0));
+      assert.equal(moderationCalls, outputFailure ? 2 : 1, 'Do not automatically retry an access denial');
+      assert.equal((await storage.exec('SELECT * FROM inflight')).length, 0);
+      assert.equal((await post('/v1/tutor', signed.raw, signed.headers)).status, 401, 'Failed requests cannot be replayed');
+      const next = await signedRequest(tutor);
+      assert.equal((await post('/v1/tutor', next.raw, next.headers)).status, 429,
+        'A failed provider call remains counted against the limit');
+    }
   } finally { await mf.dispose(); }
 });

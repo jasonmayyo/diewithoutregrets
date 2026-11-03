@@ -1,3 +1,17 @@
+## 2.0.7 release safety update (2 November 2026)
+
+The deployed service adds independent input/output moderation to `/v1/tutor` and
+`/v1/script`, using `omni-moderation-latest`. Safety failures return a bounded
+error without the generated text. Only screened responses carry
+`safetyChecked: true`, which the new iOS client requires. Chat completion and
+moderation permissions are both needed on the existing server-only API key;
+the project model allowlist must also permit `gpt-4o-mini` and
+`omni-moderation-latest`. These are separate restrictions.
+Existing quota and authentication controls remain in effect. See
+`Docs/MonsterUnlockReleaseReadiness.md` in the repository root for deployment
+status and remaining device checks. Do not infer deployment from passing local
+checks or the historical deployment notes below.
+
 # Study Guard AI service
 
 Study Guard uses the existing Cloudflare Worker at
@@ -6,7 +20,23 @@ use, preserving the encrypted OpenAI key the user already installed. The
 historical “staging” suffix is only the Worker's name. No second key is required.
 The app contains this public hostname, never an OpenAI key or shared app token.
 
-Latest deployment: **7c190c68-1d40-49e0-a046-3cc12672139f (29 October 2026)**,
+Latest deployment: **f74066e2-63e1-4277-a4ab-122687a53a3b (2 November 2026)**,
+including independent input/output moderation, documented nullable category
+handling and content-free failure diagnostics. All 32 backend tests and the
+Worker runtime integration check pass. Live verification found a moderation
+403; the owner approved adding the moderation model to the project allowlist
+(the key scope was already enabled). Basic live moderated tutoring now passes.
+The follow-up now passes: all 12 physical-iPhone cases succeeded (eight screened
+replies and four blocked injections), with zero moderation 403s. Including
+isolated synthetic provider checks and eight repetitions of the formerly failing
+case, 73 moderation responses succeeded. No additional production deployment or
+access expansion was needed. The exact earlier intermittent provider cause is
+not confirmed. Input/output 403 integration regressions prove replies stay
+withheld, requests cannot be replayed, and quota accounting is retained. No
+support request was sent. See the release-readiness document for the passing
+recheck and remaining device/distribution gates.
+
+Previous deployment: **7c190c68-1d40-49e0-a046-3cc12672139f (29 October 2026)**,
 including generation reliability and `/v1/tutor` follow-ups. Live health returned
 200, a new enrollment challenge returned 200, and an unregistered tutor request
 was rejected with 401 `key_not_registered`. No paid provider calls were made in
@@ -24,10 +54,10 @@ No end-user account or login has been added.
 
 **AI generation is enabled.** The deployed generation limits are 10 attempts per
 installation/day, 800 globally/day and 6000 globally/month, preserving the prior
-audit's configuration and existing usage ledger. Older notes describing 300/month
-or a $5 project budget are historical; provider-side budget settings were not
-rechecked or changed during this deployment. Request ceilings are not a dollar
-budget, especially when a document requires several model calls.
+audit's configuration and existing usage ledger. The OpenAI project was checked
+on 2 November 2026 and shows a $5 enforced spend limit with a 100% alert; neither
+was changed. Older notes describing 300/month are historical. Request ceilings
+are not a dollar budget, especially when a document requires several model calls.
 The OpenAI billing blockage described below is historical.
 A deployed Worker and a successful build are not evidence of successful paid AI
 requests or readiness for Apple submission.

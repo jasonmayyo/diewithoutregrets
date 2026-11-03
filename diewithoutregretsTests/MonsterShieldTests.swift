@@ -27,15 +27,122 @@ final class MonsterShieldTests: XCTestCase {
     }
 
     func testManualHomeUnlockOpensMonsterWithoutAShieldTapOrStaleReturnTarget() {
-        let navigation = NavigationModel()
-        navigation.unlockReturnDestination = .app(bundleIdentifier: "com.example.previous")
-        navigation.openMonsterFromHome()
+        let navigation = NavigationModel(defaults: local)
+        navigation.unlockReturnDestination = .app(bundleIdentifier: "com.burbn.instagram")
+        navigation.openUnlockFromHome()
         XCTAssertEqual(navigation.currentDestination, .regretView)
         XCTAssertEqual(navigation.unlockMethodOverride, "monster")
         XCTAssertNil(navigation.unlockReturnDestination)
         XCTAssertFalse(navigation.isLockStampPlaying)
         navigation.returnHome()
         XCTAssertNil(navigation.currentDestination)
+    }
+
+    @MainActor
+    func testHomeUnlockWithMonsterOffRestoresEachSavedMethodAndClearsStaleChatContext() {
+        local.set(false, forKey: "sg_monsterUnlock")
+        let navigation = NavigationModel(defaults: local)
+        for method in ["flashcards", "trueFocus"] {
+            local.set(method, forKey: "unlockMethod")
+            navigation.unlockMethodOverride = "monster"
+            navigation.unlockReturnDestination = .app(bundleIdentifier: "com.burbn.instagram")
+            navigation.openUnlockFromHome()
+
+            XCTAssertEqual(navigation.currentDestination, .regretView)
+            XCTAssertNil(navigation.unlockMethodOverride)
+            XCTAssertEqual(navigation.unlockMethodOverride ?? local.string(forKey: "unlockMethod"), method)
+            XCTAssertNil(navigation.unlockReturnDestination)
+            XCTAssertFalse(navigation.isLockStampPlaying)
+            navigation.returnHome()
+        }
+    }
+
+    @MainActor
+    func testShieldHandoffWithMonsterOffKeepsSavedMethodOnColdAndWarmEntry() throws {
+        local.set(false, forKey: "sg_monsterUnlock")
+        for method in ["flashcards", "trueFocus"] {
+            local.set(method, forKey: "unlockMethod")
+            seedTap()
+            let token = Data("instagram-token".utf8)
+            ShieldReturnContext.remember(tokenData: token, bundleIdentifier: "com.burbn.instagram",
+                                         in: shared, now: now)
+            ShieldReturnContext.prepareReturn(for: token, in: shared, now: now)
+            let navigation = NavigationModel(defaults: local)
+
+            // Cold launch selects the flow before the first frame.
+            XCTAssertTrue(ShieldChatHandoff.shouldOpenChat(in: shared, now: now))
+            navigation.openUnlockFromShield(returnDestination: nil, grantStamp: 10)
+            XCTAssertEqual(navigation.currentDestination, .regretView)
+            XCTAssertNil(navigation.unlockMethodOverride)
+            XCTAssertEqual(navigation.unlockMethodOverride ?? local.string(forKey: "unlockMethod"), method)
+
+            // Activation consumes the tap and attaches the correct return app.
+            XCTAssertTrue(ShieldChatHandoff.consume(in: shared, now: now))
+            let destination = try XCTUnwrap(ShieldReturnContext.consumePending(in: shared, now: now))
+            navigation.openUnlockFromShield(returnDestination: destination, grantStamp: 10)
+            XCTAssertEqual(navigation.currentDestination, .regretView)
+            XCTAssertNil(navigation.unlockMethodOverride)
+            XCTAssertEqual(navigation.unlockReturnDestination?.name, "Instagram")
+            XCTAssertFalse(ShieldChatHandoff.consume(in: shared, now: now))
+
+            navigation.returnHome()
+            XCTAssertNil(navigation.unlockReturnDestination)
+            XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: false))
+        }
+    }
+
+    @MainActor
+    func testChangingMonsterPreferenceTakesEffectOnBothEntryPointsWithoutRestart() {
+        let navigation = NavigationModel(defaults: local)
+        for enabled in [true, false, true] {
+            local.set(enabled, forKey: "sg_monsterUnlock")
+            navigation.openUnlockFromHome()
+            XCTAssertEqual(navigation.unlockMethodOverride, enabled ? "monster" : nil)
+            navigation.returnHome()
+            navigation.openUnlockFromShield(returnDestination: nil)
+            XCTAssertEqual(navigation.unlockMethodOverride, enabled ? "monster" : nil)
+            navigation.returnHome()
+        }
+    }
+
+    @MainActor
+    func testAutomaticEntryRespectsMonsterOffWithAndWithoutAnimation() throws {
+        local.set(false, forKey: "sg_monsterUnlock")
+        for animated in [false, true] {
+            let navigation = NavigationModel(defaults: local)
+            navigation.unlockMethodOverride = "monster"
+            XCTAssertTrue(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: animated))
+            if animated {
+                let animation = try XCTUnwrap(navigation.monsterLockAnimationID)
+                navigation.revealUnlockAfterLock(animationID: animation)
+                navigation.finishMonsterLockAnimation(animationID: animation)
+            }
+            XCTAssertEqual(navigation.currentDestination, .regretView)
+            XCTAssertNil(navigation.unlockMethodOverride)
+            XCTAssertFalse(navigation.isLockStampPlaying)
+            navigation.returnHome()
+            XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: animated))
+        }
+    }
+
+    @MainActor
+    func testShieldEntryWithMonsterOffCancelsPendingChatAnimationAndWipe() throws {
+        let navigation = NavigationModel(defaults: local)
+        navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true)
+        let animation = try XCTUnwrap(navigation.monsterLockAnimationID)
+        navigation.activeWipe = .lock
+        navigation.wipeMidAction = { XCTFail("A superseded transition must not run") }
+        local.set(false, forKey: "sg_monsterUnlock")
+
+        navigation.openUnlockFromShield(returnDestination: nil, grantStamp: 10)
+        navigation.revealUnlockAfterLock(animationID: animation)
+
+        XCTAssertEqual(navigation.currentDestination, .regretView)
+        XCTAssertNil(navigation.unlockMethodOverride)
+        XCTAssertNil(navigation.activeWipe)
+        XCTAssertNil(navigation.wipeMidAction)
+        XCTAssertNil(navigation.monsterLockAnimationID)
+        XCTAssertFalse(navigation.isLockStampPlaying)
     }
 
     func testLockedBudgetFromYesterdayStillShowsZeroRemaining() {
@@ -181,12 +288,12 @@ final class MonsterShieldTests: XCTestCase {
 
     @MainActor
     func testLockAnimationRevealsMonsterWithoutASecondTap() throws {
-        let navigation = NavigationModel()
+        let navigation = NavigationModel(defaults: local)
         navigation.unlockMethodOverride = "trueFocus"
-        XCTAssertTrue(navigation.beginMonsterLockEntry(grantStamp: 10, animated: true))
+        XCTAssertTrue(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true))
         let animation = try XCTUnwrap(navigation.monsterLockAnimationID)
         XCTAssertNil(navigation.currentDestination)
-        navigation.revealMonsterAfterLock(animationID: animation)
+        navigation.revealUnlockAfterLock(animationID: animation)
         XCTAssertEqual(navigation.currentDestination, .regretView)
         XCTAssertEqual(navigation.unlockMethodOverride, "monster")
         XCTAssertTrue(navigation.isLockStampPlaying) // overlay survives the root swap
@@ -197,36 +304,36 @@ final class MonsterShieldTests: XCTestCase {
 
     @MainActor
     func testClosingAutomaticChatDoesNotReopenUntilANewGrant() {
-        let navigation = NavigationModel()
-        XCTAssertTrue(navigation.beginMonsterLockEntry(grantStamp: 10, animated: false))
+        let navigation = NavigationModel(defaults: local)
+        XCTAssertTrue(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: false))
         XCTAssertEqual(navigation.unlockMethodOverride, "monster")
         navigation.returnHome()
-        XCTAssertFalse(navigation.beginMonsterLockEntry(grantStamp: 10, animated: false))
+        XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: false))
         XCTAssertNil(navigation.currentDestination)
-        XCTAssertTrue(navigation.beginMonsterLockEntry(grantStamp: 20, animated: true))
+        XCTAssertTrue(navigation.beginAutomaticUnlockEntry(grantStamp: 20, animated: true))
     }
 
     @MainActor
     func testShieldEntryCancelsAnimationAndDoesNotReopenAfterClosing() throws {
-        let navigation = NavigationModel()
-        navigation.beginMonsterLockEntry(grantStamp: 10, animated: true)
+        let navigation = NavigationModel(defaults: local)
+        navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true)
         let oldAnimation = try XCTUnwrap(navigation.monsterLockAnimationID)
-        navigation.openMonsterFromShield(returnDestination: nil, grantStamp: 10)
+        navigation.openUnlockFromShield(returnDestination: nil, grantStamp: 10)
         navigation.returnHome()
-        navigation.revealMonsterAfterLock(animationID: oldAnimation)
+        navigation.revealUnlockAfterLock(animationID: oldAnimation)
         XCTAssertNil(navigation.currentDestination)
-        XCTAssertFalse(navigation.beginMonsterLockEntry(grantStamp: 10, animated: false))
+        XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: false))
     }
 
     @MainActor
     func testResetRearmsDebugLockAndIgnoresOldAnimationCallbacks() throws {
-        let navigation = NavigationModel()
-        navigation.beginMonsterLockEntry(grantStamp: 10, animated: true)
+        let navigation = NavigationModel(defaults: local)
+        navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true)
         let oldAnimation = try XCTUnwrap(navigation.monsterLockAnimationID)
-        navigation.resetAutomaticMonsterEntry()
-        XCTAssertTrue(navigation.beginMonsterLockEntry(grantStamp: 10, animated: true))
+        navigation.resetAutomaticUnlockEntry()
+        XCTAssertTrue(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true))
         let currentAnimation = try XCTUnwrap(navigation.monsterLockAnimationID)
-        navigation.revealMonsterAfterLock(animationID: oldAnimation)
+        navigation.revealUnlockAfterLock(animationID: oldAnimation)
         navigation.finishMonsterLockAnimation(animationID: oldAnimation)
         XCTAssertNil(navigation.currentDestination)
         XCTAssertEqual(navigation.monsterLockAnimationID, currentAnimation)
@@ -235,21 +342,21 @@ final class MonsterShieldTests: XCTestCase {
 
     @MainActor
     func testAutomaticEntryDoesNotInterruptAnExistingFlow() {
-        let navigation = NavigationModel()
+        let navigation = NavigationModel(defaults: local)
         navigation.activeWipe = .unlock
-        XCTAssertFalse(navigation.beginMonsterLockEntry(grantStamp: 10, animated: true))
+        XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true))
         navigation.activeWipe = nil
         navigation.navigate(to: .regretView)
-        XCTAssertFalse(navigation.beginMonsterLockEntry(grantStamp: 10, animated: true))
+        XCTAssertFalse(navigation.beginAutomaticUnlockEntry(grantStamp: 10, animated: true))
     }
 
     @MainActor
     func testDirectRouteSkipsHomeAndClearsPendingWipe() {
-        let navigation = NavigationModel()
+        let navigation = NavigationModel(defaults: local)
         navigation.unlockMethodOverride = "trueFocus"
         navigation.activeWipe = .lock
         navigation.wipeMidAction = { XCTFail("An old home transition must not run") }
-        navigation.openMonsterFromShield(returnDestination: nil)
+        navigation.openUnlockFromShield(returnDestination: nil)
         XCTAssertEqual(navigation.currentDestination, .regretView)
         XCTAssertEqual(navigation.unlockMethodOverride, "monster")
         XCTAssertNil(navigation.activeWipe)

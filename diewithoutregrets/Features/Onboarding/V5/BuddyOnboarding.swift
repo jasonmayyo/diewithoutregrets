@@ -46,10 +46,8 @@ struct BuddyOnboardingEntry: Identifiable, Codable {
     var id = UUID()
     var text: String
     var isUser = false
-    var reaction: String?
     var message: MonsterMessage {
-        .init(id: id, sender: isUser ? .user : .monster, kind: .text(text),
-              reaction: reaction.flatMap(MonsterReaction.init(rawValue:)))
+        .init(id: id, sender: isUser ? .user : .monster, kind: .text(text))
     }
 }
 
@@ -97,7 +95,7 @@ enum BuddyOnboardingCopy {
         case "diva": return "\(name) it is. Name remembered. Doomscrolling privileges under review."
         case "coach": return "\(name). Welcome to the squad. Your thumb’s retirement party starts now."
         case "gremlin": return "\(name). Excellent. I’ve added you to my extremely legal goblin records."
-        default: return "Nice to meet you, \(name). Tiny steps. Suspiciously good memes. We’ve got this."
+        default: return "Nice to meet you, \(name). Tiny steps. Steady progress. We’ve got this."
         }
     }
 
@@ -136,8 +134,8 @@ extension SGV5FlowModel {
     var buddyPersona: MonsterPersona { PersonaStore.shared.persona }
     var buddyName: String { buddyIdentity.name.isEmpty ? "friend" : buddyIdentity.name }
 
-    func buddySay(_ text: String, isUser: Bool = false, reaction: MonsterReaction? = nil) {
-        buddy.entries.append(.init(text: text, isUser: isUser, reaction: reaction?.rawValue))
+    func buddySay(_ text: String, isUser: Bool = false) {
+        buddy.entries.append(.init(text: text, isUser: isUser))
     }
 
     func buddyBegin() {
@@ -157,9 +155,7 @@ extension SGV5FlowModel {
         }
         if buddy.entries.isEmpty {
             buddy.personaID = buddyPersona.id
-            // Guaranteed once; stored in the transcript, so resuming never rerolls it.
-            var picker = MonsterReactionPicker()
-            buddySay(BuddyOnboardingCopy.greeting(buddyPersona), reaction: picker.opening(persona: buddyPersona, guaranteed: true))
+            buddySay(BuddyOnboardingCopy.greeting(buddyPersona))
             buddyPrompt()
         } else if buddy.personaID != buddyPersona.id {
             buddy.personaID = buddyPersona.id

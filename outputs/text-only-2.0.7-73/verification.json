@@ -1,0 +1,53 @@
+{
+  "version": "2.0.7",
+  "build": "73",
+  "date": "2026-11-02",
+  "archive": "build/StudyGuard-2.0.7-73.xcarchive",
+  "changes": [
+    "Removed all 21 third-party reaction media files from source",
+    "Removed reaction models, picker and rendering code",
+    "Text-only messages and header in chat, study sheet and onboarding conversations",
+    "Removed chat coin-flight effects and animated typing dots",
+    "Legacy saved media fields ignored; existing progress and idempotent grants retained",
+    "Removed legacy dog-side-eye.mp4 and both bundled mockupvideo.mp4 copies",
+    "Replaced meme-containing welcome recording with text explanation",
+    "Expanded artifact gate to all seven extensions and compiled asset catalogs"
+  ],
+  "checks": {
+    "ios_simulator": {
+      "executed": 183,
+      "skipped_opt_in_live": 4,
+      "failures": 0,
+      "completed_at": "2026-11-02T16:39:15+02:00"
+    },
+    "study_harness": {
+      "executed": 87,
+      "skipped_opt_in_live": 4,
+      "failures": 0
+    },
+    "storage_passed": 9,
+    "shield_routing_passed": 34,
+    "countdown_passed": 11,
+    "backend_unit_passed": 32,
+    "worker_integration_passed": 1,
+    "archive": "passed",
+    "codesign_deep_strict_system_trust": "passed",
+    "version_media_private_api_check": "passed; all seven extensions and asset catalogs checked",
+    "client_secret_scan": "passed",
+    "visual_preview": "passed; synthetic fixture using production conversation views",
+    "git_diff_check": "passed"
+  },
+  "upload": {
+    "status": "not uploaded; handed to owner"
+  },
+  "apple_processing": "not uploaded",
+  "app_store_review": "not submitted; owner will submit",
+  "release_mode": "manual; saved in App Store Connect",
+  "remaining_public_release_gate": "Owner physical Screen Time unlock/re-lock testing remains unverified",
+  "live_provider_retested_for_media_removal": false,
+  "prior_provider_followup": "Previously recorded 73 successful moderation responses, zero 403s; no provider changes in build72",
+  "preview_image": "chat-text-only.png",
+  "status": "archive complete; owner will upload and submit",
+  "prior_candidate": "Build72 was uploaded but not submitted; superseded after the expanded media scan found legacy clips.",
+  "archive_binary_sha256": "dfcb2abf8cc8e0f1e39960022ca8d9a9e8b2441b86e6dce954d5db6cf1a59245"
+}

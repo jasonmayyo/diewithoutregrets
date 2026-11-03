@@ -4,7 +4,7 @@ import Foundation
 
 /// A selectable tutor-monster personality — tone/voice only, never a real-world
 /// demographic caricature. Referenced everywhere by `id`, so renaming is cheap.
-struct MonsterPersona: Identifiable, Equatable {
+struct MonsterPersona: Identifiable, Equatable, Codable {
     let id: String          // stable key; display names can change freely
     let name: String
     let tagline: String
@@ -55,5 +55,13 @@ struct MonsterShieldCopy {
     var title: String { "\(persona.name) has locked \(destination)" }
     var subtitle: String { "Chat with \(persona.name) and answer a few flashcards to earn access to \(destination)." }
     var button: String { "Ask Permission" }
+
+    func handoffSubtitle(supportsDirectOpen: Bool) -> String {
+        supportsDirectOpen ? subtitle : "To unlock \(destination), close this app and open Study Guard from your Home Screen. \(persona.name) will meet you there."
+    }
+
+    func handoffButton(supportsDirectOpen: Bool) -> String {
+        supportsDirectOpen ? "Open Study Guard" : "Go to Home Screen"
+    }
 }
 

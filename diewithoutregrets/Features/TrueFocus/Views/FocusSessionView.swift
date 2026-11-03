@@ -244,7 +244,10 @@ struct FocusSessionView: View {
             // Grant synchronously the moment the session is earned — never
             // inside an animation delay (a background/kill mid-animation
             // would eat the earned unlock).
-            StudyGuardManager.shared.grantFreshBudget(reason: .focusSession)
+            guard StudyGuardManager.shared.grantFreshBudget(reason: .focusSession) else {
+                onEndSession() // The root shows the durable reward and retry action.
+                return
+            }
         } else {
             // Legacy Shortcuts flow — unchanged until the user migrates.
             let currentTime = Date().timeIntervalSince1970

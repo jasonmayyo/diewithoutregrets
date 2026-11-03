@@ -1,6 +1,6 @@
 import Foundation
 
-enum MonsterStudyMethod: String, CaseIterable, Identifiable {
+enum MonsterStudyMethod: String, CaseIterable, Identifiable, Codable {
     case inChat
     case studySheet
 
@@ -14,22 +14,21 @@ enum MonsterStudyMethod: String, CaseIterable, Identifiable {
     }
 }
 
-struct MonsterStudyQuestion: Identifiable, Equatable {
-    let id = UUID()
+struct MonsterStudyQuestion: Identifiable, Equatable, Codable {
+    var id = UUID()
     let card: Regret
 }
 
-struct MonsterStudyAnswer: Identifiable, Equatable {
+struct MonsterStudyAnswer: Identifiable, Equatable, Codable {
     let id: UUID // question occurrence, including a new ID when revisiting a card
     let correct: Bool
     let text: String
     let choiceIndex: Int?
-    var reaction: MonsterReaction? = nil
 }
 
 /// A finite, locally graded batch. Advancing requires an explicit Next tap.
-struct MonsterStudyRound: Identifiable, Equatable {
-    let id = UUID()
+struct MonsterStudyRound: Identifiable, Equatable, Codable {
+    var id = UUID()
     let title: String
     let questions: [MonsterStudyQuestion]
     let isFollowUp: Bool
@@ -58,11 +57,11 @@ struct MonsterStudyRound: Identifiable, Equatable {
     }
 }
 
-struct MonsterStudySummary: Equatable {
+struct MonsterStudySummary: Equatable, Codable {
     let round: MonsterStudyRound
     let earnedSeconds: Int
 }
 
-enum MonsterStudySheetState {
+enum MonsterStudySheetState: Codable {
     case offered, active, readyToUnlock, finished
 }

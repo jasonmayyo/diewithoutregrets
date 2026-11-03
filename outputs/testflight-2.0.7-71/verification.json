@@ -1,0 +1,55 @@
+{
+  "version": "2.0.7",
+  "build": "71",
+  "archive": "build/StudyGuard-2.0.7-71.xcarchive",
+  "appStoreAppID": "6744607430",
+  "upload": "succeeded",
+  "processing": "complete",
+  "testFlightAvailable": true,
+  "appStoreReviewSubmitted": false,
+  "productionReleased": false,
+  "bundles": [
+    {
+      "bundle": "diewithoutregrets.app",
+      "identifier": "com.jasonmayo.diewithoutregrets",
+      "version": "2.0.7",
+      "build": "71"
+    },
+    {
+      "bundle": "MonsterWidgetExtension.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.MonsterWidget",
+      "version": "2.0.7",
+      "build": "71"
+    },
+    {
+      "bundle": "StudyGuardMonitor.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardMonitor",
+      "version": "2.0.7",
+      "build": "71"
+    },
+    {
+      "bundle": "StudyGuardShield.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardShield",
+      "version": "2.0.7",
+      "build": "71"
+    },
+    {
+      "bundle": "StudyGuardShieldAction.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardShieldAction",
+      "version": "2.0.7",
+      "build": "71"
+    }
+  ],
+  "reasonForBuildNumber": "App Store Connect already contained 2.0.7 builds 69 and 70.",
+  "changesFromAuditedCandidate": "Shared build number changed from 2 to 71; no application behavior changes.",
+  "compliance": "saved_after_explicit_owner_approval",
+  "buildID": "8daaaa86-81f9-4bcd-8b5b-6eb5fcf3d808",
+  "buildURL": "https://appstoreconnect.apple.com/teams/bea078d8-ec87-4d64-aaf5-8813f2fcfdaa/apps/6744607430/testflight/ios/8daaaa86-81f9-4bcd-8b5b-6eb5fcf3d808",
+  "testNotesSaved": true,
+  "individualTesterCount": 1,
+  "testFlightStatus": "Testing",
+  "internalGroup": "Beta 1",
+  "internalGroupTesters": 3,
+  "expiresInDaysAtVerification": 90,
+  "reactionPhotosAndGIFsBundled": false
+}

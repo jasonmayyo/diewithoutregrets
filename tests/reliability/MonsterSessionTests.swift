@@ -196,6 +196,61 @@ final class MonsterSessionTests: XCTestCase {
             .last?.totalSeconds, SGContract.maxEarnedMinutes * 60)
     }
 
+    @MainActor func testRoundSurvivesRecreationWithoutLosingEarnedTimeOrReview() throws {
+        let suite = "RoundResume.\(UUID().uuidString)"
+        let preferences = UserDefaults(suiteName: suite)!
+        defer { preferences.removePersistentDomain(forName: suite) }
+        let store = DeckStore(); store.selectedDeck = Deck(name: "Biology", cards: (0..<4).map { _ in card() })
+        let manager = StudyGuardManager()
+        func newSession() -> MonsterSession {
+            MonsterSession(deckStore: store, studyGuard: manager, sharedDefaults: nil,
+                creatorDefaults: preferences, persistsProgress: true, method: .inChat, loadBundle: { _, _, _ in nil })
+        }
+        let first = newSession(); first.start()
+        let firstCard = try XCTUnwrap(first.activeCard)
+        first.answer(choiceIndex: 0)
+        let nextCardID = first.activeCard?.id
+        let earned = first.studyEarnedSeconds
+        XCTAssertEqual(store.recorded[firstCard.id], true)
+        first.stop()
+        let resumed = newSession(); resumed.start()
+        XCTAssertEqual(resumed.roundID, first.roundID)
+        XCTAssertEqual(resumed.activeCard?.id, nextCardID)
+        XCTAssertEqual(resumed.studyEarnedSeconds, earned)
+        XCTAssertEqual(manager.grants, 0)
+        for _ in 0..<20 where !resumed.isFinished { resumed.answer(choiceIndex: 0) }
+        XCTAssertTrue(resumed.isFinished)
+        XCTAssertEqual(manager.grants, 1)
+        XCTAssertNil(preferences.data(forKey: MonsterSession.progressKey))
+    }
+
+    @MainActor func testRepeatedWrongAnswersEndAfterOneRetryPerCard() {
+        let suite = "BoundedRetry.\(UUID().uuidString)"
+        let preferences = UserDefaults(suiteName: suite)!
+        defer { preferences.removePersistentDomain(forName: suite) }
+        // Enough encounters to reach the retrying moods.
+        for _ in 0..<40 { SGContract.recordGateEncounter(preferences) }
+        let store = DeckStore(); store.selectedDeck = Deck(name: "Biology", cards: [card()])
+        let manager = StudyGuardManager()
+        let session = MonsterSession(deckStore: store, studyGuard: manager, sharedDefaults: preferences,
+            creatorDefaults: preferences, method: .inChat, loadBundle: { _, _, _ in nil })
+        session.start()
+        XCTAssertGreaterThanOrEqual(session.dials.mood, .annoyed)
+        session.answer(choiceIndex: 1)
+        XCTAssertFalse(session.isFinished)
+        session.answer(choiceIndex: 1)
+        XCTAssertTrue(session.isFinished)
+        XCTAssertEqual(session.grantedMinutes, 0)
+    }
+
+    @MainActor func testPunctuationAnswerCanGradeItselfAndSafetyFallbackDoesNotEchoUnsafeCard() {
+        var item = card(); item.answerMode = .typed; item.choices = ["?"]; item.correctAnswerIndex = 0; item.regret = "?"
+        XCTAssertTrue(item.isUsableForStudy)
+        XCTAssertTrue(AnswerGrading.matches("?", item.correctAnswer))
+        item.backgroundExplanation = "unsafe fixture must not be echoed"
+        XCTAssertFalse(MonsterSession.fallbackReply(for: item, error: FlashcardServiceError.unsafeContent).contains("unsafe fixture"))
+    }
+
     private func card() -> Regret {
         Regret(regretPrompt: "Plants absorb ___.", regret: "light", choices: ["light", "sand", "soil", "wind"],
                correctAnswerIndex: 0, backgroundExplanation: "Light supplies energy.")
@@ -346,7 +401,7 @@ final class MonsterChatDeckSwitchTests: XCTestCase {
         })
     }
 
-    @MainActor func testSwitchingInChatPreservesEarnedTimeAndWritesEachDeckOnce() throws {
+    @MainActor func testSwitchingInChatPreservesEarnedTimeAndSavesEachAnswerToItsDeck() throws {
         let first = deck("Biology"), second = deck("Physics")
         let store = DeckStore(); store.selectedDeck = first
         let manager = StudyGuardManager()
@@ -379,9 +434,11 @@ final class MonsterChatDeckSwitchTests: XCTestCase {
         XCTAssertEqual(manager.grants, 1)
         XCTAssertEqual(session.grantedMinutes, SGContract.completedQuizMinutes(
             results: Array(repeating: true, count: remaining + 1), perCardSeconds: session.secondsPerCorrectAnswer))
-        XCTAssertEqual(store.reviewWrites.count, 2)
-        XCTAssertEqual(store.reviewWrites[1].deckID, second.id)
-        XCTAssertTrue(Set(store.reviewWrites[1].outcomes.keys).isSubset(of: Set(second.cards.map(\.id))))
+        XCTAssertEqual(store.reviewWrites.count, remaining + 1)
+        for write in store.reviewWrites.dropFirst() {
+            XCTAssertEqual(write.deckID, second.id)
+            XCTAssertTrue(Set(write.outcomes.keys).isSubset(of: Set(second.cards.map(\.id))))
+        }
         session.stop()
     }
 
@@ -412,7 +469,7 @@ final class MonsterChatDeckSwitchTests: XCTestCase {
         XCTAssertEqual(session.studyEarnedSeconds, 4 * session.secondsPerCorrectAnswer)
         session.claimStudyTime(); session.claimStudyTime()
         XCTAssertEqual(manager.grants, 1)
-        XCTAssertEqual(store.reviewWrites.map(\.deckID), [first.id, second.id])
+        XCTAssertEqual(store.reviewWrites.map(\.deckID), [first.id, second.id, second.id, second.id])
         session.stop()
     }
 

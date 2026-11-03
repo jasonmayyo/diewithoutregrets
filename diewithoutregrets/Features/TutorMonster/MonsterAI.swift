@@ -40,13 +40,9 @@ struct BuddyIdentity: Equatable {
         String(text.split(whereSeparator: \.isWhitespace).joined(separator: " ").prefix(limit))
     }
 
-    /// Uses the existing request contract so deployed tutor servers need no migration.
-    /// This is user preference data alongside the question, not system authority.
+    /// Only the question is sent; saved identity preferences remain local.
     func tutorQuestion(_ question: String) -> String {
-        guard !name.isEmpty else { return question }
-        let genderContext = gender.map { " My gender is \(Self.clean($0, limit: 40))." } ?? ""
-        let context = "My preferred name is \(Self.clean(name, limit: 30)); my preference for how to refer to me is \(Self.clean(pronouns, limit: 40)).\(genderContext) Avoid gendered nicknames. My study question: "
-        var result = context + question
+        var result = question
         while result.utf16.count > 1000 { result.removeLast() }
         return result
     }
@@ -61,6 +57,7 @@ struct BuddyIdentity: Equatable {
 
 /// A personalized set of persona lines for one unlock session, from the Worker.
 struct MonsterScriptBundle: Decodable {
+    var safetyChecked: Bool? = nil
     let greeting: String
     let demand: String
     let reason: String
@@ -125,5 +122,17 @@ enum MonsterAI {
             topic: vars.topic, questions: vars.questions, minutes: vars.minutes
         )
         return try? await FlashcardAPIClient.shared.generateScript(context)
+    }
+}
+
+/// Versioned, explicit opt-in. Local grading never requires this permission.
+enum TutorPrivacy {
+    static let consentKey = "sg_tutorConsentVersion"
+    static let version = 1
+    static func isAllowed(in defaults: UserDefaults = .standard) -> Bool {
+        defaults.integer(forKey: consentKey) == version
+    }
+    static func setAllowed(_ allowed: Bool, in defaults: UserDefaults = .standard) {
+        defaults.set(allowed ? version : 0, forKey: consentKey)
     }
 }

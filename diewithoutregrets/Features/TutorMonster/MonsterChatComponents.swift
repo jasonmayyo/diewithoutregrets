@@ -1,6 +1,6 @@
 //
 //  MonsterChatComponents.swift
-//  Text-first Meadow chat, with character identity kept in the contact portrait.
+//  Text-only Meadow chat, with character identity kept in the contact name.
 //
 
 import SwiftUI
@@ -104,7 +104,6 @@ struct MonsterAvatarHeader: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            MonsterProfilePicture(persona: persona)
             if let onChooseDeck {
                 Button(action: onChooseDeck) {
                     VStack(alignment: .leading, spacing: 3) {
@@ -133,65 +132,35 @@ struct MonsterAvatarHeader: View {
     }
 }
 
-/// Always-visible allowance beside the contact name. Uses the same hourglass
-/// artwork as the quiz's earn animation, with the quieter chat styling.
+/// The current allowance or pending round earnings, shown without decorative media.
 struct MonsterAllowanceChip: View {
     let seconds: Int
-    let bump: Int
     var isEarning = false
-    @State private var pulsing = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 5) {
-            Image("sticker-hourglass")
-                .resizable().scaledToFit().frame(width: 20, height: 20)
-            Text(QV2EarnedChip.label(seconds: max(0, seconds)))
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .contentTransition(.numericText(countsDown: false))
-        }
-        .foregroundStyle(MonsterPalette.text)
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(pulsing ? MonsterPalette.successBg : MonsterPalette.surface, in: Capsule())
-        .scaleEffect(pulsing ? 1.1 : 1, anchor: .trailing)
-        .fixedSize(horizontal: true, vertical: true)
-        .task(id: bump) {
-            guard bump > 0, !reduceMotion else { return }
-            withAnimation(.spring(response: 0.18, dampingFraction: 0.6)) { pulsing = true }
-            try? await Task.sleep(nanoseconds: 120_000_000)
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.2)) { pulsing = false }
-        }
-        .onChange(of: reduceMotion) { _, reduced in if reduced { pulsing = false } }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(isEarning ? "Screen time earned this round" : "Screen time allowance")
-        .accessibilityValue(QV2EarnedChip.spokenLabel(seconds: max(0, seconds)))
-        .accessibilityHint(isEarning ? "Finish this round to unlock your earned time." : "")
+        Text(QV2EarnedChip.label(seconds: max(0, seconds)))
+            .font(.subheadline.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(MonsterPalette.text)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(MonsterPalette.surface, in: Capsule())
+            .fixedSize(horizontal: true, vertical: true)
+            .accessibilityLabel(isEarning ? "Screen time earned this round" : "Screen time allowance")
+            .accessibilityValue(QV2EarnedChip.spokenLabel(seconds: max(0, seconds)))
+            .accessibilityHint(isEarning ? "Finish this round to unlock your earned time." : "")
     }
 }
 
 struct MonsterTypingIndicator: View {
     var name: String
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var on = false
 
     var body: some View {
-        HStack(spacing: 5) {
-            ForEach(0..<3, id: \.self) { i in
-                Circle().fill(MonsterPalette.textDim)
-                    .frame(width: 6, height: 6)
-                    .opacity(reduceMotion ? 0.7 : (on ? 0.9 : 0.3))
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6)
-                        .repeatForever().delay(Double(i) * 0.16), value: on)
-            }
-        }
-        .padding(.horizontal, 16).padding(.vertical, 15)
-        .background(MonsterPalette.surface, in: Capsule())
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name) is typing")
-        .onAppear { on = true }
+        Text("\(name) is typing…")
+            .font(.caption)
+            .foregroundStyle(MonsterPalette.textDim)
+            .padding(.horizontal, 16).padding(.vertical, 12)
+            .background(MonsterPalette.surface, in: Capsule())
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -560,5 +529,52 @@ struct MonsterReplyComposer: View {
         guard canSend else { return }
         focused = false
         onSend()
+    }
+}
+
+/// The disclosure is shown before the first tutor request in either entry flow.
+struct TutorPrivacySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage(TutorPrivacy.consentKey) private var consentVersion = 0
+    var onAllow: () -> Void = {}
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Optional AI tutoring") {
+                    Text("To answer a follow-up, Study Guard sends the current card’s question, answer and explanation, your question, and up to four previous follow-ups for that card to OpenAI through Study Guard’s server.")
+                    Text("If you allow AI tutoring, optional buddy dialogue can also use your topic, exam subject and days remaining, gate count and study-round settings. Your saved name, pronouns and gender stay on your device.")
+                    Text("Avoid entering private or sensitive information. AI can make mistakes. Your cards are graded on your device and AI cannot grant app access.")
+                }
+                Section("Your choices and data") {
+                    Text("You can answer cards and earn time without AI. Change this permission here or in Profile at any time. Unfinished study rounds are saved on this device until completed.")
+                    Text("Study Guard does not save chat text on its server. OpenAI processes requests under its API data policies; standard abuse-monitoring logs may be retained for up to 30 days. This does not delete material you have already sent.")
+                    Link("OpenAI API data policy", destination: URL(string: "https://platform.openai.com/docs/guides/your-data")!)
+                    Link("Study Guard privacy policy", destination: URL(string: "https://studyguard.framer.website/legal/privacy-policy")!)
+                }
+                Section {
+                    if consentVersion == TutorPrivacy.version {
+                        Button("Turn off AI tutoring", role: .destructive) {
+                            consentVersion = 0
+                            dismiss()
+                        }
+                    } else {
+                        Button("Allow and continue") {
+                            consentVersion = TutorPrivacy.version
+                            dismiss()
+                            onAllow()
+                        }
+                        Button("Continue without AI") { dismiss() }
+                    }
+                }
+                Section("Report a concern") {
+                    Text("If a reply seems unsafe or incorrect, contact Study Guard support. Include only the details you choose to share.")
+                    Link("Report a tutor reply", destination: URL(string: "https://studyguard.framer.website/support")!)
+                }
+            }
+            .navigationTitle("AI & Privacy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
     }
 }

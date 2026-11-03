@@ -1,0 +1,31 @@
+Test Suite 'CountdownReplayTests' passed at 2026-11-02 10:06:17.438.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.066 (0.071) seconds
+Test Suite 'DeckStoreTests' passed at 2026-11-02 10:06:17.475.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.035 (0.036) seconds
+Test Suite 'FlashcardAPIClientTests' passed at 2026-11-02 10:06:17.588.
+	 Executed 11 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.108 (0.112) seconds
+Test Suite 'FlashcardTransportReliabilityTests' passed at 2026-11-02 10:06:18.032.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.440 (0.444) seconds
+Test Suite 'MonsterShieldTests' passed at 2026-11-02 10:06:18.134.
+	 Executed 22 tests, with 0 failures (0 unexpected) in 0.095 (0.102) seconds
+Test Suite 'OnboardingSuperwallFlowTests' passed at 2026-11-02 10:06:18.155.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.016 (0.020) seconds
+Test Suite 'OnboardingV5Tests' passed at 2026-11-02 10:06:20.560.
+	 Executed 31 tests, with 0 failures (0 unexpected) in 2.394 (2.405) seconds
+Test Suite 'PurchaseReceiptRecoveryTests' passed at 2026-11-02 10:06:20.569.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'ShieldReturnContextTests' passed at 2026-11-02 10:06:20.690.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.117 (0.121) seconds
+Test Suite 'StudyGuardEngineTests' passed at 2026-11-02 10:06:20.758.
+	 Executed 23 tests, with 0 failures (0 unexpected) in 0.060 (0.068) seconds
+Test Suite 'SuperwallBillingTests' passed at 2026-11-02 10:06:20.768.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.007 (0.009) seconds
+Test Suite 'TutorMonsterFoundationTests' passed at 2026-11-02 10:06:20.814.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.040 (0.046) seconds
+Test Suite 'UnlockAppReturnTests' passed at 2026-11-02 10:06:20.831.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.013 (0.017) seconds
+Test Suite 'diewithoutregretsTests.xctest' passed at 2026-11-02 10:06:20.831.
+	 Executed 180 tests, with 2 tests skipped and 0 failures (0 unexpected) in 3.399 (3.463) seconds
+Test Suite 'All tests' passed at 2026-11-02 10:06:20.831.
+	 Executed 180 tests, with 2 tests skipped and 0 failures (0 unexpected) in 3.399 (3.465) seconds
+** TEST SUCCEEDED **

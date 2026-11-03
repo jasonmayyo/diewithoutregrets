@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 @testable import diewithoutregrets
 
 final class OnboardingV5Tests: XCTestCase {
@@ -122,14 +123,14 @@ final class OnboardingV5Tests: XCTestCase {
         XCTAssertEqual(model.buddyUnansweredPhase(startingAt: .practice), .practice)
     }
 
-    func testOldProfileDraftsStillDecodeAndExplicitGenderUsesExistingTutorContext() throws {
+    func testOldProfileDraftsStillDecodeAndIdentityIsExcludedFromTutorContext() throws {
         let old = try JSONDecoder().decode(SGV5V5OnboardingProfile.self,
             from: Data("{\"dailyReductionMinutes\":30,\"startSmaller\":false}".utf8))
         XCTAssertNil(old.gender)
         let identity = BuddyIdentity(name: "Alex", pronouns: "Just my name", gender: "Non-binary")
         let question = identity.tutorQuestion(String(repeating: "🦖", count: 900))
-        XCTAssertTrue(question.contains("My gender is Non-binary"))
-        XCTAssertTrue(question.contains("Just my name"))
+        XCTAssertFalse(question.contains("Non-binary"))
+        XCTAssertFalse(question.contains("Just my name"))
         XCTAssertLessThanOrEqual(question.utf16.count, 1000)
     }
 
@@ -169,15 +170,27 @@ final class OnboardingV5Tests: XCTestCase {
         XCTAssertEqual(resumed.buddy.entries.map(\.text), refreshed)
     }
 
+    func testLegacyOnboardingMediaDoesNotDiscardTheConversation() throws {
+        let entry = BuddyOnboardingEntry(text: "Welcome back.")
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any])
+        legacy["reaction"] = "awkward-wave"
+        let restored = try JSONDecoder().decode(BuddyOnboardingEntry.self,
+            from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertEqual(restored.id, entry.id)
+        XCTAssertEqual(restored.text, entry.text)
+        XCTAssertEqual(restored.message.text, entry.text)
+        XCTAssertFalse(String(decoding: try JSONEncoder().encode(restored), as: UTF8.self).contains("\"reaction\""))
+    }
+
     @MainActor
-    func testOpeningMemeIsGuaranteedAndResumeDoesNotRepeatIt() throws {
+    func testOpeningIsTextOnlyAndResumeDoesNotRepeatIt() throws {
         let suite = "BuddyOpening.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         let model = SGV5FlowModel(defaults: defaults, sharedDefaults: defaults)
         model.buddyBegin()
         XCTAssertEqual(model.buddy.entries.count, 2)
-        XCTAssertNotNil(model.buddy.entries.first?.reaction)
+        XCTAssertFalse(String(decoding: try JSONEncoder().encode(model.buddy.entries), as: UTF8.self).contains("\"reaction\""))
         model.buddySubmitText("  Alex  ")
         model.buddySubmitText("They / them")
         XCTAssertEqual(model.buddyIdentity.name, "Alex")
@@ -187,7 +200,7 @@ final class OnboardingV5Tests: XCTestCase {
         let restored = SGV5FlowModel(defaults: defaults, sharedDefaults: defaults)
         restored.buddyBegin()
         XCTAssertEqual(restored.buddy.entries.count, count)
-        XCTAssertEqual(restored.buddy.entries.filter { $0.reaction != nil }.count, 1)
+        XCTAssertEqual(restored.buddy.entries.map(\.text), model.buddy.entries.map(\.text))
     }
 
     @MainActor
@@ -212,8 +225,8 @@ final class OnboardingV5Tests: XCTestCase {
     func testIdentityIsExplicitAndTutorContextStaysWithinRequestLimit() {
         let identity = BuddyIdentity(name: "Alex", pronouns: "They / them")
         let question = identity.tutorQuestion(String(repeating: "🦖", count: 900))
-        XCTAssertTrue(question.contains("Alex"))
-        XCTAssertTrue(question.contains("They / them"))
+        XCTAssertFalse(question.contains("Alex"))
+        XCTAssertFalse(question.contains("They / them"))
         XCTAssertLessThanOrEqual(question.utf16.count, 1000)
         XCTAssertEqual(BuddyIdentity().tutorQuestion("Why?"), "Why?")
         XCTAssertEqual(identity.addressBanter("Nice work, girl."), "Nice work, friend.")
@@ -475,8 +488,10 @@ final class OnboardingV5Tests: XCTestCase {
         XCTAssertFalse(model.accessVerified)
     }
 
-    func testOriginalWelcomeVideoIsBundled() {
-        XCTAssertNotNil(Bundle.main.url(forResource: "mockupvideo", withExtension: "mp4"))
+    func testRetiredMemeMediaIsNotBundled() {
+        XCTAssertNil(Bundle.main.url(forResource: "mockupvideo", withExtension: "mp4"))
+        XCTAssertNil(Bundle.main.url(forResource: "dog-side-eye", withExtension: "mp4"))
+        XCTAssertNil(NSDataAsset(name: "mockupvideo", bundle: .main))
     }
 
     @MainActor

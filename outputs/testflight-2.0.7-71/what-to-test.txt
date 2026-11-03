@@ -1,0 +1,8 @@
+Please test the chat-monster unlock flow:
+
+1. Complete a monster study round and confirm the selected blocked apps unlock.
+2. Use up the earned time without reopening Study Guard, and confirm those apps re-lock. Try short grants of 1, 2 and 5 minutes where possible.
+3. Close and reopen Study Guard during a round; check that progress is restored and earned time is not awarded twice.
+4. Try local study with AI declined or no internet, and test emergency access.
+
+If something fails, include your iPhone model, iOS version, the steps taken, expected behavior and what actually happened in TestFlight feedback.

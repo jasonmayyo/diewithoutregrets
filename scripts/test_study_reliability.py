@@ -21,8 +21,7 @@ with tempfile.TemporaryDirectory(prefix='studyguard-reliability-') as work:
 import PackageDescription
 let package = Package(name: "StudyReliability", platforms: [.macOS(.v14)],
     targets: [.target(name: "StudyReliability"),
-              .testTarget(name: "StudyReliabilityTests", dependencies: ["StudyReliability"],
-                          resources: [.copy("MonsterReactions")]),
+              .testTarget(name: "StudyReliabilityTests", dependencies: ["StudyReliability"]),
               .target(name: "StudyStorage"),
               .testTarget(name: "StudyStorageTests", dependencies: ["StudyStorage"])])
 ''')
@@ -34,7 +33,6 @@ let package = Package(name: "StudyReliability", platforms: [.macOS(.v14)],
         'diewithoutregrets/Features/TutorMonster/MonsterAI.swift',
         'diewithoutregrets/Features/TutorMonster/MonsterScript.swift',
         'diewithoutregrets/Features/TutorMonster/MonsterMessage.swift',
-        'diewithoutregrets/Features/TutorMonster/MonsterReaction.swift',
         'diewithoutregrets/Features/TutorMonster/MonsterSession.swift',
         'diewithoutregrets/Features/TutorMonster/MonsterStudyRound.swift',
         'tests/reliability/Infrastructure.swift',
@@ -54,11 +52,10 @@ let package = Package(name: "StudyReliability", platforms: [.macOS(.v14)],
     shutil.copyfile(root / 'tests/reliability/MonsterSessionTests.swift', tests / 'MonsterSessionTests.swift')
     shutil.copyfile(root / 'tests/reliability/MonsterStudySheetTests.swift', tests / 'MonsterStudySheetTests.swift')
     shutil.copyfile(root / 'tests/reliability/MonsterPresentationTests.swift', tests / 'MonsterPresentationTests.swift')
-    shutil.copyfile(root / 'tests/reliability/MonsterReactionTests.swift', tests / 'MonsterReactionTests.swift')
+    shutil.copyfile(root / 'tests/reliability/MonsterTextOnlyTests.swift', tests / 'MonsterTextOnlyTests.swift')
     shutil.copyfile(root / 'tests/reliability/MonsterOpeningTests.swift', tests / 'MonsterOpeningTests.swift')
     shutil.copyfile(root / 'tests/reliability/StudyCalendarTests.swift', tests / 'StudyCalendarTests.swift')
     shutil.copyfile(root / 'tests/reliability/StudyLinkSessionTests.swift', tests / 'StudyLinkSessionTests.swift')
-    shutil.copytree(root / 'diewithoutregrets/Resources/MonsterReactions', tests / 'MonsterReactions')
     # Exercise the real UserDefaults stores separately from the chat's focused fakes.
     storage = work / 'Sources' / 'StudyStorage'
     storage_tests = work / 'Tests' / 'StudyStorageTests'

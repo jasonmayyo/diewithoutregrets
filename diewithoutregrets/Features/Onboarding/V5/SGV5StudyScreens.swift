@@ -1,47 +1,35 @@
 import SwiftUI
-import AVFoundation
 
-/// The same bundled demo used by Study Guard's earlier welcome screen.
-struct SGV5WelcomeDemoVideo: View {
-    @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
+/// A text-only introduction; no third-party social feed recording is bundled.
+struct SGV5WelcomeSummary: View {
     var body: some View {
-        SGV5WelcomePlayer(isPlaying: scenePhase == .active && !reduceMotion)
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            .accessibilityLabel("Study Guard product demo: flashcards unlock your apps")
+        VStack(alignment: .leading, spacing: 24) {
+            Text("A little study.\nA little scroll.")
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(SGTheme.paper)
+            step("1", "Choose the apps that distract you.")
+            step("2", "Answer flashcards with your study buddy.")
+            step("3", "Earn time to use your apps.")
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .background(SGTheme.inkRaised, in: RoundedRectangle(cornerRadius: 24))
     }
-}
 
-private struct SGV5WelcomePlayer: UIViewRepresentable {
-    let isPlaying: Bool
-    func makeUIView(context: Context) -> SGV5WelcomePlayerView { SGV5WelcomePlayerView() }
-    func updateUIView(_ view: SGV5WelcomePlayerView, context: Context) {
-        isPlaying ? view.player?.play() : view.player?.pause()
+    private func step(_ number: String, _ title: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Text(number)
+                .font(.headline)
+                .foregroundStyle(SGTheme.mintDeep)
+                .frame(width: 30, height: 30)
+                .background(SGTheme.ink, in: Circle())
+            Text(title)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(SGTheme.paper)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
     }
-    static func dismantleUIView(_ view: SGV5WelcomePlayerView, coordinator: ()) {
-        view.player?.pause()
-        view.player?.removeAllItems()
-    }
-}
-
-private final class SGV5WelcomePlayerView: UIView {
-    override class var layerClass: AnyClass { AVPlayerLayer.self }
-    var player: AVQueuePlayer?
-    private var looper: AVPlayerLooper?
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        guard let url = Bundle.main.url(forResource: "mockupvideo", withExtension: "mp4") else { return }
-        let queue = AVQueuePlayer()
-        queue.isMuted = true
-        looper = AVPlayerLooper(player: queue, templateItem: AVPlayerItem(url: url))
-        player = queue
-        let videoLayer = layer as! AVPlayerLayer
-        videoLayer.player = queue
-        videoLayer.videoGravity = .resizeAspect
-        backgroundColor = UIColor(SGTheme.ink)
-    }
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
 struct SGV5StudyLevelView: View {

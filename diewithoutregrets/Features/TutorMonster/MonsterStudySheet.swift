@@ -5,20 +5,8 @@ struct MonsterStudySheet: View {
     @ObservedObject var session: MonsterSession
     let onAsk: (MonsterReplyTarget) -> Void
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @Environment(\.scenePhase) private var scenePhase
     @State private var draft = ""
-    @State private var displayedSeconds = 0
-    @State private var bump = 0
-    @State private var coins: [QV2CoinModel] = []
-    @State private var landed: Set<Int> = []
-    @State private var serial = 0
-    @State private var rewardStart = 0
-    @State private var rewardTarget = 0
-    @State private var chipFrame: CGRect = .zero
-    @State private var answerFrame: CGRect = .zero
-    @State private var viewportHeight: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,70 +17,42 @@ struct MonsterStudySheet: View {
                     .padding(.horizontal, 24).padding(.bottom, 16)
                     .accessibilityLabel("Flashcards answered")
                     .accessibilityValue("\(round.answers.count) of \(round.questions.count)")
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            HStack {
-                                Text(MonsterDisplayCopy.text(question.card.topic ?? round.title)).lineLimit(2)
-                                Spacer(minLength: 8)
-                                Text("\(round.index + 1) of \(round.questions.count)").monospacedDigit().fixedSize()
-                            }
-                            .font(.caption.weight(.medium)).foregroundStyle(MonsterPalette.textDim)
-                            Text(MonsterDisplayCopy.text(question.card.quizPrompt.text))
-                                .font(.title2.weight(.semibold))
-                                .fixedSize(horizontal: false, vertical: true)
-                                .accessibilityAddTraits(.isHeader)
-                            if question.card.answerMode == .choices {
-                                choices(question: question, answer: round.currentAnswer)
-                            } else if let answer = round.currentAnswer {
-                                Text(MonsterDisplayCopy.text(answer.text)).font(.body).padding(16)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 16))
-                            } else {
-                                MonsterReplyComposer(draft: $draft, enabled: !session.isThinking,
-                                    placeholder: "Your answer…", onSend: {
-                                        session.answerStudyTyped(questionID: question.id, text: draft)
-                                    })
-                            }
-                            feedback(question: question, answer: round.currentAnswer)
-                                .background(QV2GlobalFrameReader { answerFrame = $0 })
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack {
+                            Text(MonsterDisplayCopy.text(question.card.topic ?? round.title)).lineLimit(2)
+                            Spacer(minLength: 8)
+                            Text("\(round.index + 1) of \(round.questions.count)").monospacedDigit().fixedSize()
                         }
-                        .padding(.horizontal, 24).padding(.bottom, 20)
-                        .id(question.id)
-                    }
-                    .coordinateSpace(name: "monsterTranscript")
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
-                    .scrollDismissesKeyboard(.interactively)
-                    .onChange(of: round.currentAnswer?.id) { _, id in
-                        guard id != nil, round.currentAnswer?.reaction != nil else { return }
-                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) {
-                            proxy.scrollTo("answerReaction", anchor: .bottom)
+                        .font(.caption.weight(.medium)).foregroundStyle(MonsterPalette.textDim)
+                        Text(MonsterDisplayCopy.text(question.card.quizPrompt.text))
+                            .font(.title2.weight(.semibold))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                        if question.card.answerMode == .choices {
+                            choices(question: question, answer: round.currentAnswer)
+                        } else if let answer = round.currentAnswer {
+                            Text(MonsterDisplayCopy.text(answer.text)).font(.body).padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(MonsterPalette.surface, in: RoundedRectangle(cornerRadius: 16))
+                        } else {
+                            MonsterReplyComposer(draft: $draft, enabled: !session.isThinking,
+                                placeholder: "Your answer…", onSend: {
+                                    session.answerStudyTyped(questionID: question.id, text: draft)
+                                })
                         }
+                        feedback(question: question, answer: round.currentAnswer)
                     }
+                    .padding(.horizontal, 24).padding(.bottom, 20)
+                    .id(question.id)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 footer(round: round, question: question)
             }
         }
         .foregroundStyle(MonsterPalette.text)
         .background(MonsterPalette.bg)
-        .overlay {
-            QV2CoinFlightOverlay(coins: coins, spawnFrame: answerFrame, targetFrame: chipFrame, onLand: bank)
-                .accessibilityHidden(true)
-        }
-        .onAppear { displayedSeconds = session.studyEarnedSeconds }
         .onChange(of: session.studyRound?.currentQuestion?.id) { _, _ in draft = "" }
-        .onChange(of: session.studyRound?.currentAnswer?.id) { _, id in
-            guard id != nil, session.studyRound?.currentAnswer?.correct == true else { return }
-            guard !reduceMotion, scenePhase == .active else { settle(); return }
-            rewardStart = displayedSeconds
-            rewardTarget = session.studyEarnedSeconds
-            serial += 1
-            landed = []
-            coins = QV2CoinModel.flock(of: 6, serial: serial)
-        }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { settle() } }
-        .onChange(of: reduceMotion) { _, reduced in if reduced { settle() } }
-        .onDisappear { settle() }
     }
 
     private var header: some View {
@@ -104,8 +64,7 @@ struct MonsterStudySheet: View {
                     .font(.caption).foregroundStyle(MonsterPalette.textDim)
             }
             Spacer(minLength: 0)
-            MonsterAllowanceChip(seconds: displayedSeconds, bump: bump, isEarning: true)
-                .background(QV2GlobalFrameReader { chipFrame = $0 })
+            MonsterAllowanceChip(seconds: session.studyEarnedSeconds, isEarning: true)
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.system(size: 13, weight: .semibold))
                     .frame(width: 34, height: 34)
@@ -162,10 +121,6 @@ struct MonsterStudySheet: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
-            if let reaction = answer.reaction {
-                MonsterReactionView(reaction: reaction, playbackEnabled: true, viewportHeight: viewportHeight)
-                    .id("answerReaction")
-            }
         } else {
             Text(question.card.answerMode == .choices ? "Choose one answer. Take your time." : "Try recalling it in your own words.")
                 .font(.caption).foregroundStyle(MonsterPalette.textDim)
@@ -175,7 +130,7 @@ struct MonsterStudySheet: View {
     private func footer(round: MonsterStudyRound, question: MonsterStudyQuestion) -> some View {
         VStack(spacing: 10) {
             MonsterStudyButton(title: round.index == round.questions.count - 1 ? "Back to \(session.persona.name)" : "Next card",
-                               enabled: round.currentAnswer != nil && coins.isEmpty && !session.isThinking) {
+                               enabled: round.currentAnswer != nil && !session.isThinking) {
                 if session.advanceStudyRound(questionID: question.id) { dismiss() }
             }
             Button {
@@ -192,19 +147,7 @@ struct MonsterStudySheet: View {
         .background(MonsterPalette.bg)
     }
 
-    private func bank(_ coin: QV2CoinModel) {
-        guard coins.contains(where: { $0.id == coin.id }), landed.insert(coin.id).inserted else { return }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-            displayedSeconds = rewardStart + (rewardTarget - rewardStart) * landed.count / coin.flockSize
-            bump += 1
-        }
-        QuizHaptics.coinLand(progress: Double(landed.count) / Double(coin.flockSize))
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { coins.removeAll { $0.id == coin.id } }
-    }
 
-    private func settle() {
-        coins = []; landed = []; displayedSeconds = session.studyEarnedSeconds
-    }
 }
 
 struct MonsterStudyButton: View {

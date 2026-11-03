@@ -33,7 +33,7 @@ enum MonsterRoundOutcome: String, CaseIterable {
 }
 
 /// Runtime values a scripted line can interpolate.
-struct MonsterScriptVars: Equatable {
+struct MonsterScriptVars: Equatable, Codable {
     var app = "your apps"
     var count = 0            // gate encounters today
     var exam: String? = nil

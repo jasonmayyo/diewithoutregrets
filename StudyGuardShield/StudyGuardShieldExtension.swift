@@ -53,6 +53,8 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
         let persona = previewPersona ?? MonsterPersona.selected(in: SGContract.sharedDefaults)
         let copy = MonsterShieldCopy(persona: persona, applicationName: applicationName, fallback: fallbackName)
         let buttonColor = UIColor(red: 0.102, green: 0.141, blue: 0.125, alpha: 1)
+        let supportsDirectOpen: Bool
+        if #available(iOS 26.5, *) { supportsDirectOpen = true } else { supportsDirectOpen = false }
 
         return ShieldConfiguration(
             backgroundBlurStyle: nil,
@@ -60,10 +62,10 @@ final class StudyGuardShieldExtension: ShieldConfigurationDataSource {
             icon: monsterIcon(persona: persona) ?? lockIcon(color: buttonColor),
             title: ShieldConfiguration.Label(text: copy.title, color: .label),
             subtitle: ShieldConfiguration.Label(
-                text: copy.subtitle,
+                text: copy.handoffSubtitle(supportsDirectOpen: supportsDirectOpen),
                 color: .secondaryLabel
             ),
-            primaryButtonLabel: ShieldConfiguration.Label(text: copy.button, color: .white),
+            primaryButtonLabel: ShieldConfiguration.Label(text: copy.handoffButton(supportsDirectOpen: supportsDirectOpen), color: .white),
             primaryButtonBackgroundColor: buttonColor
         )
     }

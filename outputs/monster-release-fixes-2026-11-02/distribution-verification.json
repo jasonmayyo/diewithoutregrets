@@ -1,0 +1,69 @@
+{
+  "ipa": "/Users/jasonmayo/Desktop/diewithoutregrets/build/StudyGuard-2.0.7-2-export/diewithoutregrets.ipa",
+  "signatureVerification": "passed",
+  "appStoreProvisioning": "passed",
+  "bundles": [
+    {
+      "bundle": "diewithoutregrets.app",
+      "entitlements": {
+        "application-identifier": "5BFXSF2PS6.com.jasonmayo.diewithoutregrets",
+        "com.apple.developer.team-identifier": "5BFXSF2PS6",
+        "com.apple.security.application-groups": [
+          "group.com.jasonmayo.diewithoutregrets"
+        ],
+        "com.apple.developer.family-controls": true,
+        "com.apple.developer.devicecheck.appattest-environment": "production",
+        "get-task-allow": false
+      },
+      "profileExpires": "2027-04-16 17:10:12"
+    },
+    {
+      "bundle": "MonsterWidgetExtension.appex",
+      "entitlements": {
+        "application-identifier": "5BFXSF2PS6.com.jasonmayo.diewithoutregrets.MonsterWidget",
+        "com.apple.developer.team-identifier": "5BFXSF2PS6",
+        "get-task-allow": false
+      },
+      "profileExpires": "2027-04-16 17:10:12"
+    },
+    {
+      "bundle": "StudyGuardMonitor.appex",
+      "entitlements": {
+        "application-identifier": "5BFXSF2PS6.com.jasonmayo.diewithoutregrets.StudyGuardMonitor",
+        "com.apple.developer.team-identifier": "5BFXSF2PS6",
+        "com.apple.security.application-groups": [
+          "group.com.jasonmayo.diewithoutregrets"
+        ],
+        "com.apple.developer.family-controls": true,
+        "get-task-allow": false
+      },
+      "profileExpires": "2027-04-16 17:10:12"
+    },
+    {
+      "bundle": "StudyGuardShield.appex",
+      "entitlements": {
+        "application-identifier": "5BFXSF2PS6.com.jasonmayo.diewithoutregrets.StudyGuardShield",
+        "com.apple.developer.team-identifier": "5BFXSF2PS6",
+        "com.apple.security.application-groups": [
+          "group.com.jasonmayo.diewithoutregrets"
+        ],
+        "com.apple.developer.family-controls": true,
+        "get-task-allow": false
+      },
+      "profileExpires": "2027-04-16 17:10:12"
+    },
+    {
+      "bundle": "StudyGuardShieldAction.appex",
+      "entitlements": {
+        "application-identifier": "5BFXSF2PS6.com.jasonmayo.diewithoutregrets.StudyGuardShieldAction",
+        "com.apple.developer.team-identifier": "5BFXSF2PS6",
+        "com.apple.security.application-groups": [
+          "group.com.jasonmayo.diewithoutregrets"
+        ],
+        "com.apple.developer.family-controls": true,
+        "get-task-allow": false
+      },
+      "profileExpires": "2027-04-16 17:10:12"
+    }
+  ]
+}

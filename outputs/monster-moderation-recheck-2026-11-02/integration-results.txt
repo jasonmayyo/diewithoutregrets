@@ -1,0 +1,6 @@
+✔ Worker runtime verifies signed requests, blocks replay/tampering and reserves failed calls (477.841333ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 830.644292

@@ -112,7 +112,7 @@ struct SGV5WelcomeView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            SGV5WelcomeDemoVideo()
+            SGV5WelcomeSummary()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 24)
                 .layoutPriority(-1)

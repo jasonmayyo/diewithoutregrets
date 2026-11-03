@@ -78,8 +78,8 @@ struct StudyGuardDebugSection: View {
             Button {
                 switch manager.debugForceLock() {
                 case .success:
-                    NavigationModel.shared.resetAutomaticMonsterEntry()
-                    lastAction = "Apps locked. Open a guarded app to test its shield, or open monster chat below."
+                    NavigationModel.shared.resetAutomaticUnlockEntry()
+                    lastAction = "Apps locked. Open a guarded app to test its shield, or open the unlock flow below."
                     NavigationModel.shared.requestedTab = 0
                 case .failure(let error):
                     lastAction = error.localizedDescription
@@ -90,16 +90,15 @@ struct StudyGuardDebugSection: View {
             }
 
             Button {
-                // Use the same direct route as the personalized shield, even
-                // with no deck or a different saved unlock preference.
+                // Use the same route and saved preference as a shield tap.
                 if DeckStore.shared.selectedDeck?.cards.isEmpty ?? true,
                    let deck = DeckStore.shared.decks.first(where: { !$0.cards.isEmpty }) {
                     DeckStore.shared.selectDeck(deck)
                 }
-                NavigationModel.shared.openMonsterFromShield(returnDestination: nil)
-                lastAction = "Opened monster chat"
+                NavigationModel.shared.openUnlockFromShield(returnDestination: nil)
+                lastAction = "Opened unlock flow"
             } label: {
-                Label("Open monster chat (debug)", systemImage: "bubble.left.and.bubble.right.fill")
+                Label("Open unlock flow (debug)", systemImage: "lock.open.fill")
             }
 
             Button {

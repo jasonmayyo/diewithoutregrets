@@ -62,7 +62,7 @@ struct GuardBudgetSnapshot {
 }
 
 /// Why a fresh budget was granted — becomes the analytics `source`.
-enum GrantReason: String {
+enum GrantReason: String, Codable {
     case setup
     case quiz = "flashcards"
     case focusSession = "true_focus"
@@ -101,5 +101,46 @@ enum EmergencyLedger {
         if let data = try? JSONEncoder().encode(timestamps) {
             defaults.set(data, forKey: SGContract.Keys.emergencyUnlockTimestamps)
         }
+    }
+}
+
+/// Durable rewards are acknowledged only after DeviceActivity registration.
+/// Retrying a completed ID cannot mint another budget after a crash/reopen.
+struct PendingBudgetGrant: Codable, Identifiable {
+    let id: UUID
+    let minutes: Int
+    let reason: GrantReason
+}
+
+enum BudgetGrantLedger {
+    static let pendingKey = "sg_pendingBudgetGrants.v1"
+    static let completedKey = "sg_completedBudgetGrants.v1"
+    static func pending(in defaults: UserDefaults) -> [PendingBudgetGrant] {
+        guard let data = defaults.data(forKey: pendingKey) else { return [] }
+        return (try? JSONDecoder().decode([PendingBudgetGrant].self, from: data)) ?? []
+    }
+    @discardableResult
+    static func attempt(_ grant: PendingBudgetGrant, defaults: UserDefaults,
+                        start: () -> Bool, commit: () -> Void, fail: () -> Void) -> Bool {
+        var completed = defaults.stringArray(forKey: completedKey) ?? []
+        if completed.contains(grant.id.uuidString) { return true }
+        var rewards = pending(in: defaults)
+        if !rewards.contains(where: { $0.id == grant.id }) { rewards.append(grant) }
+        defaults.set(try? JSONEncoder().encode(rewards), forKey: pendingKey)
+        defaults.synchronize()
+        guard start() else { fail(); return false }
+        commit()
+        completed.append(grant.id.uuidString)
+        defaults.set(Array(completed.suffix(128)), forKey: completedKey)
+        defaults.set(try? JSONEncoder().encode(rewards.filter { $0.id != grant.id }), forKey: pendingKey)
+        defaults.synchronize()
+        return true
+    }
+    static func acknowledge(_ id: UUID, defaults: UserDefaults) {
+        var completed = defaults.stringArray(forKey: completedKey) ?? []
+        if !completed.contains(id.uuidString) { completed.append(id.uuidString) }
+        defaults.set(Array(completed.suffix(128)), forKey: completedKey)
+        defaults.set(try? JSONEncoder().encode(pending(in: defaults).filter { $0.id != id }), forKey: pendingKey)
+        defaults.synchronize()
     }
 }

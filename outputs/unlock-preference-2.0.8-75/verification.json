@@ -1,0 +1,69 @@
+{
+  "version": "2.0.8",
+  "build": "75",
+  "date": "2026-11-03",
+  "archive": "build/StudyGuard-2.0.8-75.xcarchive",
+  "changes": [
+    "Monster unlock off uses the saved Flashcards or True Focus method for home, shield, cold/warm launch, deep-link and automatic unlock entries"
+  ],
+  "checks": {
+    "signed_release_archive": "passed",
+    "codesign_deep_strict_system_trust": "passed",
+    "app_and_seven_extension_versions": "passed",
+    "release_packaging_media_private_api_scan": "passed",
+    "client_secret_scan": "passed",
+    "diff_check": "passed",
+    "prior_routing_tests_for_this_change": {
+      "executed": 39,
+      "failures": 0
+    },
+    "prior_simulator_verification": "old quiz confirmed through simulated shield handoff and home Unlock apps button"
+  },
+  "bundles": [
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/Extensions/OpenGuardIntent.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/Extensions/RegretGuardIntent.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/Extensions/StudyGuardReport.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/PlugIns/MonsterWidgetExtension.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/PlugIns/StudyGuardMonitor.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/PlugIns/StudyGuardShield.appex",
+      "version": "2.0.8",
+      "build": "75"
+    },
+    {
+      "bundle": "Products/Applications/diewithoutregrets.app/PlugIns/StudyGuardShieldAction.appex",
+      "version": "2.0.8",
+      "build": "75"
+    }
+  ],
+  "archive_binary_sha256": "b4c14d99026c88dde96d0eeb2d65cc17e9041a8f281c6ce3acb404841e36e9b6",
+  "organizer": "2.0.8 (75) selected; Distribute App available",
+  "uploaded": false,
+  "submitted": false,
+  "handoff": "Owner performs upload and Apple submission"
+}

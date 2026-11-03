@@ -251,7 +251,7 @@ enum SGContract {
     // Primitives only (no app-model deps) so this compiles into every target and
     // the shield can derive the monster's mood for its copy later.
 
-    enum MonsterMood: Int, Comparable, CaseIterable {
+    enum MonsterMood: Int, Comparable, CaseIterable, Codable {
         case chill = 0, nudgy, annoyed, fedUp, feral
         static func < (lhs: MonsterMood, rhs: MonsterMood) -> Bool { lhs.rawValue < rhs.rawValue }
     }
@@ -264,7 +264,7 @@ enum SGContract {
         var fastBurn: Bool = false        // last grant spent unusually fast
     }
 
-    struct MoodDials: Equatable {
+    struct MoodDials: Equatable, Codable {
         var mood: MonsterMood
         var questions: Int      // toll size
         var minutesBack: Int    // screen-time reward on a pass

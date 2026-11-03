@@ -30,11 +30,15 @@ struct GeneratedFlashcard: Decodable {
 }
 
 enum FlashcardServiceError: LocalizedError, Equatable {
-    case unavailable, unsupportedDevice, verificationFailed, invalidResponse
+    case unavailable, unsupportedDevice, verificationFailed, invalidResponse, consentRequired, unsafeContent, safetyUnavailable
     case dailyLimit, rateLimited, inputTooLarge, alreadyGenerating, serviceAtCapacity, serviceBusy, timedOut
 
     var errorDescription: String? {
         switch self {
+        case .consentRequired:
+            return "Allow AI tutoring before sharing study material. You can keep studying locally."
+        case .unsafeContent, .safetyUnavailable:
+            return "The live tutor could not provide a checked reply. You can continue studying locally or report a concern from AI & Privacy."
         case .unavailable:
             return "AI flashcard generation is temporarily unavailable. Please try again later. Your existing cards are safe."
         case .unsupportedDevice:
@@ -104,13 +108,16 @@ final class FlashcardAPIClient {
     private let defaults: UserDefaults
     private let baseURL: URL?
     private let attestation: any AppAttesting
+    private let operationTimeout: TimeInterval?
     private enum RecoverableVerification: Error { case invalidKey, expiredChallenge }
 
     init(session: URLSession = .shared, defaults: UserDefaults = .standard,
          host: String? = Bundle.main.object(forInfoDictionaryKey: "StudyGuardAPIHost") as? String,
          attestation: (any AppAttesting)? = nil,
+         operationTimeout: TimeInterval? = nil,
          transport: ((URLRequest) async throws -> (Data, URLResponse))? = nil) {
         self.attestation = attestation ?? SystemAppAttestation()
+        self.operationTimeout = operationTimeout
         self.transport = transport ?? { try await session.data(for: $0) }
         self.defaults = defaults
         // Configuration contains a public HTTPS hostname, never credentials.
@@ -163,11 +170,12 @@ final class FlashcardAPIClient {
     }
 
     func generateScript(_ context: MonsterScriptContext) async throws -> MonsterScriptBundle {
+        guard TutorPrivacy.isAllowed(in: defaults) else { throw FlashcardServiceError.consentRequired }
         let data = try await authenticatedPost("v1/script", timeout: 15) { challenge, requestID in
             try JSONEncoder().encode(ScriptPayload(action: "generate_script", context: context,
                 challenge: challenge, requestId: requestID))
         }
-        guard let bundle = try? JSONDecoder().decode(MonsterScriptBundle.self, from: data), bundle.isValid else {
+        guard let bundle = try? JSONDecoder().decode(MonsterScriptBundle.self, from: data), bundle.isValid, bundle.safetyChecked == true else {
             throw FlashcardServiceError.invalidResponse
         }
         return bundle
@@ -175,26 +183,34 @@ final class FlashcardAPIClient {
 
     func askTutor(persona: String, card: MonsterTutorCard, question: String,
                   history: [MonsterTutorTurn]) async throws -> String {
-        let personalizedQuestion = BuddyIdentity.load().tutorQuestion(question)
+        guard TutorPrivacy.isAllowed(in: defaults) else { throw FlashcardServiceError.consentRequired }
         let data = try await authenticatedPost("v1/tutor", timeout: 18) { challenge, requestID in
             try JSONEncoder().encode(TutorPayload(action: "ask_tutor", persona: persona, card: card,
-                question: personalizedQuestion, history: Array(history.suffix(4)), challenge: challenge, requestId: requestID))
+                question: question, history: Array(history.suffix(4)), challenge: challenge, requestId: requestID))
         }
         guard let result = try? JSONDecoder().decode(TutorResponse.self, from: data),
               !result.reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               result.reply.utf16.count <= 2000 else { throw FlashcardServiceError.invalidResponse }
+        guard result.safetyChecked == true else { throw FlashcardServiceError.safetyUnavailable }
         return result.reply.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Serialize signed requests across generation, scripts and follow-ups. Apple
     /// assertion counters must reach the server in order, and enrollment must not race.
     private func authenticatedPost(_ path: String, timeout: TimeInterval,
-                                   body makeBody: (String, String) throws -> Data) async throws -> Data {
+                                   body makeBody: @escaping (String, String) throws -> Data) async throws -> Data {
         guard baseURL != nil else { throw FlashcardServiceError.unavailable }
         guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
         guard !isGenerating else { throw FlashcardServiceError.alreadyGenerating }
         isGenerating = true
         defer { isGenerating = false }
+        return try await RequestDeadline.run(seconds: operationTimeout ?? timeout + 2) { [self] in
+            try await performAuthenticatedPost(path, timeout: timeout, body: makeBody)
+        }
+    }
+
+    private func performAuthenticatedPost(_ path: String, timeout: TimeInterval,
+        body makeBody: (String, String) throws -> Data) async throws -> Data {
         let requestID = UUID().uuidString
         for attempt in 0...1 {
             do {
@@ -211,6 +227,7 @@ final class FlashcardAPIClient {
             } catch let recovery as RecoverableVerification {
                 // These failures prove the paid operation was not accepted. Never
                 // retry an uncertain timeout, 5xx, invalid assertion, or quota error.
+                try Task.checkCancellation()
                 if recovery == .invalidKey { defaults.removeObject(forKey: keyStorageName) }
                 if attempt == 1 { throw FlashcardServiceError.verificationFailed }
             }
@@ -263,7 +280,9 @@ final class FlashcardAPIClient {
         guard attestation.isSupported else { throw FlashcardServiceError.unsupportedDevice }
         isGenerating = true
         defer { isGenerating = false }
-        do { return try await prepareChallenge() }
+        do { return try await RequestDeadline.run(seconds: operationTimeout ?? 20) { [self] in
+            try await prepareChallenge()
+        } }
         catch is RecoverableVerification { throw FlashcardServiceError.verificationFailed }
     }
 
@@ -274,6 +293,7 @@ final class FlashcardAPIClient {
         else {
             do { keyID = try await attestation.generateKey() }
             catch { throw FlashcardServiceError.verificationFailed }
+            try Task.checkCancellation()
             // Save before enrollment. If the server response is lost, the next
             // challenge tells us whether this key has already been registered.
             defaults.set(keyID, forKey: keyStorageName)
@@ -288,6 +308,7 @@ final class FlashcardAPIClient {
         } catch {
             throw verificationError(error)
         }
+        try Task.checkCancellation()
         let enrollment = Enrollment(keyId: keyID, challenge: challenge.challenge, attestation: object.base64EncodedString())
         _ = try await post("v1/attest", body: JSONEncoder().encode(enrollment))
         let next = try await fetchChallenge(keyID)
@@ -328,6 +349,8 @@ final class FlashcardAPIClient {
         guard (200..<300).contains(http.statusCode) else {
             let code = (try? JSONDecoder().decode(ErrorResponse.self, from: data))?.error.code
             switch code {
+            case "unsafe_content": throw FlashcardServiceError.unsafeContent
+            case "safety_unavailable": throw FlashcardServiceError.safetyUnavailable
             case "daily_limit": throw FlashcardServiceError.dailyLimit
             case "rate_limited": throw FlashcardServiceError.rateLimited
             case "generation_in_progress": throw FlashcardServiceError.alreadyGenerating
@@ -371,9 +394,50 @@ final class FlashcardAPIClient {
         let action: String; let persona: String; let card: MonsterTutorCard
         let question: String; let history: [MonsterTutorTurn]; let challenge: String; let requestId: String
     }
-    private struct TutorResponse: Decodable { let reply: String }
+    private struct TutorResponse: Decodable { let reply: String; let safetyChecked: Bool? }
     private struct ErrorResponse: Decodable {
         struct Detail: Decodable { let code: String }
         let error: Detail
+    }
+}
+
+/// A deadline must not wait for a non-cooperative Apple callback. A one-shot
+/// continuation releases the client lock; cancelled work checks cancellation
+/// before storing keys or submitting assertions, so late callbacks cannot send.
+@MainActor
+private final class RequestDeadline<Value> {
+    private var continuation: CheckedContinuation<Value, Error>?
+    private var worker: Task<Void, Never>?
+    private var timer: Task<Void, Never>?
+    private var finished = false
+
+    static func run(seconds: TimeInterval, operation: @escaping @MainActor () async throws -> Value) async throws -> Value {
+        let race = RequestDeadline<Value>()
+        return try await withTaskCancellationHandler(operation: {
+            try Task.checkCancellation()
+            return try await withCheckedThrowingContinuation { continuation in
+                race.continuation = continuation
+                race.worker = Task { @MainActor in
+                    do { race.finish(.success(try await operation())) }
+                    catch { race.finish(.failure(error)) }
+                }
+                race.timer = Task { @MainActor in
+                    do { try await Task.sleep(nanoseconds: UInt64(max(0.001, seconds) * 1_000_000_000)) }
+                    catch { return }
+                    race.finish(.failure(FlashcardServiceError.timedOut))
+                }
+            }
+        }, onCancel: {
+            Task { @MainActor in race.finish(.failure(CancellationError())) }
+        })
+    }
+
+    private func finish(_ result: Result<Value, Error>) {
+        guard !finished else { return }
+        finished = true
+        worker?.cancel(); timer?.cancel()
+        worker = nil; timer = nil
+        continuation?.resume(with: result)
+        continuation = nil
     }
 }

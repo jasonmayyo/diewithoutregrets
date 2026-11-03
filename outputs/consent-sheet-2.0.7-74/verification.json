@@ -1,0 +1,34 @@
+{
+  "version": "2.0.7",
+  "build": "74",
+  "date": "2026-11-02",
+  "changes": [
+    "Removed permanent saved-progress and AI/privacy strip from chat",
+    "Retained first-use consent sheet and saved permission",
+    "Retained privacy controls in Profile",
+    "Dismissed consent sheet clears pending question"
+  ],
+  "checks": {
+    "consent_and_network_safety": {
+      "executed": 11,
+      "failures": 0,
+      "live_provider_calls": 0
+    },
+    "prior_full_simulator_suite": {
+      "build": 73,
+      "executed": 183,
+      "skipped": 4,
+      "failures": 0
+    },
+    "archive": "passed",
+    "signature": "passed; deep and strict with system trust",
+    "media_and_all_extension_versions": "passed",
+    "client_secret_scan": "passed",
+    "diff_check": "passed"
+  },
+  "archive": "build/StudyGuard-2.0.7-74.xcarchive",
+  "uploaded": false,
+  "submitted": false,
+  "handoff": "Owner performs all uploads and submissions",
+  "archive_binary_sha256": "4cf156d0e7e653f19cc68ecd9b0c0f3427fc1a752b1a39dde1d7c2493dcaff26"
+}
