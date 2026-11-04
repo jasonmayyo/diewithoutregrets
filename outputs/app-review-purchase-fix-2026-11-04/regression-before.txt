@@ -1,0 +1,5 @@
+/Users/jasonmayo/Desktop/diewithoutregrets/diewithoutregretsTests/SuperwallBillingTests.swift:264: error: -[diewithoutregretsTests.OnboardingSuperwallFlowTests testPurchaseWithLocalEnvironmentMismatchCompletesOnboarding] : XCTAssertEqual failed: ("failed("We couldn\'t confirm an active subscription. Try again or restore your purchases.")") is not equal to ("completed")
+/Users/jasonmayo/Desktop/diewithoutregrets/diewithoutregretsTests/SuperwallBillingTests.swift:23: error: -[diewithoutregretsTests.SuperwallBillingTests testActiveSandboxAndProductionEntitlementsBothGrantAccess] : XCTAssertTrue failed - isSandbox=false
+/Users/jasonmayo/Desktop/diewithoutregrets/diewithoutregretsTests/SuperwallBillingTests.swift:31: error: -[diewithoutregretsTests.SuperwallBillingTests testLocalEnvironmentMismatchDoesNotRejectActiveEntitlement] : XCTAssertTrue failed
+	 Executed 23 tests, with 3 failures (0 unexpected) in 0.197 (0.823) seconds
+	 Executed 23 tests, with 3 failures (0 unexpected) in 0.197 (0.824) seconds

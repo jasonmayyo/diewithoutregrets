@@ -1,0 +1,96 @@
+Study Guard locked-app / remaining-time investigation — 2026-11-03
+
+Finding
+The reported symptoms closely match a reproducible bug in the source associated with
+the current public release. Customer-specific attribution remains unconfirmed.
+
+Live release verification
+Apple's public lookup API was fetched directly on November 3 and returned:
+  app: Study Guard: Study & Focus
+  bundle: com.jasonmayo.diewithoutregrets
+  US App Store version: 2.0.6
+  release date: 2026-10-22T20:34:23Z
+  https://apps.apple.com/us/app/study-guard-study-focus/id6744607430
+  https://itunes.apple.com/lookup?id=6744607430&country=us
+This is a live lookup, not just the older cached App Store search page.
+
+PostHog verification
+The user approved a read-only exact-email lookup in Study Guard project 149292.
+Both persons-list(email=full_address) and persons-list(search=full_address) returned
+zero matches. The person-property schema has no email property. The app identifies
+with RevenueCat's anonymous appUserID (AppDelegate.swift:79), and the support URL does
+not attach that ID or the app version. No identity was inferred from similar names.
+No account-specific event history or installed version could therefore be confirmed.
+
+A bounded record inspection of Application Opened events over the last 24 hours
+found version 2.0.6, build 67, with is_testflight=false and is_emulator=false, as well
+as older versions and development/TestFlight builds of 2.0.7. These are project-wide
+records, not evidence of this customer's version. A non-TestFlight flag alone does
+not prove App Store installation; the public release was independently verified above.
+Project: https://us.posthog.com/project/149292
+
+Version inspection query (verified event/property schema first):
+SELECT DISTINCT properties.$app_version AS app_version,
+  properties.$app_build AS app_build,
+  properties.$is_testflight AS is_testflight,
+  properties.$is_emulator AS is_emulator,
+  properties.$app_namespace AS app_namespace
+FROM events
+WHERE event = 'Application Opened' AND timestamp >= now() - INTERVAL 1 DAY
+ORDER BY app_version DESC, app_build DESC LIMIT 40
+Returned 17 distinct combinations, below the limit.
+
+Reproduced failure
+The October 22 build-67 commit is 4b3f093. Its budget display calculation is identical
+to the historical calculation extracted and tested by reproduce.py (76a1b7c^).
+1. A 15-minute allowance is exhausted and state becomes locked.
+2. On a subsequent day, refresh() treats yesterday's used time as zero even while locked.
+3. The display reports 15 minutes remaining, while the lock remains in effect.
+4. In the old home UI, study/emergency controls are inside a lock reveal that requires
+   the countdown to reach zero. If this grant's reveal has not already played,
+   the positive countdown keeps the controls hidden.
+
+Current source already contains the correction
+Commit 76a1b7c, October 30, introduced GuardBudgetSnapshot and the manual home unlock
+bar. Locked users show zero remaining and have an unlock entry independent of the
+displayed allowance. The fix postdates the October 22 public release.
+  diewithoutregrets/Features/StudyGuard/Models/StudyGuardState.swift:28
+  diewithoutregrets/Features/StudyGuard/Models/StudyGuardState.swift:41
+  diewithoutregrets/ContentView.swift:228
+  diewithoutregretsTests/MonsterShieldTests.swift:148
+
+Related behavior
+- Both rollover paths explicitly keep locked users locked across days; waiting until
+  tomorrow is not a recovery mechanism. An unlocked user gets a fresh daily allowance.
+  StudyGuardMonitor/StudyGuardMonitorExtension.swift:39
+  diewithoutregrets/Features/StudyGuard/Services/StudyGuardManager.swift:379
+- Ordinary PracticeView does not grant screen-time credit. Someone diverted to
+  practice by the missing unlock controls could study without clearing the lock.
+  This customer's actual study route is unknown.
+  diewithoutregrets/Features/RegretGuard/Views/PracticeView.swift:394
+- If the customer literally sees "You're already unlocked" while an app is shielded,
+  a display-only bug is insufficient: logical state and actual shields must also
+  disagree. Current foreground reconciliation attempts to repair that mismatch.
+  diewithoutregrets/Features/RegretGuard/Views/RegretView.swift:506
+  diewithoutregrets/Features/StudyGuard/Services/StudyGuardManager.swift:412
+
+Validation and limits
+reproduce.py completed with exit 0. It reproduced the old display mismatch and passed
+six current-code check groups, including stale/missing locked budgets, unlock-entry
+eligibility, current/stale metering and pending-grant failure/retry/idempotence.
+See results.txt. Production state/contract code runs with in-memory preferences;
+iOS scheduling adapter blocks are excluded. Actual iOS shield behavior, SwiftUI
+animation timing and cross-process races were not simulated. CoreSimulator was not
+accessible in the sandbox. No application source was changed in this investigation.
+
+Recommended next action
+Ship the existing locked-budget display and always-available locked-state unlock-entry
+fix in the next App Store release. Verify a lock carried overnight before release,
+including an app that has not displayed that grant's lock reveal. Do not assume a
+new grant or reinstall is needed to migrate the retained lock: the current read path
+derives zero directly from locked state and exposes the manual unlock action.
+Treat a desired daily unlock/reset as a separate product-rule change, since both
+current reset paths deliberately preserve locks. Add an app ID/version and diagnostic
+context to customer support reporting so future reports can be tied to actual events.
+
+No customer data was changed, message sent, app uploaded or release submitted.

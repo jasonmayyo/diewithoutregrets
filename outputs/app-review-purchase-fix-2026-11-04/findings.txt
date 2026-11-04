@@ -1,0 +1,83 @@
+Study Guard 2.0.8 (75) purchase rejection — November 4, 2026
+
+Evidence
+Apple's screenshot shows the exact failure string emitted by
+SGOnboardingPaywallCoordinator.verifyAccess when RevenueCat access returns false.
+
+Read-only PostHog inspection in Study Guard project 149292 found an iPadOS 27.2,
+build-75 session with this UTC timeline on November 4:
+  04:47:01.199  paywall_dismissed, did_purchase=true
+  04:47:01.880  paywall_retry_tapped
+  04:47:31.200  paywall_dismissed, did_purchase=true
+No onboarding_purchase_completed or onboarding_completed event was returned for
+that session between 04:40 and 05:00 UTC. A dismissal alone is not proof of payment:
+the existing event also covers restores. The RevenueCat lookup below is the
+independent purchase evidence. Session identity is inferred from the build, OS,
+timing and behavior, not an Apple-supplied customer identifier.
+
+With explicit user permission, a read-only RevenueCat lookup at 07:33:39 UTC
+confirmed that same session's customer had:
+  product_identifier: study_guard_weekly
+  entitlement: Pro Acess
+  is_sandbox: true
+  purchase_date: 2026-11-04T04:46:42Z
+  expires_date: 2026-11-05T04:46:42Z
+  store: app_store
+  no refund or billing-issue timestamp
+Customer identifiers and credentials are intentionally omitted from this report.
+
+Diagnosis
+The app uses RevenueCat 5.84.0. Its activeInCurrentEnvironment filter compares
+each entitlement's sandbox flag with a detector based on the bundle receipt path
+(or a simulator check). It can discard an otherwise-active entitlement when that
+local environment does not match the transaction environment. Study Guard applied
+that filter both to its hard access gate and to Superwall's subscription status.
+The purchase controller also returned .purchased even when this access check failed.
+The active sandbox entitlement above, the missing app-level completion event and
+the screenshot are consistent with this code path. The review device's receipt
+path itself was not collected.
+
+Change
+Use RevenueCat's standard active entitlement status for the exact existing
+Pro Acess identifier, for both sandbox and production purchases. Apply the same
+rule to Superwall status, restores, receipt recovery and purchase analytics.
+Onboarding completion already uses this central access helper.
+
+Before reporting purchase success, confirm active Study Guard access from the
+purchase result. If missing, request fresh CustomerInfo once using fetchCurrent.
+If still missing or the refresh fails, keep the purchase unconfirmed and expose
+the existing restore/retry path. Do not initiate another payment. Cancellation,
+pending approval, missing/expired/wrong entitlements and mismatched-product receipt
+recovery remain gated. No App Review-specific bypass or hardcoded access was added.
+
+Sources
+https://www.revenuecat.com/docs/customers/customer-info
+https://developer.apple.com/help/app-review/before-submitting-for-review/configure-in-app-purchases/
+https://us.posthog.com/project/149292
+Bundled RevenueCat 5.84.0 source: Sources/Misc/SandboxEnvironmentDetector.swift,
+Sources/Purchasing/EntitlementInfo.swift and EntitlementInfos.swift.
+
+Validation
+The original application binary failed three new regression cases out of 23
+selected tests, including the coordinator returning the exact screenshot error
+for an active entitlement excluded by the local environment filter. See
+regression-before.txt. On the simulator this exercises a production entitlement
+against a sandbox host; the SDK's equality-based environment filter is symmetric.
+
+With the fix, all 64 selected tests passed on an iPhone 17 Pro Max simulator
+(iOS 26.0 runtime): 14 onboarding paywall flow, 32 onboarding V5, four purchase
+confirmation, five receipt recovery and nine billing bridge tests. The unsigned
+generic iOS Release build passed. git diff --check passed. See verification.txt.
+
+Initial verification attempts hit a stale simulator test socket and then a full
+disk. Rebuildable caches in older project build directories were cleared; source
+files, app data and release archives were preserved. A separate attempt collided
+with the Release build database; the final tests ran after that build completed.
+These infrastructure failures are not counted as application test failures.
+
+Release follow-up
+Exercise a fresh sandbox/TestFlight weekly purchase, annual purchase and restore
+on iPhone and iPad, and verify advancement into setup plus access after relaunch.
+Automated CustomerInfo fixtures do not reproduce an actual Apple payment sheet.
+This work does not upload or submit a build, change dashboard configuration, or
+send a reply to Apple.

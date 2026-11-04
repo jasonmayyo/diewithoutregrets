@@ -17,6 +17,34 @@ final class SuperwallBillingTests: XCTestCase {
         XCTAssertEqual(SGSuperwallBilling.subscriptionStatus(activeEntitlementIDs: ["Pro Access"]), .inactive)
     }
 
+    func testActiveSandboxAndProductionEntitlementsBothGrantAccess() {
+        for isSandbox in [true, false] {
+            let info = billingCustomerInfo(isSandbox: isSandbox)
+            XCTAssertTrue(SGSuperwallBilling.hasActiveAccess(info), "isSandbox=\(isSandbox)")
+            XCTAssertEqual(SGSuperwallBilling.subscriptionStatus(info), .active([SuperwallKit.Entitlement(id: "pro")]))
+        }
+    }
+
+    func testLocalEnvironmentMismatchDoesNotRejectActiveEntitlement() {
+        let info = billingCustomerInfo(isSandbox: !billingSDKIsSandbox)
+        XCTAssertTrue(info.entitlements.activeInCurrentEnvironment.isEmpty)
+        XCTAssertNotNil(info.entitlements.active["Pro Acess"])
+        XCTAssertTrue(SGSuperwallBilling.hasActiveAccess(info))
+    }
+
+    func testMissingExpiredAndWrongEntitlementsRemainGatedInBothEnvironments() {
+        for isSandbox in [true, false] {
+            for info in [
+                billingCustomerInfo(entitlementID: nil, isSandbox: isSandbox),
+                billingCustomerInfo(isActive: false, isSandbox: isSandbox),
+                billingCustomerInfo(entitlementID: "Pro Access", isSandbox: isSandbox)
+            ] {
+                XCTAssertFalse(SGSuperwallBilling.hasActiveAccess(info))
+                XCTAssertEqual(SGSuperwallBilling.subscriptionStatus(info), .inactive)
+            }
+        }
+    }
+
     func testCancellationIsNotReportedAsPurchaseFailure() {
         let error = RevenueCat.ErrorCode.purchaseCancelledError as NSError
         guard case .cancelled = SGSuperwallBilling.purchaseFailure(error) else {
@@ -48,6 +76,90 @@ final class SuperwallBillingTests: XCTestCase {
     }
 }
 
+/// Model the SDK's receipt-path mismatch without relying on the test host's
+/// environment. The simulator always reports sandbox; devices may report either.
+private var billingSDKIsSandbox: Bool {
+    billingCustomerInfo(isSandbox: true).entitlements.all["Pro Acess"]!.isActiveInCurrentEnvironment
+}
+
+private func billingCustomerInfo(
+    entitlementID: String? = "Pro Acess",
+    productID: String = "study_guard_yearly_pro",
+    isActive: Bool = true,
+    isSandbox: Bool = true
+) -> RevenueCat.CustomerInfo {
+    let entitlement = RevenueCat.EntitlementInfo(
+        identifier: entitlementID ?? "", isActive: isActive, willRenew: isActive, periodType: .normal,
+        store: .appStore, productIdentifier: productID, isSandbox: isSandbox, ownershipType: .purchased
+    )
+    return RevenueCat.CustomerInfo(
+        entitlements: .init(entitlements: entitlementID.map { [$0: entitlement] } ?? [:]),
+        requestDate: Date(), firstSeen: Date(), originalAppUserId: "billing-regression-test"
+    )
+}
+
+@MainActor
+final class PurchaseAccessConfirmationTests: XCTestCase {
+    func testActivePurchaseDoesNotRequireAnotherNetworkRequest() async throws {
+        for isSandbox in [true, false] {
+            let purchased = billingCustomerInfo(isSandbox: isSandbox)
+            var refreshCount = 0
+            let confirmed = try await SGSuperwallBilling.confirmPurchasedAccess(purchased) {
+                refreshCount += 1
+                throw URLError(.notConnectedToInternet)
+            }
+            XCTAssertTrue(confirmed === purchased)
+            XCTAssertEqual(refreshCount, 0)
+        }
+    }
+
+    func testMissingPurchaseAccessRefreshesOnceAndUsesConfirmedEntitlement() async throws {
+        let refreshed = billingCustomerInfo(isSandbox: !billingSDKIsSandbox)
+        var refreshCount = 0
+        let confirmed = try await SGSuperwallBilling.confirmPurchasedAccess(billingCustomerInfo(entitlementID: nil)) {
+            refreshCount += 1
+            return refreshed
+        }
+        XCTAssertTrue(confirmed === refreshed)
+        XCTAssertEqual(refreshCount, 1)
+    }
+
+    func testEmptyExpiredOrWrongEntitlementAfterRefreshCannotReportPurchaseSuccess() async {
+        for refreshed in [
+            billingCustomerInfo(entitlementID: nil),
+            billingCustomerInfo(isActive: false),
+            billingCustomerInfo(entitlementID: "Pro Access")
+        ] {
+            var refreshCount = 0
+            do {
+                _ = try await SGSuperwallBilling.confirmPurchasedAccess(billingCustomerInfo(entitlementID: nil)) {
+                    refreshCount += 1
+                    return refreshed
+                }
+                XCTFail("A successful payment without Study Guard access must not report purchase success.")
+            } catch {
+                XCTAssertTrue(error.localizedDescription.contains("Restore Purchases"))
+            }
+            XCTAssertEqual(refreshCount, 1)
+        }
+    }
+
+    func testRefreshFailurePropagatesWithoutRetryingOrGrantingAccess() async {
+        let networkError = URLError(.notConnectedToInternet)
+        var refreshCount = 0
+        do {
+            _ = try await SGSuperwallBilling.confirmPurchasedAccess(billingCustomerInfo(entitlementID: nil)) {
+                refreshCount += 1
+                throw networkError
+            }
+            XCTFail("A failed refresh cannot confirm access.")
+        } catch {
+            XCTAssertEqual(error as NSError, networkError as NSError)
+        }
+        XCTAssertEqual(refreshCount, 1)
+    }
+}
+
 @MainActor
 final class PurchaseReceiptRecoveryTests: XCTestCase {
     private let productID = "study_guard_yearly_pro"
@@ -69,8 +181,7 @@ final class PurchaseReceiptRecoveryTests: XCTestCase {
             ("empty", customerInfo(entitlementID: nil)),
             ("expired", customerInfo(isActive: false)),
             ("wrong entitlement", customerInfo(entitlementID: "Pro Access")),
-            ("different product", customerInfo(productID: "study_guard_weekly")),
-            ("different environment", customerInfo(wrongEnvironment: true))
+            ("different product", customerInfo(productID: "study_guard_weekly"))
         ]
         for (reason, info) in invalidResults {
             var syncCount = 0
@@ -81,6 +192,13 @@ final class PurchaseReceiptRecoveryTests: XCTestCase {
             XCTAssertNil(recovered, reason)
             XCTAssertEqual(syncCount, 1, reason)
         }
+    }
+
+    func testReceiptRecoveryAcceptsActiveAccessDespiteLocalEnvironmentMismatch() async throws {
+        let info = customerInfo(wrongEnvironment: true)
+        XCTAssertTrue(info.entitlements.activeInCurrentEnvironment.isEmpty)
+        let recovered = try await SGSuperwallBilling.recoverReceiptFailure(receiptError, productID: productID) { info }
+        XCTAssertTrue(recovered === info)
     }
 
     func testOtherPurchaseErrorsNeverTriggerReceiptSync() async throws {
@@ -201,6 +319,18 @@ final class OnboardingSuperwallFlowTests: XCTestCase {
         // Superwall also invokes its feature closure after onDismiss.
         await h.send(.verifyAccess)
         await h.send(.declined)
+        XCTAssertEqual(h.model.state, .completed)
+        XCTAssertEqual(h.model.declineCount, 0)
+    }
+
+    func testPurchaseWithLocalEnvironmentMismatchCompletesOnboarding() async {
+        let h = Harness()
+        await h.model.present()
+        await h.send(.presented)
+        h.accessCheck = {
+            SGSuperwallBilling.hasActiveAccess(billingCustomerInfo(isSandbox: !billingSDKIsSandbox))
+        }
+        await h.send(.verifyAccess)
         XCTAssertEqual(h.model.state, .completed)
         XCTAssertEqual(h.model.declineCount, 0)
     }

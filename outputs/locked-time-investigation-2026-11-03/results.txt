@@ -1,0 +1,8 @@
+REPRODUCED historical midnight mismatch: locked=true, displayedRemaining=15
+PASS current snapshot: locked=true, displayedRemaining=0; no grant written
+PASS locked users retain manual unlock entry independent of displayed allowance
+PASS missing usage/grant timestamp still displays zero while locked
+PASS stale metering allowance still resets for display
+PASS same-day metering preserves real usage: 8 of 15 minutes remain
+PASS pending reward survives registration failure, retries once, and cannot double-commit
+LIMITATION: pure Swift logic only; actual iOS shields and cross-process timing are not simulated

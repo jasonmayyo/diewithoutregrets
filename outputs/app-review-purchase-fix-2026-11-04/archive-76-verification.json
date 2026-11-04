@@ -1,0 +1,65 @@
+{
+  "archive": "/Users/jasonmayo/Desktop/diewithoutregrets/build/StudyGuard-2.0.8-76.xcarchive",
+  "creationDate": "2026-11-04 08:16:06",
+  "applicationProperties": {
+    "CFBundleIdentifier": "com.jasonmayo.diewithoutregrets",
+    "CFBundleShortVersionString": "2.0.8",
+    "CFBundleVersion": "76",
+    "SigningIdentity": "Apple Development: Jason Mayo (YF76XQ685W)",
+    "Team": "5BFXSF2PS6"
+  },
+  "bundles": [
+    {
+      "bundle": "diewithoutregrets.app",
+      "identifier": "com.jasonmayo.diewithoutregrets",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "MonsterWidgetExtension.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.MonsterWidget",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "StudyGuardMonitor.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardMonitor",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "StudyGuardShield.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardShield",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "StudyGuardShieldAction.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardShieldAction",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "OpenGuardIntent.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.OpenGuardIntent",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "RegretGuardIntent.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.RegretGuardIntent",
+      "version": "2.0.8",
+      "build": "76"
+    },
+    {
+      "bundle": "StudyGuardReport.appex",
+      "identifier": "com.jasonmayo.diewithoutregrets.StudyGuardReport",
+      "version": "2.0.8",
+      "build": "76"
+    }
+  ],
+  "codeSignature": "verified (deep, strict; system trust access)",
+  "mainBinaryDSYMs": "UUIDs match",
+  "sentryUpload": "disabled for this archive",
+  "appStoreConnectUpload": "not performed"
+}

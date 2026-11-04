@@ -1,0 +1,42 @@
+[
+  {
+    "bundle": "diewithoutregrets.app",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "MonsterWidgetExtension.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "StudyGuardMonitor.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "StudyGuardShield.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "StudyGuardShieldAction.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "OpenGuardIntent.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "RegretGuardIntent.appex",
+    "version": "2.0.8",
+    "build": "76"
+  },
+  {
+    "bundle": "StudyGuardReport.appex",
+    "version": "2.0.8",
+    "build": "76"
+  }
+]

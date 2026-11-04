@@ -1,0 +1,57 @@
+Build 76 double-check — November 4, 2026
+
+Version: 2.0.8 (76)
+Both project configurations and all nine targets inherit the correct release build.
+Built Release app and all seven extensions verified as 2.0.8 (76).
+See build-76-bundle-versions.json.
+
+Review: the purchase, restore, Superwall status and onboarding checks use the same exact entitlement ID.
+RevenueCat caches the completed purchase CustomerInfo before dispatching its callback.
+Superwall requires active entitlements as well as a successful restoration result.
+No further application code changes were needed during the double-check.
+
+Full simulator suite (iPhone 17 Pro Max, iOS 26.0 runtime):
+Test Suite 'CountdownReplayTests' passed at 2026-11-04 10:07:01.963.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.069 (0.092) seconds
+Test Suite 'DeckStoreTests' passed at 2026-11-04 10:07:02.012.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.047 (0.048) seconds
+Test Suite 'FlashcardAPIClientTests' passed at 2026-11-04 10:07:02.165.
+	 Executed 13 tests, with 4 tests skipped and 0 failures (0 unexpected) in 0.149 (0.153) seconds
+Test Suite 'FlashcardTransportReliabilityTests' passed at 2026-11-04 10:07:02.456.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.287 (0.291) seconds
+Test Suite 'MonsterShieldTests' passed at 2026-11-04 10:07:02.642.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.176 (0.186) seconds
+Test Suite 'OnboardingSuperwallFlowTests' passed at 2026-11-04 10:07:02.666.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.015 (0.024) seconds
+Test Suite 'OnboardingV5Tests' passed at 2026-11-04 10:07:05.037.
+	 Executed 32 tests, with 0 failures (0 unexpected) in 2.360 (2.371) seconds
+Test Suite 'PurchaseAccessConfirmationTests' passed at 2026-11-04 10:07:05.048.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.010 (0.011) seconds
+Test Suite 'PurchaseReceiptRecoveryTests' passed at 2026-11-04 10:07:05.057.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.007 (0.009) seconds
+Test Suite 'ShieldReturnContextTests' passed at 2026-11-04 10:07:05.166.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.104 (0.108) seconds
+Test Suite 'StudyGuardEngineTests' passed at 2026-11-04 10:07:05.238.
+	 Executed 23 tests, with 0 failures (0 unexpected) in 0.066 (0.073) seconds
+Test Suite 'SuperwallBillingTests' passed at 2026-11-04 10:07:05.268.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.026 (0.029) seconds
+Test Suite 'TutorMonsterFoundationTests' passed at 2026-11-04 10:07:05.323.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.049 (0.055) seconds
+Test Suite 'UnlockAppReturnTests' passed at 2026-11-04 10:07:05.338.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.011 (0.014) seconds
+Test Suite 'diewithoutregretsTests.xctest' passed at 2026-11-04 10:07:05.338.
+	 Executed 197 tests, with 4 tests skipped and 0 failures (0 unexpected) in 3.376 (3.466) seconds
+Test Suite 'All tests' passed at 2026-11-04 10:07:05.338.
+	 Executed 197 tests, with 4 tests skipped and 0 failures (0 unexpected) in 3.376 (3.468) seconds
+** TEST EXECUTE SUCCEEDED **
+
+Release verification (generic iOS, code signing disabled):
+** BUILD SUCCEEDED **
+
+git diff --check: passed.
+Four live generation/attestation checks were skipped because they require physical-device App Attest; live-test opt-in flags were also disabled.
+The first test run stalled before execution; the task simulator was restarted and the compiled full suite then passed.
+
+At the end of this double-check, work was paused before archiving or uploading.
+The subsequently requested local archive is verified in archive-76-verification.json.
+Next: the user will upload the archive, then exercise actual sandbox purchases and restores in TestFlight.

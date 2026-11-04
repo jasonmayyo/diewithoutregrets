@@ -1,0 +1,17 @@
+Test Suite 'OnboardingSuperwallFlowTests' passed at 2026-11-04 09:45:40.946.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.159 (0.167) seconds
+Test Suite 'OnboardingV5Tests' passed at 2026-11-04 09:45:43.262.
+	 Executed 32 tests, with 0 failures (0 unexpected) in 2.302 (2.312) seconds
+Test Suite 'PurchaseAccessConfirmationTests' passed at 2026-11-04 09:45:43.270.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.006 (0.008) seconds
+Test Suite 'PurchaseReceiptRecoveryTests' passed at 2026-11-04 09:45:43.280.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.007 (0.009) seconds
+Test Suite 'SuperwallBillingTests' passed at 2026-11-04 09:45:43.307.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.025 (0.028) seconds
+Test Suite 'diewithoutregretsTests.xctest' passed at 2026-11-04 09:45:43.308.
+	 Executed 64 tests, with 0 failures (0 unexpected) in 2.499 (2.528) seconds
+Test Suite 'Selected tests' passed at 2026-11-04 09:45:43.308.
+	 Executed 64 tests, with 0 failures (0 unexpected) in 2.499 (2.529) seconds
+** TEST SUCCEEDED **
+
+** BUILD SUCCEEDED **

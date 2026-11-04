@@ -1,0 +1,87 @@
+{
+  "checkedOn": "2026-11-02",
+  "purpose": "Candidate reaction media for Study Guard and creator promotional videos",
+  "status": "Research shortlist only; no assets downloaded, purchased, integrated, or published",
+  "licenceAssessment": "Based on the providers' current public asset pages and terms. Not independent verification of each uploader's ownership. Review the final captions, edit, and distribution against the licence before shipping.",
+  "freeCandidates": [
+    {
+      "name": "Tongue-out tuxedo cat",
+      "format": "photo",
+      "creator": "Luis Alberto Barrera Diaz",
+      "source": "https://www.pexels.com/photo/adorable-funny-cat-20400679/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "me opening the deck with zero preparation"
+    },
+    {
+      "name": "Cross-eyed orange cat",
+      "format": "photo",
+      "creator": "Eyyüp Erten",
+      "source": "https://www.pexels.com/photo/funny-cross-eyed-orange-tabby-cat-on-grass-32272444/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "me trying to remember what I just revised"
+    },
+    {
+      "name": "Cat peeking over a cardboard box",
+      "format": "photo",
+      "creator": "AG ZN",
+      "source": "https://www.pexels.com/photo/cute-funny-cat-behind-a-cartonbox-5233032/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "just checking if my apps are unlocked yet"
+    },
+    {
+      "name": "Shiba Inu wearing sunglasses",
+      "format": "photo",
+      "creator": "Sam Lion",
+      "source": "https://www.pexels.com/photo/funny-dog-with-accessories-at-home-5733407/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "earned my scroll time"
+    },
+    {
+      "name": "Cat ignoring a weird sound",
+      "format": "video, 12 seconds; candidate for a short muted loop",
+      "creator": "Videas Cl",
+      "source": "https://www.pexels.com/video/cat-ignoring-weird-sound-5089550/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "me ignoring the urge to open TikTok",
+      "reviewNeeded": "Preview and select the loop before integration; audio not reviewed and should be omitted."
+    },
+    {
+      "name": "Graduation dance with confetti",
+      "format": "video, 26 seconds; candidate for a short muted loop",
+      "creator": "Pavel Danilyuk",
+      "source": "https://www.pexels.com/video/people-dancing-in-their-graduation-day-7945889/",
+      "licence": "https://www.pexels.com/license/",
+      "proposedCaption": "finished the deck",
+      "reviewNeeded": "Preview and select the loop before integration; audio not reviewed and should be omitted. Do not imply the depicted people endorse Study Guard."
+    }
+  ],
+  "paidCandidates": [
+    {
+      "name": "Distracted Boyfriend original photo",
+      "format": "photo",
+      "creator": "Antonio Guillem",
+      "source": "https://www.shutterstock.com/image-photo/disloyal-man-walking-his-girlfriend-looking-297886754",
+      "licence": "https://www.shutterstock.com/license",
+      "status": "Available to license; not purchased",
+      "releaseEvidence": "Provider asset page states signed model release on file.",
+      "pricingEvidence": "Asset page displayed a two-image pack for USD 29; confirm regional checkout price and current plan terms.",
+      "proposedUse": "Captioned meme comparing me, my revision, and one more scroll",
+      "licenceNotes": "Standard Image terms include apps, social media, and online advertising. Audiovisual productions have a USD 10,000 production-budget limit under Standard terms. Single-seat rules restrict handling original files; distribute finished derivative creative to creators. No defamatory, deceptive, or other prohibited contexts."
+    },
+    {
+      "name": "Hungry-Eyed Cat Watches Fish",
+      "format": "video",
+      "creator": "Chelsea Grady, as credited by ViralHog",
+      "source": "https://viralhog.com/watch/file/395838576",
+      "licence": "https://viralhog.com/faq/question/65",
+      "status": "Commercial licence quote required; no rights acquired",
+      "proposedCaption": "me watching my locked apps",
+      "quoteScopeNeeded": "Worldwide commercial app embedding, edited muted loops and still frames, creator organic social promotion, paid ads if intended, term, and permission for creator partners to publish the finished creative."
+    }
+  ],
+  "pexelsScope": {
+    "supports": ["Free commercial use", "Editing", "App use", "Marketing and social media", "No mandatory attribution"],
+    "limitsRelevantHere": ["No implied endorsement", "No offensive or bad-light portrayal of identifiable people", "No resale of unaltered copies or redistribution as a stock library", "Depicted third-party rights may need separate clearance"],
+    "commercialUseSource": "https://help.pexels.com/hc/en-us/articles/360042295214-Can-I-use-the-photos-and-videos-for-a-commercial-project"
+  }
+}

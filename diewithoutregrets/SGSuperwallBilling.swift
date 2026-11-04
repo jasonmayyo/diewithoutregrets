@@ -62,9 +62,7 @@ final class SGSuperwallBilling: PurchaseController {
     }
 
     private func apply(_ customerInfo: RevenueCat.CustomerInfo) {
-        Superwall.shared.subscriptionStatus = Self.subscriptionStatus(
-            activeEntitlementIDs: Set(customerInfo.entitlements.activeInCurrentEnvironment.keys)
-        )
+        Superwall.shared.subscriptionStatus = Self.subscriptionStatus(customerInfo)
         #if DEBUG
         print("[Superwall] RevenueCat access synced: \(Superwall.shared.subscriptionStatus)")
         #endif
@@ -79,7 +77,11 @@ final class SGSuperwallBilling: PurchaseController {
     }
 
     nonisolated static func hasActiveAccess(_ info: RevenueCat.CustomerInfo) -> Bool {
-        info.entitlements.activeInCurrentEnvironment[revenueCatEntitlementID] != nil
+        // RevenueCat's active status is the source of truth for sandbox and
+        // production purchases. activeInCurrentEnvironment additionally guesses
+        // the environment from the bundle's receipt path, which can disagree
+        // with a valid StoreKit 2 purchase during App Review.
+        info.entitlements.active[revenueCatEntitlementID] != nil
     }
 
     func restoreAccess() async throws -> Bool {
@@ -102,6 +104,10 @@ final class SGSuperwallBilling: PurchaseController {
             : .inactive
     }
 
+    nonisolated static func subscriptionStatus(_ info: RevenueCat.CustomerInfo) -> SuperwallKit.SubscriptionStatus {
+        subscriptionStatus(activeEntitlementIDs: Set(info.entitlements.active.keys))
+    }
+
     func purchase(product: SuperwallKit.StoreProduct) async -> SuperwallKit.PurchaseResult {
         guard let storeKitProduct = product.sk2Product else {
             return .failed(BillingError.storeKitProductUnavailable)
@@ -111,11 +117,16 @@ final class SGSuperwallBilling: PurchaseController {
             let result = try await Purchases.shared.purchase(
                 product: RevenueCat.StoreProduct(sk2Product: storeKitProduct)
             )
-            apply(result.customerInfo)
-            if !result.userCancelled, Self.hasActiveAccess(result.customerInfo) {
-                trackPurchase(storeKitProduct, info: result.customerInfo)
+            guard !result.userCancelled else {
+                apply(result.customerInfo)
+                return .cancelled
             }
-            return result.userCancelled ? .cancelled : .purchased
+            let info = try await Self.confirmPurchasedAccess(result.customerInfo) {
+                try await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
+            }
+            apply(info)
+            trackPurchase(storeKitProduct, info: info)
+            return .purchased
         } catch {
             if Self.isReceiptValidationFailure(error) {
                 capturePurchaseError(error, productID: storeKitProduct.id, phase: "purchase")
@@ -144,6 +155,19 @@ final class SGSuperwallBilling: PurchaseController {
         }
     }
 
+    /// A completed payment must carry Study Guard access before the paywall
+    /// reports success. Re-fetch once if the purchase response has no access;
+    /// never initiate a second payment or substitute a purchase callback for it.
+    static func confirmPurchasedAccess(
+        _ info: RevenueCat.CustomerInfo,
+        refreshCustomerInfo: () async throws -> RevenueCat.CustomerInfo
+    ) async throws -> RevenueCat.CustomerInfo {
+        if hasActiveAccess(info) { return info }
+        let refreshed = try await refreshCustomerInfo()
+        guard hasActiveAccess(refreshed) else { throw BillingError.purchaseAccessMissing }
+        return refreshed
+    }
+
     /// Reconcile a confirmed purchase once if receipt validation failed. This
     /// never launches another payment or treats a successful sync as access.
     static func recoverReceiptFailure(
@@ -153,7 +177,7 @@ final class SGSuperwallBilling: PurchaseController {
     ) async throws -> RevenueCat.CustomerInfo? {
         guard isReceiptValidationFailure(error) else { return nil }
         let info = try await syncPurchases()
-        guard let entitlement = info.entitlements.activeInCurrentEnvironment[revenueCatEntitlementID],
+        guard let entitlement = info.entitlements.active[revenueCatEntitlementID],
               entitlement.productIdentifier == productID else { return nil }
         return info
     }
@@ -192,7 +216,7 @@ final class SGSuperwallBilling: PurchaseController {
     private func trackPurchase(_ product: StoreKit.Product, info: RevenueCat.CustomerInfo) {
         let price = NSDecimalNumber(decimal: product.price).doubleValue
         let currency = product.priceFormatStyle.currencyCode
-        let isTrial = info.entitlements.activeInCurrentEnvironment[Self.revenueCatEntitlementID]?.periodType == .trial
+        let isTrial = info.entitlements.active[Self.revenueCatEntitlementID]?.periodType == .trial
         if isTrial {
             AdsTracker.trackStartTrial(productId: product.id, productName: product.displayName, price: price, currency: currency)
         } else {
@@ -201,13 +225,14 @@ final class SGSuperwallBilling: PurchaseController {
         }
         Analytics.subscriptionStarted(surface: "onboarding_superwall", productId: product.id,
                                       price: price, currency: currency, isTrial: isTrial,
-                                      offeringId: nil, entitlements: Array(info.entitlements.activeInCurrentEnvironment.keys))
+                                      offeringId: nil, entitlements: Array(info.entitlements.active.keys))
         Analytics.capture("onboarding_purchase_completed", properties: ["provider": "superwall", "product_id": product.id])
     }
 
     private enum BillingError: LocalizedError {
         case storeKitProductUnavailable
         case purchaseVerificationFailed
+        case purchaseAccessMissing
 
         var errorDescription: String? {
             switch self {
@@ -215,6 +240,8 @@ final class SGSuperwallBilling: PurchaseController {
                 return "This product is unavailable. Please try again later."
             case .purchaseVerificationFailed:
                 return "We couldn't verify your purchase with the App Store. Please tap Restore Purchases. If it still doesn't work, try again later."
+            case .purchaseAccessMissing:
+                return "Your purchase completed, but Study Guard access hasn't been confirmed yet. Please tap Restore Purchases."
             }
         }
     }
